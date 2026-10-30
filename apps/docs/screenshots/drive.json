@@ -30,9 +30,9 @@
     "clip": { "x": 0, "y": 0, "width": 760, "height": 220 },
     "path": "{workspace}/d/{drive:s3}",
     "steps": [
-      { "waitFor": "section[aria-label=\"Files\"] [title=\"preview\"]" },
-      { "dblclick": "section[aria-label=\"Files\"] [title=\"preview\"]" },
-      { "waitFor": "section[aria-label=\"Files\"] [title=\"docs\"]" },
+      { "waitFor": "section[aria-label=\"Files\"] [title=\"Team\"]" },
+      { "dblclick": "section[aria-label=\"Files\"] [title=\"Team\"]" },
+      { "waitFor": "section[aria-label=\"Files\"] [title=\"website\"]" },
       { "goto": "{workspace}/d/{drive:s3}" },
       { "waitFor": "section[aria-label=\"Files\"] [title=\"welcome.txt\"]" },
       {
@@ -62,7 +62,7 @@
     "viewport": { "width": 1440, "height": 480 },
     "path": "{workspace}/d/{drive:s3}",
     "steps": [
-      { "waitFor": "section[aria-label=\"Files\"] [title=\"rebrand\"]" },
+      { "waitFor": "section[aria-label=\"Files\"] [title=\"Clients\"]" },
       {
         "fill": "input[placeholder=\"Search this drive\"]",
         "value": "welcome"
@@ -96,8 +96,8 @@
     "viewport": { "width": 1024, "height": 440 },
     "path": "{workspace}/d/{drive:s3}",
     "steps": [
-      { "waitFor": "section[aria-label=\"Files\"] [title=\"preview\"]" },
-      { "click": "[aria-label=\"Actions for preview\"]" },
+      { "waitFor": "section[aria-label=\"Files\"] [title=\"Clients\"]" },
+      { "click": "[aria-label=\"Actions for Clients\"]" },
       { "waitFor": "role=menuitem[name=\"Pin to sidebar\"]" }
     ]
   },
@@ -126,17 +126,17 @@
   {
     "name": "drive/preview-pdf",
     "viewport": { "width": 1440, "height": 420 },
-    "element": "aside[aria-label=\"Preview of three-pages.pdf\"]",
-    "path": "{workspace}/d/{drive:s3}/preview%2Fdocs%2F",
+    "element": "aside[aria-label=\"Preview of moodboard.pdf\"]",
+    "path": "{workspace}/d/{drive:s3}/Clients%2FAozora%20Ceramics%2FRebrand%2F",
     "steps": [
       {
-        "waitFor": "section[aria-label=\"Files\"] [title=\"three-pages.pdf\"]"
+        "waitFor": "section[aria-label=\"Files\"] [title=\"moodboard.pdf\"]"
       },
       {
-        "dblclick": "section[aria-label=\"Files\"] [title=\"three-pages.pdf\"]"
+        "dblclick": "section[aria-label=\"Files\"] [title=\"moodboard.pdf\"]"
       },
       {
-        "waitFor": "aside[aria-label=\"Preview of three-pages.pdf\"] [aria-label=\"Next page\"]:not([disabled])"
+        "waitFor": "aside[aria-label=\"Preview of moodboard.pdf\"] [aria-label=\"Next page\"]:not([disabled])"
       },
       { "wait": 2000 }
     ]
@@ -144,33 +144,33 @@
   {
     "name": "drive/preview-table",
     "viewport": { "width": 1920, "height": 640 },
-    "element": "aside[aria-label=\"Preview of people.csv\"]",
-    "path": "{workspace}/d/{drive:s3}/preview%2Fdata%2F",
+    "element": "aside[aria-label=\"Preview of invoices.csv\"]",
+    "path": "{workspace}/d/{drive:s3}/Finance%2F2025%2F",
     "steps": [
-      { "waitFor": "section[aria-label=\"Files\"] [title=\"people.csv\"]" },
-      { "dblclick": "section[aria-label=\"Files\"] [title=\"people.csv\"]" },
-      { "waitFor": "aside[aria-label=\"Preview of people.csv\"] table" },
+      { "waitFor": "section[aria-label=\"Files\"] [title=\"invoices.csv\"]" },
+      { "dblclick": "section[aria-label=\"Files\"] [title=\"invoices.csv\"]" },
+      { "waitFor": "aside[aria-label=\"Preview of invoices.csv\"] table" },
       { "wait": 800 }
     ]
   },
   {
     "name": "drive/preview-fallback",
     "viewport": { "width": 1440, "height": 480 },
-    "path": "{workspace}/d/{drive:s3}/preview%2Ffallback%2F",
+    "path": "{workspace}/d/{drive:s3}/Clients%2FKaltwasser%20GmbH%2F",
     "steps": [
-      { "waitFor": "section[aria-label=\"Files\"] [title=\"slides.pptx\"]" },
-      { "dblclick": "section[aria-label=\"Files\"] [title=\"slides.pptx\"]" },
+      { "waitFor": "section[aria-label=\"Files\"] [title=\"Pitch deck.pptx\"]" },
+      { "dblclick": "section[aria-label=\"Files\"] [title=\"Pitch deck.pptx\"]" },
       {
-        "waitFor": "aside[aria-label=\"Preview of slides.pptx\"] >> text=There is no preview for this file type."
+        "waitFor": "aside[aria-label=\"Preview of Pitch deck.pptx\"] >> text=There is no preview for this file type."
       }
     ],
-    "element": "aside[aria-label=\"Preview of slides.pptx\"]"
+    "element": "aside[aria-label=\"Preview of Pitch deck.pptx\"]"
   },
   {
     "name": "drive/restricted-drive",
     "viewport": { "width": 1440, "height": 480 },
     "path": "{workspace}/d/{drive:ftp}",
-    "steps": [{ "waitFor": "section[aria-label=\"Files\"] [title=\"rebrand\"]" }]
+    "steps": [{ "waitFor": "section[aria-label=\"Files\"] [title=\"Clients\"]" }]
   },
   {
     "name": "drive/folder-restriction-settings",
@@ -221,26 +221,26 @@
     "clip": { "x": 0, "y": 0, "width": 760, "height": 240 },
     "path": "{workspace}/d/{drive:s3}",
     "steps": [
-      { "waitFor": "section[aria-label=\"Files\"] [title=\"preview\"]" },
-      { "dblclick": "section[aria-label=\"Files\"] [title=\"preview\"]" },
-      { "waitFor": "section[aria-label=\"Files\"] [title=\"docs\"]" },
-      { "dblclick": "section[aria-label=\"Files\"] [title=\"docs\"]" },
+      { "waitFor": "section[aria-label=\"Files\"] [title=\"Clients\"]" },
+      { "dblclick": "section[aria-label=\"Files\"] [title=\"Clients\"]" },
+      { "waitFor": "section[aria-label=\"Files\"] [title=\"Aozora Ceramics\"]" },
+      { "dblclick": "section[aria-label=\"Files\"] [title=\"Aozora Ceramics\"]" },
       {
-        "waitFor": "section[aria-label=\"Files\"] [title=\"three-pages.pdf\"]"
+        "waitFor": "section[aria-label=\"Files\"] [title=\"Rebrand\"]"
       },
       { "waitFor": "aside:has([aria-label=\"Switch drive\"]) >> text=Recent" }
     ]
   },
   {
     "name": "drive/preview-zip",
-    "path": "{workspace}/d/{drive:s3}/preview%2Farchive%2F",
+    "path": "{workspace}/d/{drive:s3}/Clients%2FAozora%20Ceramics%2FRebrand%2F",
     "steps": [
-      { "waitFor": "section[aria-label=\"Files\"] [title=\"bundle.zip\"]" },
-      { "dblclick": "section[aria-label=\"Files\"] [title=\"bundle.zip\"]" },
+      { "waitFor": "section[aria-label=\"Files\"] [title=\"logo-pack.zip\"]" },
+      { "dblclick": "section[aria-label=\"Files\"] [title=\"logo-pack.zip\"]" },
       {
-        "waitFor": "aside[aria-label=\"Preview of bundle.zip\"] >> text=readme.txt"
+        "waitFor": "aside[aria-label=\"Preview of logo-pack.zip\"] >> text=README.txt"
       }
     ],
-    "element": "aside[aria-label=\"Preview of bundle.zip\"]"
+    "element": "aside[aria-label=\"Preview of logo-pack.zip\"]"
   }
 ]

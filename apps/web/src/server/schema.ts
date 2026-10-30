@@ -45,7 +45,6 @@ import {
   WORKSPACE_AI_POLICIES,
   WORKSPACE_INVITE_ROLES,
   WORKSPACE_PHISHING_DETECTION_POLICIES,
-  WORKSPACE_PLANS,
   WORKSPACE_ROLES,
 } from "@/types/workspace";
 import { RUN_SOURCES } from "@/workflow/runtime";
@@ -71,7 +70,6 @@ const connectServerNameSchema = z.string().nullable();
 export const mailFolderSchema = z.enum(MAIL_FOLDERS);
 
 export const workspaceRoleSchema = z.enum(WORKSPACE_ROLES);
-export const workspacePlanSchema = z.enum(WORKSPACE_PLANS);
 export const inviteRoleSchema = z.enum(WORKSPACE_INVITE_ROLES);
 export const emailAddressSchema = z.email("Enter a valid email address").trim().toLowerCase();
 
@@ -1140,7 +1138,6 @@ export const workspaceSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
   slug: z.string(),
-  plan: workspacePlanSchema,
   role: workspaceRoleSchema,
   themeBrand: themeBrandSchema,
   logo: z.string().nullable(),
@@ -1432,7 +1429,6 @@ export const dashboardWorkspaceRowSchema = z.object({
   id: z.string(),
   name: z.string(),
   slug: z.string(),
-  plan: z.string(),
   aiPolicy: z.string(),
   members: z.number(),
   mailboxes: z.number(),

@@ -192,7 +192,7 @@ export default function settingsSpecs() {
   });
 
   test("detach and delete a calendar the test connected itself", async ({ page, rpc, account }) => {
-    const email = `${env.caldavStress.user}@harness.test`;
+    const email = `${env.caldavStress.user}@demo.trymetis.email`;
     await rpc("connections.createCredential", {
       email,
       credentials: {

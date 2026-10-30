@@ -1,3 +1,4 @@
+import { CLIENTS_FOLDER } from "@metis/e2e/lib/cast";
 import { WORKSPACE_CHATS } from "@metis/e2e/lib/llm-scenarios";
 import { expect, test } from "vitest";
 
@@ -87,7 +88,7 @@ test("the export holds the account's preferences, workspaces, labels, workflows 
     expect.arrayContaining(Object.values(account.driveSlugs)),
   );
   const ftp = workspace?.drives.find((d) => d.slug === account.driveSlugs.ftp);
-  expect(ftp?.visibleRootIds).toEqual(["rebrand/"]);
+  expect(ftp?.visibleRootIds).toEqual([CLIENTS_FOLDER]);
 
   const definitions = data.labels.flatMap((l) => l.definitions);
   expect(definitions).toContainEqual({
@@ -120,7 +121,7 @@ test("the export holds the account's preferences, workspaces, labels, workflows 
 test("the export holds the account's own security activity", async () => {
   const { rpc, account } = await ana();
   const ws = { workspaceSlug: account.workspaceSlug };
-  const email = `${uniqueName()}@discard.harness.test`;
+  const email = `${uniqueName()}@discard.demo.trymetis.email`;
   const { id } = await rpc<{ id: string }>("workspaces.createInvite", {
     ...ws,
     email,

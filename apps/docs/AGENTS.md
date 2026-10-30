@@ -27,7 +27,6 @@ Blume owns the Astro layer: `content/`, `pages/` and `blume.config.ts` are the a
 - **Frontmatter follows Blume's schema** (`node_modules/blume/docs/reference/frontmatter.mdx`).
 - **Images are screenshots of the real app, never mockups.** Each one comes from an entry in `screenshots/<area>.json`; a page links only images that exist once the capture has run.
 - **Every screenshot is linked as a light and dark pair, never as a Markdown image.** Blume has no themed content image, so a page writes two tags on consecutive lines, the same mechanism Blume's own logo uses: `<img src="/images/<name>.png" alt="…" class="dark:hidden" />` then `<img src="/images/<name>-dark.png" alt="…" class="hidden dark:block" />`. Blume's `dark:` variant follows its `data-theme` toggle, and both tags work in `.md` and `.mdx`.
-- **Screenshots show sample data only.** `scripts/screenshots.ts` swaps the e2e stack's test names (`harness.test`, `Harness`) for `example.com` and `Example` before capturing.
 
 ## How it works
 

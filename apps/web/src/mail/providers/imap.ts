@@ -157,6 +157,15 @@ function addressList(list: EnvelopeAddress[] | undefined): string[] {
   return (list ?? []).map((entry) => entry.address ?? "").filter((address) => address.length > 0);
 }
 
+function messageDate(message: FetchMessageObject): string {
+  for (const candidate of [message.envelope?.date, message.internalDate]) {
+    if (candidate === undefined || candidate === null) continue;
+    const parsed = new Date(candidate);
+    if (!Number.isNaN(parsed.getTime())) return parsed.toString();
+  }
+  return new Date().toString();
+}
+
 function toEmail(
   message: FetchMessageObject,
   path: string,
@@ -187,7 +196,7 @@ function toEmail(
     references: references || undefined,
     subject: envelope?.subject ? decodeMimeHeader(envelope.subject) : "",
     snippet: "",
-    date: (envelope?.date ?? message.internalDate ?? new Date()).toString(),
+    date: messageDate(message),
     isRead: flags.has("\\Seen"),
     isStarred: flags.has("\\Flagged"),
     provider: "imap",

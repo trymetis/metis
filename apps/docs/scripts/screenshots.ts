@@ -52,6 +52,7 @@ const shotsSchema = z.array(
     seededWeek: z.boolean().optional(),
     steps: z.array(stepSchema).optional(),
     element: z.union([z.string(), z.array(z.string())]).optional(),
+    pad: z.number().optional(),
     clip: boxSchema.optional(),
     fullPage: z.boolean().optional(),
     viewport: z.object({ width: z.number(), height: z.number() }).optional(),
@@ -68,15 +69,6 @@ const accountSchema = z.object({
   driveSlugs: z.record(z.string(), z.string()),
 });
 type Account = z.infer<typeof accountSchema>;
-
-const SAMPLE_TEXT: [RegExp, string][] = [
-  [/harness\.test/g, "example.com"],
-  [/Harness /g, "Example "],
-  [/git\.example\.com\/ana/g, "github.com/example"],
-  [/harness-test/g, "example-com"],
-  [/\bharness\b/g, "example"],
-  [/acme\.test/g, "acme.example"],
-];
 
 async function harness(path: string): Promise<Response> {
   const res = await fetch(`${HARNESS}${path}`);
@@ -184,36 +176,6 @@ async function run(page: Page, step: Step, a: Account) {
   else if ("scroll" in step) await page.locator(step.scroll).first().scrollIntoViewIfNeeded();
 }
 
-async function scrub(page: Page) {
-  const pairs = SAMPLE_TEXT.map(([re, to]) => [re.source, re.flags, to]);
-  for (const frame of page.frames()) {
-    await frame
-      .evaluate((samples) => {
-        const rules = samples.map(
-          ([source, flags, to]) => [new RegExp(source, flags), to] as const,
-        );
-        const swap = (s: string) => rules.reduce((acc, [re, to]) => acc.replace(re, to), s);
-        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-        for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-          if (n.parentElement?.closest('[contenteditable="true"]')) continue;
-          const value = swap(n.nodeValue ?? "");
-          if (value !== n.nodeValue) n.nodeValue = value;
-        }
-        for (const input of document.querySelectorAll("input, textarea")) {
-          if (!(input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement))
-            continue;
-          const value = swap(input.value);
-          if (value !== input.value) input.value = value;
-          const placeholder = swap(input.placeholder);
-          if (placeholder !== input.placeholder) {
-            input.placeholder = placeholder;
-          }
-        }
-      }, pairs)
-      .catch(() => {});
-  }
-}
-
 function contentBox(el: Element): Box {
   const rect = el.getBoundingClientRect();
   const solid = new Set(["svg", "img", "canvas", "button", "input", "textarea", "select"]);
@@ -234,7 +196,7 @@ function contentBox(el: Element): Box {
   };
 }
 
-async function region(page: Page, element: string | string[]): Promise<Box> {
+async function region(page: Page, element: string | string[], pad = PAD): Promise<Box> {
   const boxes: Box[] = [];
   for (const selector of Array.isArray(element) ? element : [element])
     boxes.push(await page.locator(selector).first().evaluate(contentBox));
@@ -242,10 +204,10 @@ async function region(page: Page, element: string | string[]): Promise<Box> {
     width: document.documentElement.scrollWidth,
     height: document.documentElement.scrollHeight,
   }));
-  const x = Math.max(0, Math.min(...boxes.map((b) => b.x)) - PAD);
-  const y = Math.max(0, Math.min(...boxes.map((b) => b.y)) - PAD);
-  const right = Math.min(doc.width, Math.max(...boxes.map((b) => b.x + b.width)) + PAD);
-  const bottom = Math.min(doc.height, Math.max(...boxes.map((b) => b.y + b.height)) + PAD);
+  const x = Math.max(0, Math.min(...boxes.map((b) => b.x)) - pad);
+  const y = Math.max(0, Math.min(...boxes.map((b) => b.y)) - pad);
+  const right = Math.min(doc.width, Math.max(...boxes.map((b) => b.x + b.width)) + pad);
+  const bottom = Math.min(doc.height, Math.max(...boxes.map((b) => b.y + b.height)) + pad);
   return { x, y, width: right - x, height: bottom - y };
 }
 
@@ -267,7 +229,7 @@ async function capture(page: Page, shot: Shot, path: string) {
     await page.screenshot({
       path,
       fullPage: true,
-      clip: await region(page, shot.element),
+      clip: await region(page, shot.element, shot.pad),
     });
   else await page.screenshot({ path, fullPage: shot.fullPage });
 }
@@ -308,7 +270,6 @@ async function main() {
       await page.waitForTimeout(400);
       for (const { theme, suffix } of THEMES) {
         if (theme !== "light") await switchTheme(page, theme);
-        await scrub(page);
         const file = join(OUT, `${shot.name}${suffix}.png`);
         await mkdir(dirname(file), { recursive: true });
         await capture(page, shot, file);

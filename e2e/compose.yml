@@ -254,10 +254,36 @@ services:
       timeout: 3s
       retries: 60
 
-  harness:
+  replay:
     build:
       context: ..
       dockerfile: e2e/Dockerfile
+    command: ["bun", "run", "harness/replay.ts"]
+    env_file: .env.fixture
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 128
+    networks:
+      default:
+        aliases:
+          - openrouter.ai
+          - api.typesafe.ai
+      egress: {}
+    healthcheck:
+      test:
+        - CMD
+        - bun
+        - -e
+        - 'fetch("http://127.0.0.1:8080/health").then(r=>process.exit(r.ok?0:1),()=>process.exit(1))'
+      interval: 2s
+      timeout: 3s
+      retries: 60
+
+  seed:
+    build:
+      context: ..
+      dockerfile: e2e/Dockerfile
+    command: ["bun", "run", "harness/seed.ts"]
     env_file: .env.fixture
     mem_limit: 2g
     cpus: 2
@@ -268,15 +294,6 @@ services:
     depends_on:
       preflight:
         condition: service_completed_successfully
-    healthcheck:
-      test:
-        - CMD
-        - bun
-        - -e
-        - 'fetch("http://127.0.0.1:8080/health").then(r=>process.exit(r.ok?0:1),()=>process.exit(1))'
-      interval: 3s
-      timeout: 3s
-      retries: 200
 
   updater:
     build:
@@ -330,12 +347,18 @@ services:
         condition: service_healthy
       proxy:
         condition: service_started
+      replay:
+        condition: service_healthy
 
   worker:
     build:
       context: ..
       target: worker
     env_file: .env.fixture
+    environment:
+      NODE_EXTRA_CA_CERTS: /etc/metis-e2e/ca.crt
+    volumes:
+      - ./tls/ca.crt:/etc/metis-e2e/ca.crt:ro
     mem_limit: 1g
     cpus: 1
     pids_limit: 256
@@ -365,8 +388,10 @@ services:
     cpus: 2
     pids_limit: 512
     depends_on:
-      harness:
+      replay:
         condition: service_healthy
+      seed:
+        condition: service_completed_successfully
       mcp-client:
         condition: service_healthy
       updater:
@@ -408,10 +433,10 @@ services:
     networks:
       default:
         aliases:
-          - mcp-client-private.harness.test
+          - mcp-private.quillmate.app
       cimd:
         aliases:
-          - mcp-client.harness.test
+          - mcp.quillmate.app
     healthcheck:
       test: ["CMD", "/fakes", "health", "http://127.0.0.1:8080/health"]
       interval: 2s

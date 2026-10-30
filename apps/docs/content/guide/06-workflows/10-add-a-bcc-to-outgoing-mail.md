@@ -14,7 +14,7 @@ Use this to keep a copy of your sent mail in an archive mailbox, or to copy a te
 3. From the **Triggers** category of the step palette, click or drag **Before mail is sent** onto the canvas. You can also press **w** then **a** and search for it.
 4. With the trigger selected, choose under **Only from** in the Inspector: one mailbox, so the copy is only added to mail sent from that address, or leave it empty for every mailbox.
 5. From the **Mail** category of the step palette, add **Add a Bcc**.
-6. With **Add a Bcc** selected, enter the address to copy under **Address** in the Inspector, for example `archive@example.com`.
+6. With **Add a Bcc** selected, enter the address to copy under **Address** in the Inspector, for example `archive@demo.trymetis.email`.
 
    <img src="/images/workflows/bcc-steps.png" alt="The Before mail is sent and Add a Bcc cards on the canvas, with archive@example.com as the Bcc address" class="dark:hidden" />
    <img src="/images/workflows/bcc-steps-dark.png" alt="The Before mail is sent and Add a Bcc cards on the canvas, with archive@example.com as the Bcc address" class="hidden dark:block" />

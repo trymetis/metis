@@ -30,7 +30,6 @@ import type { ThreadSummary } from "@/types/thread-summary";
 import {
   WORKSPACE_AI_POLICIES,
   WORKSPACE_PHISHING_DETECTION_POLICIES,
-  WORKSPACE_PLANS,
   WORKSPACE_ROLES,
 } from "@/types/workspace";
 import type {
@@ -69,7 +68,6 @@ export const workspace = sqliteTable(
     id: text("id").primaryKey(),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
-    plan: text("plan", { enum: WORKSPACE_PLANS }).notNull().default("free"),
     aiPolicy: text("ai_policy", { enum: WORKSPACE_AI_POLICIES }).notNull().default("optional"),
     phishingDetectionPolicy: text("phishing_detection_policy", {
       enum: WORKSPACE_PHISHING_DETECTION_POLICIES,

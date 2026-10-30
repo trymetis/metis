@@ -1,3 +1,4 @@
+import { REBRAND_FOLDER } from "@metis/e2e/lib/cast";
 import { LATE_ARRIVAL_WORKFLOW } from "@metis/e2e/lib/late-arrival";
 import {
   AGENT_WORKFLOW,
@@ -191,23 +192,23 @@ export function seededWorkflows(ids: SeedIds): SeededWorkflow[] {
       ),
     },
     {
-      name: "Collect rebrand and GitHub mail",
+      name: "Collect rebrand and Codeyard mail",
       enabled: true,
       graph: graph(
         [
           manual(),
           inbox(mailboxId, 1, 50),
           contains("rebrand", "subject", "Rebrand", 2, 0),
-          contains("github", "from", "github", 2, 1),
+          contains("codeyard", "from", "codeyard", 2, 1),
           node("append", "logic.merge", at(3)),
           label("label", "work", 4),
         ],
         [
           edge("e1", "manual", "inbox"),
           edge("e2", "inbox", "rebrand"),
-          edge("e3", "inbox", "github"),
+          edge("e3", "inbox", "codeyard"),
           edge("e4", "rebrand", "append", "out", "in:0"),
-          edge("e5", "github", "append", "out", "in:1"),
+          edge("e5", "codeyard", "append", "out", "in:1"),
           edge("e6", "append", "label"),
         ],
       ),
@@ -398,7 +399,7 @@ export function seededWorkflows(ids: SeedIds): SeededWorkflow[] {
         [
           node("added", "trigger.drive.added", at(0), {
             drive: lit(driveId),
-            folder: lit("rebrand"),
+            folder: lit(REBRAND_FOLDER.replace(/\/$/, "")),
           }),
           node("read", "drive.readText", at(1), { file: cel("item") }),
         ],

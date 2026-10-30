@@ -1,3 +1,4 @@
+import { CLIENTS_FOLDER, REBRAND_FOLDER } from "@metis/e2e/lib/cast";
 import { eq } from "drizzle-orm";
 
 import { setDriveVisibility } from "../../../src/connections";
@@ -45,7 +46,7 @@ export async function seedWorkspaceState(account: Account, resources: Resources)
       id: crypto.randomUUID(),
       userId,
       driveId: driveLink(kind).driveId,
-      folderId: "rebrand/",
+      folderId: REBRAND_FOLDER,
       label: "Rebrand",
       createdAt: new Date(),
     });
@@ -54,7 +55,7 @@ export async function seedWorkspaceState(account: Account, resources: Resources)
   await setDriveVisibility({
     linkId: driveLink("ftp").linkId,
     workspaceId,
-    visibleRootIds: ["rebrand/"],
+    visibleRootIds: [CLIENTS_FOLDER],
   });
 
   await db

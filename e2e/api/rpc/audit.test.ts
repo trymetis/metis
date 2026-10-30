@@ -6,7 +6,7 @@ import { signIn } from "../../clients/sign-in";
 import { uniqueName } from "../support/poll";
 import { ana, totpCode } from "../support/session";
 
-const OUTSIDE_DOMAIN = "discard.harness.test";
+const OUTSIDE_DOMAIN = "discard.demo.trymetis.email";
 
 interface AuditEvent {
   id: string;

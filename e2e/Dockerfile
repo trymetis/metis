@@ -9,4 +9,3 @@ COPY --from=pruner /app/out/json/ .
 RUN bun install --frozen-lockfile --production
 COPY --from=pruner /app/out/full/ .
 WORKDIR /app/e2e
-CMD ["bun", "run", "harness/main.ts"]

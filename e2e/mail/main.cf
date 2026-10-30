@@ -1,17 +1,17 @@
 compatibility_level = 3.10
-myhostname = mta.harness.test
-mydomain = harness.test
-myorigin = harness.test
+myhostname = mta.demo.trymetis.email
+mydomain = demo.trymetis.email
+myorigin = demo.trymetis.email
 mydestination =
 inet_interfaces = loopback-only
 inet_protocols = ipv4
 mynetworks = 127.0.0.0/8
 
 smtpd_relay_restrictions = permit_mynetworks, reject
-smtpd_recipient_restrictions = check_recipient_access inline:{ discard.harness.test=DISCARD }, permit_mynetworks, reject
+smtpd_recipient_restrictions = check_recipient_access inline:{ discard.demo.trymetis.email=DISCARD, kestrelsupply.com=DISCARD }, permit_mynetworks, reject
 
 virtual_alias_domains =
-virtual_alias_maps = regexp:{ {/^system@system\.harness\.test$$/ system@system.harness.test}, {/@system\.harness\.test$$/ system@system.harness.test}, {/./ ana@harness.test} }
+virtual_alias_maps = regexp:{ {/^system@notify\.demo\.trymetis\.email$$/ system@notify.demo.trymetis.email}, {/@notify\.demo\.trymetis\.email$$/ system@notify.demo.trymetis.email}, {/./ ana@demo.trymetis.email} }
 virtual_mailbox_domains = static:all
 virtual_mailbox_maps = static:ok
 virtual_transport = lmtp:inet:127.0.0.1:31024

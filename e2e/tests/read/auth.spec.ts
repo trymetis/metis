@@ -37,10 +37,12 @@ test("a magic-link request for an unknown address answers exactly like one for a
     };
   };
   const known = await ask(account.email);
-  const unknown = await ask("nobody-here@harness.test");
+  const unknown = await ask("nobody-here@demo.trymetis.email");
   expect(unknown.status).toBe(known.status);
   expect(unknown.body).toBe(known.body);
-  expect(unknown.screen.replace("nobody-here@harness.test", account.email)).toBe(known.screen);
+  expect(unknown.screen.replace("nobody-here@demo.trymetis.email", account.email)).toBe(
+    known.screen,
+  );
 });
 
 test("without a session, app pages redirect to sign-in and the API answers 401", async ({

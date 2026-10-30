@@ -1,10 +1,13 @@
+import { APPROVED_FOLDER, SUBJECTS } from "./cast";
+
 export const INBOX_PAGE_SIZE = 100;
 export const CLASSIFY_BATCH_SIZE = 25;
 export const VIEWER_TIME_ZONE = "UTC";
+export const GATED_SUBJECTS = ["jsonld-50-blocks", "jsonld-hostile-urls"] as const;
 
 export const MAIL_CHAT = {
   folder: "inbox",
-  attachedSubject: "Rebrand kickoff",
+  attachedSubject: SUBJECTS.kickoff,
   turns: [
     "Summarize this email and tell me what I need to do next.",
     "Who sent it, and who else is on the thread?",
@@ -18,7 +21,7 @@ export const MAIL_CHAT = {
     "Which carrier is it shipping with, and is there a tracking link?",
     "Did I get a bank alert recently? What was the amount?",
     "Which account was it debited from?",
-    "Is there a GitHub verification code email? Tell me what it is for without repeating the code.",
+    "Is there a Codeyard verification code email? Tell me what it is for without repeating the code.",
     "Of everything we looked at, what is the single most urgent thing?",
     "Give me a three-line recap of this whole conversation.",
   ],
@@ -69,13 +72,13 @@ export const DRIVE_CHAT = {
 
 export const APPROVAL_CHAT = {
   drive: "webdav",
-  parentFolder: "rebrand/",
-  folder: "approved-by-e2e",
-  turn: "Create a folder named approved-by-e2e inside the rebrand folder of my WebDAV drive.",
+  parentFolder: "Team/",
+  folder: APPROVED_FOLDER,
+  turn: `Make a folder called ${APPROVED_FOLDER} in Team on my WebDAV drive.`,
 } as const;
 
 export const MCP_CALLS = {
-  summarySubject: "Rebrand kickoff",
+  summarySubject: SUBJECTS.kickoff,
   previewWorkflow: "Triage with the decision model",
   previewLimit: 10,
 } as const;

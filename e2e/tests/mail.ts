@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import type { Rpc } from "./fixtures";
-import { type Account, mailPath } from "./harness";
+import { type Account, harness, mailPath } from "./harness";
 
 export const BUILT_IN_LABELS = [
   "Action Required",
@@ -13,6 +13,23 @@ export const BUILT_IN_LABELS = [
   "Promotional",
   "Social",
 ] as const;
+
+async function mailboxLink(rpc: Rpc, account: Account): Promise<string> {
+  const { mailboxes } = await rpc<{
+    mailboxes: { linkId: string; email: string }[];
+  }>("workspaceMailboxes.list", { workspaceSlug: account.workspaceSlug });
+  const linkId = mailboxes.find((m) => m.email === account.email)?.linkId;
+  if (!linkId) throw new Error("Ana's mailbox is not linked");
+  return linkId;
+}
+
+export async function setMailboxAi(rpc: Rpc, account: Account, on: boolean): Promise<void> {
+  await rpc("mailboxes.setPolicy", {
+    linkId: await mailboxLink(rpc, account),
+    aiEnabled: on,
+    ...(on ? { code: await harness.totp() } : {}),
+  });
+}
 
 export function mailList(page: Page): Locator {
   return page.getByRole("main").locator('[aria-roledescription="draggable"]');
@@ -82,6 +99,17 @@ export function bulkToolbar(page: Page): Locator {
 export async function openMail(page: Page, subject: string): Promise<void> {
   await mailRow(page, subject).click();
   await expect(messageHeading(page)).toHaveText(subject);
+  await expect(messageToolbar(page)).toBeVisible();
+}
+
+export async function searchAndOpen(page: Page, query: string, subject = query): Promise<void> {
+  const search = page.getByRole("textbox", { name: "Search emails" });
+  await search.fill(query);
+  await search.press("Enter");
+  const row = mailRow(page, subject).first();
+  await expect(row).toBeVisible({ timeout: 60_000 });
+  await row.click();
+  await expect(messageHeading(page)).toHaveText(subject, { timeout: 60_000 });
   await expect(messageToolbar(page)).toBeVisible();
 }
 

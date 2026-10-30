@@ -289,7 +289,7 @@ func (f *resendFake) inbound(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := newID()
-	messageID := fmt.Sprintf("<%s@inbound.harness.test>", id)
+	messageID := fmt.Sprintf("<%s@updates.demo.trymetis.email>", id)
 	created := time.Now().UTC()
 	raw := strings.Join([]string{
 		"From: " + body.From,

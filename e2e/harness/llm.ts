@@ -25,7 +25,7 @@ export function listModels(): Response {
 }
 
 export async function handleLlm(req: Request): Promise<Response> {
-  const path = new URL(req.url).pathname.replace(/^\/v1/, "");
+  const path = new URL(req.url).pathname.replace(/^(\/api)?\/v1/, "");
   const request = z.record(z.string(), z.unknown()).parse(await req.json());
   const key = llmKey(path, request);
   const seed = seeds[key];

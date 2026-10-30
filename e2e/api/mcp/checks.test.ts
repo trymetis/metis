@@ -59,7 +59,7 @@ function sample(schema: JsonSchema): unknown {
   const type = Array.isArray(schema.type) ? schema.type.find((t) => t !== "null") : schema.type;
   switch (type) {
     case "string": {
-      if (schema.format === "email") return "nobody@discard.harness.test";
+      if (schema.format === "email") return "nobody@discard.demo.trymetis.email";
       if (schema.format === "date-time") return "2030-01-01T00:00:00.000Z";
       if (schema.format === "uri") return "https://example.org/";
       if (schema.pattern) {

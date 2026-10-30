@@ -1,5 +1,6 @@
 import { writeFile } from "node:fs/promises";
 
+import { SUBJECTS } from "@metis/e2e/lib/cast";
 import { env } from "@metis/e2e/lib/env";
 import { deleteLateArrival } from "@metis/e2e/lib/late-arrival";
 import { INBOX_PAGE_SIZE } from "@metis/e2e/lib/llm-scenarios";
@@ -14,8 +15,8 @@ import type { Email } from "../../../../src/types/mail";
 import { removeApprovalFolder } from "./approval-folder";
 import { findEmail, type StepContext, type World } from "./context";
 
-const MUTED_SUBJECT = "[GitHub] Your sign-in verification code";
-const READ_LATER_SUBJECT = "Your order A-42 has shipped";
+const MUTED_SUBJECT = SUBJECTS.otp;
+const READ_LATER_SUBJECT = SUBJECTS.shipment;
 
 export async function run(ctx: StepContext): Promise<void> {
   const { mail } = ctx.session;

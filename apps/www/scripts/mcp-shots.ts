@@ -98,16 +98,6 @@ const SHOTS: Shot[] = [
 
 const SMOKE_COMMAND = "claude mcp list";
 
-const SAMPLE_TEXT: [RegExp, string][] = [
-  [/harness\.test/g, "example.com"],
-  [/Harness /g, "Example "],
-  [/git\.example\.com\/ana/g, "github.com/example"],
-  [/harness-test/g, "example-com"],
-  [/\bharness\b/g, "example"],
-  [/acme\.test/g, "acme.example"],
-  [/\be2e\b/gi, "team"],
-];
-
 const FRAME_CSS = `
 html, body { margin: 0; height: 100%; background: ${BACKDROP}; overflow: hidden; }
 #mcp-window {
@@ -319,7 +309,6 @@ async function authorize(browser: Browser, ctx: BrowserContext, consentFile: str
       const approve = page.getByRole("main").getByRole("button", { name: "Approve", exact: true });
       await approve.waitFor();
       if (consentFile) {
-        await scrub(page);
         await mkdir(dirname(consentFile), { recursive: true });
         await page.screenshot({ path: consentFile, type: "jpeg", quality: 90 });
       }
@@ -407,18 +396,6 @@ async function waitForText(page: Page, text: string, timeoutMs: number) {
   throw new Error(`"${text}" did not appear within ${timeoutMs}ms`);
 }
 
-async function scrub(page: Page) {
-  const pairs = SAMPLE_TEXT.map(([re, to]): [string, string, string] => [re.source, re.flags, to]);
-  await page.evaluate((samples) => {
-    const rules = samples.map(([source, flags, to]) => [new RegExp(source, flags), to] as const);
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-      const value = rules.reduce((acc, [re, to]) => acc.replace(re, to), n.nodeValue ?? "");
-      if (value !== n.nodeValue) n.nodeValue = value;
-    }
-  }, pairs);
-}
-
 async function capture(browser: Browser, shot: Shot, file: string) {
   const page = await browser.newPage({
     viewport: VIEWPORT,
@@ -452,7 +429,6 @@ async function capture(browser: Browser, shot: Shot, file: string) {
       console.error(`[mcp-shots] screen at failure: ${failed}`);
       throw error;
     }
-    await scrub(page);
     await mkdir(dirname(file), { recursive: true });
     await page.screenshot({ path: file, type: "jpeg", quality: 90 });
   } finally {

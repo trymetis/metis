@@ -30,6 +30,7 @@ const WORKFLOW_TABLES = [
 ] as const;
 const EXPLICIT_FTP_DRIVES = new Set(["ftps", "ftp"]);
 const INBOX = "imap:inbox";
+const RECORDED_FOLDERS = ["sent", "drafts", "archive", "spam", "trash"] as const;
 
 function scenario(fields: Pick<Scenario, "id" | "step"> & Partial<Scenario>): Scenario {
   return {
@@ -75,6 +76,15 @@ export function catalog(driveKinds: string[]): Scenario[] {
       from: "world",
       timeoutMs: 30 * MINUTE,
     }),
+    ...RECORDED_FOLDERS.map((folder) =>
+      scenario({
+        id: `mail:${folder}`,
+        step: "mail",
+        arg: folder,
+        timeoutMs: 30 * MINUTE,
+      }),
+    ),
+    scenario({ id: "mail:gated", step: "mail", arg: "gated" }),
     workspaceChat("stored", { mastra: true }),
     scenario({
       id: "mail:llm",

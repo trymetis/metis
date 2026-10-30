@@ -41,7 +41,7 @@ const SEEDED_WORKFLOWS = [
   "Label rebrand mail",
   "Morning newsletter sweep",
   "File new mail from Raj",
-  "Collect rebrand and GitHub mail",
+  "Collect rebrand and Codeyard mail",
   "Label orders once both checks finish",
   "Triage with the decision model",
   "Triage new mail",
@@ -147,7 +147,12 @@ for (const era of ERAS) {
         }),
         z.object({ calendars: z.array(z.object({ name: z.string() })) }),
       );
-      expect(calendars.map((c) => c.name).toSorted()).toEqual(["Bulk", "Edge cases", "Work"]);
+      expect(calendars.map((c) => c.name).toSorted()).toEqual([
+        "Bulk",
+        "Edge cases",
+        "Personal",
+        "Work",
+      ]);
 
       const { workflows } = toolJson(
         await client.callTool({

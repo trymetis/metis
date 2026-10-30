@@ -30,7 +30,7 @@ test("a move across drives on /d/all is refused", async () => {
   await rpc("drive.createFolder", { ...scope, parentId: from?.id, name });
   try {
     const source = (await list(rpc, account, from?.id ?? null)).find((e) => e.name === name);
-    const target = (await list(rpc, account, to?.id ?? null)).find((e) => e.name === "rebrand");
+    const target = (await list(rpc, account, to?.id ?? null)).find((e) => e.name === "Clients");
     expect(source).toBeDefined();
     expect(target).toBeDefined();
     await expect(

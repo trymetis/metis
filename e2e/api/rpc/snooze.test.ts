@@ -36,7 +36,7 @@ test("a message snoozed from the archive wakes up back in the archive", async ()
   await withImap((client) =>
     client.append(
       "Archive",
-      `From: snooze@harness.test\r\nTo: ${env.imap.user}\r\nSubject: ${subject}\r\nDate: ${new Date().toUTCString()}\r\n\r\nSnoozed from the archive.\r\n`,
+      `From: snooze@demo.trymetis.email\r\nTo: ${env.imap.user}\r\nSubject: ${subject}\r\nDate: ${new Date().toUTCString()}\r\n\r\nSnoozed from the archive.\r\n`,
       ["\\Seen"],
     ),
   );

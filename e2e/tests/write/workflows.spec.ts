@@ -30,7 +30,7 @@ export default function workflowSpecs() {
       await canvas.getByRole("group", { name: "If", exact: true }).click();
       await inspector
         .getByRole("textbox", { name: "Condition" })
-        .fill('item.from == "nobody@discard.harness.test"');
+        .fill('item.from == "nobody@discard.demo.trymetis.email"');
       await canvas.getByRole("group", { name: "Label", exact: true }).click();
       await inspector.getByRole("combobox", { name: "Label" }).click();
       await page.getByRole("option", { name: "Work", exact: true }).click();
@@ -180,13 +180,13 @@ export default function workflowSpecs() {
       expect(rebrand.status).toBe("completed");
       expect(nodeOf(rebrand, "label").items.length).toBeGreaterThan(0);
 
-      const append = await runWorkflow(rpc, account, "Collect rebrand and GitHub mail");
+      const append = await runWorkflow(rpc, account, "Collect rebrand and Codeyard mail");
       expect(append.status).toBe("completed");
       const appended = nodeOf(append, "append").items.map((i) => i.id);
       expect(new Set(appended).size).toBe(appended.length);
       const fromBranches = new Set([
         ...nodeOf(append, "rebrand").items.map((i) => i.id),
-        ...nodeOf(append, "github").items.map((i) => i.id),
+        ...nodeOf(append, "codeyard").items.map((i) => i.id),
       ]);
       expect(nodeOf(append, "label").items.length).toBeLessThanOrEqual(fromBranches.size);
 
@@ -204,7 +204,7 @@ export default function workflowSpecs() {
       await expect(
         page.getByRole("heading", {
           level: 1,
-          name: "Collect rebrand and GitHub mail",
+          name: "Collect rebrand and Codeyard mail",
         }),
       ).toBeVisible();
       await page.getByRole("group", { name: /^Merge: / }).click();

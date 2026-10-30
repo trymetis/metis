@@ -1,32 +1,33 @@
 import { env } from "../lib/env";
-import { seedCalendar, seedStressCalendar } from "../seed/calendar";
-import { seedFiles } from "../seed/files";
-import { seedMail } from "../seed/mail";
-import { rejections } from "../seed/report";
-import { ftpSink } from "../seed/sinks/ftp";
-import { s3Sink } from "../seed/sinks/s3";
-import { sftpSink } from "../seed/sinks/sftp";
-import { webdavSink } from "../seed/sinks/webdav";
 import { consoleMailRoutes } from "./console-mail";
-import { loadMastraSeedSql, loadSeedSql } from "./database";
 import { handleLlm, listHits, listMisses, listModels, llmSeedCount } from "./llm";
 import { pixelRoutes } from "./pixels";
 import { loadEnrollment, totpRoutes } from "./totp";
 
 const PORT = 8080;
+const MODELS_PORT = 443;
+const MODELS_TLS = new URL("./tls/", import.meta.url);
 
 const enrollment = await loadEnrollment();
 
-await loadSeedSql();
-await loadMastraSeedSql();
+const modelRoutes = {
+  "/v1/models": { GET: listModels },
+  "/api/v1/models": { GET: listModels },
+  "/v1/*": { POST: handleLlm },
+  "/api/v1/*": { POST: handleLlm },
+};
 
-await seedMail(env.imap);
-await seedCalendar(env.caldav);
-await seedStressCalendar(env.caldavStress);
-await seedFiles(await s3Sink(env.s3), { bulkConcurrency: 32 });
-await seedFiles(await webdavSink(env.webdav));
-await seedFiles(await ftpSink(env.ftp));
-await seedFiles(await sftpSink(env.sftp));
+Bun.serve({
+  port: MODELS_PORT,
+  hostname: "0.0.0.0",
+  idleTimeout: 255,
+  tls: {
+    cert: Bun.file(new URL("models.crt", MODELS_TLS)),
+    key: Bun.file(new URL("models.key", MODELS_TLS)),
+  },
+  routes: modelRoutes,
+  fetch: () => new Response("not found\n", { status: 404 }),
+});
 
 Bun.serve({
   port: PORT,
@@ -34,10 +35,9 @@ Bun.serve({
   idleTimeout: 255,
   routes: {
     "/health": new Response("ok\n"),
-    "/v1/models": { GET: listModels },
+    ...modelRoutes,
     "/llm-misses": { GET: listMisses },
     "/llm-hits": { GET: listHits },
-    "/v1/*": { POST: handleLlm },
     ...totpRoutes(enrollment),
     ...pixelRoutes(),
     ...consoleMailRoutes(env.consoleMail.token),
@@ -66,7 +66,6 @@ console.log(
           `/w/${enrollment.workspaceSlug}/d/${slug}`,
         ]),
       ),
-      rejectedByTestServers: rejections(),
     },
     null,
     2,

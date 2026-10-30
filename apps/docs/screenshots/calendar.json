@@ -33,7 +33,7 @@
         "click": "role=menuitem[name=/^Month/]"
       },
       {
-        "waitFor": "role=button[name=\"3pm Design review\"]"
+        "waitFor": "role=button[name=\"9am Daily standup\"]"
       }
     ]
   },
@@ -79,7 +79,7 @@
       },
       {
         "fill": "role=dialog[name=\"New event\"] >> role=textbox[name=\"Guest 1\"]",
-        "value": "sam@example.com"
+        "value": "sam@demo.trymetis.email"
       },
       {
         "fill": "role=dialog[name=\"New event\"] >> role=textbox[name=\"Location\"]",
@@ -93,7 +93,7 @@
         "click": "role=dialog[name=\"New event\"] >> role=combobox[name=\"Calendar\"]"
       },
       {
-        "click": "role=listbox >> role=option[name=\"Work · ana@harness.test\"]"
+        "click": "role=listbox >> role=option[name=\"Work · ana@demo.trymetis.email\"]"
       },
       {
         "waitFor": "role=dialog[name=\"New event\"] >> role=combobox[name=\"Calendar\"] >> text=Work"

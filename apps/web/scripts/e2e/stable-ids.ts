@@ -73,6 +73,12 @@ function naturalKeys(path: string): Map<string, string> {
     keys.set(r.id, `signup_invite:${r.email}`);
   }
   for (const r of rows(
+    { id: text, action: text, actor_email: text, target_label: text },
+    `SELECT id, action, actor_email, coalesce(target_label, '') AS target_label FROM "audit_event"`,
+  )) {
+    keys.set(r.id, `audit_event:${r.action}:${r.actor_email}:${r.target_label}`);
+  }
+  for (const r of rows(
     { id: text, client_id: text, resource_id: text },
     `SELECT id, client_id, resource_id FROM "oauth_client_resource"`,
   )) {

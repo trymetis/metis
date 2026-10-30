@@ -67,14 +67,14 @@ test("opening a message shows its summary card and three smart replies", async (
   await expect(
     main.getByRole("button", { name: "Reply 3 smart replies", exact: true }),
   ).toBeVisible();
-  await expect(main.getByRole("button", { name: "Confirm both" })).toBeVisible();
+  await expect(main.getByRole("button", { name: "Accept both" })).toBeVisible();
 });
 
 test("the muted thread is kept out of the inbox list", async ({ page, account }) => {
   await page.goto(mailPath(account));
   await showTab(page, "All");
   await expect(mailRow(page, "Rebrand kickoff")).toBeVisible();
-  await expect(mailRow(page, "[GitHub] Your sign-in verification code")).toHaveCount(0);
+  await expect(mailRow(page, "[Codeyard] Your sign-in verification code")).toHaveCount(0);
 });
 
 test("the read-later message is listed under Read later", async ({ page, account }) => {
@@ -88,7 +88,7 @@ test("the seeded scheduled send is listed under Scheduled", async ({ page, accou
   await page.goto(mailPath(account, "scheduled"));
   await expect(page.getByRole("heading", { level: 2, name: "Pending (1)" })).toBeVisible();
   const row = scheduledRow(page, "Moodboard for the rebrand");
-  await expect(row).toContainText("To: ana@harness.test");
+  await expect(row).toContainText("To: ana@demo.trymetis.email");
   await expect(row.getByRole("button", { name: "Cancel" })).toBeVisible();
 });
 

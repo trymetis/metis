@@ -78,7 +78,7 @@ export default function memberSpecs() {
       });
 
       const attached = await second.rpc<{ slug: string | null }>("connections.createCredential", {
-        email: `${env.caldavStress.user}@harness.test`,
+        email: `${env.caldavStress.user}@demo.trymetis.email`,
         credentials: {
           provider: "caldav",
           server: env.servers.caldav,
@@ -92,13 +92,13 @@ export default function memberSpecs() {
         (
           await rpc<{ calendars: { email: string }[] }>("workspaceCalendars.list", ws)
         ).calendars.map((c) => c.email);
-      expect(await calendarsOf()).toContain(`${env.caldavStress.user}@harness.test`);
+      expect(await calendarsOf()).toContain(`${env.caldavStress.user}@demo.trymetis.email`);
 
       await rpc("workspaces.removeMember", {
         ...ws,
         memberId: await memberId(rpc, account.workspaceSlug, user.email),
       });
-      expect(await calendarsOf()).not.toContain(`${env.caldavStress.user}@harness.test`);
+      expect(await calendarsOf()).not.toContain(`${env.caldavStress.user}@demo.trymetis.email`);
       const { workspaces } = await second.rpc<{
         workspaces: { slug: string }[];
       }>("workspaces.list");
@@ -302,7 +302,7 @@ export default function memberSpecs() {
     account,
   }, testInfo) => {
     const ws = { workspaceSlug: account.workspaceSlug };
-    const email = `${uniqueName(testInfo)}@discard.harness.test`;
+    const email = `${uniqueName(testInfo)}@discard.demo.trymetis.email`;
     const { id } = await rpc<{ id: string }>("workspaces.createInvite", {
       ...ws,
       email,

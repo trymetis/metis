@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 
+import { CLIENTS_FOLDER } from "@metis/e2e/lib/cast";
 import type { Page } from "@playwright/test";
 
 import { driveSidebar, entry, entryActions, folderPath } from "../drive";
@@ -53,7 +54,7 @@ export default function driveSpecs() {
       account,
     }, testInfo) => {
       const driveSlug = account.driveSlugs[kind] ?? "";
-      const base = kind === "ftp" ? "rebrand/" : null;
+      const base = kind === "ftp" ? CLIENTS_FOLDER : null;
       const root = base ? folderPath(drivePath(account, kind), base) : drivePath(account, kind);
       const folder = uniqueName(testInfo);
 
@@ -140,18 +141,18 @@ export default function driveSpecs() {
 
   test("pin a folder to the sidebar and unpin it", async ({ page, account }) => {
     await page.goto(drivePath(account, "sftp"));
-    await expect(entry(page, "preview")).toBeVisible();
-    await entryAction(page, "preview", "Pin to sidebar");
+    await expect(entry(page, "Team")).toBeVisible();
+    await entryAction(page, "Team", "Pin to sidebar");
     const sidebar = driveSidebar(page);
-    const unpin = sidebar.getByRole("button", { name: "Unpin preview" });
+    const unpin = sidebar.getByRole("button", { name: "Unpin Team" });
     await expect(unpin).toBeVisible();
     await page.reload();
     await expect(unpin).toBeVisible();
-    await sidebar.getByRole("button", { name: "preview", exact: true }).click();
-    await expect(page).toHaveURL(new RegExp(encodeURIComponent("preview/")));
+    await sidebar.getByRole("button", { name: "Team", exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(encodeURIComponent("Team/")));
     await unpin.click();
     await expect(unpin).toHaveCount(0);
     await page.reload();
-    await expect(sidebar.getByRole("button", { name: "Unpin preview" })).toHaveCount(0);
+    await expect(sidebar.getByRole("button", { name: "Unpin Team" })).toHaveCount(0);
   });
 }

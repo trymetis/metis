@@ -78,7 +78,7 @@ test(
     try {
       await setSection(rpc, "mailer", {
         driver: "smtp",
-        mailFrom: "Metis Suite <noreply@harness.test>",
+        mailFrom: "Metis Suite <noreply@notify.demo.trymetis.email>",
         host: env.imap.host,
         port: env.imap.smtpPort,
         user: env.imap.user,

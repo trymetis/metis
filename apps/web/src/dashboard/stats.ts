@@ -399,7 +399,6 @@ export async function dashboardWorkspaces(): Promise<DashboardWorkspaces> {
         id: workspace.id,
         name: workspace.name,
         slug: workspace.slug,
-        plan: workspace.plan,
         aiPolicy: workspace.aiPolicy,
         createdAt: workspace.createdAt,
       })
@@ -439,7 +438,6 @@ export async function dashboardWorkspaces(): Promise<DashboardWorkspaces> {
       id: row.id,
       name: row.name,
       slug: row.slug,
-      plan: row.plan,
       aiPolicy: row.aiPolicy,
       members: memberCounts.get(row.id) ?? 0,
       mailboxes: mailboxCounts.get(row.id) ?? 0,

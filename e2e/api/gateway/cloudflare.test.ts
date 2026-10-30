@@ -5,7 +5,7 @@ import { uniqueName, until } from "../support/poll";
 import { ana } from "../support/session";
 
 const { url: GATEWAY, domain: DOMAIN, adminToken: ADMIN } = env.gateway;
-const SERVER = "Harness Cloudflare";
+const SERVER = "Fernhill Inbound";
 
 interface WireEmail {
   id: string;
@@ -60,7 +60,7 @@ async function deliver(
   mail: { subject: string; messageId: string; date?: string },
 ): Promise<void> {
   const raw = [
-    "From: Raj Mehta <raj@harness.test>",
+    "From: Raj Mehta <raj@demo.trymetis.email>",
     `To: ${to}`,
     `Subject: ${mail.subject}`,
     `Date: ${mail.date ?? new Date().toUTCString()}`,
@@ -72,7 +72,7 @@ async function deliver(
     "",
   ].join("\r\n");
   const res = await fetch(
-    `${GATEWAY}/cdn-cgi/local/email?from=raj@harness.test&to=${encodeURIComponent(to)}`,
+    `${GATEWAY}/cdn-cgi/local/email?from=raj@demo.trymetis.email&to=${encodeURIComponent(to)}`,
     { method: "POST", body: raw },
   );
   expect(res.status, await res.clone().text()).toBe(200);
@@ -119,7 +119,7 @@ describe("the /v1 contract", () => {
     const subject = `${uniqueName()} for bo`;
     await deliver(boAddress, {
       subject,
-      messageId: `<${uniqueName()}@harness.test>`,
+      messageId: `<${uniqueName()}@demo.trymetis.email>`,
     });
     expect((await inbox(boToken)).map((e) => e.subject)).toContain(subject);
     expect((await inbox(anaToken)).map((e) => e.subject)).not.toContain(subject);
@@ -127,7 +127,7 @@ describe("the /v1 contract", () => {
       method: "POST",
       body: {
         from: boAddress,
-        to: [`x@discard.harness.test`],
+        to: [`x@discard.demo.trymetis.email`],
         subject: "spoofed",
         html: "<p>no</p>",
       },
@@ -137,7 +137,7 @@ describe("the /v1 contract", () => {
 
   test("ingest normalises the recipient and skips a known Message-ID", async () => {
     const subject = uniqueName();
-    const messageId = `<${uniqueName()}@harness.test>`;
+    const messageId = `<${uniqueName()}@demo.trymetis.email>`;
     await deliver(anaAddress.toUpperCase(), { subject, messageId });
     await deliver(anaAddress, { subject, messageId });
     const copies = (await inbox(anaToken)).filter((e) => e.subject === subject);
@@ -149,7 +149,7 @@ describe("the /v1 contract", () => {
     for (const [index, day] of ["10", "11", "12"].entries()) {
       await deliver(anaAddress, {
         subject: `${tag} page ${index}`,
-        messageId: `<${tag}-${index}@harness.test>`,
+        messageId: `<${tag}-${index}@demo.trymetis.email>`,
         date: `Mon, ${day} Aug 2026 09:00:00 +0000`,
       });
     }
@@ -181,7 +181,7 @@ describe("the /v1 contract", () => {
       method: "POST",
       body: {
         from: anaAddress,
-        to: ["out@discard.harness.test"],
+        to: ["out@discard.demo.trymetis.email"],
         subject,
         html: "<p>from the e2e suite</p>",
       },
@@ -189,7 +189,7 @@ describe("the /v1 contract", () => {
     const listed = (
       await v1Json<{ emails: WireEmail[] }>(anaToken, "/messages?folder=sent")
     ).emails.find((e) => e.id === sent.id);
-    expect(listed).toMatchObject({ subject, to: ["out@discard.harness.test"] });
+    expect(listed).toMatchObject({ subject, to: ["out@discard.demo.trymetis.email"] });
   });
 });
 
@@ -201,7 +201,7 @@ describe("the app on top of the gateway", () => {
     const subject = `${uniqueName()} through the app`;
     await deliver(address, {
       subject,
-      messageId: `<${uniqueName()}@harness.test>`,
+      messageId: `<${uniqueName()}@demo.trymetis.email>`,
     });
 
     const connected = await rpc<{ slug: string | null }>("connections.createCredential", {

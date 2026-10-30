@@ -12,7 +12,7 @@
       { "waitFor": "role=dialog[name=\"Create a workspace\"]" },
       {
         "fill": "role=dialog[name=\"Create a workspace\"] >> role=textbox[name=/^Name$/]",
-        "value": "Acme Support"
+        "value": "Aozora rebrand"
       }
     ],
     "element": "role=dialog"
@@ -95,9 +95,9 @@
       { "click": "main >> role=button[name=/Add mailbox$/]" },
       { "waitFor": "role=dialog[name=\"Add a mailbox\"]" },
       { "click": "role=dialog >> role=button[name=/^Connect a new mailbox$/]" },
-      { "waitFor": "role=dialog >> role=button[name=/^Harness Mail$/]" },
+      { "waitFor": "role=dialog >> role=button[name=/^Fernhill Mail$/]" },
       { "wait": 400 },
-      { "click": "role=dialog >> role=button[name=/^Harness Mail$/]" },
+      { "click": "role=dialog >> role=button[name=/^Fernhill Mail$/]" },
       { "waitFor": "role=dialog >> text=SMTP uses a different login" },
       { "wait": 400 }
     ],
@@ -174,7 +174,7 @@
       { "waitFor": "role=dialog[name=/^Invite to /]" },
       {
         "fill": "role=dialog >> input[placeholder=\"teammate@example.com\"]",
-        "value": "sam@example.com"
+        "value": "priya@demo.trymetis.email"
       }
     ],
     "element": "role=dialog"

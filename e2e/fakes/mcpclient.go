@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	mcpPublicHost  = "mcp-client.harness.test"
+	mcpPublicHost  = "mcp.quillmate.app"
 	mcpRedirectURI = "http://127.0.0.1:47801/callback"
 )
 
@@ -61,7 +61,7 @@ func (f *mcpClientFake) document(w http.ResponseWriter, r *http.Request) {
 	name := match[1]
 	doc := clientDocument{
 		ClientID:                fmt.Sprintf("https://%s%s", r.Host, requestPath(r)),
-		ClientName:              "Harness " + name,
+		ClientName:              "Quillmate " + name,
 		ClientURI:               "https://" + mcpPublicHost,
 		RedirectURIs:            []string{mcpRedirectURI},
 		GrantTypes:              []string{"authorization_code", "refresh_token"},

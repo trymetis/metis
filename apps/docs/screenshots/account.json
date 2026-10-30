@@ -117,7 +117,7 @@
     "steps": [
       {
         "fill": "role=main >> role=textbox[name=\"Email address\"]",
-        "value": "ana@harness.test"
+        "value": "ana@demo.trymetis.email"
       },
       {
         "fill": "role=main >> role=textbox[name=\"Password\"]",
@@ -135,7 +135,7 @@
     "steps": [
       {
         "fill": "role=main >> role=textbox[name=\"Email address\"]",
-        "value": "you@example.com"
+        "value": "ana@demo.trymetis.email"
       },
       { "click": "role=button[name=\"Email me a magic link\"]" },
       { "waitFor": "text=Check your email" }

@@ -23,7 +23,7 @@
       { "press": "e" },
       { "press": "f" },
       {
-        "waitFor": "role=listbox[name=\"Insert a reference\"] >> role=option[name=/brief\\.txt/]"
+        "waitFor": "role=listbox[name=\"Insert a reference\"] >> role=option[name=/brief\\.md/]"
       },
       { "wait": 600 }
     ],
@@ -119,9 +119,9 @@
     "viewport": { "width": 1440, "height": 720 },
     "path": "/settings/mcp",
     "steps": [
-      { "waitFor": "role=link[name=\"Open e2e defaults\"]" },
-      { "click": "role=link[name=\"Open e2e defaults\"]" },
-      { "waitFor": "role=heading[level=1][name=\"e2e defaults\"]" },
+      { "waitFor": "role=link[name=\"Open Tandem\"]" },
+      { "click": "role=link[name=\"Open Tandem\"]" },
+      { "waitFor": "role=heading[level=1][name=\"Tandem\"]" },
       { "waitFor": "main >> text=Client ID:" },
       { "wait": 400 }
     ]
@@ -130,7 +130,7 @@
     "name": "assistant/mcp-client-workspaces",
     "path": "/settings/mcp",
     "steps": [
-      { "click": "role=link[name=\"Open e2e defaults\"]" },
+      { "click": "role=link[name=\"Open Tandem\"]" },
       { "waitFor": "section:has(> h2:text-is(\"Workspaces\")) >> role=switch" },
       { "scroll": "section:has(> h2:text-is(\"Workspaces\"))" }
     ],
@@ -140,8 +140,8 @@
     "name": "assistant/remove-mcp-client",
     "path": "/settings/mcp",
     "steps": [
-      { "click": "role=link[name=\"Open e2e defaults\"]" },
-      { "waitFor": "role=heading[level=1][name=\"e2e defaults\"]" },
+      { "click": "role=link[name=\"Open Tandem\"]" },
+      { "waitFor": "role=heading[level=1][name=\"Tandem\"]" },
       { "click": "main >> role=button[name=\"Remove client\"]" },
       { "waitFor": "role=alertdialog >> text=Also remove it locally" },
       { "wait": 300 }
@@ -156,7 +156,7 @@
       { "waitFor": "role=textbox[name=\"Ask across your workspace\"s]" },
       {
         "fill": "role=textbox[name=\"Ask across your workspace\"s]",
-        "value": "Create a folder named approved-by-e2e inside the rebrand folder of my WebDAV drive."
+        "value": "Make a folder called Final artwork in Team on my WebDAV drive."
       },
       { "press": "Enter" },
       { "waitFor": "role=log >> role=button[name=\"Approve\"s]" },

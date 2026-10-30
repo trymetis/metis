@@ -126,18 +126,24 @@
       },
       {
         "fill": "role=combobox[name=\"To recipients\"]",
-        "value": "alex@example.com"
+        "value": "kenji@aozora-ceramics.jp"
+      },
+      {
+        "waitFor": "role=option[name=/kenji@aozora-ceramics\\.jp/]"
+      },
+      {
+        "press": "ArrowDown"
       },
       {
         "press": "Enter"
       },
       {
         "fill": "role=textbox[name=\"Subject line…\"]",
-        "value": "Quarterly report"
+        "value": "Packaging mockups"
       },
       {
         "fill": "[aria-modal=\"true\"]:has([aria-label=\"Close compose\"]) [contenteditable=\"true\"]",
-        "value": "Hi Alex, here is the quarterly report we talked about."
+        "value": "Hi Kenji, here are the packaging mockups we talked about."
       },
       {
         "click": "[aria-modal=\"true\"]:has([aria-label=\"Close compose\"]) >> role=button[name=/^Cc$/]"
@@ -186,18 +192,24 @@
       },
       {
         "fill": "role=combobox[name=\"To recipients\"]",
-        "value": "alex@example.com"
+        "value": "kenji@aozora-ceramics.jp"
+      },
+      {
+        "waitFor": "role=option[name=/kenji@aozora-ceramics\\.jp/]"
+      },
+      {
+        "press": "ArrowDown"
       },
       {
         "press": "Enter"
       },
       {
         "fill": "role=textbox[name=\"Subject line…\"]",
-        "value": "Quarterly report"
+        "value": "Packaging mockups"
       },
       {
         "fill": "[aria-modal=\"true\"]:has([aria-label=\"Close compose\"]) [contenteditable=\"true\"]",
-        "value": "Hi Alex, here is the quarterly report we talked about."
+        "value": "Hi Kenji, here are the packaging mockups we talked about."
       },
       {
         "click": "[aria-modal=\"true\"]:has([aria-label=\"Close compose\"]) >> role=button[name=\"Schedule send\"]"

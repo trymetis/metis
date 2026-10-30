@@ -142,11 +142,11 @@
       { "waitFor": "role=textbox[name=/^SMTP host/]" },
       {
         "fill": "role=textbox[name=/^From\\s*optional/]",
-        "value": "Metis Suite <noreply@example.com>"
+        "value": "Metis Suite <noreply@notify.demo.trymetis.email>"
       },
       {
         "fill": "role=textbox[name=/^SMTP host/]",
-        "value": "smtp.example.com"
+        "value": "smtp.demo.trymetis.email"
       },
       { "click": "role=heading[level=1][name=\"Mail\"]" }
     ]

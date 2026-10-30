@@ -26,7 +26,7 @@ export function newSecondUser(): Omit<SecondUser, "secret"> {
   const id = Date.now().toString(36);
   return {
     name: `Bo Member ${id}`,
-    email: `bo-${id}@harness.test`,
+    email: `bo-${id}@demo.trymetis.email`,
     password: `bo-member-password-${id}`,
   };
 }

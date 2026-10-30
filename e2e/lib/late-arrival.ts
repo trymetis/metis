@@ -1,12 +1,10 @@
-import { readFile } from "node:fs/promises";
-
 import { ImapFlow } from "imapflow";
 
-export const LATE_ARRIVAL_SUBJECT = "Please sign the venue contract by Friday";
-export const LATE_ARRIVAL_WORKFLOW = "Triage new mail";
+import { lateArrival } from "../seed/mailbox/late-arrival";
+import { SUBJECTS } from "./cast";
 
-const FIXTURE = new URL("../seed/fixtures/mail/late-arrival/late-arrival.eml", import.meta.url);
-const ARRIVAL = new Date("2026-09-27T09:00:00Z");
+export const LATE_ARRIVAL_SUBJECT = SUBJECTS.lateArrival;
+export const LATE_ARRIVAL_WORKFLOW = "Triage new mail";
 
 export interface ImapLogin {
   host: string;
@@ -32,8 +30,8 @@ async function withInbox<T>(login: ImapLogin, run: (client: ImapFlow) => Promise
 }
 
 export async function appendLateArrival(login: ImapLogin): Promise<void> {
-  const raw = (await readFile(FIXTURE, "utf8")).replace(/\r?\n/g, "\r\n");
-  await withInbox(login, (client) => client.append("INBOX", raw, [], ARRIVAL));
+  const message = lateArrival();
+  await withInbox(login, (client) => client.append("INBOX", message.raw, [], message.date));
 }
 
 export async function deleteLateArrival(login: ImapLogin): Promise<void> {

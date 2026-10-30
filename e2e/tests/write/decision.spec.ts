@@ -1,37 +1,19 @@
-import { APPROVAL_CHAT } from "@metis/e2e/lib/llm-scenarios";
+import { APPROVAL_CHAT, GATED_SUBJECTS } from "@metis/e2e/lib/llm-scenarios";
 import type { Page } from "@playwright/test";
 import { z } from "zod";
 
 import { ask, chatResponse, conversation, failure } from "../chat";
-import { expect, type Rpc, test } from "../fixtures";
+import { expect, test } from "../fixtures";
 import { type Account, harness, mailPath, workspacePath } from "../harness";
-import { mailList, mailRow, openMail, showTab } from "../mail";
-import { labelMap, nodeOf, restoreLabels, runWorkflow, waitForRun, workspace } from "../workflow";
+import { mailList, mailRow, searchAndOpen, setMailboxAi, showTab } from "../mail";
+import { labelMap, nodeOf, restoreLabels, runWorkflow, waitForRun } from "../workflow";
 
 const TRIAGE = "Triage with the decision model";
-const GATED = ["jsonld-50-blocks", "jsonld-hostile-urls"];
 
 async function hitsDuring(path: string, run: () => Promise<void>): Promise<number> {
   const before = (await harness.hits()).length;
   await run();
   return (await harness.hits()).slice(before).filter((h) => h.path === path).length;
-}
-
-async function mailboxLink(rpc: Rpc, account: Account): Promise<string> {
-  const { mailboxes } = await rpc<{
-    mailboxes: { linkId: string; email: string }[];
-  }>("workspaceMailboxes.list", workspace(account));
-  const linkId = mailboxes.find((m) => m.email === account.email)?.linkId;
-  if (!linkId) throw new Error("Ana's mailbox is not linked");
-  return linkId;
-}
-
-async function setMailboxAi(rpc: Rpc, account: Account, on: boolean) {
-  await rpc("mailboxes.setPolicy", {
-    linkId: await mailboxLink(rpc, account),
-    aiEnabled: on,
-    ...(on ? { code: await harness.totp() } : {}),
-  });
 }
 
 async function retryFailedSteps(page: Page) {
@@ -143,7 +125,7 @@ export default function decisionSpecs() {
     await page.goto(mailPath(account));
     await showTab(page, "All");
     const skipped: string[] = [];
-    for (const subject of GATED) {
+    for (const subject of GATED_SUBJECTS) {
       let smartReplies = 0;
       const countReplies = (res: import("@playwright/test").Response) => {
         if (res.url().includes("/rpc/ai/smartReplies") && res.ok()) smartReplies++;
@@ -154,7 +136,7 @@ export default function decisionSpecs() {
         const summary = page.waitForResponse(/\/rpc\/ai\/threadSummary/, {
           timeout: 60_000,
         });
-        await openMail(page, subject);
+        await searchAndOpen(page, subject);
         spec = z
           .object({ json: z.object({ spec: z.unknown() }) })
           .parse(await (await summary).json()).json.spec;
@@ -172,7 +154,7 @@ export default function decisionSpecs() {
         expect(completions - smartReplies, `${subject}: summarizer calls`).toBe(0);
       }
     }
-    expect(skipped).toEqual(GATED);
+    expect(skipped).toEqual(GATED_SUBJECTS);
   });
 
   test("with AI off for the mailbox an Ask run is blocked, and retrying after turning AI on completes it", async ({

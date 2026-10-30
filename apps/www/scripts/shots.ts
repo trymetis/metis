@@ -24,7 +24,9 @@ const stepSchema = z.union([
   z.object({ fill: z.string(), value: z.string() }),
   z.object({ type: z.string(), text: z.string() }),
   z.object({ press: z.string() }),
+  z.object({ drag: z.string(), to: z.string() }),
   z.object({ waitFor: z.string() }),
+  z.object({ waitForHidden: z.string() }),
   z.object({ wait: z.number() }),
   z.object({ scroll: z.string() }),
   z.object({ clearReadLater: z.literal(true) }),
@@ -75,16 +77,6 @@ const accountSchema = z.object({
   driveSlugs: z.record(z.string(), z.string()),
 });
 type Account = z.infer<typeof accountSchema>;
-
-const SAMPLE_TEXT: [RegExp, string][] = [
-  [/harness\.test/g, "example.com"],
-  [/Harness /g, "Example "],
-  [/git\.example\.com\/ana/g, "github.com/example"],
-  [/harness-test/g, "example-com"],
-  [/\bharness\b/g, "example"],
-  [/acme\.test/g, "acme.example"],
-  [/\be2e\b/gi, "team"],
-];
 
 async function harness(path: string): Promise<Response> {
   const res = await fetch(`${HARNESS}${path}`);
@@ -155,6 +147,21 @@ async function clearReadLater(page: Page, a: Account) {
   );
 }
 
+async function centerOf(page: Page, selector: string) {
+  const box = await page.locator(selector).first().boundingBox();
+  if (!box) throw new Error(`${selector} has no box`);
+  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+}
+
+async function drag(page: Page, from: string, to: string) {
+  const start = await centerOf(page, from);
+  const end = await centerOf(page, to);
+  await page.mouse.move(start.x, start.y);
+  await page.mouse.down();
+  await page.mouse.move(end.x, end.y, { steps: 12 });
+  await page.mouse.up();
+}
+
 async function run(page: Page, step: Step, a: Account) {
   if ("clearReadLater" in step) await clearReadLater(page, a);
   else if ("goto" in step) await page.goto(resolve(step.goto, a));
@@ -172,38 +179,13 @@ async function run(page: Page, step: Step, a: Account) {
     await page.locator(step.type).first().click();
     await page.keyboard.type(step.text);
   } else if ("press" in step) await page.keyboard.press(step.press);
+  else if ("drag" in step) await drag(page, step.drag, step.to);
   else if ("waitFor" in step)
     await page.locator(step.waitFor).first().waitFor({ state: "visible" });
+  else if ("waitForHidden" in step)
+    await page.locator(step.waitForHidden).first().waitFor({ state: "hidden" });
   else if ("wait" in step) await page.waitForTimeout(step.wait);
   else if ("scroll" in step) await page.locator(step.scroll).first().scrollIntoViewIfNeeded();
-}
-
-async function scrub(page: Page) {
-  const pairs = SAMPLE_TEXT.map(([re, to]): [string, string, string] => [re.source, re.flags, to]);
-  for (const frame of page.frames()) {
-    await frame
-      .evaluate((samples) => {
-        const rules = samples.map(
-          ([source, flags, to]) => [new RegExp(source, flags), to] as const,
-        );
-        const swap = (s: string) => rules.reduce((acc, [re, to]) => acc.replace(re, to), s);
-        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-        for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-          if (n.parentElement?.closest('[contenteditable="true"]')) continue;
-          const value = swap(n.nodeValue ?? "");
-          if (value !== n.nodeValue) n.nodeValue = value;
-        }
-        for (const input of document.querySelectorAll("input, textarea")) {
-          if (!(input instanceof HTMLInputElement || input instanceof HTMLTextAreaElement))
-            continue;
-          const value = swap(input.value);
-          if (value !== input.value) input.value = value;
-          const hint = swap(input.placeholder);
-          if (hint !== input.placeholder) input.placeholder = hint;
-        }
-      }, pairs)
-      .catch(() => {});
-  }
 }
 
 function viewBox(el: Element): Box {
@@ -282,7 +264,6 @@ async function main() {
       for (const step of [...(base.steps ?? []), ...(shot.steps ?? [])])
         await run(page, step, account);
       await page.waitForTimeout(500);
-      await scrub(page);
       const want = shot.focus === undefined ? (base.element ?? base.clip) : shot.focus;
       let box: Box | null = null;
       if (want && typeof want === "object" && !Array.isArray(want)) box = want;

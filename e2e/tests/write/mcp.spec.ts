@@ -99,7 +99,9 @@ export default function mcpSpecs() {
         name: "Approve",
         exact: true,
       });
-      await expect(main.getByRole("heading", { level: 1, name: `Harness ${name}` })).toBeVisible();
+      await expect(
+        main.getByRole("heading", { level: 1, name: `Quillmate ${name}` }),
+      ).toBeVisible();
       await expect(main.getByText(clientId)).toBeVisible();
       await expect(main.getByText("returns to 127.0.0.1")).toBeVisible();
       await expect(
@@ -122,7 +124,7 @@ export default function mcpSpecs() {
       expect((await callStatus(tokens.access_token)).status).toBe(200);
       const rows = await listed();
       expect(rows).toHaveLength(1);
-      expect(rows[0]?.label).toBe(`Harness ${name}`);
+      expect(rows[0]?.label).toBe(`Quillmate ${name}`);
     } finally {
       if ((await listed()).length > 0) {
         await rpc("mcp.deleteClient", { clientId });
@@ -170,7 +172,7 @@ export default function mcpSpecs() {
     await test.step("disabling turns an issued token into a 403", async () => {
       const enabled = page
         .getByRole("main")
-        .getByRole("switch", { name: `Harness ${name} enabled`, exact: true });
+        .getByRole("switch", { name: `Quillmate ${name} enabled`, exact: true });
       await expect(enabled).toHaveAttribute("aria-checked", "true");
       await enabled.click();
       await expect(enabled).toHaveAttribute("aria-checked", "false");
@@ -204,7 +206,7 @@ export default function mcpSpecs() {
         .getByRole("button", { name: "Remove client", exact: true })
         .click();
       await page
-        .getByRole("alertdialog", { name: `Remove Harness ${name}?` })
+        .getByRole("alertdialog", { name: `Remove Quillmate ${name}?` })
         .getByRole("button", { name: "Remove", exact: true })
         .click();
       await expect.poll(async () => clientRow(rpc, clientId)).toBeUndefined();

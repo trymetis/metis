@@ -1,25 +1,16 @@
-import { readdir } from "node:fs/promises";
-
 import { ImapFlow } from "imapflow";
 
 import { MAIL_CASES } from "./edge/mail-cases";
+import { MAILBOX_FOLDERS, mailbox } from "./mailbox";
 import { edgeEnabled, reject } from "./report";
 
-const FOLDERS = ["Sent", "Drafts", "Trash", "Archive", "Junk"];
-const FIXTURES = new URL("./fixtures/mail/", import.meta.url);
-const EDGE_ARRIVAL = Date.UTC(2026, 8, 1);
+const EDGE_ARRIVAL = Date.UTC(2024, 5, 1);
 
 export interface ImapTarget {
   host: string;
   port: number;
   user: string;
   pass: string;
-}
-
-function dateHeader(raw: string): Date | undefined {
-  const match = raw.match(/^Date:\s*(.+)$/im);
-  const parsed = match?.[1] ? new Date(match[1]) : null;
-  return parsed && !Number.isNaN(parsed.getTime()) ? parsed : undefined;
 }
 
 export async function seedMail(target: ImapTarget): Promise<void> {
@@ -33,7 +24,7 @@ export async function seedMail(target: ImapTarget): Promise<void> {
   await client.connect();
   try {
     const existing = new Set((await client.list()).map((box) => box.path));
-    for (const folder of FOLDERS) {
+    for (const folder of MAILBOX_FOLDERS) {
       if (!existing.has(folder)) await client.mailboxCreate(folder);
     }
 
@@ -60,13 +51,14 @@ export async function seedMail(target: ImapTarget): Promise<void> {
       console.log(`[seed] appended ${appended} edge-case messages (${MAIL_CASES.length} cases)`);
     }
 
-    const files = (await readdir(FIXTURES)).filter((f) => f.endsWith(".eml"));
-    for (const file of files.toSorted()) {
-      const raw = await Bun.file(new URL(file, FIXTURES)).text();
-      const eml = raw.replace(/\r?\n/g, "\r\n");
-      await client.append("INBOX", eml, [], dateHeader(raw));
+    const counts = new Map<string, number>();
+    for (const message of mailbox()) {
+      await client.append(message.folder, message.raw, message.flags, message.date);
+      counts.set(message.folder, (counts.get(message.folder) ?? 0) + 1);
     }
-    console.log(`[seed] appended ${files.length} messages to INBOX`);
+    console.log(
+      `[seed] appended ${[...counts].map(([folder, n]) => `${n} to ${folder}`).join(", ")}`,
+    );
   } finally {
     await client.logout();
   }

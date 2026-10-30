@@ -1,5 +1,5 @@
 services:
-  harness:
+  seed:
     environment:
       E2E_EDGE: "0"
   preflight:

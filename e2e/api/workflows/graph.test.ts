@@ -572,7 +572,7 @@ test("a test run refuses an invalid graph, a trigger with no event and a mailbox
       graph: graphOf(
         [
           node("sending", "trigger.mail.beforeSend", at(0)),
-          node("bcc", "mail.addBcc", at(1), { address: lit("archive@harness.test") }),
+          node("bcc", "mail.addBcc", at(1), { address: lit("archive@demo.trymetis.email") }),
         ],
         [edge("sending", "bcc")],
       ),
@@ -607,7 +607,7 @@ test("a test run validates and runs the graph it is sent, not the saved one", as
     async () => {
       const edited = manualGraph(
         box.id,
-        [subjectContains("cond", "debited")],
+        [subjectContains("cond", "1,250.00 debited")],
         [edge("inbox", "cond")],
       );
       const result = await rpc<TestResult>("workflows.test", {
@@ -616,7 +616,7 @@ test("a test run validates and runs the graph it is sent, not the saved one", as
         triggerNodeId: "manual",
       });
       const matched = result.items.filter((i) => i.nodeId === "cond" && i.outputs.includes("out"));
-      expect(matched.map((i) => i.title)).toEqual([expect.stringContaining("debited")]);
+      expect(matched.map((i) => i.title)).toEqual([expect.stringContaining("1,250.00 debited")]);
     },
   );
 });

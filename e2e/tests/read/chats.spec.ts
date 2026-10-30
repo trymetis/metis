@@ -124,12 +124,12 @@ test("the @ picker inserts a chip that resolves", async ({ page, rpc, account })
   await page.keyboard.type("@brief");
   const picker = page.getByRole("listbox", { name: "Insert a reference" });
   const option = picker.getByRole("option", {
-    name: `brief.txt ${webdav?.server}`,
+    name: `brief.md ${webdav?.server}`,
     exact: true,
   });
   await option.click();
   await expect(picker).toBeHidden();
-  await expect(composer(page)).toHaveText("brief.txt");
+  await expect(composer(page)).toHaveText("brief.md");
 });
 
 async function storedThreadTitle(rpc: Rpc, account: Account): Promise<string> {

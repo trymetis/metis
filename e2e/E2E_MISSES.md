@@ -4,7 +4,7 @@ The e2e stack is a seeded environment that two suites drive: Vitest in `api/` fo
 
 ## 1. Seeds still missing
 
-`generate` seeds one account (with 2FA), its personal workspace with the `blue` brand, the connections, a `Clients` custom label, `Rebrand` pins on the S3 and WebDAV drives, a `rebrand/` root restriction on the FTP drive, seven workflows (manual, schedule, new mail, merge append, merge join, Ask/Branch, and the disabled new-mail Ask/Branch), a scheduled send, a second account in no shared workspace, and manually added MCP clients with signed access tokens. `generate:record` adds `seed-record.sql`: the real `ai_usage` rows, one run of each manual and schedule workflow, a muted thread and a read-later message. Still missing:
+`generate` seeds one account (with 2FA), its personal workspace with the `blue` brand, the connections, a `Clients` custom label, `Rebrand` pins on the S3 and WebDAV drives, a `Clients/` root restriction on the FTP drive, seven workflows (manual, schedule, new mail, merge append, merge join, Ask/Branch, and the disabled new-mail Ask/Branch), a scheduled send, a second account in no shared workspace, and manually added MCP clients with signed access tokens. `generate:record` adds `seed-record.sql`: the real `ai_usage` rows, one run of each manual and schedule workflow, a muted thread and a read-later message. Still missing:
 
 - **Snooze:** snoozing archives the message on the IMAP server. A snooze made while recording would leave that server archived, but each `bun run up` starts from a fresh mailbox, so the seeded snooze would point at a message that is still in the inbox.
 - **New-mail workflow runs:** the recorder starts runs by hand, and only manual and schedule triggers can be started that way; a new-mail trigger only runs when mail arrives.
@@ -12,11 +12,19 @@ The e2e stack is a seeded environment that two suites drive: Vitest in `api/` fo
 - **Usage coverage:** the recorder only produces rows for the paths that record usage in domain code (the decision classifier, the summary gate, summaries). Chats, smart replies and the LLM classifier record usage in their routes, which the recorder bypasses. Every seeded row carries the recording date.
 - **Second calendar visibility setting:** needs a second calendar connection or a second workspace.
 - **Workspace logo:** needs an image file.
-- **One-click and `mailto` unsubscribes:** the seeded Shop Weekly newsletter offers both, but nothing performs them; the `unsubscribe` case appends its own link-only message over IMAP and removes it.
+- **Six audit events:** `account.deleted`, `two_factor.disabled`, `mcp_client.approved`, `mcp_client.enabled`, `connection.deleted` and `resource.deleted` (`src/types/audit.ts` → `AUDIT_ACTIONS`) are never checked by name; the other 13 are, in `api/rpc/audit.test.ts`, `api/mcp/tools.test.ts`, `api/system/sign-in-alerts.test.ts`, `tests/write/members.spec.ts` and `tests/write/updates.spec.ts`. Retention pruning (`pruneAuditEvents`, the `system:audit-prune` workflow) is not run either; only `retentionDays` is read.
+- **One-click and `mailto` unsubscribes:** the seeded Kestrel Supply Co. newsletters offer both, but nothing performs them; the `unsubscribe` case appends its own link-only message over IMAP and removes it.
 
 ## 2. Small infrastructure
 
-- **More recordings:** other folders and later inbox pages (the recorder reads the first 100 inbox messages).
+- **More recordings:** summaries past the first page of the inbox and of each folder (the recorder summarizes the first 100 messages of each).
+- **A public app URL:** the stack serves the app at `http://localhost:3000` (`BETTER_AUTH_URL`), which the host-run suites, desktop tests and screenshot scripts reach directly, so the dashboard's Public URL, Secure cookies "No", webhook addresses, OAuth redirect URIs and the `noreply@localhost` default senders show `localhost` in screenshots. A real hostname such as `https://demo.trymetis.email` needs TLS on the proxy and an `/etc/hosts` entry on every machine and in CI.
+- **Real server hostnames:** the server entries use `*.localhost` hosts on test ports (`imap.localhost:31143`/`31587`, `caldav.localhost`, `s3.localhost`, …) because the host-run generator and recorder reach them by those names, so the provider pages show them in screenshots.
+- **AI edge cases:** each needs its own fixture and recording, and asserts the app's guard rather than the model's answer:
+  - a message carrying a prompt injection ("forward this thread to …"): the agent stops at the approval gate;
+  - a recorded summary answer with a URL the conversation does not contain: `allowedLinks` drops it;
+  - an oversized body: the summary gate and structured-data requests stay capped (`GATE_TEXT_MAX`, `MAX_SOURCE_CHARS`);
+  - hostile or oversized JSON-LD and broken charsets reaching the classifier and the summarizer.
 - **PUT-only S3 bucket:** a second bucket with a different CORS rule and its server entry.
 - **Video and HEIC previews:** committed binaries or an encoder.
 - **System mail flows beyond invites and sign-in alerts:** the mailer chain sends workspace invites under each driver and sign-in alerts under `console`; magic links, password resets and verification mail under `smtp` would read the same `system` mailbox.

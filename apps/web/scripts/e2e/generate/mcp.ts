@@ -1,6 +1,6 @@
 import {
   ALL_TOOLS_ON,
-  clientLabel,
+  CLIENT_PROFILES,
   MCP_CLIENT_REDIRECT,
   OWNER_CLIENTS,
   type OwnerClient,
@@ -21,13 +21,14 @@ const EVERY_TOOL: McpToolPrefs = Object.fromEntries(MCP_TOOL_KEYS.map((key) => [
 
 async function seedClient(
   owner: Account,
-  name: string,
+  name: OwnerClient | "member",
   allTools: boolean,
 ): Promise<SeededMcpClient> {
+  const profile = CLIENT_PROFILES[name];
   const row = await createManualMcpClient({
     userId: owner.userId,
-    label: clientLabel(name),
-    preset: "custom",
+    label: profile.label,
+    preset: profile.preset,
     redirectUris: [MCP_CLIENT_REDIRECT],
   });
   if (allTools) {

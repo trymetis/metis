@@ -92,7 +92,7 @@ See also [AGENTS.md](../AGENTS.md), [auth.md](auth.md), [configuration.md](confi
 - **Blocked runs** carry `workflow_run.blocked_at` (set by `settleRun`), which keeps them out of the retry count.
 - **System checks run only when the owner asks.** `dashboard.system.check` runs a driver check or, for a provider, the same `serverChecks` probes preflight uses ([servers.md](servers.md)).
 - **Preflight runs the dashboard's AI checks once per deploy, warn only.** A set LLM driver goes through `checkLlm` (kind `llm`), and the decision model through `checkDecisionModel` when any switch is on (kind `decision`).
-  - In the e2e stack both point at the harness, which starts after preflight, so each run records a false "unreachable" warning.
+  - In the e2e stack both point at the `replay` service, which starts before preflight, so the checks pass.
 - **Editing.**
   - `ConfigForm` loads `dashboard.system.form` for each of the page's sections (descriptors, values, secret summaries, a server list's entries) and renders one card per section, hiding fields whose `when` does not match.
   - It keeps the loaded values beside the draft; any change shows the save bar (Reset, Save changes) and sets `useUnsavedChangesStore.dirty`.

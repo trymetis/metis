@@ -44,20 +44,6 @@ export function authOptions(deps: AuthDeps) {
     }),
     user: {
       additionalFields: {
-        subscriptionStatus: {
-          type: ["not-created", "active", "on_hold", "failed", "cancelled", "expired"],
-          defaultValue: "not-created",
-          input: false,
-          required: false,
-        },
-        dodoCustomerId: { type: "string", input: false, required: false },
-        dodoSubscriptionId: { type: "string", input: false, required: false },
-        subscriptionProductId: {
-          type: "string",
-          input: false,
-          required: false,
-        },
-        subscriptionUpdatedAt: { type: "date", input: false, required: false },
         defaultWorkspaceSlug: { type: "string", input: false, required: false },
       },
     },

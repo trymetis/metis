@@ -1,21 +1,18 @@
-import { readFile } from "node:fs/promises";
-
 import { calendarCollectionUrl } from "@metis/e2e/lib/calendars";
 import { env } from "@metis/e2e/lib/env";
 import type { Page } from "@playwright/test";
 
+import { vcalendar } from "../../seed/ics";
+import { REBRAND_REVIEW } from "../../seed/mailbox/anchors";
 import { REVIEW_WEEK, timedEvent, toolbar } from "../calendar";
 import { expect, test, uniqueName } from "../fixtures";
 import { calendarPath } from "../harness";
 
-const INVITE_EML = new URL("../../seed/fixtures/mail/04-invite.eml", import.meta.url);
-const INVITE_HREF = `${calendarCollectionUrl(env.servers.caldavOrigin, env.caldav.user, "work")}e2e-rebrand-review.ics`;
+const INVITE_HREF = `${calendarCollectionUrl(env.servers.caldavOrigin, env.caldav.user, "work")}rebrand-review.ics`;
 const AUTH = `Basic ${Buffer.from(`${env.caldav.user}:${env.caldav.pass}`).toString("base64")}`;
 
-async function inviteEvent(): Promise<string> {
-  const eml = await readFile(INVITE_EML, "utf8");
-  const ics = eml.slice(eml.indexOf("BEGIN:VCALENDAR"), eml.indexOf("END:VCALENDAR") + 13);
-  return `${ics.replace(/^METHOD:.*\r?\n/m, "").replace(/\r?\n/g, "\r\n")}\r\n`;
+function inviteEvent(): string {
+  return vcalendar([REBRAND_REVIEW]);
 }
 
 async function putEvent(href: string, ics: string): Promise<void> {
@@ -70,10 +67,10 @@ export default function calendarSpecs() {
     const dialog = page.getByRole("dialog", { name: "New event" });
     await dialog.getByRole("textbox", { name: "Event title" }).fill(title);
     await expect(dialog.getByRole("combobox", { name: "Starts at" })).toContainText("1:00 PM");
-    await dialog.getByRole("combobox").filter({ hasText: "ana@harness.test" }).click();
+    await dialog.getByRole("combobox").filter({ hasText: "ana@demo.trymetis.email" }).click();
     await page
       .getByRole("listbox")
-      .getByRole("option", { name: "Work · ana@harness.test", exact: true })
+      .getByRole("option", { name: "Work · ana@demo.trymetis.email", exact: true })
       .click();
     await expect(
       dialog.getByRole("textbox", { name: "Event title" }),
@@ -87,9 +84,9 @@ export default function calendarSpecs() {
     await created.click();
     await eventPopover(page, title).getByRole("button", { name: "Edit event" }).click();
     const edit = page.getByRole("dialog", { name: "Edit event" });
-    await expect(edit.getByRole("combobox").filter({ hasText: "ana@harness.test" })).toContainText(
-      "Work · ana@harness.test",
-    );
+    await expect(
+      edit.getByRole("combobox").filter({ hasText: "ana@demo.trymetis.email" }),
+    ).toContainText("Work · ana@demo.trymetis.email");
     await edit.getByRole("textbox", { name: "Event title" }).fill(renamed);
     await edit.getByRole("button", { name: "Save", exact: true }).click();
     await expect(edit).toBeHidden();
@@ -116,7 +113,7 @@ export default function calendarSpecs() {
     page,
     account,
   }) => {
-    const invite = await inviteEvent();
+    const invite = inviteEvent();
     const review = timedEvent(page, "Rebrand review 3pm – 3:45pm");
     await putEvent(INVITE_HREF, invite);
     try {
@@ -129,7 +126,7 @@ export default function calendarSpecs() {
       await expect(yes).toHaveAttribute("aria-pressed", "true");
       await expect
         .poll(async () => (await getEvent(INVITE_HREF)).replace(/\r\n /g, ""))
-        .toMatch(/ATTENDEE[^\r\n]*PARTSTAT=ACCEPTED[^\r\n]*mailto:ana@harness\.test/);
+        .toMatch(/ATTENDEE[^\r\n]*PARTSTAT=ACCEPTED[^\r\n]*mailto:ana@demo\.trymetis\.email/);
 
       await putEvent(INVITE_HREF, invite);
       await page.reload();

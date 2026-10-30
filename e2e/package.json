@@ -17,7 +17,7 @@
     "test:browser:ui": "node --env-file=.env.fixture node_modules/@playwright/test/cli.js test --ui",
     "test:desktop": "node --env-file=.env.fixture node_modules/@playwright/test/cli.js test --config desktop.config.ts",
     "totp": "curl -s http://localhost:8099/totp",
-    "logs": "docker compose --env-file .env.fixture logs -f harness app",
+    "logs": "docker compose --env-file .env.fixture logs -f seed replay app",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

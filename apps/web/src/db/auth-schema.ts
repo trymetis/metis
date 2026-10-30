@@ -1,5 +1,5 @@
 import { relations, sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
@@ -15,15 +15,6 @@ export const user = sqliteTable("user", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
   twoFactorEnabled: integer("two_factor_enabled", { mode: "boolean" }).default(false),
-  subscriptionStatus: text("subscription_status", {
-    enum: ["not-created", "active", "on_hold", "failed", "cancelled", "expired"],
-  }).default("not-created"),
-  dodoCustomerId: text("dodo_customer_id"),
-  dodoSubscriptionId: text("dodo_subscription_id"),
-  subscriptionProductId: text("subscription_product_id"),
-  subscriptionUpdatedAt: integer("subscription_updated_at", {
-    mode: "timestamp_ms",
-  }),
   defaultWorkspaceSlug: text("default_workspace_slug"),
 });
 
@@ -155,9 +146,7 @@ export const oauthClient = sqliteTable(
     softwareVersion: text("software_version"),
     softwareStatement: text("software_statement"),
     redirectUris: text("redirect_uris", { mode: "json" }).$type<string[]>().notNull(),
-    postLogoutRedirectUris: text("post_logout_redirect_uris", {
-      mode: "json",
-    }).$type<string[]>(),
+    postLogoutRedirectUris: text("post_logout_redirect_uris", { mode: "json" }).$type<string[]>(),
     backchannelLogoutUri: text("backchannel_logout_uri"),
     backchannelLogoutSessionRequired: integer("backchannel_logout_session_required", {
       mode: "boolean",

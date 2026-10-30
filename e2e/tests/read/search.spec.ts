@@ -9,9 +9,9 @@ test("the rail opens search, the query is highlighted and a mail result opens th
 }) => {
   await page.goto(mailPath(account));
   const dialog = await openSearch(page);
-  await typeQuery(page, "from:raj@harness.test kickoff");
+  await typeQuery(page, "from:raj@demo.trymetis.email kickoff");
   await expect(dialog.locator(".sq-key")).toHaveText("from");
-  await expect(dialog.locator(".sq-value")).toHaveText("raj@harness.test");
+  await expect(dialog.locator(".sq-value")).toHaveText("raj@demo.trymetis.email");
   await expect(dialog.locator(".sq-text")).toHaveText("kickoff");
 
   const row = result(page, /Rebrand kickoff/);
@@ -109,7 +109,9 @@ test("a member result opens the member's profile with their mail", async ({ page
   await page.goto(mailPath(account));
   await openSearch(page);
   await typeQuery(page, `type:member ${account.email}`);
-  const row = result(page, new RegExp(account.name));
+  const row = searchDialog(page)
+    .getByRole("group", { name: "Members" })
+    .getByRole("option", { name: new RegExp(account.name) });
   await expect(row).toBeVisible();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/\/members\//);

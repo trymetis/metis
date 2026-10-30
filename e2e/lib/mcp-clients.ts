@@ -23,9 +23,32 @@ export const ALL_TOOLS_ON: ReadonlySet<OwnerClient> = new Set([...TOOL_GROUPS, .
 
 export const MCP_CLIENT_REDIRECT = "http://127.0.0.1:47801/callback";
 
-export function clientLabel(name: string): string {
-  return `e2e ${name}`;
-}
+export type SeededClientPreset =
+  | "claude-desktop"
+  | "codex"
+  | "cursor-desktop"
+  | "vscode"
+  | "custom";
+
+export const CLIENT_PROFILES: Record<
+  OwnerClient | "member",
+  { label: string; preset: SeededClientPreset }
+> = {
+  reads: { label: "Claude Desktop", preset: "claude-desktop" },
+  mail: { label: "Mail triage", preset: "custom" },
+  inbox: { label: "Lumen", preset: "custom" },
+  labels: { label: "Label sync", preset: "custom" },
+  drive: { label: "Cursor", preset: "cursor-desktop" },
+  calendar: { label: "Scheduling assistant", preset: "custom" },
+  workflows: { label: "Codex", preset: "codex" },
+  account: { label: "Hearth", preset: "custom" },
+  "checks-1": { label: "VS Code", preset: "vscode" },
+  "checks-2": { label: "Studio wiki", preset: "custom" },
+  "checks-3": { label: "Paperweight", preset: "custom" },
+  "checks-4": { label: "Weekly report", preset: "custom" },
+  defaults: { label: "Tandem", preset: "custom" },
+  member: { label: "Claude Desktop", preset: "claude-desktop" },
+};
 
 export const seededMcpClientSchema = z.object({
   clientId: z.string(),

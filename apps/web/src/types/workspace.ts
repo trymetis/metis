@@ -1,6 +1,3 @@
-export const WORKSPACE_PLANS = ["free", "pro", "team", "business"] as const;
-export type WorkspacePlan = (typeof WORKSPACE_PLANS)[number];
-
 export const WORKSPACE_ROLES = ["owner", "admin", "member"] as const;
 export type WorkspaceRole = (typeof WORKSPACE_ROLES)[number];
 

@@ -6,7 +6,7 @@ import { uniqueName, until } from "../support/poll";
 import { ana } from "../support/session";
 
 const { gatewayUrl: GATEWAY, domain: DOMAIN, adminToken: ADMIN, controlUrl: CONTROL } = env.resend;
-const SERVER = "Harness Resend";
+const SERVER = "Fernhill Updates";
 
 interface WireEmail {
   id: string;
@@ -54,7 +54,7 @@ async function inbound(to: string, subject: string): Promise<void> {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
-      from: "Raj Mehta <raj@harness.test>",
+      from: "Raj Mehta <raj@demo.trymetis.email>",
       to,
       subject,
       text: `Body of ${subject}.`,
@@ -127,7 +127,7 @@ describe("the /v1 contract", () => {
       method: "POST",
       body: {
         from: anaAddress,
-        to: ["out@discard.harness.test"],
+        to: ["out@discard.demo.trymetis.email"],
         subject,
         html: "<p>from the e2e suite</p>",
       },

@@ -1,3 +1,5 @@
+import { BRIEF, CLIENTS, CLIENTS_FOLDER, REBRAND_FOLDER } from "@metis/e2e/lib/cast";
+
 import { driveSidebar, entry, files, folderPath, openPreview } from "../drive";
 import { expect, test } from "../fixtures";
 import { drivePath } from "../harness";
@@ -7,7 +9,7 @@ const UNRESTRICTED = ["s3", "s3Relay", "webdav", "ftps", "ftpsImplicit", "sftp"]
 test("every drive lists the seeded files", async ({ page, account }) => {
   for (const kind of UNRESTRICTED) {
     await page.goto(drivePath(account, kind));
-    for (const name of ["preview", "rebrand", "welcome.txt"]) {
+    for (const name of ["Clients", "Finance", "Team", "welcome.txt"]) {
       await expect(entry(page, name), `${kind}: ${name}`).toBeVisible();
     }
     const edge = entry(page, "edge");
@@ -30,13 +32,13 @@ test("the Rebrand pins show on the S3 and WebDAV drives only", async ({ page, ac
   ).toHaveCount(0);
 });
 
-test("the FTP drive's root restriction shows only rebrand/ and refuses a direct link to a hidden file", async ({
+test("the FTP drive's root restriction shows only Clients/ and refuses a direct link to a hidden file", async ({
   page,
   account,
 }) => {
   await page.goto(drivePath(account, "ftp"));
-  await expect(entry(page, "rebrand")).toBeVisible();
-  for (const name of ["edge", "preview", "welcome.txt"])
+  await expect(entry(page, "Clients")).toBeVisible();
+  for (const name of ["edge", "Finance", "Team", "welcome.txt"])
     await expect(entry(page, name)).toHaveCount(0);
 
   const hidden = await page.request.get(
@@ -45,7 +47,7 @@ test("the FTP drive's root restriction shows only rebrand/ and refuses a direct 
   );
   expect(hidden.status()).toBeGreaterThanOrEqual(400);
   const visible = await page.request.get(
-    `/api/drive/download?w=${account.workspaceSlug}&d=${account.driveSlugs.ftp}&id=rebrand/brief.txt`,
+    `/api/drive/download?w=${account.workspaceSlug}&d=${account.driveSlugs.ftp}&id=${encodeURIComponent(BRIEF)}`,
     { maxRedirects: 0 },
   );
   expect(visible.status()).toBe(302);
@@ -68,7 +70,7 @@ test("search finds a file by name on every drive", async ({ page, account }) => 
       await page.getByRole("textbox", { name: "Search this drive" }).fill("welcome");
       await search;
       await expect.soft(entry(page, "welcome.txt"), kind).toBeVisible();
-      await expect.soft(entry(page, "rebrand"), kind).toHaveCount(0);
+      await expect.soft(entry(page, "Clients"), kind).toHaveCount(0);
     });
   }
 });
@@ -78,40 +80,41 @@ test("every preview renderer shows its file", async ({ page, account }) => {
   const cases: [string, string, (preview: import("@playwright/test").Locator) => Promise<void>][] =
     [
       [
-        "preview/docs/",
-        "notes.md",
-        (p) => expect(p.getByRole("heading", { name: "Preview fixture" })).toBeVisible(),
+        "Team/",
+        "Meeting notes 2026-10-05.md",
+        (p) =>
+          expect(p.getByRole("heading", { name: "Meeting notes, 5 October 2026" })).toBeVisible(),
       ],
       [
-        "preview/docs/",
-        "three-pages.pdf",
+        REBRAND_FOLDER,
+        "moodboard.pdf",
         (p) => expect(p.getByRole("button", { name: "Next page" })).toBeVisible(),
       ],
-      ["preview/image/", "noise-640x400.png", (p) => expect(p.getByRole("img")).toBeVisible()],
-      ["preview/image/", "shapes.svg", (p) => expect(p.getByRole("img")).toBeVisible()],
-      ["preview/data/", "people.csv", (p) => expect(p.getByRole("table")).toBeVisible()],
-      ["preview/data/", "people.tsv", (p) => expect(p.getByRole("table")).toBeVisible()],
-      ["preview/text/", "Dockerfile", (p) => expect(p.locator("pre")).toContainText(/FROM/)],
-      ["preview/text/", "settings.json", (p) => expect(p.locator("pre")).toBeVisible()],
+      [REBRAND_FOLDER, "logo-options.png", (p) => expect(p.getByRole("img")).toBeVisible()],
+      [REBRAND_FOLDER, "wordmark.svg", (p) => expect(p.getByRole("img")).toBeVisible()],
+      ["Finance/2025/", "invoices.csv", (p) => expect(p.getByRole("table")).toBeVisible()],
+      ["Finance/2025/", "expenses.tsv", (p) => expect(p.getByRole("table")).toBeVisible()],
+      ["Team/website/", "Dockerfile", (p) => expect(p.locator("pre")).toContainText(/FROM/)],
+      ["Team/", "brand-tokens.json", (p) => expect(p.locator("pre")).toBeVisible()],
       [
-        "preview/archive/",
-        "bundle.zip",
+        REBRAND_FOLDER,
+        "logo-pack.zip",
         (p) => expect(p.getByText(/Name · \d+ entries/)).toBeVisible(),
       ],
-      ["preview/audio/", "tone-440hz.wav", (p) => expect(p.locator("audio")).toBeAttached()],
+      ["Team/", "voice-memo.wav", (p) => expect(p.locator("audio")).toBeAttached()],
       [
-        "preview/fallback/",
-        "slides.pptx",
+        `${CLIENTS_FOLDER}${CLIENTS.kaltwasser}/`,
+        "Pitch deck.pptx",
         (p) => expect(p.getByText("There is no preview for this file type.")).toBeVisible(),
       ],
       [
-        "preview/fallback/",
-        "backup.tar.gz",
+        "Team/website/",
+        "site-backup.tar.gz",
         (p) => expect(p.getByText("There is no preview for this file type.")).toBeVisible(),
       ],
       [
-        "preview/fallback/",
-        "blob.dat",
+        `${CLIENTS_FOLDER}${CLIENTS.saffron}/`,
+        "menu-proof.indd",
         (p) =>
           expect(
             p.getByText(
@@ -173,15 +176,15 @@ test("hostile files never execute", async ({ page, account }) => {
 test("the d chord and j/k walk the drive history", async ({ page, account }) => {
   const s3 = drivePath(account, "s3");
   await page.goto(s3);
-  await expect(entry(page, "rebrand")).toBeVisible();
-  await entry(page, "rebrand").dblclick();
-  await expect(page).toHaveURL(new RegExp(encodeURIComponent("rebrand/")));
+  await expect(entry(page, "Clients")).toBeVisible();
+  await entry(page, "Clients").dblclick();
+  await expect(page).toHaveURL(new RegExp(encodeURIComponent(CLIENTS_FOLDER)));
   await files(page).click({ position: { x: 5, y: 5 } });
   await page.keyboard.press("d");
   await page.keyboard.press("h");
   await expect(page).toHaveURL(new RegExp(`${drivePath(account, "all")}$`));
   await page.keyboard.press("k");
-  await expect(page).toHaveURL(new RegExp(encodeURIComponent("rebrand/")));
+  await expect(page).toHaveURL(new RegExp(encodeURIComponent(CLIENTS_FOLDER)));
   await page.keyboard.press("j");
   await expect(page).toHaveURL(new RegExp(`${drivePath(account, "all")}$`));
 });

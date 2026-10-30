@@ -1,15 +1,13 @@
-import { readdir } from "node:fs/promises";
-
 import { CALENDAR_COLLECTIONS, type CalendarCollection } from "../lib/calendars";
+import { PERSONAL_EVENTS, type SeededEvent, WORK_EVENTS } from "./calendar-events";
 import {
   bulkEvent,
   CALENDAR_BULK_EVENTS,
   CALENDAR_CASES,
   CALENDAR_STRESS_CASES,
 } from "./edge/calendar-cases";
+import { vcalendar } from "./ics";
 import { edgeEnabled, reject } from "./report";
-
-const FIXTURES = new URL("./fixtures/calendar/", import.meta.url);
 
 function collectionName(slug: CalendarCollection): string {
   return CALENDAR_COLLECTIONS.find((c) => c.slug === slug)?.name ?? slug;
@@ -74,13 +72,17 @@ export async function seedCalendar(target: CaldavTarget): Promise<void> {
     throw new Error(`PROPFIND ${home} -> ${principal.status}`);
   }
 
-  const work = await ensureCollection(target, "work", collectionName("work"));
-  const files = (await readdir(FIXTURES)).filter((f) => f.endsWith(".ics"));
-  for (const file of files.toSorted()) {
-    const ics = await Bun.file(new URL(file, FIXTURES)).text();
-    await putEvent(target, `${work}${file}`, ics.replace(/\r?\n/g, "\r\n"));
+  const collections: [CalendarCollection, SeededEvent[]][] = [
+    ["work", WORK_EVENTS],
+    ["personal", PERSONAL_EVENTS],
+  ];
+  for (const [slug, seeded] of collections) {
+    const collection = await ensureCollection(target, slug, collectionName(slug));
+    for (const event of seeded) {
+      await putEvent(target, `${collection}${event.name}.ics`, vcalendar(event.events));
+    }
+    console.log(`[seed] put ${seeded.length} events into ${collection}`);
   }
-  console.log(`[seed] put ${files.length} events into ${work}`);
 
   if (!edgeEnabled()) return;
 

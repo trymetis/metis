@@ -1,8 +1,10 @@
+import { env } from "@metis/e2e/lib/env";
 import type { Page } from "@playwright/test";
 
 import { expect, type Rpc, RpcError, test, uniqueName } from "../fixtures";
-import type { Account } from "../harness";
+import { type Account, mailPath } from "../harness";
 import {
+  anyRowLabel,
   BUILT_IN_LABELS,
   bulkToolbar,
   composer,
@@ -15,13 +17,25 @@ import {
   openMail,
   pickDrive,
   scheduledRow,
+  searchAndOpen,
+  setMailboxAi,
   showTab,
   snoozeArmed,
   snoozedRow,
 } from "../mail";
 
+const RENDERED: [query: string, row: string][] = [
+  ["html-hostile", "html-hostile"],
+  ["html-no-visible-text", "html-no-visible-text"],
+  ["max-html-nesting-10k", "max-html-nesting-10k"],
+  ["html-css-20mb", "html-css-20mb"],
+  ["max-body-plain-20mb", "max-body-plain-20mb"],
+  ["mime-nested-100", "mime-nested-100"],
+  ["Long thread", "Re: Long thread"],
+];
+
 const TARGET = "INR 1,250.00 debited from a/c **4821";
-const OUTSIDE = "outside@discard.harness.test";
+const OUTSIDE = "outside@discard.demo.trymetis.email";
 
 interface ListedEmail {
   id: string;
@@ -59,7 +73,10 @@ async function findIn(
 
 async function openTarget(page: Page, account: Account, folder = "inbox", subject = TARGET) {
   await goToFolder(page, account, folder);
-  if (folder === "inbox") await showTab(page, "All");
+  if (folder === "inbox") {
+    await showTab(page, "All");
+    await expect(anyRowLabel(mailRow(page, subject))).toBeVisible();
+  }
   await openMail(page, subject);
 }
 
@@ -283,8 +300,8 @@ export default function mailSpecs() {
     const labelButton = messageToolbar(page).getByRole("button", {
       name: "Change label",
     });
+    await expect(labelButton).toHaveText(new RegExp(`^(${BUILT_IN_LABELS.join("|")})$`));
     const aiLabel = (await labelButton.innerText()).trim();
-    expect(BUILT_IN_LABELS as readonly string[]).toContain(aiLabel);
     const userLabel = aiLabel === "Personal" ? "Social" : "Personal";
     const target = await findIn(rpc, account, "inbox", TARGET);
     const clear = () =>
@@ -426,10 +443,10 @@ export default function mailSpecs() {
         .click();
       const picker = page.getByRole("dialog", { name: "Save to Drive" });
       await pickDrive(picker, rpc, account, account.driveSlugs.webdav ?? "");
-      await picker.getByRole("button", { name: "rebrand", exact: true }).click();
+      await picker.getByRole("button", { name: "Team", exact: true }).click();
       await picker.getByRole("button", { name: "Save here", exact: true }).click();
       await expect(
-        toasts(page).getByText("Saved invite.ics to rebrand", { exact: true }),
+        toasts(page).getByText("Saved invite.ics to Team", { exact: true }),
       ).toBeVisible();
       expect(await savedFiles()).toHaveLength(1);
     } finally {
@@ -529,5 +546,70 @@ export default function mailSpecs() {
         .poll(async () => (await findIn(rpc, account, "inbox", subject))?.isRead)
         .toBe(true);
     }
+  });
+
+  test.describe("malformed and oversized mail", () => {
+    test.skip(!env.edge, "the edge-case seed is off");
+
+    test("edge mail opens and renders without breaking the page", async ({
+      page,
+      rpc,
+      account,
+    }) => {
+      test.setTimeout(15 * 60_000);
+      const dialogs: string[] = [];
+      page.on("dialog", (dialog) => {
+        dialogs.push(dialog.message());
+        void dialog.dismiss();
+      });
+      const outside: string[] = [];
+      page.on("request", (req) => {
+        if (new URL(req.url()).hostname.endsWith(".invalid")) outside.push(req.url());
+      });
+
+      await setMailboxAi(rpc, account, false);
+      try {
+        await page.goto(mailPath(account));
+        await showTab(page, "All");
+        const title = await page.title();
+        for (const [query, subject] of RENDERED) {
+          await test.step(subject, async () => {
+            await searchAndOpen(page, query, subject);
+            await page.waitForLoadState("networkidle");
+            expect(await page.title(), subject).toBe(title);
+            expect(page.url(), subject).toContain(mailPath(account));
+          });
+        }
+        expect(dialogs).toEqual([]);
+        expect(outside).toEqual([]);
+      } finally {
+        await setMailboxAi(rpc, account, true);
+      }
+    });
+
+    test("hostile HTML renders in a frame without scripts, forms or navigation", async ({
+      page,
+      rpc,
+      account,
+    }) => {
+      await setMailboxAi(rpc, account, false);
+      try {
+        await page.goto(mailPath(account));
+        await showTab(page, "All");
+        await searchAndOpen(page, "html-hostile");
+        const frame = page.getByRole("main").locator("iframe");
+        await expect(frame).toBeAttached();
+        const sandbox = (await frame.getAttribute("sandbox")) ?? "";
+        expect(sandbox).not.toContain("allow-scripts");
+        expect(sandbox).not.toContain("allow-forms");
+        expect(sandbox).not.toContain("allow-top-navigation");
+        const body = frame.contentFrame().locator("body");
+        await expect(body).toContainText("Click to confirm");
+        await expect(body.locator("script")).toHaveCount(0);
+        await expect(body.locator("form")).toHaveCount(0);
+      } finally {
+        await setMailboxAi(rpc, account, true);
+      }
+    });
   });
 }

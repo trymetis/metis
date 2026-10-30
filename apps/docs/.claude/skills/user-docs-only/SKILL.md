@@ -12,7 +12,7 @@ Every page under `apps/docs/content/` is public. It is read by customers who hav
 - Code symbols, file paths, module, table, queue or service names, and internal driver names
 - Anything from `E2E_MISSES.md`, or `TODO` / `FIXME` / `HACK` notes
 - Planned, unbuilt or unreleased work, including Metis Cloud
-- Test fixtures and harness names (`harness.test`, `Harness Mail`, recorded model data) in prose
+- Test fixtures and their cast (`demo.trymetis.email`, `Fernhill Studio`, recorded model data) in prose
 - Employee names, ticket numbers, private repository links or chat channels
 - How a security control works inside (key formats, encryption layout, network guards). Describe what the customer sees and can rely on.
 

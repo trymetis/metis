@@ -144,7 +144,7 @@ test(
           await withImap((client) =>
             client.append(
               "Junk",
-              `From: feeds@harness.test\r\nTo: ${env.imap.user}\r\nSubject: ${subject}\r\nDate: ${new Date().toUTCString()}\r\n\r\nA message for the change feed.\r\n`,
+              `From: feeds@demo.trymetis.email\r\nTo: ${env.imap.user}\r\nSubject: ${subject}\r\nDate: ${new Date().toUTCString()}\r\n\r\nA message for the change feed.\r\n`,
             ),
           );
           const runId = await firedFor(rpc, account, workflowId, (e) => e.subject === subject);
@@ -197,7 +197,7 @@ test(
     const { rpc, account } = await ana();
     const calendarId = bySlug((await directory(rpc, account)).calendars, account.calendarSlug);
     const title = uniqueName();
-    const uid = `${title}@harness.test`;
+    const uid = `${title}@demo.trymetis.email`;
     const path = `/${env.caldav.user}/work/${title}.ics`;
     const start = new Date(Date.now() + 2 * 86_400_000);
     const end = new Date(start.getTime() + 3_600_000);
@@ -360,7 +360,7 @@ describe("a file added outside the app starts a run", () => {
   test("on S3", async () => expect(await driveFeed("s3", withS3)).toBeTruthy(), 2 * FEED_TIMEOUT);
   test(
     "on FTP",
-    async () => expect(await driveFeed("ftp", withFtp, "rebrand")).toBeTruthy(),
+    async () => expect(await driveFeed("ftp", withFtp, "Clients")).toBeTruthy(),
     2 * FEED_TIMEOUT,
   );
   test(

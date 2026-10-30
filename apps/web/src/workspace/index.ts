@@ -20,7 +20,7 @@ import {
 } from "@/db/schema";
 import type { WorkspaceSummary } from "@/server/schema";
 import { DEFAULT_THEME_BRAND, isThemeBrand, type ThemeBrandId } from "@/theme/brand";
-import type { WorkspacePlan, WorkspaceRole } from "@/types/workspace";
+import type { WorkspaceRole } from "@/types/workspace";
 import { memberJoined } from "@/workflow/hooks";
 
 import type { WorkspacePolicy } from "./policy";
@@ -127,7 +127,6 @@ export async function createWorkspace(
   opts: {
     name: string;
     ownerUserId: string;
-    plan?: WorkspacePlan;
   },
   executor: Executor = db,
 ): Promise<{ workspaceId: string; slug: string }> {
@@ -140,7 +139,6 @@ export async function createWorkspace(
     id: workspaceId,
     name: opts.name,
     slug,
-    plan: opts.plan ?? "free",
     createdAt: now,
     updatedAt: now,
   });
@@ -167,7 +165,6 @@ export async function getWorkspaceBySlug(
       id: workspace.id,
       name: workspace.name,
       slug: workspace.slug,
-      plan: workspace.plan,
       branding: workspace.branding,
       role: workspaceMember.role,
     })
@@ -180,7 +177,6 @@ export async function getWorkspaceBySlug(
     id: row.id,
     name: row.name,
     slug: row.slug,
-    plan: row.plan,
     role: row.role,
     themeBrand: workspaceThemeBrand(row.branding),
     logo: workspaceLogo(row.branding),
@@ -214,7 +210,6 @@ export async function listMyWorkspaces(userId: string): Promise<WorkspaceSummary
       id: workspace.id,
       name: workspace.name,
       slug: workspace.slug,
-      plan: workspace.plan,
       branding: workspace.branding,
       role: workspaceMember.role,
     })
@@ -226,7 +221,6 @@ export async function listMyWorkspaces(userId: string): Promise<WorkspaceSummary
     id: r.id,
     name: r.name,
     slug: r.slug,
-    plan: r.plan,
     role: r.role,
     themeBrand: workspaceThemeBrand(r.branding),
     logo: workspaceLogo(r.branding),

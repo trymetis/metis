@@ -1,10 +1,6 @@
-import { readdir } from "node:fs/promises";
-
+import { DRIVE_FILES } from "./drive-files";
 import { FILE_BULK_COUNT, FILE_BULK_PREFIX, FILE_CASES } from "./edge/file-cases";
-import { PREVIEW_CASES } from "./preview/file-cases";
 import { edgeEnabled, reject } from "./report";
-
-const FIXTURES = new URL("./fixtures/files/", import.meta.url);
 
 export interface FileSink {
   area: string;
@@ -27,28 +23,16 @@ async function inBatches(
 
 export async function seedFiles(sink: FileSink, edge?: { bulkConcurrency: number }): Promise<void> {
   try {
-    const files = await readdir(FIXTURES, { recursive: true });
     let count = 0;
-    for (const file of files.toSorted()) {
-      const blob = Bun.file(new URL(file, FIXTURES));
-      if (!(await blob.exists()) || blob.size === 0) continue;
-      await sink.put(file, new Uint8Array(await blob.arrayBuffer()), blob.type);
-      count++;
-    }
-    console.log(`[seed] uploaded ${count} files to ${sink.label}`);
-
-    let previewed = 0;
-    for (const preview of PREVIEW_CASES) {
+    for (const file of DRIVE_FILES) {
       try {
-        await sink.put(preview.key, preview.body(), preview.contentType);
-        previewed++;
+        await sink.put(file.key, file.body(), file.contentType);
+        count++;
       } catch (err) {
-        reject(sink.area, preview.key, err);
+        reject(sink.area, file.key, err);
       }
     }
-    console.log(
-      `[seed] uploaded ${previewed}/${PREVIEW_CASES.length} preview files to ${sink.label}`,
-    );
+    console.log(`[seed] uploaded ${count}/${DRIVE_FILES.length} files to ${sink.label}`);
 
     if (!edge || !edgeEnabled()) return;
 

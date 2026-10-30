@@ -12,6 +12,7 @@ import {
 } from "@modelcontextprotocol/client";
 import { z } from "zod";
 
+import { MCP_CLIENT_HOSTS } from "../lib/cast";
 import { APP } from "./harness";
 
 export const ISSUER = `${APP}/api/auth`;
@@ -24,7 +25,7 @@ export type Era = (typeof ERAS)[number];
 const SERVICE_CONTROL = "http://localhost:8098";
 
 export function clientIdFor(name: string, host: "public" | "private" = "public"): string {
-  const domain = host === "public" ? "mcp-client.harness.test" : "mcp-client-private.harness.test";
+  const domain = MCP_CLIENT_HOSTS[host];
   return `https://${domain}/clients/${name}.json`;
 }
 

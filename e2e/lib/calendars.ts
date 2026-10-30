@@ -1,5 +1,6 @@
 export const CALENDAR_COLLECTIONS = [
   { slug: "work", name: "Work" },
+  { slug: "personal", name: "Personal" },
   { slug: "edge", name: "Edge cases" },
   { slug: "bulk", name: "Bulk" },
 ] as const;

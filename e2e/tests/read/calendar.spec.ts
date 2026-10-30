@@ -35,7 +35,7 @@ test("day, week, month, year and schedule views, and today", async ({ page, acco
   }
 
   await chooseView(page, "Schedule");
-  await expect(timedEvent(page, "3pm – 4pm Design review ana@harness.test")).toBeVisible();
+  await expect(timedEvent(page, "3pm – 4pm Design review ana@demo.trymetis.email")).toBeVisible();
 
   await chooseView(page, "Month");
   await toolbar(page).getByRole("button", { name: "Next", exact: true }).click();

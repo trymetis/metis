@@ -30,10 +30,10 @@ export async function appendFixture(
   login: ImapLogin,
   mail: { from: string; subject: string; headers?: [string, string][] },
 ): Promise<FixtureMail> {
-  const messageId = `<fixture-${randomUUID()}@harness.test>`;
+  const messageId = `<fixture-${randomUUID()}@demo.trymetis.email>`;
   const raw = [
     `From: ${mail.from}`,
-    `To: ${login.user}@harness.test`,
+    `To: ${login.user}@demo.trymetis.email`,
     `Subject: ${mail.subject}`,
     `Date: ${ARRIVAL.toUTCString()}`,
     `Message-ID: ${messageId}`,

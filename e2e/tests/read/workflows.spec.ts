@@ -24,7 +24,7 @@ const SEEDED = [
   "Label rebrand mail",
   "Morning newsletter sweep",
   "File new mail from Raj",
-  "Collect rebrand and GitHub mail",
+  "Collect rebrand and Codeyard mail",
   "Label orders once both checks finish",
   "Triage with the decision model",
   LATE_ARRIVAL_WORKFLOW,
@@ -44,9 +44,15 @@ const SEEDED = [
   AI_WORKFLOW,
   AGENT_WORKFLOW,
 ];
-const REBRAND_SUBJECTS = [
-  "Rebrand kickoff",
-  "Invitation: Rebrand review @ Thu Oct 8, 2026 15:00 UTC",
+const REBRAND_ITEMS = [
+  "Invitation: Rebrand review @ Thu Oct 8, 2026 15:00 UTC · Raj Mehta",
+  "Rebrand kickoff · Raj Mehta",
+  "Automatic reply: Re: Aozora rebrand: logo shortlist (was: brief and timeline) · Kenji Watanabe",
+  "Re: Aozora rebrand: logo shortlist (was: brief and timeline) · Raj Mehta",
+  "Re: Aozora rebrand: logo shortlist (was: brief and timeline) · Tomás Ortega",
+  "Re: Aozora rebrand: brief and timeline · Raj Mehta",
+  "Re: Aozora rebrand: brief and timeline · Kenji Watanabe",
+  "Aozora rebrand: brief and timeline · Kenji Watanabe",
 ];
 const NEW_MAIL = ["File new mail from Raj", LATE_ARRIVAL_WORKFLOW, WEBHOOK_WORKFLOW];
 const NOT_RUN_BY_HAND = new Set([
@@ -134,15 +140,15 @@ test("the seeded history has one run per manual and schedule workflow, with take
 
   await page.getByRole("group", { name: /^Label: / }).click();
   const step = page.getByRole("region", { name: "Selected step" });
-  await expect(step.getByText(new RegExp(`^completed ×${REBRAND_SUBJECTS.length}`))).toBeVisible();
+  await expect(step.getByText(new RegExp(`^completed ×${REBRAND_ITEMS.length}`))).toBeVisible();
   const items = step.getByRole("listitem");
-  await expect(items).toHaveCount(REBRAND_SUBJECTS.length);
+  await expect(items).toHaveCount(REBRAND_ITEMS.length);
   for (const item of await items.all()) {
     await expect(item.getByText("completed", { exact: true })).toBeVisible();
     await expect(item.getByText("Input", { exact: true })).toBeVisible();
   }
-  for (const subject of REBRAND_SUBJECTS) {
-    await expect(items.filter({ hasText: subject })).toHaveCount(1);
+  for (const item of REBRAND_ITEMS) {
+    await expect(items.filter({ has: page.getByText(item, { exact: true }) })).toHaveCount(1);
   }
 });
 

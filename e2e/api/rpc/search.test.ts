@@ -69,19 +69,19 @@ test("a retired or unknown key comes back as a diagnostic with no results", asyn
 
 test("mail search combines provider fields, negation and OR", async () => {
   const { rpc, account } = await ana();
-  const both = await mail(rpc, account, "from:raj@harness.test subject:Rebrand");
+  const both = await mail(rpc, account, "from:raj@demo.trymetis.email subject:Rebrand");
   const subjects = both.emails.map((e) => e.subject);
   expect(subjects).toContain("Rebrand kickoff");
   expect(subjects.some((s) => s.startsWith("Invitation: Rebrand review"))).toBe(true);
-  for (const hit of both.emails) expect(hit.from).toBe("raj@harness.test");
+  for (const hit of both.emails) expect(hit.from).toBe("raj@demo.trymetis.email");
 
-  const without = await mail(rpc, account, "from:raj@harness.test -subject:kickoff");
+  const without = await mail(rpc, account, "from:raj@demo.trymetis.email -subject:kickoff");
   expect(without.emails.map((e) => e.subject)).not.toContain("Rebrand kickoff");
 
   const either = await mail(
     rpc,
     account,
-    "(from:orders@acme.test OR from:alerts@bank.harness.test) mail-folder:inbox",
+    "(from:orders@brightloom.com OR from:alerts@konkanbank.in) mail-folder:inbox",
   );
   const found = either.emails.map((e) => e.subject);
   expect(found).toContain("Your order A-42 has shipped");
@@ -135,9 +135,9 @@ test.each(DRIVES)(
 
     const folders = await rpc<{ entries: FileHit[] }>(
       "search.files",
-      input(account, `drive:${slug} rebrand kind:folder`),
+      input(account, `drive:${slug} Clients kind:folder`),
     );
-    expect(folders.entries.map((e) => e.name)).toContain("rebrand");
+    expect(folders.entries.map((e) => e.name)).toContain("Clients");
     for (const hit of folders.entries) {
       expect(hit.kind).toBe("folder");
       expect(hit.driveSlug).toBe(slug);
@@ -149,7 +149,7 @@ test("a filter no file takes searches no file", async () => {
   const { rpc, account } = await ana();
   const res = await rpc<{ entries: FileHit[] }>(
     "search.files",
-    input(account, "from:raj@harness.test welcome"),
+    input(account, "from:raj@demo.trymetis.email welcome"),
   );
   expect(res.entries).toEqual([]);
 });
@@ -209,7 +209,7 @@ test("saved searches round-trip and a deleted one is gone", async () => {
   const { search } = await rpc<{ search: { id: string; query: string } }>("search.saved.create", {
     ...scope,
     name,
-    query: "from:raj@harness.test has:attachment",
+    query: "from:raj@demo.trymetis.email has:attachment",
   });
   try {
     const { searches } = await rpc<{
@@ -217,7 +217,7 @@ test("saved searches round-trip and a deleted one is gone", async () => {
     }>("search.saved.list", scope);
     expect(searches.find((s) => s.id === search.id)).toMatchObject({
       name,
-      query: "from:raj@harness.test has:attachment",
+      query: "from:raj@demo.trymetis.email has:attachment",
     });
   } finally {
     await rpc("search.saved.delete", { ...scope, id: search.id });

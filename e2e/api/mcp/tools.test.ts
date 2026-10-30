@@ -1,3 +1,4 @@
+import { PEOPLE, REBRAND_FOLDER, SENDERS, SUBJECTS } from "@metis/e2e/lib/cast";
 import { env } from "@metis/e2e/lib/env";
 import { appendFixture, deleteFixture } from "@metis/e2e/lib/fixture-mail";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
@@ -7,15 +8,16 @@ import { type Account, harness } from "../../clients/harness";
 import { type Rpc, rpcWithCookie } from "../../clients/rpc";
 import { signIn } from "../../clients/sign-in";
 import { TOOL_GROUPS, type ToolGroup } from "../../lib/mcp-clients";
+import { anchorMessageId } from "../../seed/mailbox/anchors";
 import { type McpSession, session } from "../support/mcp";
 import { uniqueName, until } from "../support/poll";
 import { ana, totpCode } from "../support/session";
 import { SETTLED } from "../support/workflow";
 
-const BANK = "INR 1,250.00 debited from a/c **4821";
-const SHOP = "This week at the shop";
-const GITHUB = "[GitHub] Your sign-in verification code";
-const OUTSIDE_DOMAIN = "discard.harness.test";
+const BANK = SUBJECTS.bank;
+const SHOP = SUBJECTS.newsletter;
+const CODEYARD = SUBJECTS.otp;
+const OUTSIDE_DOMAIN = "discard.demo.trymetis.email";
 const RANGE = {
   timeMin: "2026-10-04T00:00:00Z",
   timeMax: "2026-10-11T00:00:00Z",
@@ -24,7 +26,7 @@ const SEEDED_WORKFLOWS = [
   "Label rebrand mail",
   "Morning newsletter sweep",
   "File new mail from Raj",
-  "Collect rebrand and GitHub mail",
+  "Collect rebrand and Codeyard mail",
   "Label orders once both checks finish",
   "Triage with the decision model",
   "Triage new mail",
@@ -195,7 +197,7 @@ async function withFolder(
   try {
     await run(created.fileId, name);
   } finally {
-    for (const parent of [undefined, "rebrand/"]) {
+    for (const parent of [undefined, REBRAND_FOLDER]) {
       const { entries } = await s.ok<{
         entries: { fileId: string; name: string }[];
       }>("listFolder", { ...drive(c), folderId: parent });
@@ -621,7 +623,7 @@ const READS: Case[] = [
       expect(out.currentVersion).toBeGreaterThan(0);
       expect(out.run).not.toBeNull();
       expect(
-        out.run?.warnings.filter((w) => w.message.includes("Harness Cloudflare")),
+        out.run?.warnings.filter((w) => w.message.includes("Fernhill Inbound")),
         "the Cloudflare gateway passed preflight",
       ).toEqual([]);
     },
@@ -751,7 +753,7 @@ const READS: Case[] = [
         query: "raj",
       });
       expect(out.count).toBe(out.contacts.length);
-      expect(out.contacts.map((m) => m.email)).toContain("raj@harness.test");
+      expect(out.contacts.map((m) => m.email)).toContain(PEOPLE.raj.email);
     },
   },
   {
@@ -853,6 +855,7 @@ const READS: Case[] = [
       expect(out.calendars.map((cal) => cal.name).toSorted()).toEqual([
         "Bulk",
         "Edge cases",
+        "Personal",
         "Work",
       ]);
       expect(out.calendars.map((cal) => cal.calendarId)).toContain(c.work.calendarId);
@@ -967,7 +970,7 @@ const READS: Case[] = [
         expect.objectContaining({ name: "welcome.txt", kind: "file" }),
       );
       expect(out.entries).toContainEqual(
-        expect.objectContaining({ name: "rebrand", kind: "folder" }),
+        expect.objectContaining({ name: "Clients", kind: "folder" }),
       );
     },
   },
@@ -1007,7 +1010,7 @@ const READS: Case[] = [
       expect(out.name).toBe("welcome.txt");
       expect(out.text.length).toBeGreaterThan(0);
       expect(out.truncated).toBe(false);
-      expect(await s.refused("getFileText", { ...drive(c), fileId: "rebrand/" })).toBe(
+      expect(await s.refused("getFileText", { ...drive(c), fileId: REBRAND_FOLDER })).toBe(
         "That is a folder, not a file",
       );
     },
@@ -1027,7 +1030,7 @@ const READS: Case[] = [
         pins: { label: string; folderId: string }[];
       }>("listPins", ws(c));
       expect(
-        out.pins.filter((p) => p.label === "Rebrand" && p.folderId === "rebrand/"),
+        out.pins.filter((p) => p.label === "Rebrand" && p.folderId === REBRAND_FOLDER),
       ).toHaveLength(2);
     },
   },
@@ -1058,7 +1061,7 @@ const READS: Case[] = [
     tool: "listMuted",
     run: async (s, c) => {
       const out = await s.ok<{ count: number; threadIds: string[] }>("listMuted", box(c));
-      expect(out.threadIds).toContain("<e2e-otp-0001@harness.test>");
+      expect(out.threadIds).toContain(anchorMessageId(SUBJECTS.otp));
     },
   },
   {
@@ -1081,7 +1084,7 @@ const READS: Case[] = [
       expect(out.count).toBe(out.senders.length);
       expect(out.senders).toContainEqual(
         expect.objectContaining({
-          senderEmail: "news@shop.harness.test",
+          senderEmail: SENDERS.kestrel.email,
           methods: ["one_click", "mailto", "link"],
         }),
       );
@@ -1462,7 +1465,7 @@ const LABELS: Case[] = [
   {
     tool: "setLabel",
     run: async (s, c) => {
-      const target = await must(s, c, "inbox", GITHUB);
+      const target = await must(s, c, "inbox", CODEYARD);
       try {
         expect(
           await s.ok("setLabel", {
@@ -1486,7 +1489,7 @@ const LABELS: Case[] = [
   {
     tool: "setLabels",
     run: async (s, c) => {
-      const target = await must(s, c, "inbox", GITHUB);
+      const target = await must(s, c, "inbox", CODEYARD);
       try {
         const out = await s.ok<{
           count: number;
@@ -1502,7 +1505,7 @@ const LABELS: Case[] = [
   {
     tool: "clearLabel",
     run: async (s, c) => {
-      const target = await must(s, c, "inbox", GITHUB);
+      const target = await must(s, c, "inbox", CODEYARD);
       await s.ok("setLabel", { ...box(c), id: target.id, label: "updates" });
       expect(await s.ok("clearLabel", { ...box(c), id: target.id })).toMatchObject({
         success: true,
@@ -1555,10 +1558,10 @@ const DRIVE: Case[] = [
           await s.ok("moveFile", {
             ...drive(c),
             fileId,
-            parentFolderId: "rebrand/",
+            parentFolderId: REBRAND_FOLDER,
           }),
-        ).toMatchObject({ moved: true, parentFolderId: "rebrand/" });
-        expect((await folderEntries(s, c, "rebrand/")).map((e) => e.name)).toContain(name);
+        ).toMatchObject({ moved: true, parentFolderId: REBRAND_FOLDER });
+        expect((await folderEntries(s, c, REBRAND_FOLDER)).map((e) => e.name)).toContain(name);
         expect((await folderEntries(s, c)).map((e) => e.name)).not.toContain(name);
       });
     },
@@ -2070,7 +2073,7 @@ beforeAll(async () => {
     });
     const mailbox = { workspaceId, mailboxId: mailboxes[0]?.mailboxId ?? "" };
     const inbox = await emails(s, mailbox, "inbox");
-    const kickoff = inbox.find((e) => e.subject === "Rebrand kickoff");
+    const kickoff = inbox.find((e) => e.subject === SUBJECTS.kickoff);
     const invite = inbox.find((e) => e.subject.startsWith("Invitation: Rebrand review"));
     if (!kickoff || !invite) throw new Error("the seeded inbox is missing mail");
     const { attachments } = await s.ok<{

@@ -1,12 +1,15 @@
-import { CLASSIFY_BATCH_SIZE, INBOX_PAGE_SIZE } from "@metis/e2e/lib/llm-scenarios";
+import { CLASSIFY_BATCH_SIZE, GATED_SUBJECTS, INBOX_PAGE_SIZE } from "@metis/e2e/lib/llm-scenarios";
 import { inArray } from "drizzle-orm";
+import { z } from "zod";
 
 import { db } from "../../../../src/db";
 import { mailLabel } from "../../../../src/db/schema";
 import { classifyMessages } from "../../../../src/mail/classify";
 import { mailboxIds, scopeMessage } from "../../../../src/mail/session";
+import { generateSmartReplies } from "../../../../src/mail/smart-replies";
 import { buildThreadSummary } from "../../../../src/mail/thread-summary";
 import { decisionEnabled } from "../../../../src/services/decision";
+import { MAIL_FOLDERS, type MailFolder } from "../../../../src/types/mail";
 import { eachLimited, Failures, type InboxEmail, loadWorld, type StepContext } from "./context";
 
 const SUMMARY_LANES = 4;
@@ -67,22 +70,16 @@ async function beyondFirstPage(ctx: StepContext, firstPage: InboxEmail[]): Promi
   return rest;
 }
 
-export async function run(ctx: StepContext): Promise<void> {
+async function summarizeThreads(ctx: StepContext, emails: InboxEmail[], classifier: string) {
   const { mail } = ctx.session;
-  const { inbox } = await loadWorld(ctx);
-  const classifier = decisionEnabled("classifier") ? "decision" : "LLM";
-
-  const classified = await classifyLikeTheList(ctx, inbox);
-  console.log(`[record] ${classifier} classifier labelled ${classified}/${inbox.length}`);
-
   const threads = new Map<string, InboxEmail[]>();
-  for (const email of inbox) {
+  for (const email of emails) {
     const thread = email.threadId ?? email.id;
     threads.set(thread, [...(threads.get(thread) ?? []), email]);
   }
   const failures = new Failures();
-  await eachLimited([...threads.values()], SUMMARY_LANES, async (emails) => {
-    for (const email of emails) {
+  await eachLimited([...threads.values()], SUMMARY_LANES, async (thread) => {
+    for (const email of thread) {
       await failures.attempt(`summary "${email.subject}"`, async () => {
         await buildThreadSummary(mail, email.id, email.threadId);
         console.log(`[record] summary under ${classifier} labels "${email.subject}"`);
@@ -90,6 +87,56 @@ export async function run(ctx: StepContext): Promise<void> {
     }
   });
   failures.throwIfAny();
+}
+
+async function recordFolder(ctx: StepContext, folder: MailFolder): Promise<void> {
+  const { emails } = await ctx.session.mail.adapter.listMessages(
+    folder,
+    undefined,
+    INBOX_PAGE_SIZE,
+  );
+  const classified = await classifyLikeTheList(ctx, emails);
+  console.log(`[record] decision classifier labelled ${classified}/${emails.length} in ${folder}`);
+  await summarizeThreads(ctx, emails, "decision");
+}
+
+async function recordGated(ctx: StepContext): Promise<void> {
+  const { mail } = ctx.session;
+  const { inbox } = await loadWorld(ctx);
+  const all = [...inbox, ...(await beyondFirstPage(ctx, inbox))];
+  for (const subject of GATED_SUBJECTS) {
+    const email = all.find((e) => e.subject === subject);
+    if (!email) throw new Error(`"${subject}" is not in the inbox`);
+    const item = {
+      id: email.id,
+      sender: email.fromName || email.from,
+      subject: email.subject,
+      snippet: email.snippet,
+    };
+    await classifyMessages(mail, [item]);
+    await buildThreadSummary(mail, email.id, email.threadId);
+    await generateSmartReplies(mail, item);
+    console.log(`[record] searched, classified, summarized and replied to "${subject}"`);
+  }
+}
+
+export async function run(ctx: StepContext): Promise<void> {
+  const folder = ctx.scenario.arg;
+  if (folder === "gated") {
+    await recordGated(ctx);
+    return;
+  }
+  if (folder) {
+    await recordFolder(ctx, z.enum(MAIL_FOLDERS).parse(folder));
+    return;
+  }
+  const { inbox } = await loadWorld(ctx);
+  const classifier = decisionEnabled("classifier") ? "decision" : "LLM";
+
+  const classified = await classifyLikeTheList(ctx, inbox);
+  console.log(`[record] ${classifier} classifier labelled ${classified}/${inbox.length}`);
+
+  await summarizeThreads(ctx, inbox, classifier);
 
   if (decisionEnabled("classifier")) {
     const rest = await beyondFirstPage(ctx, inbox);

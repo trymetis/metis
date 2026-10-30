@@ -1,7 +1,7 @@
 import { CRLF } from "./mime";
 import { words } from "./rng";
 
-const DOMAIN = "edge.harness.test";
+const DOMAIN = "edge.test";
 
 export interface CalendarCase {
   name: string;
