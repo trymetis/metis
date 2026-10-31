@@ -11,8 +11,8 @@ Click the **Drive AI** button (the robot icon) at the right end of the toolbar, 
 
 The panel is titled **Drive AI**. Below the title it says **This drive**, or **All drives** when you open it from [All drives](/guide/drive/all-drives).
 
-<img src="/images/drive/drive-ai.png" alt="The Drive AI panel open beside the files, with suggested questions" class="dark:hidden" />
-<img src="/images/drive/drive-ai-dark.png" alt="The Drive AI panel open beside the files, with suggested questions" class="hidden dark:block" />
+<img src="/images/drive/drive-ai.webp" alt="The Drive AI panel open beside the files, with suggested questions" class="dark:hidden" />
+<img src="/images/drive/drive-ai-dark.webp" alt="The Drive AI panel open beside the files, with suggested questions" class="hidden dark:block" />
 
 If you do not see the button, AI is turned off for your Metis instance.
 

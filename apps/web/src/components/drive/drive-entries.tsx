@@ -35,9 +35,9 @@ import type { DriveEntryRow } from "@/server/schema";
 export type DriveView = "list" | "grid";
 
 function formatDate(value: string | null): string {
-  if (!value) return "—";
+  if (!value) return "";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "";
   return date.toLocaleDateString(undefined, {
     day: "numeric",
     month: "short",
@@ -47,7 +47,7 @@ function formatDate(value: string | null): string {
 
 function formatSize(entry: DriveEntryRow): string {
   if (entry.kind === "folder") return "Folder";
-  return entry.size === null ? "—" : formatBytes(entry.size);
+  return entry.size === null ? "" : formatBytes(entry.size);
 }
 
 interface EntryActions {
@@ -235,6 +235,8 @@ function EntryItem({
     if (open) onSelect();
   };
   const touchTap = useRef(false);
+  const size = formatSize(entry);
+  const modified = formatDate(entry.modifiedAt);
 
   return (
     <ContextMenu onOpenChange={selectOnOpen}>
@@ -273,12 +275,14 @@ function EntryItem({
                 folder: entry.kind === "folder",
               })}
             >
-              {formatSize(entry)}
+              {size}
             </span>
-            <span aria-hidden className={metaSeparatorVariants({ view })}>
-              ·
-            </span>
-            <span className={dateVariants({ view })}>{formatDate(entry.modifiedAt)}</span>
+            {size && modified && (
+              <span aria-hidden className={metaSeparatorVariants({ view })}>
+                ·
+              </span>
+            )}
+            <span className={dateVariants({ view })}>{modified}</span>
           </span>
         </button>
         <DropdownMenu onOpenChange={selectOnOpen}>

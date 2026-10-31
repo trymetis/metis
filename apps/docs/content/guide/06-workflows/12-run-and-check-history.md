@@ -39,8 +39,8 @@ If the run is waiting for an approval you can give, you can approve or deny it r
 
 Click **Activity** at the bottom of the workflow list. The **Workflow activity** page lists up to the latest 100 runs in the workspace that you can see, newest first, and refreshes on its own. To see the runs of one workflow, choose it in the list at the top right, which shows **All workflows** to start with.
 
-<img src="/images/workflows/activity.png" alt="The Workflow activity page with a list of runs" class="dark:hidden" />
-<img src="/images/workflows/activity-dark.png" alt="The Workflow activity page with a list of runs" class="hidden dark:block" />
+<img src="/images/workflows/activity.webp" alt="The Workflow activity page with a list of runs" class="dark:hidden" />
+<img src="/images/workflows/activity-dark.webp" alt="The Workflow activity page with a list of runs" class="hidden dark:block" />
 
 Each run shows:
 
@@ -71,8 +71,8 @@ To retry a **failed**, **partial** or **blocked** run, see [Cancel and retry run
 
 Click a run to open its details. The header shows the workflow name, the status and the run's id. The back arrow returns to **Workflow activity**.
 
-<img src="/images/workflows/run-detail.png" alt="The details of one run, with its facts, the graph and the selected Label step" class="dark:hidden" />
-<img src="/images/workflows/run-detail-dark.png" alt="The details of one run, with its facts, the graph and the selected Label step" class="hidden dark:block" />
+<img src="/images/workflows/run-detail.webp" alt="The details of one run, with its facts, the graph and the selected Label step" class="dark:hidden" />
+<img src="/images/workflows/run-detail-dark.webp" alt="The details of one run, with its facts, the graph and the selected Label step" class="hidden dark:block" />
 
 ### The facts
 
@@ -98,8 +98,8 @@ The **Graph** shows the workflow exactly as it was when it ran. Each step is col
 
 Click a step to open its details in a card below the graph. Click **Close step detail** to close it. On a touch screen, tap **Move the graph** to pan and zoom, and **Stop moving the graph** when you are done.
 
-<img src="/images/workflows/run-selected-step.png" alt="The details card for the selected Label step, listing each message it labelled" class="dark:hidden" />
-<img src="/images/workflows/run-selected-step-dark.png" alt="The details card for the selected Label step, listing each message it labelled" class="hidden dark:block" />
+<img src="/images/workflows/run-selected-step.webp" alt="The details card for the selected Label step, listing each message it labelled" class="dark:hidden" />
+<img src="/images/workflows/run-selected-step-dark.webp" alt="The details card for the selected Label step, listing each message it labelled" class="hidden dark:block" />
 
 ### The steps
 

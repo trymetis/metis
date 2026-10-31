@@ -2,7 +2,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-import { type Browser, chromium, type Page } from "@playwright/test";
+import { type Browser, chromium, type Page, type PageScreenshotOptions } from "@playwright/test";
+import sharp from "sharp";
 import { z } from "zod";
 
 const APP = process.env.DOCS_APP_URL ?? "http://localhost:3000";
@@ -111,7 +112,7 @@ function contextOptions() {
   return {
     baseURL: APP,
     viewport: { width: 1440, height: 900 },
-    deviceScaleFactor: 1,
+    deviceScaleFactor: 2,
     colorScheme: "light" as const,
     timezoneId: "UTC",
     locale: "en-US",
@@ -222,16 +223,20 @@ async function unscroll(page: Page) {
   });
 }
 
+async function shoot(page: Page, path: string, options: PageScreenshotOptions) {
+  const png = await page.screenshot({ ...options, type: "png" });
+  await sharp(png).webp({ quality: 80 }).toFile(path);
+}
+
 async function capture(page: Page, shot: Shot, path: string) {
   await unscroll(page);
-  if (shot.clip) await page.screenshot({ path, clip: shot.clip });
+  if (shot.clip) await shoot(page, path, { clip: shot.clip });
   else if (shot.element)
-    await page.screenshot({
-      path,
+    await shoot(page, path, {
       fullPage: true,
       clip: await region(page, shot.element, shot.pad),
     });
-  else await page.screenshot({ path, fullPage: shot.fullPage });
+  else await shoot(page, path, { fullPage: shot.fullPage });
 }
 
 async function switchTheme(page: Page, theme: string) {
@@ -260,7 +265,9 @@ async function main() {
       ...(shot.viewport ? { viewport: shot.viewport } : {}),
       storageState: shot.signedOut ? undefined : state,
     });
-    await context.addInitScript(() => localStorage.setItem("theme", "light"));
+    await context.addInitScript(() => {
+      if (window === window.top) localStorage.setItem("theme", "light");
+    });
     const page = await context.newPage();
     if (shot.seededWeek) await page.clock.setFixedTime(CLOCK);
     try {
@@ -270,7 +277,7 @@ async function main() {
       await page.waitForTimeout(400);
       for (const { theme, suffix } of THEMES) {
         if (theme !== "light") await switchTheme(page, theme);
-        const file = join(OUT, `${shot.name}${suffix}.png`);
+        const file = join(OUT, `${shot.name}${suffix}.webp`);
         await mkdir(dirname(file), { recursive: true });
         await capture(page, shot, file);
       }

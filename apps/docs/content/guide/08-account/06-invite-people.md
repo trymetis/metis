@@ -14,8 +14,8 @@ This page is about inviting someone to create an account on your instance. It do
 3. In the **Invite someone** card, type the person's email address.
 4. Click **Send invite**.
 
-<img src="/images/account/invites.png" alt="The Invites settings page with the Invite someone card and a list of invites" class="dark:hidden" />
-<img src="/images/account/invites-dark.png" alt="The Invites settings page with the Invite someone card and a list of invites" class="hidden dark:block" />
+<img src="/images/account/invites.webp" alt="The Invites settings page with the Invite someone card and a list of invites" class="dark:hidden" />
+<img src="/images/account/invites-dark.webp" alt="The Invites settings page with the Invite someone card and a list of invites" class="hidden dark:block" />
 
 You see "Invite sent to" followed by their address. They get an email with a **Create your account** button. They then pick a name and password and set up two-factor authentication, as shown in [Sign in for the first time](/guide/get-started/sign-in-for-the-first-time).
 

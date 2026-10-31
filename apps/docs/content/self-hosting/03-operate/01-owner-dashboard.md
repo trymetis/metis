@@ -13,8 +13,8 @@ Click your initials at the bottom of the left rail and choose **Dashboard**. The
 
 The sidebar lists **Overview**, **AI usage**, **Connections**, **People**, **Workspaces**, **Automation**, **MCP clients**, **Audit log** and **System**. Click **Back** to return to your mail. At the bottom of the sidebar are the deploy check bar and the source code link.
 
-<img src="/images/self-hosting/dashboard-overview.png" alt="The dashboard Overview page with counts, health cards and the sidebar" class="dark:hidden" />
-<img src="/images/self-hosting/dashboard-overview-dark.png" alt="The dashboard Overview page with counts, health cards and the sidebar" class="hidden dark:block" />
+<img src="/images/self-hosting/dashboard-overview.webp" alt="The dashboard Overview page with counts, health cards and the sidebar" class="dark:hidden" />
+<img src="/images/self-hosting/dashboard-overview-dark.webp" alt="The dashboard Overview page with counts, health cards and the sidebar" class="hidden dark:block" />
 
 Every page except **System** is read-only.
 
@@ -34,8 +34,8 @@ The tokens every AI feature used, counted per day in UTC. Pick **7 days**, **30 
 - Charts: **Tokens per day** and **Tokens by feature**.
 - Tables: **By model** (model, driver, calls and tokens) and **Recent calls** (the last 20 in the range).
 
-<img src="/images/self-hosting/ai-usage.png" alt="The AI usage page with totals, the tokens per day chart and the usage by model" class="dark:hidden" />
-<img src="/images/self-hosting/ai-usage-dark.png" alt="The AI usage page with totals, the tokens per day chart and the usage by model" class="hidden dark:block" />
+<img src="/images/self-hosting/ai-usage.webp" alt="The AI usage page with totals, the tokens per day chart and the usage by model" class="dark:hidden" />
+<img src="/images/self-hosting/ai-usage-dark.webp" alt="The AI usage page with totals, the tokens per day chart and the usage by model" class="hidden dark:block" />
 
 ## Connections
 
@@ -74,8 +74,8 @@ The runner card shows a status badge, the runner, its cadence and its tick budge
 
 Below it are the last successful tick, discovery lag, backlog, work waiting to retry, blocked runs, and unconfirmed sends waiting for a person. The page also counts workflows, runs and failures, and the queued, completed and failed scheduled mail. **Recent runs** lists the latest workflow runs and their results.
 
-<img src="/images/self-hosting/dashboard-automation.png" alt="The Automation page with the runner card and recent workflow runs" class="dark:hidden" />
-<img src="/images/self-hosting/dashboard-automation-dark.png" alt="The Automation page with the runner card and recent workflow runs" class="hidden dark:block" />
+<img src="/images/self-hosting/dashboard-automation.webp" alt="The Automation page with the runner card and recent workflow runs" class="dark:hidden" />
+<img src="/images/self-hosting/dashboard-automation-dark.webp" alt="The Automation page with the runner card and recent workflow runs" class="hidden dark:block" />
 
 See [Background work](/self-hosting/configure/background-work).
 
@@ -87,8 +87,8 @@ Every external MCP client registered on the instance: **Clients**, **Enabled** a
 
 "Security-relevant changes by every user on this instance."
 
-<img src="/images/self-hosting/dashboard-audit.png" alt="The Audit log page with the All events card, the search box, the event type list and the empty state" class="dark:hidden" />
-<img src="/images/self-hosting/dashboard-audit-dark.png" alt="The Audit log page with the All events card, the search box, the event type list and the empty state" class="hidden dark:block" />
+<img src="/images/self-hosting/dashboard-audit.webp" alt="The Audit log page with the All events card, the search box, the event type list and the empty state" class="dark:hidden" />
+<img src="/images/self-hosting/dashboard-audit-dark.webp" alt="The Audit log page with the All events card, the search box, the event type list and the empty state" class="hidden dark:block" />
 
 The **All events** card lists changes such as turned-off two-factor authentication, turned-off sign-in alerts, approved MCP clients, disconnected accounts, removed or detached mailboxes, calendars and drives, role changes, removed members, ownership transfers, invites, deleted workspaces and accounts, and undone upgrades. The full list of what is recorded is in [Security activity](/guide/account/security-activity#what-is-recorded). Each change is recorded after it succeeds. Reading mail, events or files is never recorded.
 
@@ -169,8 +169,8 @@ A provider with no settings shows **Not configured**: "Users cannot connect acco
 
 Editing a field shows a bar with the number of unsaved changes, **Reset** and **Save changes**. Saving asks for your authenticator code, then checks the changed settings against the real service before anything is stored. See [How configuration works](/self-hosting/configure/how-configuration-works#saving-a-change-in-the-dashboard).
 
-<img src="/images/self-hosting/dashboard-save-bar.png" alt="The Instance page with one unsaved change and the save bar" class="dark:hidden" />
-<img src="/images/self-hosting/dashboard-save-bar-dark.png" alt="The Instance page with one unsaved change and the save bar" class="hidden dark:block" />
+<img src="/images/self-hosting/dashboard-save-bar.webp" alt="The Instance page with one unsaved change and the save bar" class="dark:hidden" />
+<img src="/images/self-hosting/dashboard-save-bar-dark.webp" alt="The Instance page with one unsaved change and the save bar" class="hidden dark:block" />
 
 If you click another dashboard link with unsaved changes, the dashboard keeps you on the page and the bar asks you to save or reset first. Closing or reloading the tab asks you to confirm. The browser's Back button is not guarded, so save before you use it.
 
@@ -183,8 +183,8 @@ Every saved change is a version. The **History** page lists them, newest first: 
 - **Compare:** pick two versions in **From** and **To** to see what changed, as old and new values. Secrets show only whether they changed.
 - **Restore:** click **Restore** on a row and enter your authenticator code. Every setting that differs is checked against the real service, then stored as a new version. Restoring never rewrites history. If a check fails, you see **Restore refused** and nothing changes.
 
-<img src="/images/self-hosting/dashboard-history.png" alt="The History page with the list of stored versions" class="dark:hidden" />
-<img src="/images/self-hosting/dashboard-history-dark.png" alt="The History page with the list of stored versions" class="hidden dark:block" />
+<img src="/images/self-hosting/dashboard-history.webp" alt="The History page with the list of stored versions" class="dark:hidden" />
+<img src="/images/self-hosting/dashboard-history-dark.webp" alt="The History page with the list of stored versions" class="hidden dark:block" />
 
 You can also reach History from the **History** button on any settings page.
 

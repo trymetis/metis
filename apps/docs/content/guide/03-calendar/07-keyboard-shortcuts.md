@@ -29,8 +29,8 @@ Shortcuts do not work while you are typing in a box, such as an event title.
 | <kbd>k</kbd> or <kbd>p</kbd> | Previous day, week, month or year, depending on the view |
 | <kbd>?</kbd>                 | Show the **Keyboard shortcuts** help                     |
 
-<img src="/images/calendar/keyboard-shortcuts.png" alt="The Keyboard shortcuts help for the calendar" class="dark:hidden" />
-<img src="/images/calendar/keyboard-shortcuts-dark.png" alt="The Keyboard shortcuts help for the calendar" class="hidden dark:block" />
+<img src="/images/calendar/keyboard-shortcuts.webp" alt="The Keyboard shortcuts help for the calendar" class="dark:hidden" />
+<img src="/images/calendar/keyboard-shortcuts-dark.webp" alt="The Keyboard shortcuts help for the calendar" class="hidden dark:block" />
 
 ## Switch workspace
 

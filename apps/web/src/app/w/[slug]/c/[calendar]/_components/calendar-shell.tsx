@@ -13,6 +13,7 @@ import {
 import { differenceInMinutes, format, parseISO, startOfDay } from "date-fns";
 import { CalendarDays, Loader2 } from "lucide-react";
 import { useCallback, useState } from "react";
+import { toast } from "sonner";
 import { z } from "zod";
 
 import { AGENT_DROP_ID } from "@/ai/turn";
@@ -136,6 +137,9 @@ function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAge
         start: nextStart.toISOString(),
         end: nextEnd.toISOString(),
       });
+    } catch (err) {
+      const failure = mode === "resize" ? "Could not resize the event" : "Could not move the event";
+      toast.error(err instanceof Error ? err.message : failure);
     } finally {
       await refresh();
     }

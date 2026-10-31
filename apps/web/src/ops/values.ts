@@ -290,6 +290,7 @@ export async function listEventValues(
     timeMin: args.from.toISOString(),
     timeMax: args.to.toISOString(),
     query: args.query || undefined,
+    max: args.limit,
   });
   return listed.events
     .filter((event) => account.visibleCalendarIds.includes(event.calendarId))

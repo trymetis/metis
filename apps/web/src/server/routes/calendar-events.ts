@@ -8,6 +8,7 @@ import {
   listEventsAcross,
   resolveCalendarAccount,
 } from "@/calendar/aggregate";
+import { countEventDays } from "@/calendar/day-counts";
 
 import { calendarSession } from "../middlewares/calendar-session";
 import {
@@ -16,6 +17,8 @@ import {
   createEventInputSchema,
   createEventOutputSchema,
   getEventInputSchema,
+  listEventDaysInputSchema,
+  listEventDaysOutputSchema,
   listEventsInputSchema,
   listEventsOutputSchema,
   listSessionCalendarsOutputSchema,
@@ -50,6 +53,25 @@ export const calendarEventsRouter = {
           query: input.query,
           max: input.max,
         });
+      } catch (err) {
+        throw fail(err);
+      }
+    }),
+
+  days: calendarSession(listEventDaysInputSchema)
+    .output(listEventDaysOutputSchema)
+    .handler(async ({ input, context }) => {
+      try {
+        const { events, calendarErrors } = await listEventsAcross(context.calendar.accounts, {
+          timeMin: input.timeMin,
+          timeMax: input.timeMax,
+          calendarIds: input.calendarIds,
+          fields: "times",
+        });
+        return {
+          days: countEventDays(events, input.timeZone, input.timeMin, input.timeMax),
+          calendarErrors,
+        };
       } catch (err) {
         throw fail(err);
       }

@@ -31,6 +31,7 @@ export function RecipientField({
   ariaLabel,
 }: RecipientFieldProps) {
   const [inputValue, setInputValue] = useState("");
+  const [highlighted, setHighlighted] = useState<string | undefined>();
   const anchorRef = useComboboxAnchor();
 
   const emails = useMemo(() => contacts.map((c) => c.email), [contacts]);
@@ -58,6 +59,7 @@ export function RecipientField({
       onValueChange={onValuesChange}
       inputValue={inputValue}
       onInputValueChange={setInputValue}
+      onItemHighlighted={setHighlighted}
       itemToStringLabel={(email: string) => {
         const name = nameByEmail.get(email);
         return name ? `${name} <${email}>` : email;
@@ -81,15 +83,9 @@ export function RecipientField({
             if (e.key === "," || e.key === ";") {
               e.preventDefault();
               commitRaw(raw);
-            } else if (e.key === "Enter" && raw) {
-              const q = raw.toLowerCase();
-              const hasMatch = contacts.some(
-                (c) => c.email.toLowerCase().includes(q) || c.name?.toLowerCase().includes(q),
-              );
-              if (!hasMatch) {
-                e.preventDefault();
-                commitRaw(raw);
-              }
+            } else if (e.key === "Enter" && raw && highlighted === undefined) {
+              e.preventDefault();
+              if (!commitRaw(raw)) e.preventBaseUIHandler();
             }
           }}
           onBlur={() => {

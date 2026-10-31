@@ -82,17 +82,18 @@ To change the rows:
 - Click **Remove condition** (the **X** on a row) or **Remove group** (the **X** on a group) to remove it. If you remove every row, the condition is empty. On **Only when**, an empty condition means the trigger runs on every event.
 - Click **Edit as expression** to see and change the condition as text. Click **Edit as conditions** to go back to rows, when the text can be shown that way.
 
-| Kind of field | Comparisons                                                                                                            |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Text          | **contains**, **does not contain**, **is**, **is not**, **starts with**, **ends with**, **is empty**, **is not empty** |
-| Number        | **=**, **≠**, **>**, **≥**, **<**, **≤**                                                                               |
-| Yes / no      | **is yes**, **is no**                                                                                                  |
-| Date          | **is before**, **is after**                                                                                            |
-| List of text  | **includes**, **does not include**, **is empty**, **is not empty**                                                     |
+| Kind of field | Comparisons                                                                                                                                 |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Text          | **contains**, **does not contain**, **is**, **is not**, **starts with**, **ends with**, **matches pattern**, **is empty**, **is not empty** |
+| Number        | **=**, **≠**, **>**, **≥**, **<**, **≤**                                                                                                    |
+| Yes / no      | **is yes**, **is no**                                                                                                                       |
+| Date          | **is before**, **is after**                                                                                                                 |
+| List of text  | **includes**, **does not include**, **is empty**, **is not empty**                                                                          |
 
 Good to know:
 
-- **Text comparisons ignore capitals.** "Invoice" and "invoice" count as the same.
+- **Text comparisons ignore capitals.** "Invoice" and "invoice" count as the same. This applies to every text comparison except **matches pattern**.
+- **matches pattern takes a pattern.** Its **Value** is a pattern (a regular expression), not plain text. It is true when the pattern matches anywhere in the text. Use `^` to match the start and `$` to match the end, for example `^Invoice` for a subject that starts with "Invoice". It is case sensitive. A pattern that is not valid, such as `(`, shows "Not a valid pattern." in the row, under **Value**.
 - **includes matches a whole entry.** On a list such as `to`, **includes** `ada@example.com` is true only when one entry is exactly that address.
 - **A number that is not valid counts as 0.**
 - **Dates use your browser's time zone.** The date and time you pick under **Value** is read in the time zone of the browser you pick it in.

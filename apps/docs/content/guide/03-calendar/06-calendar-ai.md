@@ -11,8 +11,8 @@ This page shows how to open the panel. To learn how to talk to the assistant and
 
 Click the **Calendar AI** button (the robot icon) in the calendar header, or press <kbd>c</kbd>, then <kbd>a</kbd>. Do the same again, or click **Close assistant**, to close it.
 
-<img src="/images/calendar/calendar-ai.png" alt="The calendar with the Calendar AI panel open on the right" class="dark:hidden" />
-<img src="/images/calendar/calendar-ai-dark.png" alt="The calendar with the Calendar AI panel open on the right" class="hidden dark:block" />
+<img src="/images/calendar/calendar-ai.webp" alt="The calendar with the Calendar AI panel open on the right" class="dark:hidden" />
+<img src="/images/calendar/calendar-ai-dark.webp" alt="The calendar with the Calendar AI panel open on the right" class="hidden dark:block" />
 
 Under the panel title, "All calendars" or "This calendar" tells you which calendars the assistant works with. It matches what you picked in the **Switch calendar** menu.
 

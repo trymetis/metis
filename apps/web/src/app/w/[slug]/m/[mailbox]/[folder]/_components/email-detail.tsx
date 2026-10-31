@@ -31,6 +31,7 @@ import {
   BellOff,
   Bookmark,
   BookmarkCheck,
+  Calendar,
   ChevronDown,
   ChevronLeft,
   ChevronUp,
@@ -44,7 +45,6 @@ import {
   Mail,
   MailX,
   MessageCircleQuestion,
-  MoreHorizontal,
   Paperclip,
   Pencil,
   Printer,
@@ -62,6 +62,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { type DrivePick, DrivePickerDialog } from "@/components/drive-picker-dialog";
+import { PickTimeDialog } from "@/components/pick-time-dialog";
 import { useScopePolicy } from "@/components/scope-policy-context";
 import { base64ToBlob, uploadToDrive } from "@/drive/upload-client";
 import { useCurrentEmails } from "@/hooks/use-current-emails";
@@ -276,6 +277,7 @@ export function EmailDetail() {
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [smartRepliesExpanded, setSmartRepliesExpanded] = useState(false);
   const [apologyOpen, setApologyOpen] = useState(false);
+  const [snoozePickerOpen, setSnoozePickerOpen] = useState(false);
   const [apologySituation, setApologySituation] = useState("");
   const [apologyTone, setApologyTone] = useState<"brief" | "warm" | "formal">("warm");
   const [apologyLoading, setApologyLoading] = useState(false);
@@ -803,10 +805,6 @@ export function EmailDetail() {
           </ToolBtn>
         ) : (
           <>
-            <ToolBtn onClick={() => handleReply()}>
-              <Reply className="size-3.25" strokeWidth={2} />
-              Reply
-            </ToolBtn>
             {selectedEmail.to.length + (selectedEmail.cc?.length ?? 0) > 1 && (
               <ToolBtn onClick={handleReplyAll}>
                 <ReplyAll className="size-3.25" strokeWidth={2} />
@@ -951,6 +949,11 @@ export function EmailDetail() {
                   {p.label}
                 </DropdownMenuItem>
               ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setSnoozePickerOpen(true)}>
+                <Calendar className="mr-2 h-3 w-3" strokeWidth={2} />
+                Pick date & time…
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         )}
@@ -970,46 +973,30 @@ export function EmailDetail() {
           Delete
         </ToolBtn>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                variant="outline"
-                size="icon-sm"
-                aria-label="More actions"
-                className="bg-transparent text-muted-foreground dark:bg-transparent"
-              >
-                <MoreHorizontal className="size-3.25" />
-              </Button>
-            }
-          />
-          <DropdownMenuContent align="end" className="w-52">
-            {selectedEmail.folder !== "drafts" && (
-              <DropdownMenuItem onClick={() => setApologyOpen(true)}>
-                <HeartHandshake className="mr-2 h-3.5 w-3.5" strokeWidth={2} />
-                Draft apology
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem
-              onClick={() =>
-                printEmail(
-                  selectedEmail,
-                  (body?.kind === "html"
-                    ? privacy.render(body.html, "view", images, "light")?.html
-                    : null) ?? bodyAsHtml(body),
-                  { images, proxyEndpoint: privacy.proxyEndpoint },
-                )
-              }
-            >
-              <Printer className="mr-2 h-3.5 w-3.5" strokeWidth={2} />
-              Print
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => viewOriginalEmail(selectedEmail, scope)}>
-              <FileCode className="mr-2 h-3.5 w-3.5" strokeWidth={2} />
-              View original
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {selectedEmail.folder !== "drafts" && (
+          <ToolBtn onClick={() => setApologyOpen(true)}>
+            <HeartHandshake className="size-3.25" strokeWidth={2} />
+            Draft apology
+          </ToolBtn>
+        )}
+        <ToolBtn
+          onClick={() =>
+            printEmail(
+              selectedEmail,
+              (body?.kind === "html"
+                ? privacy.render(body.html, "view", images, "light")?.html
+                : null) ?? bodyAsHtml(body),
+              { images, proxyEndpoint: privacy.proxyEndpoint },
+            )
+          }
+        >
+          <Printer className="size-3.25" strokeWidth={2} />
+          Print
+        </ToolBtn>
+        <ToolBtn onClick={() => viewOriginalEmail(selectedEmail, scope)}>
+          <FileCode className="size-3.25" strokeWidth={2} />
+          View original
+        </ToolBtn>
       </div>
 
       {selectedEmail.folder === "trash" && (
@@ -1404,6 +1391,20 @@ export function EmailDetail() {
           </div>
         )}
       </div>
+
+      {snoozePickerOpen && (
+        <PickTimeDialog
+          title="Snooze until"
+          label="When it comes back"
+          preview="Comes back"
+          confirmLabel="Confirm snooze"
+          onClose={() => setSnoozePickerOpen(false)}
+          onConfirm={(date) => {
+            setSnoozePickerOpen(false);
+            void handleSnooze(date);
+          }}
+        />
+      )}
 
       <AlertDialog open={apologyOpen} onOpenChange={setApologyOpen}>
         <AlertDialogContent>

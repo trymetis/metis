@@ -154,17 +154,32 @@
   {
     "name": "drive/all",
     "from": "drive/all-drives",
-    "focus": null
+    "focus": {
+      "x": 60,
+      "y": 0,
+      "width": 700,
+      "height": 320
+    }
   },
   {
     "name": "drive/grid",
     "from": "drive/explorer-grid",
-    "focus": null
+    "focus": {
+      "x": 60,
+      "y": 0,
+      "width": 880,
+      "height": 240
+    }
   },
   {
     "name": "drive/list",
     "from": "drive/explorer-list",
-    "focus": null
+    "focus": {
+      "x": 60,
+      "y": 0,
+      "width": 700,
+      "height": 220
+    }
   },
   {
     "name": "drive/file-menu",
@@ -215,7 +230,12 @@
   {
     "name": "agent/workspace",
     "from": "assistant/workspace-ai-empty",
-    "focus": null
+    "focus": {
+      "x": 600,
+      "y": 130,
+      "width": 580,
+      "height": 280
+    }
   },
   {
     "name": "agent/every-view",
@@ -280,7 +300,12 @@
   {
     "name": "agent/workflow",
     "from": "workflows/workflow-canvas",
-    "focus": null
+    "focus": {
+      "x": 510,
+      "y": 405,
+      "width": 580,
+      "height": 80
+    }
   },
   {
     "name": "agent/steps",
@@ -312,12 +337,22 @@
   {
     "name": "agent/history",
     "from": "workflows/activity",
-    "focus": "main"
+    "focus": {
+      "x": 420,
+      "y": 80,
+      "width": 650,
+      "height": 440
+    }
   },
   {
     "name": "agent/runs",
     "from": "workflows/run-detail",
-    "focus": "main"
+    "focus": {
+      "x": 420,
+      "y": 80,
+      "width": 660,
+      "height": 540
+    }
   },
   {
     "name": "security/two-factor",
@@ -551,11 +586,12 @@
   {
     "name": "workflows/combine",
     "from": "workflows/combine-workflow",
-    "focus": [
-      ".react-flow__node[data-id=\"rebrand\"]",
-      ".react-flow__node[data-id=\"github\"]",
-      ".react-flow__node[data-id=\"append\"]"
-    ]
+    "focus": {
+      "x": 510,
+      "y": 380,
+      "width": 580,
+      "height": 110
+    }
   },
   {
     "name": "workflows/bcc",

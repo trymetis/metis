@@ -47,8 +47,8 @@ See [Run a workflow now](/guide/workflows/run-and-check-history#run-a-workflow-n
 
 A new schedule runs every weekday at 09:00, in your browser's time zone. Click the trigger to change it in the Inspector.
 
-<img src="/images/workflows/schedule-trigger.png" alt="The Inspector for an On a schedule trigger set to Every day at 07:00, with its time zone and next runs" class="dark:hidden" />
-<img src="/images/workflows/schedule-trigger-dark.png" alt="The Inspector for an On a schedule trigger set to Every day at 07:00, with its time zone and next runs" class="hidden dark:block" />
+<img src="/images/workflows/schedule-trigger.webp" alt="The Inspector for an On a schedule trigger set to Every day at 07:00, with its time zone and next runs" class="dark:hidden" />
+<img src="/images/workflows/schedule-trigger-dark.webp" alt="The Inspector for an On a schedule trigger set to Every day at 07:00, with its time zone and next runs" class="hidden dark:block" />
 
 Pick how often it runs under **Repeats**. Each choice shows the fields it needs:
 
@@ -119,8 +119,8 @@ Each mail trigger passes on the message as its item.
 
 The **Mail arrives** card says "Watching" and the mailbox address. It adds the folder when it is not the inbox, and the **Only when** condition when there is one.
 
-<img src="/images/workflows/new-mail-trigger.png" alt="A Mail arrives card watching a mailbox address" class="dark:hidden" />
-<img src="/images/workflows/new-mail-trigger-dark.png" alt="A Mail arrives card watching a mailbox address" class="hidden dark:block" />
+<img src="/images/workflows/new-mail-trigger.webp" alt="A Mail arrives card watching a mailbox address" class="dark:hidden" />
+<img src="/images/workflows/new-mail-trigger-dark.webp" alt="A Mail arrives card watching a mailbox address" class="hidden dark:block" />
 
 **Mail is labelled** starts as soon as the label is put on, without waiting for a check.
 

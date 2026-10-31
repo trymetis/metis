@@ -18,8 +18,8 @@ From top to bottom, the rail shows:
 7. **Your account menu**, your initials in a circle.
 8. A link to the source code, with the version number of Metis Suite.
 
-<img src="/images/workspaces/workspace-menu.png" alt="The workspace menu open in the left rail" class="dark:hidden" />
-<img src="/images/workspaces/workspace-menu-dark.png" alt="The workspace menu open in the left rail" class="hidden dark:block" />
+<img src="/images/workspaces/workspace-menu.webp" alt="The workspace menu open in the left rail" class="dark:hidden" />
+<img src="/images/workspaces/workspace-menu-dark.webp" alt="The workspace menu open in the left rail" class="hidden dark:block" />
 
 Hover over a workspace tile to see the workspace's name and your role in it.
 
@@ -52,8 +52,8 @@ Your default workspace is the one that opens when you sign in.
 
 The current default shows a **Default** badge. Each row also shows the workspace's web address, your role, and what it holds, such as "2 mailboxes · 1 calendar", or "Empty".
 
-<img src="/images/workspaces/workspaces-list.png" alt="The Workspaces page in account settings, with the default workspace marked" class="dark:hidden" />
-<img src="/images/workspaces/workspaces-list-dark.png" alt="The Workspaces page in account settings, with the default workspace marked" class="hidden dark:block" />
+<img src="/images/workspaces/workspaces-list.webp" alt="The Workspaces page in account settings, with the default workspace marked" class="dark:hidden" />
+<img src="/images/workspaces/workspaces-list-dark.webp" alt="The Workspaces page in account settings, with the default workspace marked" class="hidden dark:block" />
 
 ## The account menu
 
@@ -67,8 +67,8 @@ Click your initials at the bottom of the rail to open the account menu. It shows
 
 In the desktop and mobile apps, **App settings** appears right after **Settings**.
 
-<img src="/images/workspaces/account-menu.png" alt="The account menu open in the left rail" class="dark:hidden" />
-<img src="/images/workspaces/account-menu-dark.png" alt="The account menu open in the left rail" class="hidden dark:block" />
+<img src="/images/workspaces/account-menu.webp" alt="The account menu open in the left rail" class="dark:hidden" />
+<img src="/images/workspaces/account-menu-dark.webp" alt="The account menu open in the left rail" class="hidden dark:block" />
 
 ## When a workspace has nothing to show
 

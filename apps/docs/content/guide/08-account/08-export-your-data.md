@@ -15,8 +15,8 @@ It is also not a mailbox archive. Your mail, calendar events and files stay with
 2. Click **Settings**. The **Account** page opens.
 3. Scroll down to the **Export your data** card, below **Where you're signed in**.
 
-   <img src="/images/account/data-export.png" alt="The Export your data card with its Download export button" class="dark:hidden" />
-   <img src="/images/account/data-export-dark.png" alt="The Export your data card with its Download export button" class="hidden dark:block" />
+   <img src="/images/account/data-export.webp" alt="The Export your data card with its Download export button" class="dark:hidden" />
+   <img src="/images/account/data-export-dark.webp" alt="The Export your data card with its Download export button" class="hidden dark:block" />
 
 4. Click **Download export**. While the file is being prepared, the button says **Preparing…**.
 5. Your browser saves the file. Its name is `metis-suite-export-` followed by the date, for example `metis-suite-export-2026-10-22.json`.

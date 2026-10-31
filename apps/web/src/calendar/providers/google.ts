@@ -37,6 +37,9 @@ export function googleCalendar(accessToken: string, selfEmail: string): Calendar
 }
 
 const SYNC_PAGES = 20;
+const LIST_PAGES = 10;
+const LIST_PAGE_SIZE = 2500;
+const TIMES_FIELDS = "items(id,status,start,end,recurringEventId),nextPageToken";
 
 async function syncCalendar(
   client: calendar_v3.Calendar,
@@ -229,16 +232,27 @@ async function listEvents(accessToken: string, opts: ListEventsOptions): Promise
 
   const pages = await Promise.all(
     wanted.map(async (cal) => {
-      const res = await client.events.list({
-        calendarId: cal.id,
-        singleEvents: true,
-        orderBy: "startTime",
-        timeMin: opts.timeMin,
-        timeMax: opts.timeMax,
-        maxResults: opts.max ?? 250,
-        q: opts.query,
-      });
-      return (res.data.items ?? []).map((raw) => toEvent(raw, cal.id, cal.name));
+      const items: calendar_v3.Schema$Event[] = [];
+      let pageToken: string | undefined;
+      for (let page = 0; page < LIST_PAGES; page += 1) {
+        const wantedCount = opts.max === undefined ? LIST_PAGE_SIZE : opts.max - items.length;
+        // oxlint-disable-next-line eslint/no-await-in-loop -- each page needs the previous page's token
+        const res = await client.events.list({
+          calendarId: cal.id,
+          singleEvents: true,
+          orderBy: "startTime",
+          timeMin: opts.timeMin,
+          timeMax: opts.timeMax,
+          maxResults: Math.min(wantedCount, LIST_PAGE_SIZE),
+          q: opts.query,
+          ...(opts.fields === "times" ? { fields: TIMES_FIELDS } : {}),
+          ...(pageToken ? { pageToken } : {}),
+        });
+        items.push(...(res.data.items ?? []));
+        pageToken = res.data.nextPageToken ?? undefined;
+        if (!pageToken || (opts.max !== undefined && items.length >= opts.max)) break;
+      }
+      return items.slice(0, opts.max).map((raw) => toEvent(raw, cal.id, cal.name));
     }),
   );
 

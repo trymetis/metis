@@ -12,8 +12,8 @@ These choices belong to you alone. They apply in every mailbox and every workspa
 1. Open your user menu (the round button with your initials at the bottom of the left rail) and click **Settings**.
 2. Click **Privacy**.
 
-<img src="/images/account/privacy.png" alt="The Privacy settings page with switches for remote images and link cleaning" class="dark:hidden" />
-<img src="/images/account/privacy-dark.png" alt="The Privacy settings page with switches for remote images and link cleaning" class="hidden dark:block" />
+<img src="/images/account/privacy.webp" alt="The Privacy settings page with switches for remote images and link cleaning" class="dark:hidden" />
+<img src="/images/account/privacy-dark.webp" alt="The Privacy settings page with switches for remote images and link cleaning" class="hidden dark:block" />
 
 Each card has a question mark button. Point at it to see a short explanation of that setting.
 

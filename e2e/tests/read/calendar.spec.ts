@@ -33,6 +33,10 @@ test("day, week, month, year and schedule views, and today", async ({ page, acco
   for (const month of ["January", "June", "December"]) {
     await expect(page.getByRole("heading", { level: 2, name: month, exact: true })).toBeVisible();
   }
+  const october8 = page.getByRole("button", { name: /^October 8, \d+ events?$/ });
+  await expect(october8).toBeVisible();
+  await october8.click();
+  await expect(timedEvent(page, "Design review 3pm – 4pm")).toBeVisible();
 
   await chooseView(page, "Schedule");
   await expect(timedEvent(page, "3pm – 4pm Design review ana@demo.trymetis.email")).toBeVisible();

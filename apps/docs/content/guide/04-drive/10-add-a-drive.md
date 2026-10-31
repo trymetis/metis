@@ -18,8 +18,8 @@ The page lists the section **Drive accounts in this workspace**. If it is empty,
 
 If every drive account you have is already in this workspace, the dialog says "Every drive account you have is already here."
 
-<img src="/images/drive/add-drive-dialog.png" alt="The Add a drive dialog, with Connect a new account at the bottom" class="dark:hidden" />
-<img src="/images/drive/add-drive-dialog-dark.png" alt="The Add a drive dialog, with Connect a new account at the bottom" class="hidden dark:block" />
+<img src="/images/drive/add-drive-dialog.webp" alt="The Add a drive dialog, with Connect a new account at the bottom" class="dark:hidden" />
+<img src="/images/drive/add-drive-dialog-dark.webp" alt="The Add a drive dialog, with Connect a new account at the bottom" class="hidden dark:block" />
 
 ## Connect a new drive account
 

@@ -129,7 +129,7 @@ const softwareApplication: SoftwareApplication = {
   downloadUrl: absoluteUrl("/apps#downloads"),
   softwareHelp: { "@type": "CreativeWork", url: DOCS_URL },
   license: LICENSE_URL,
-  screenshot: absoluteUrl("/shots/mail/all-inboxes.jpg"),
+  screenshot: absoluteUrl("/shots/mail/all-inboxes.webp"),
   featureList: [
     "Mail from Gmail, Outlook, Zoho Mail and IMAP in one list",
     "Google Calendar, Outlook, Zoho Calendar and CalDAV in one week view",

@@ -9,11 +9,11 @@ This page explains how to work with steps in the workflow editor. To see what ea
 
 There are two ways to add a step:
 
-- **From the step palette** on the left of the editor. Click a step to add it to the canvas, or drag it onto the canvas and drop it where you want it. Type in **Search steps** to filter the list. If nothing fits, the palette says "No step matches."
+- **From the step palette** on the left of the editor. If the palette is closed, click **Show steps** in the top bar to open it. Click a step to add it to the canvas, or drag it onto the canvas and drop it where you want it. Type in **Search steps** to filter the list. If nothing fits, the palette says "No step matches."
 - **From the Add step window.** Press **w** then **a** (or tap **Add step** on a phone). Type to search, then press **Enter** to add the highlighted step, or click a step.
 
-<img src="/images/workflows/add-step-menu.png" alt="The Add step window with its search box and steps grouped by category" class="dark:hidden" />
-<img src="/images/workflows/add-step-menu-dark.png" alt="The Add step window with its search box and steps grouped by category" class="hidden dark:block" />
+<img src="/images/workflows/add-step-menu.webp" alt="The Add step window with its search box and steps grouped by category" class="dark:hidden" />
+<img src="/images/workflows/add-step-menu-dark.webp" alt="The Add step window with its search box and steps grouped by category" class="hidden dark:block" />
 
 The palette groups the steps under **Triggers**, **Mail**, **Calendar**, **Drive**, **Logic**, **Waits and flow** and **AI**. Each entry shows the step's name and a short description.
 

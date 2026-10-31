@@ -7,7 +7,7 @@ An **Ask for approval** step pauses a run until a person decides. Use it before 
 
 ## Add an approval step
 
-1. Open the workflow and add **Ask for approval** from the **Waits and flow** category of the step palette.
+1. Open the workflow and add **Ask for approval** from the **Waits and flow** category of the step palette, or press **w** then **a** and search for it.
 2. Connect the step before it to its input.
 3. Click the step and fill in its settings in the Inspector:
    - **Approvers**: tick the workspace members who may answer. The list shows each member's name and email address. You need at least one. Until you pick someone, the card says "Pick who approves".
@@ -41,8 +41,8 @@ Requests appear in the app, under **Approvals**.
    - a "Note (optional)" field, for up to 500 characters.
 4. Type a note if you want, then click **Approve** or **Deny**. A message confirms "Approved" or "Denied".
 
-<img src="/images/workflows/approvals.png" alt="The Approvals panel with a request waiting for a decision, its note field and the Approve and Deny buttons" class="dark:hidden" />
-<img src="/images/workflows/approvals-dark.png" alt="The Approvals panel with a request waiting for a decision, its note field and the Approve and Deny buttons" class="hidden dark:block" />
+<img src="/images/workflows/approvals.webp" alt="The Approvals panel with a request waiting for a decision, its note field and the Approve and Deny buttons" class="dark:hidden" />
+<img src="/images/workflows/approvals-dark.webp" alt="The Approvals panel with a request waiting for a decision, its note field and the Approve and Deny buttons" class="hidden dark:block" />
 
 If nothing is waiting, the panel says "Nothing is waiting for you."
 

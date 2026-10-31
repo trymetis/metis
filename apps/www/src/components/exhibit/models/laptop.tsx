@@ -19,7 +19,7 @@ export const SCREEN_IMAGES = [
   "screens/agent",
   "agent/workflow",
   "agent/mcp",
-].map((n) => `/shots/${n}.jpg`);
+].map((n) => `/shots/${n}.webp`);
 
 export function LaptopModel() {
   const { scene } = useGLTF("/models/laptop.glb");

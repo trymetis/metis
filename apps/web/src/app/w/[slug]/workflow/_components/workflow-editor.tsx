@@ -289,7 +289,7 @@ function EditorShell({
   const [replay, setReplay] = useState<ReplayTarget | null>(null);
   const [inputsOpen, setInputsOpen] = useState(false);
   const [runInputs, setRunInputs] = useState<InputValues>({});
-  const [paletteOpen, setPaletteOpen] = useState(true);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(true);
   const [dockOpen, setDockOpen] = useState(false);
   const paletteRef = usePanelRef();
@@ -684,7 +684,7 @@ function EditorShell({
                       id="palette"
                       panelRef={paletteRef}
                       collapsible
-                      defaultSize={250}
+                      defaultSize={0}
                       minSize={200}
                       maxSize={360}
                       onResize={(size) => setPaletteOpen(size.inPixels > 0)}

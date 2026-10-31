@@ -17,8 +17,8 @@ Problems show as you edit, on the step's card, in the Inspector and on a red but
 
 Each save keeps a new version, called a revision. Runs that already started finish on the version they started with, and later runs use the new one. To see what each save changed, see [See what each save changed](#see-what-each-save-changed).
 
-<img src="/images/workflows/workflow-canvas.png" alt="A saved workflow open in the editor, with its name, the Enabled switch, Saved, and the Test, Run now and Save buttons in the top bar" class="dark:hidden" />
-<img src="/images/workflows/workflow-canvas-dark.png" alt="A saved workflow open in the editor, with its name, the Enabled switch, Saved, and the Test, Run now and Save buttons in the top bar" class="hidden dark:block" />
+<img src="/images/workflows/workflow-canvas.webp" alt="A saved workflow open in the editor, with its name, the Enabled switch, Saved, and the Test, Run now and Save buttons in the top bar" class="dark:hidden" />
+<img src="/images/workflows/workflow-canvas-dark.webp" alt="A saved workflow open in the editor, with its name, the Enabled switch, Saved, and the Test, Run now and Save buttons in the top bar" class="hidden dark:block" />
 
 See [Use the editor](/guide/workflows/use-the-editor) for how to add, connect and copy steps.
 
@@ -32,8 +32,8 @@ If you reload or close the browser tab, your browser asks whether to leave the p
 
 Click an empty part of the canvas so that no step is selected. The **Workflow settings** show in the Inspector, below the summary of the workflow.
 
-<img src="/images/workflows/workflow-settings.png" alt="The Workflow settings section in the Inspector, with Runs at the same time, Rate limit and Time zone" class="dark:hidden" />
-<img src="/images/workflows/workflow-settings-dark.png" alt="The Workflow settings section in the Inspector, with Runs at the same time, Rate limit and Time zone" class="hidden dark:block" />
+<img src="/images/workflows/workflow-settings.webp" alt="The Workflow settings section in the Inspector, with Runs at the same time, Rate limit and Time zone" class="dark:hidden" />
+<img src="/images/workflows/workflow-settings-dark.webp" alt="The Workflow settings section in the Inspector, with Runs at the same time, Rate limit and Time zone" class="hidden dark:block" />
 
 | Setting                   | What it does                                                                                                                                                                                                                                                                                                            |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -108,8 +108,8 @@ Only workspace owners and admins can delete workflows. Other members see **Delet
 2. Click **More workflow actions** (**...**) at the right of the top bar, then click **Delete workflow**. It is there once the workflow is saved.
 3. The dialog **Delete this workflow?** names the workflow and explains what happens. Click **Delete** to confirm, or **Cancel** to keep it.
 
-<img src="/images/workflows/delete-dialog.png" alt="The Delete this workflow? dialog with its Cancel and Delete buttons" class="dark:hidden" />
-<img src="/images/workflows/delete-dialog-dark.png" alt="The Delete this workflow? dialog with its Cancel and Delete buttons" class="hidden dark:block" />
+<img src="/images/workflows/delete-dialog.webp" alt="The Delete this workflow? dialog with its Cancel and Delete buttons" class="dark:hidden" />
+<img src="/images/workflows/delete-dialog-dark.webp" alt="The Delete this workflow? dialog with its Cancel and Delete buttons" class="hidden dark:block" />
 
 After you delete a workflow:
 

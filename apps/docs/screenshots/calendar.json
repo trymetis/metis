@@ -176,6 +176,7 @@
   },
   {
     "name": "calendar/calendar-ai",
+    "clip": { "x": 800, "y": 0, "width": 640, "height": 900 },
     "path": "{workspace}/c/{calendar}",
     "seededWeek": true,
     "steps": [

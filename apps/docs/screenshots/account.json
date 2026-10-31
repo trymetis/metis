@@ -1,6 +1,7 @@
 [
   {
     "name": "get-started/app-rail",
+    "clip": { "x": 0, "y": 0, "width": 640, "height": 900 },
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [{ "waitFor": "nav[aria-label='App navigation']" }]
   },

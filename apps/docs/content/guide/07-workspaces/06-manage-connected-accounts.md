@@ -9,8 +9,8 @@ Your account settings list everything you have connected, across all your worksp
 
 The **Connections** page lists "The accounts you've connected, and what you use each one for." Each row shows the account's email address, its provider and, for a server, the server's name.
 
-<img src="/images/workspaces/connections.png" alt="The Connections page in account settings" class="dark:hidden" />
-<img src="/images/workspaces/connections-dark.png" alt="The Connections page in account settings" class="hidden dark:block" />
+<img src="/images/workspaces/connections.webp" alt="The Connections page in account settings" class="dark:hidden" />
+<img src="/images/workspaces/connections-dark.webp" alt="The Connections page in account settings" class="hidden dark:block" />
 
 Next to each account, icons for what it supports (**Mail**, **Calendar**, **Drive**) show what you use it for. A server account shows one icon. Google and Microsoft accounts can show all three, and Zoho accounts show Mail and Calendar. Hover over an icon to see what it means:
 
@@ -36,8 +36,8 @@ These pages list every mailbox, calendar account or drive connected to your acco
 
 Click **In 1 workspace** (or **In 2 workspaces**, and so on) on a row. The button is greyed out when the resource is in no workspace.
 
-<img src="/images/workspaces/in-workspaces-dialog.png" alt="The dialog that lists every workspace using a mailbox" class="dark:hidden" />
-<img src="/images/workspaces/in-workspaces-dialog-dark.png" alt="The dialog that lists every workspace using a mailbox" class="hidden dark:block" />
+<img src="/images/workspaces/in-workspaces-dialog.webp" alt="The dialog that lists every workspace using a mailbox" class="dark:hidden" />
+<img src="/images/workspaces/in-workspaces-dialog-dark.webp" alt="The dialog that lists every workspace using a mailbox" class="hidden dark:block" />
 
 The dialog lists each workspace that uses the resource, with its own switches:
 

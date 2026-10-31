@@ -9,8 +9,8 @@ description: See every drive in the workspace in one view, and upload or create 
 
 Click the drive switcher at the top of the sidebar and choose **All drives**. The option shows only when the workspace has more than one drive. While you are in All drives, the switcher shows **All drives** and the number of drives.
 
-<img src="/images/drive/all-drives.png" alt="All drives at the top level, with one folder for each drive" class="dark:hidden" />
-<img src="/images/drive/all-drives-dark.png" alt="All drives at the top level, with one folder for each drive" class="hidden dark:block" />
+<img src="/images/drive/all-drives.webp" alt="All drives at the top level, with one folder for each drive" class="dark:hidden" />
+<img src="/images/drive/all-drives-dark.webp" alt="All drives at the top level, with one folder for each drive" class="hidden dark:block" />
 
 ## What you see
 
@@ -32,8 +32,8 @@ At the top level there is no folder to put things in yet, so Metis asks you wher
 4. Click **Upload here** or **Create here**. The button stays off until you have opened a drive.
 5. For a new folder, type its name in the next dialog and click **Create**.
 
-<img src="/images/drive/all-drives-picker.png" alt="The New folder dialog asking which folder to create it in, starting at the list of drives" class="dark:hidden" />
-<img src="/images/drive/all-drives-picker-dark.png" alt="The New folder dialog asking which folder to create it in, starting at the list of drives" class="hidden dark:block" />
+<img src="/images/drive/all-drives-picker.webp" alt="The New folder dialog asking which folder to create it in, starting at the list of drives" class="dark:hidden" />
+<img src="/images/drive/all-drives-picker-dark.webp" alt="The New folder dialog asking which folder to create it in, starting at the list of drives" class="hidden dark:block" />
 
 If the dialog cannot read your drives, it says "Could not read your drives". A drive or folder with nothing in it shows "Nothing here".
 

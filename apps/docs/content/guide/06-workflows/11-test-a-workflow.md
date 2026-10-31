@@ -30,8 +30,8 @@ For **A recent item**, the **Sample** list shows the 15 newest messages of a mai
 
 The tab shows the result, such as **completed**. Below that is one row for each step the test reached, with what the step did, and "×" with the number of items it handled. Click a row to select that step.
 
-<img src="/images/workflows/test-run.png" alt="A test run drawn on the canvas, with the result in the Test run tab and the selected Label step's items under In the test run in the Inspector" class="dark:hidden" />
-<img src="/images/workflows/test-run-dark.png" alt="A test run drawn on the canvas, with the result in the Test run tab and the selected Label step's items under In the test run in the Inspector" class="hidden dark:block" />
+<img src="/images/workflows/test-run.webp" alt="A test run drawn on the canvas, with the result in the Test run tab and the selected Label step's items under In the test run in the Inspector" class="dark:hidden" />
+<img src="/images/workflows/test-run-dark.webp" alt="A test run drawn on the canvas, with the result in the Test run tab and the selected Label step's items under In the test run in the Inspector" class="hidden dark:block" />
 
 The canvas shows the test run too. Each step shows how it went, and the connections the items took are highlighted. The tab's header says "Showing the test run on the canvas". Click a step to see each item it handled under **In the test run** in the Inspector, with the output it took and its **Input** and **Output**. Click **Clear** in the header to hide the test run.
 

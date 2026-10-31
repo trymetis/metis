@@ -13,8 +13,8 @@ Mail, calendar, drive and the workflow editor each have their own shortcuts. Mos
 - **Press ? for help.** In mail, calendar, drive and the workflow editor, **?** shows or hides the **Keyboard shortcuts** dialog for that section. Press **Esc** or click **Close** to close it.
 - **Press Ctrl + K to search.** Workspace search also finds commands such as **Compose mail** and settings pages, so you can run them by typing their name. See [Search](#search).
 
-<img src="/images/workspaces/keyboard-shortcuts-help.png" alt="The Keyboard shortcuts dialog in mail" class="dark:hidden" />
-<img src="/images/workspaces/keyboard-shortcuts-help-dark.png" alt="The Keyboard shortcuts dialog in mail" class="hidden dark:block" />
+<img src="/images/workspaces/keyboard-shortcuts-help.webp" alt="The Keyboard shortcuts dialog in mail" class="dark:hidden" />
+<img src="/images/workspaces/keyboard-shortcuts-help-dark.webp" alt="The Keyboard shortcuts dialog in mail" class="hidden dark:block" />
 
 ## Everywhere
 
@@ -58,7 +58,7 @@ Press **m**, then:
 | **m** then **v** | Go to Archive                                                                                                                                                                                |
 | **m** then **p** | Go to Spam                                                                                                                                                                                   |
 | **m** then **c** | Compose a new message                                                                                                                                                                        |
-| **m** then **r** | When a message is open, opens a new blank message. It does not fill in a reply. To reply, use the **Reply** button on the message.                                                           |
+| **m** then **r** | When a message is open, opens a new blank message. It does not fill in a reply. To reply, use the **Reply** bar at the bottom of the reading pane.                                           |
 | **m** then **x** | Star or unstar the open message                                                                                                                                                              |
 | **m** then **u** | Mark the open message read or unread                                                                                                                                                         |
 | **m** then **e** | Archive the open message                                                                                                                                                                     |

@@ -92,8 +92,8 @@ Good to know:
 - A step after an **Aggregate** can read only the **Aggregate**, not the steps before it.
 - With **Wait for all**, a branch that found nothing counts as finished. A branch that failed, was blocked or is still waiting holds back everything after the **Wait for all**.
 
-<img src="/images/workflows/combine-workflow.png" alt="A workflow where two Filter steps join in a Merge step before a Label step" class="dark:hidden" />
-<img src="/images/workflows/combine-workflow-dark.png" alt="A workflow where two Filter steps join in a Merge step before a Label step" class="hidden dark:block" />
+<img src="/images/workflows/combine-workflow.webp" alt="A workflow where two Filter steps join in a Merge step before a Label step" class="dark:hidden" />
+<img src="/images/workflows/combine-workflow-dark.webp" alt="A workflow where two Filter steps join in a Merge step before a Label step" class="hidden dark:block" />
 
 ## Waits and flow
 

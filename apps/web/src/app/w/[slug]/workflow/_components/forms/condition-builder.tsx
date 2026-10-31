@@ -94,12 +94,25 @@ function RuleRow({
               const value = kind === "date" && raw ? new Date(raw).toISOString() : raw;
               onChange({ ...rule, value });
             }}
-            placeholder="value"
+            placeholder={rule.op === "matches" ? "pattern" : "value"}
           />
         )}
       </div>
+      {rule.op === "matches" && toPattern(rule.value) === null && (
+        <p role="alert" className="text-[11px] text-destructive-text">
+          Not a valid pattern.
+        </p>
+      )}
     </div>
   );
+}
+
+function toPattern(source: string): RegExp | null {
+  try {
+    return new RegExp(source);
+  } catch {
+    return null;
+  }
 }
 
 function GroupEditor({

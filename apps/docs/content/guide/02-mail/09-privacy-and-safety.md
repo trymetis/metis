@@ -22,8 +22,8 @@ Messages follow the app's light or dark theme. A message that was not designed f
 
 Images stored on the sender's server can tell the sender when and where you opened the message. So Metis Suite blocks them until you say otherwise. A banner above the message says how many images were blocked, for example "3 remote images blocked".
 
-<img src="/images/mail/blocked-images.png" alt="The remote images blocked banner with its three buttons" class="dark:hidden" />
-<img src="/images/mail/blocked-images-dark.png" alt="The remote images blocked banner with its three buttons" class="hidden dark:block" />
+<img src="/images/mail/blocked-images.webp" alt="The remote images blocked banner with its three buttons" class="dark:hidden" />
+<img src="/images/mail/blocked-images-dark.webp" alt="The remote images blocked banner with its three buttons" class="hidden dark:block" />
 
 The banner has three buttons:
 
@@ -45,8 +45,8 @@ Some emails hide tiny tracking images or links. Metis Suite removes known tracke
 
 When trackers were removed, a green shield with a number appears under the date. Click it to see the list of trackers by name, or "Unknown tracker" when the name is not known.
 
-<img src="/images/mail/tracker-badge.png" alt="The tracker popover listing the trackers removed from a message" class="dark:hidden" />
-<img src="/images/mail/tracker-badge-dark.png" alt="The tracker popover listing the trackers removed from a message" class="hidden dark:block" />
+<img src="/images/mail/tracker-badge.webp" alt="The tracker popover listing the trackers removed from a message" class="dark:hidden" />
+<img src="/images/mail/tracker-badge-dark.webp" alt="The tracker popover listing the trackers removed from a message" class="hidden dark:block" />
 
 ## Links are cleaned
 

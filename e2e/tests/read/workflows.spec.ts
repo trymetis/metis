@@ -184,6 +184,7 @@ test("a bad graph shows its validation error and is not saved", async ({ page, a
 
 test("the step palette offers Ask and Branch", async ({ page, account }) => {
   await page.goto(workspacePath(account, "/workflow"));
+  await page.getByRole("button", { name: "Show steps", exact: true }).click();
   const step = (name: string) =>
     page.getByRole("option").filter({ has: page.getByText(name, { exact: true }) });
   await expect(step("Ask")).toBeVisible();

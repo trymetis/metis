@@ -32,6 +32,7 @@
     "oxlint": "catalog:",
     "postcss": "^8.5.31",
     "schema-dts": "^2.1.0",
+    "sharp": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
   }

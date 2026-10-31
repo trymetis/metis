@@ -5,8 +5,8 @@ description: Give a workspace its own logo and accent color.
 
 The **Appearance** section of a workspace's **General** settings page sets the workspace's logo and accent color. Both apply to everyone in the workspace.
 
-<img src="/images/workspaces/appearance.png" alt="The Appearance section with the logo and color choices" class="dark:hidden" />
-<img src="/images/workspaces/appearance-dark.png" alt="The Appearance section with the logo and color choices" class="hidden dark:block" />
+<img src="/images/workspaces/appearance.webp" alt="The Appearance section with the logo and color choices" class="dark:hidden" />
+<img src="/images/workspaces/appearance-dark.webp" alt="The Appearance section with the logo and color choices" class="hidden dark:block" />
 
 Owners and admins can change them. Members see the section with the note "Only owners and admins can change it."
 

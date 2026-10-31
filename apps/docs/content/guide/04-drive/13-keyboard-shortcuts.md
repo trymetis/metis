@@ -32,7 +32,7 @@ Shortcuts do not work while you are typing in a box, such as the search box.
 
 Back and forward walk through the folders you visited, like the back and forward buttons of a browser. They do not move the selection. The history stays when you switch to another drive, so <kbd>k</kbd> can take you back to a folder in the drive you came from.
 
-<img src="/images/drive/shortcuts-help.png" alt="The Keyboard shortcuts help listing the Drive shortcuts" class="dark:hidden" />
-<img src="/images/drive/shortcuts-help-dark.png" alt="The Keyboard shortcuts help listing the Drive shortcuts" class="hidden dark:block" />
+<img src="/images/drive/shortcuts-help.webp" alt="The Keyboard shortcuts help listing the Drive shortcuts" class="dark:hidden" />
+<img src="/images/drive/shortcuts-help-dark.webp" alt="The Keyboard shortcuts help listing the Drive shortcuts" class="hidden dark:block" />
 
 For other keys in the file list, see [Browse your files](/guide/drive/browse-your-files): <kbd>Enter</kbd> opens the selected item and <kbd>Esc</kbd> clears the selection.

@@ -19,6 +19,8 @@ import type { WritableAttendeeResponse } from "@/types/calendar";
 
 import type { Output } from "./output";
 
+const DEFAULT_EVENT_MAX = 250;
+
 export const listCalendarsOutput = z.object({
   accountCount: z.number(),
   calendars: z.array(
@@ -124,7 +126,7 @@ export async function listEvents(
     max?: number;
   },
 ): Promise<Output<typeof listEventsOutput>> {
-  const res = await listEventsAcross(accounts, args);
+  const res = await listEventsAcross(accounts, { ...args, max: args.max ?? DEFAULT_EVENT_MAX });
   return {
     count: res.events.length,
     events: res.events.map((event) => ({

@@ -232,7 +232,7 @@
   },
   {
     "name": "mail/snooze-menu",
-    "viewport": { "width": 1440, "height": 360 },
+    "viewport": { "width": 1440, "height": 420 },
     "element": "div:has(> div > button[title=\"Previous message\"])",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
@@ -342,6 +342,7 @@
   },
   {
     "name": "mail/summary-card",
+    "clip": { "x": 640, "y": 90, "width": 780, "height": 440 },
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -372,10 +373,7 @@
         "waitFor": "main h2:has-text(\"Rebrand kickoff\")"
       },
       {
-        "click": "role=button[name=\"More actions\"]"
-      },
-      {
-        "click": "role=menuitem[name=\"Draft apology\"]"
+        "click": "role=button[name=\"Draft apology\"]"
       },
       {
         "fill": "#apology-situation",
@@ -389,6 +387,7 @@
   },
   {
     "name": "mail/mail-ai-panel",
+    "clip": { "x": 800, "y": 0, "width": 640, "height": 900 },
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -408,29 +407,6 @@
       },
       {
         "wait": 600
-      }
-    ]
-  },
-  {
-    "name": "mail/more-actions",
-    "viewport": { "width": 1440, "height": 360 },
-    "element": "div:has(> div > button[title=\"Previous message\"])",
-    "path": "{workspace}/m/{mailbox}/inbox",
-    "steps": [
-      {
-        "click": "role=tab[name=/^All$/]"
-      },
-      {
-        "click": "main [aria-roledescription=\"draggable\"] >> text=\"Rebrand kickoff\""
-      },
-      {
-        "waitFor": "main h2:has-text(\"Rebrand kickoff\")"
-      },
-      {
-        "click": "role=button[name=\"More actions\"]"
-      },
-      {
-        "waitFor": "role=menuitem[name=\"View original\"]"
       }
     ]
   },

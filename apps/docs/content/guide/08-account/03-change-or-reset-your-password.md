@@ -25,8 +25,8 @@ If you got a [sign-in alert](/guide/account/sign-in-alerts) for a sign-in you di
 1. On the sign-in page, click **Forgot password?**.
 2. The page **Reset your password** opens. Enter your **Email address** and click **Send reset link**.
 
-   <img src="/images/account/forgot-password.png" alt="The Reset your password page with an email field and a Send reset link button" class="dark:hidden" />
-   <img src="/images/account/forgot-password-dark.png" alt="The Reset your password page with an email field and a Send reset link button" class="hidden dark:block" />
+   <img src="/images/account/forgot-password.webp" alt="The Reset your password page with an email field and a Send reset link button" class="dark:hidden" />
+   <img src="/images/account/forgot-password-dark.webp" alt="The Reset your password page with an email field and a Send reset link button" class="hidden dark:block" />
 
 3. The page shows **Check your email**. For your privacy, it looks the same whether or not an account exists for that address.
 4. Open the email from Metis Suite and click the reset link. The link is valid for 1 hour.

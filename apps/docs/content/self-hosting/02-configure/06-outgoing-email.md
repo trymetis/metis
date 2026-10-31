@@ -38,8 +38,8 @@ sudo docker compose --project-directory /opt/metis-suite logs -f app
 | **SMTP host**, **SMTP port**, **SMTP user**, **SMTP password** | `smtp`              | Use these instead of the URL.                                                                                                                              |
 | **Implicit TLS**                                               | `smtp`              | Turn on for a server that uses TLS from the start of the connection, usually on port 465.                                                                  |
 
-<img src="/images/self-hosting/driver-mail-smtp.png" alt="The Mail driver page with smtp chosen, showing the sender and SMTP fields" class="dark:hidden" />
-<img src="/images/self-hosting/driver-mail-smtp-dark.png" alt="The Mail driver page with smtp chosen, showing the sender and SMTP fields" class="hidden dark:block" />
+<img src="/images/self-hosting/driver-mail-smtp.webp" alt="The Mail driver page with smtp chosen, showing the sender and SMTP fields" class="dark:hidden" />
+<img src="/images/self-hosting/driver-mail-smtp-dark.webp" alt="The Mail driver page with smtp chosen, showing the sender and SMTP fields" class="hidden dark:block" />
 
 Click **Save changes** and enter your authenticator code. Then click **Run check** in the **Health** card. It signs in to the SMTP server or checks the Resend API key. It sends nothing.
 

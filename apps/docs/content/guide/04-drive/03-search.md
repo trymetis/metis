@@ -13,8 +13,8 @@ The search box in the toolbar finds files and folders by name across the whole d
 
 To go back to the folder you were in, clear the search box.
 
-<img src="/images/drive/search.png" alt='Search results for "welcome" in a drive' class="dark:hidden" />
-<img src="/images/drive/search-dark.png" alt='Search results for "welcome" in a drive' class="hidden dark:block" />
+<img src="/images/drive/search.webp" alt='Search results for "welcome" in a drive' class="dark:hidden" />
+<img src="/images/drive/search-dark.webp" alt='Search results for "welcome" in a drive' class="hidden dark:block" />
 
 If nothing matches, you see "Nothing matched that search". When there are many results, click **Load more** at the bottom to see the rest.
 

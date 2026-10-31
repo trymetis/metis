@@ -56,7 +56,7 @@ function Shot({ name, on, alt }: { name: string; on: boolean; alt: string }) {
         }}
       >
         <Image
-          src={`/shots/${name}.jpg`}
+          src={`/shots/${name}.webp`}
           alt={alt}
           width={W}
           height={H}

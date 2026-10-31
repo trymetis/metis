@@ -6,6 +6,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Whi
 
 ## Unreleased
 
+### Changed
+
+- Drive: a file or folder with no modified date or size leaves that cell empty instead of showing a dash.
+- Workflows: the step palette starts closed so the canvas gets the full width; **Show steps** in the top bar opens it.
+- Workflows: an Ask step's questions start collapsed to their number, type and text, so a step with several questions stays short; click a question to edit it and **Collapse** to fold it again. A new question opens ready to type.
+- Mail: the message toolbar drops its Reply button, since the Reply bar under the message does the same, and shows Draft apology, Print and View original as buttons instead of in a **More actions** menu.
+
+### Added
+
+- Mail: the toolbar **Snooze** menu has **Pick date & time…** to snooze until any future time.
+- Workflows: text conditions can use **matches pattern** to test a field against a regular expression; the editor flags a pattern that is not valid.
+
+### Fixed
+
+- Calendar: Year view marks each day that has events with a dot, instead of showing every month empty.
+- Calendar: Google and Microsoft calendars show every event in a view, instead of stopping after each calendar's first 250 events.
+- Calendar: moving or resizing an event by dragging shows an error when the change could not be saved, instead of leaving the event in its old place without a word.
+- Mail: **Pick date & time…** for Send later and Snooze accepts any future time, such as ten minutes from now; it starts at the next whole hour but no longer refuses an earlier time with **OK**.
+- Compose: pressing Enter after typing a saved contact's full address adds it as a recipient, instead of clearing the text; with a suggestion highlighted, Enter still picks the suggestion.
+
 ## 0.2.1 - 2026-10-30
 
 ### Upgrade notes

@@ -54,8 +54,8 @@ The newest change is at the top. The page shows 50 rows at a time. Click **Load 
 
 Above the list are a search box ("Search events") and a list of event types, which starts at **All events**. Use them to find one change without scrolling.
 
-<img src="/images/workspaces/workspace-activity.png" alt="The workspace Activity page with the search box, the event type list set to All events, and the empty state" class="dark:hidden" />
-<img src="/images/workspaces/workspace-activity-dark.png" alt="The workspace Activity page with the search box, the event type list set to All events, and the empty state" class="hidden dark:block" />
+<img src="/images/workspaces/workspace-activity.webp" alt="The workspace Activity page with the search box, the event type list set to All events, and the empty state" class="dark:hidden" />
+<img src="/images/workspaces/workspace-activity-dark.webp" alt="The workspace Activity page with the search box, the event type list set to All events, and the empty state" class="hidden dark:block" />
 
 ### Search
 

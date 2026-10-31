@@ -20,8 +20,8 @@
 </p>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="apps/docs/public/images/mail/inbox-dark.png" />
-  <img src="apps/docs/public/images/mail/inbox.png" alt="The Metis Suite inbox, with a message open and an AI summary of its action items above the text" />
+  <source media="(prefers-color-scheme: dark)" srcset="apps/docs/public/images/mail/inbox-dark.webp" />
+  <img src="apps/docs/public/images/mail/inbox.webp" alt="The Metis Suite inbox, with a message open and an AI summary of its action items above the text" />
 </picture>
 
 Metis Suite is an open-source mail, calendar and drive client. It connects to the accounts you already have (Gmail, Outlook, Zoho, IMAP, CalDAV and more) and puts them in one app, with an AI assistant, automations and phishing warnings on top. You run it on your own server, or we run it for you.

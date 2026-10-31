@@ -2,12 +2,14 @@
   {
     "name": "drive/explorer-list",
     "viewport": { "width": 1440, "height": 480 },
+    "clip": { "x": 0, "y": 0, "width": 1440, "height": 360 },
     "path": "{workspace}/d/{drive:s3}",
     "steps": [{ "waitFor": "section[aria-label=\"Files\"] [title=\"welcome.txt\"]" }]
   },
   {
     "name": "drive/explorer-grid",
     "viewport": { "width": 1440, "height": 480 },
+    "clip": { "x": 0, "y": 0, "width": 1440, "height": 360 },
     "path": "{workspace}/d/{drive:s3}",
     "steps": [
       { "waitFor": "section[aria-label=\"Files\"] [title=\"welcome.txt\"]" },
@@ -43,6 +45,7 @@
   {
     "name": "drive/all-drives",
     "viewport": { "width": 1440, "height": 480 },
+    "clip": { "x": 0, "y": 0, "width": 1440, "height": 360 },
     "path": "{workspace}/d/{drive:all}",
     "steps": [{ "waitFor": "section[aria-label=\"Files\"] button[title]" }]
   },
@@ -60,6 +63,7 @@
   {
     "name": "drive/search",
     "viewport": { "width": 1440, "height": 480 },
+    "clip": { "x": 0, "y": 0, "width": 1440, "height": 360 },
     "path": "{workspace}/d/{drive:s3}",
     "steps": [
       { "waitFor": "section[aria-label=\"Files\"] [title=\"Clients\"]" },
@@ -84,6 +88,7 @@
   {
     "name": "drive/file-menu",
     "viewport": { "width": 1024, "height": 440 },
+    "clip": { "x": 280, "y": 0, "width": 744, "height": 300 },
     "path": "{workspace}/d/{drive:s3}",
     "steps": [
       { "waitFor": "section[aria-label=\"Files\"] [title=\"welcome.txt\"]" },
@@ -94,6 +99,7 @@
   {
     "name": "drive/folder-menu",
     "viewport": { "width": 1024, "height": 440 },
+    "clip": { "x": 280, "y": 0, "width": 744, "height": 200 },
     "path": "{workspace}/d/{drive:s3}",
     "steps": [
       { "waitFor": "section[aria-label=\"Files\"] [title=\"Clients\"]" },
@@ -169,11 +175,13 @@
   {
     "name": "drive/restricted-drive",
     "viewport": { "width": 1440, "height": 480 },
+    "clip": { "x": 0, "y": 0, "width": 1440, "height": 360 },
     "path": "{workspace}/d/{drive:ftp}",
     "steps": [{ "waitFor": "section[aria-label=\"Files\"] [title=\"Clients\"]" }]
   },
   {
     "name": "drive/folder-restriction-settings",
+    "clip": { "x": 480, "y": 30, "width": 770, "height": 380 },
     "path": "{workspace}/settings/drives",
     "steps": [
       { "waitFor": "[aria-label=\"Choose folders\"]" },

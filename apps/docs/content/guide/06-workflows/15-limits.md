@@ -78,7 +78,7 @@ A workflow with problems cannot be saved. When you click **Save** or **Create wo
 
 | Message                                                                 | What to do                                                                                                               |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| "Add a trigger to start this workflow"                                  | Add a trigger from the **Triggers** category of the step palette.                                                        |
+| "Add a trigger to start this workflow"                                  | Add a trigger from the **Triggers** category of the step palette, or press **w** then **a** and search for it.           |
 | "Connect this step to a trigger"                                        | Connect the step, or remove it.                                                                                          |
 | "Nothing can connect into a trigger"                                    | Remove the connection that goes into the trigger.                                                                        |
 | "Steps are connected in a loop; remove one connection"                  | Remove a connection so that items never come back to a step they already passed.                                         |

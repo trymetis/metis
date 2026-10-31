@@ -5,8 +5,8 @@ description: Learn the left rail, switch workspaces, use the user menu, and find
 
 Every page in Metis Suite has the same frame: a narrow bar of icons down the left side, called the left rail, and your work in the rest of the screen. This page walks you through the rail from top to bottom, then shows you where your settings live.
 
-<img src="/images/get-started/app-rail.png" alt="The inbox with the left rail of icons on the far left" class="dark:hidden" />
-<img src="/images/get-started/app-rail-dark.png" alt="The inbox with the left rail of icons on the far left" class="hidden dark:block" />
+<img src="/images/get-started/app-rail.webp" alt="The inbox with the left rail of icons on the far left" class="dark:hidden" />
+<img src="/images/get-started/app-rail-dark.webp" alt="The inbox with the left rail of icons on the far left" class="hidden dark:block" />
 
 ## The left rail
 
@@ -41,8 +41,8 @@ The last tile, **New workspace**, creates a new workspace.
 
 Near the bottom of the rail is a round button with your initials. Click it to open your user menu.
 
-<img src="/images/get-started/user-menu.png" alt="The user menu open, showing your name, email and the menu items" class="dark:hidden" />
-<img src="/images/get-started/user-menu-dark.png" alt="The user menu open, showing your name, email and the menu items" class="hidden dark:block" />
+<img src="/images/get-started/user-menu.webp" alt="The user menu open, showing your name, email and the menu items" class="dark:hidden" />
+<img src="/images/get-started/user-menu-dark.webp" alt="The user menu open, showing your name, email and the menu items" class="hidden dark:block" />
 
 The top of the menu shows your name and email address. Below that:
 
@@ -75,8 +75,8 @@ The accent color of a workspace is a workspace setting. See [Workspaces](/guide/
 
 Open your user menu and click **Settings**. The settings page has a list of sections on the left. On a phone, the list is hidden. Tap the **Open sidebar** icon, beside **Settings** in the small bar at the top of the page, to open it. The list closes after you pick a section.
 
-<img src="/images/get-started/settings.png" alt="The settings sidebar with its list of sections" class="dark:hidden" />
-<img src="/images/get-started/settings-dark.png" alt="The settings sidebar with its list of sections" class="hidden dark:block" />
+<img src="/images/get-started/settings.webp" alt="The settings sidebar with its list of sections" class="dark:hidden" />
+<img src="/images/get-started/settings-dark.webp" alt="The settings sidebar with its list of sections" class="hidden dark:block" />
 
 | Section                                  | What it holds                                                                                                                                                                                                                                                                                     |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

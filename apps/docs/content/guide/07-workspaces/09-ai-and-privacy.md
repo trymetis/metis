@@ -5,8 +5,8 @@ description: Decide whether AI features and phishing detection are allowed anywh
 
 The **AI & privacy** section of a workspace's **General** settings page sets what the whole workspace allows. A mailbox, calendar or drive can always be more restrictive than the workspace, never less.
 
-<img src="/images/workspaces/ai-and-privacy.png" alt="The AI and privacy section of a workspace's General settings" class="dark:hidden" />
-<img src="/images/workspaces/ai-and-privacy-dark.png" alt="The AI and privacy section of a workspace's General settings" class="hidden dark:block" />
+<img src="/images/workspaces/ai-and-privacy.webp" alt="The AI and privacy section of a workspace's General settings" class="dark:hidden" />
+<img src="/images/workspaces/ai-and-privacy-dark.webp" alt="The AI and privacy section of a workspace's General settings" class="hidden dark:block" />
 
 The screenshot shows only the **AI features** card. The **Phishing detection** card appears only when your instance has phishing detection set up.
 

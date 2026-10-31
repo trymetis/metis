@@ -5,8 +5,8 @@ import { Field, FieldLabel } from "@metis/ui/components/field";
 import { Input } from "@metis/ui/components/input";
 import { Switch } from "@metis/ui/components/switch";
 import { Textarea } from "@metis/ui/components/textarea";
-import { Plus, X } from "lucide-react";
-import { useId } from "react";
+import { ChevronDown, ChevronUp, Plus, X } from "lucide-react";
+import { useId, useState } from "react";
 
 import type { DecisionQuestion, DecisionQuestionType } from "@/workflow/schema";
 
@@ -126,23 +126,64 @@ export function QuestionEditor({
   onRemove: () => void;
 }) {
   const otherId = useId();
+  const [open, setOpen] = useState(() => question.instructions.trim() === "");
+  const label = `Q${index + 1}`;
+  const removeButton = (
+    <Button variant="ghost" size="icon-sm" aria-label="Remove question" onClick={onRemove}>
+      <X />
+    </Button>
+  );
+
+  if (!open) {
+    const typeLabel = QUESTION_TYPE_OPTIONS.find((o) => o.value === question.type)?.label;
+    return (
+      <div className="flex items-start gap-1 rounded-lg border border-border bg-surface p-2.5">
+        <button
+          type="button"
+          aria-expanded={false}
+          onClick={() => setOpen(true)}
+          className="flex min-w-0 flex-1 items-start gap-1.5 text-left"
+        >
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className="flex items-center gap-1.5 text-[13px]">
+              <span className="font-medium">{label}</span>
+              <span className="text-muted-foreground">{typeLabel}</span>
+            </span>
+            <span className="truncate text-[13px] text-muted-foreground">
+              {question.instructions.trim() || "No question yet"}
+            </span>
+          </span>
+          <ChevronDown className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+        </button>
+        {removeButton}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-2.5">
       <div className="flex items-center gap-2">
-        <span className="font-medium text-[13px]">Q{index + 1}</span>
+        <span className="font-medium text-[13px]">{label}</span>
         <FormSelect
-          label={`Q${index + 1} type`}
+          label={`${label} type`}
           className="flex-1"
           value={question.type}
           onValueChange={(type) => onChange(newQuestion(type, question.id, question.instructions))}
           options={QUESTION_TYPE_OPTIONS}
         />
-        <Button variant="ghost" size="icon-sm" aria-label="Remove question" onClick={onRemove}>
-          <X />
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={`Collapse ${label}`}
+          aria-expanded
+          onClick={() => setOpen(false)}
+        >
+          <ChevronUp />
         </Button>
+        {removeButton}
       </div>
       <Textarea
-        aria-label={`Q${index + 1}`}
+        aria-label={label}
         value={question.instructions}
         onChange={(e) => onChange({ ...question, instructions: e.target.value })}
         placeholder="Is this email a request for a refund?"

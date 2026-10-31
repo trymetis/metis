@@ -14,8 +14,8 @@ Every deploy runs preflight, which checks your settings, your servers and your A
 - If the configuration changed after that run, a note says that some warnings may no longer apply. The next deploy checks again.
 - Before the first deploy, the page shows **No preflight run yet**.
 
-<img src="/images/self-hosting/deploy-checks.png" alt="The Deploy checks page with the Last run card" class="dark:hidden" />
-<img src="/images/self-hosting/deploy-checks-dark.png" alt="The Deploy checks page with the Last run card" class="hidden dark:block" />
+<img src="/images/self-hosting/deploy-checks.webp" alt="The Deploy checks page with the Last run card" class="dark:hidden" />
+<img src="/images/self-hosting/deploy-checks-dark.webp" alt="The Deploy checks page with the Last run card" class="hidden dark:block" />
 
 Warnings are grouped as follows.
 

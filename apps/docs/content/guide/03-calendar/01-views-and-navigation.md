@@ -5,8 +5,8 @@ description: Open your calendar, switch between the Day, Week, Month, Year and S
 
 This page shows you how to open your calendar, pick a view, and get to the date you want.
 
-<img src="/images/calendar/week-view.png" alt="The calendar in Week view, with events in the hour grid and the sidebar on the left" class="dark:hidden" />
-<img src="/images/calendar/week-view-dark.png" alt="The calendar in Week view, with events in the hour grid and the sidebar on the left" class="hidden dark:block" />
+<img src="/images/calendar/week-view.webp" alt="The calendar in Week view, with events in the hour grid and the sidebar on the left" class="dark:hidden" />
+<img src="/images/calendar/week-view-dark.webp" alt="The calendar in Week view, with events in the hour grid and the sidebar on the left" class="hidden dark:block" />
 
 ## Open your calendar
 
@@ -28,18 +28,18 @@ The button at the top of the sidebar shows which calendar you are looking at. It
 
 Click the view button at the right of the header. It shows the name of the current view. Pick one of these:
 
-| View         | What you see                                             |
-| ------------ | -------------------------------------------------------- |
-| **Day**      | One day as an hour grid.                                 |
-| **Week**     | Sunday to Saturday as an hour grid, one column per day.  |
-| **Month**    | The whole month as a grid of days.                       |
-| **Year**     | All 12 months of the year as small month grids.          |
-| **Schedule** | A list of your events for this month and the next month. |
+| View         | What you see                                                                            |
+| ------------ | --------------------------------------------------------------------------------------- |
+| **Day**      | One day as an hour grid.                                                                |
+| **Week**     | Sunday to Saturday as an hour grid, one column per day.                                 |
+| **Month**    | The whole month as a grid of days.                                                      |
+| **Year**     | All 12 months of the year as small month grids. A dot marks each day that has an event. |
+| **Schedule** | A list of your events for this month and the next month.                                |
 
 Metis Suite remembers your view for each calendar in this browser. The first time, you see **Week**. On a phone-sized screen you see **Schedule** instead.
 
-<img src="/images/calendar/year-view.png" alt="The calendar in Year view, with twelve small month grids" class="dark:hidden" />
-<img src="/images/calendar/year-view-dark.png" alt="The calendar in Year view, with twelve small month grids" class="hidden dark:block" />
+<img src="/images/calendar/year-view.webp" alt="The calendar in Year view, with twelve small month grids and a dot under each day that has an event" class="dark:hidden" />
+<img src="/images/calendar/year-view-dark.webp" alt="The calendar in Year view, with twelve small month grids and a dot under each day that has an event" class="hidden dark:block" />
 
 ### Day and Week
 
@@ -51,15 +51,15 @@ The **All day** row shows up to three rows of events.
 
 Each day shows up to three events. If a day has more, a link such as "2 more" appears. Events with a start time show a colored dot and the time. Events that span several days show as colored bars.
 
-<img src="/images/calendar/month-view.png" alt="The calendar in Month view, with events listed in each day" class="dark:hidden" />
-<img src="/images/calendar/month-view-dark.png" alt="The calendar in Month view, with events listed in each day" class="hidden dark:block" />
+<img src="/images/calendar/month-view.webp" alt="The calendar in Month view, with events listed in each day" class="dark:hidden" />
+<img src="/images/calendar/month-view-dark.webp" alt="The calendar in Month view, with events listed in each day" class="hidden dark:block" />
 
 ### Schedule
 
 Schedule lists your events day by day. Each row shows the time, a colored dot, the title and the email address of the account the event belongs to. If there is nothing to show, you see "Nothing scheduled in this range."
 
-<img src="/images/calendar/schedule-view.png" alt="The calendar in Schedule view, listing events day by day" class="dark:hidden" />
-<img src="/images/calendar/schedule-view-dark.png" alt="The calendar in Schedule view, listing events day by day" class="hidden dark:block" />
+<img src="/images/calendar/schedule-view.webp" alt="The calendar in Schedule view, listing events day by day" class="dark:hidden" />
+<img src="/images/calendar/schedule-view-dark.webp" alt="The calendar in Schedule view, listing events day by day" class="hidden dark:block" />
 
 ### How events look
 

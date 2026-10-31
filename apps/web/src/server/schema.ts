@@ -868,6 +868,16 @@ export const listEventsOutputSchema = z.object({
   events: z.array(calendarEventSchema),
   calendarErrors: z.array(calendarSourceErrorSchema).optional(),
 });
+export const listEventDaysInputSchema = calendarScopeSchema.extend({
+  timeMin: z.string().min(1),
+  timeMax: z.string().min(1),
+  calendarIds: z.array(z.string()).optional(),
+  timeZone: z.string().min(1),
+});
+export const listEventDaysOutputSchema = z.object({
+  days: z.record(z.string(), z.number().int()),
+  calendarErrors: z.array(calendarSourceErrorSchema).optional(),
+});
 
 export const sessionCalendarSchema = providerCalendarSchema.extend({
   accountId: z.string(),

@@ -42,9 +42,35 @@ export async function loadSeedSql(): Promise<void> {
     console.log("[harness] inserted seed.sql");
     const loaded = await loadFragments(client, RECORD_FRAGMENTS);
     console.log(`[harness] inserted ${loaded} file(s) from record/`);
+    await rebaseOpenWaits(client);
   } finally {
     client.close();
   }
+}
+
+async function rebaseOpenWaits(client: Client): Promise<void> {
+  const recorded = await client.execute('SELECT max("created_at") AS at FROM "workflow_run"');
+  const recordedAt = Number(recorded.rows[0]?.at ?? 0);
+  if (!recordedAt) return;
+  const offset = Date.now() - recordedAt;
+  await client.batch(
+    [
+      {
+        sql: `UPDATE "workflow_wait" SET "wake_at" = "wake_at" + ? WHERE "status" = 'open' AND "wake_at" IS NOT NULL`,
+        args: [offset],
+      },
+      {
+        sql: `UPDATE "workflow_step_run" SET "wake_at" = "wake_at" + ? WHERE "status" = 'waiting' AND "wake_at" IS NOT NULL`,
+        args: [offset],
+      },
+      {
+        sql: `UPDATE "workflow_run" SET "due_at" = "due_at" + ? WHERE "status" IN ('waiting', 'pending')`,
+        args: [offset],
+      },
+    ],
+    "write",
+  );
+  console.log(`[harness] moved open workflow waits forward by ${Math.round(offset / 60_000)} min`);
 }
 
 export async function loadMastraSeedSql(): Promise<void> {

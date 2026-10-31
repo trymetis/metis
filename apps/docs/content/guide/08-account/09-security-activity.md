@@ -44,8 +44,8 @@ The newest change is at the top. The card shows 50 rows at a time. Click **Load 
 
 Above the list are a search box ("Search events") and a list of event types, which starts at **All events**. Use them to find one change without scrolling.
 
-<img src="/images/account/security-activity.png" alt="The Security activity card with the search box, the event type list set to All events, and the empty state" class="dark:hidden" />
-<img src="/images/account/security-activity-dark.png" alt="The Security activity card with the search box, the event type list set to All events, and the empty state" class="hidden dark:block" />
+<img src="/images/account/security-activity.webp" alt="The Security activity card with the search box, the event type list set to All events, and the empty state" class="dark:hidden" />
+<img src="/images/account/security-activity-dark.webp" alt="The Security activity card with the search box, the event type list set to All events, and the empty state" class="hidden dark:block" />
 
 ### Search
 

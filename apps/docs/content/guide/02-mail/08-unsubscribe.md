@@ -39,8 +39,8 @@ The heading then shows how many senders it found and how many recent emails it c
 - the date, address and subject of their latest message
 - an **Unsubscribe** button
 
-<img src="/images/mail/subscriptions.png" alt="The Subscriptions folder listing mailing lists found in the inbox" class="dark:hidden" />
-<img src="/images/mail/subscriptions-dark.png" alt="The Subscriptions folder listing mailing lists found in the inbox" class="hidden dark:block" />
+<img src="/images/mail/subscriptions.webp" alt="The Subscriptions folder listing mailing lists found in the inbox" class="dark:hidden" />
+<img src="/images/mail/subscriptions-dark.webp" alt="The Subscriptions folder listing mailing lists found in the inbox" class="hidden dark:block" />
 
 ### Unsubscribe from one sender
 

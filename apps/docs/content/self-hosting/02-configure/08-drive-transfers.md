@@ -21,8 +21,8 @@ Open **Dashboard**, **System**, **Instance**. The **Drive relay** card has two l
 
 Change a value, click **Save changes** and enter your authenticator code.
 
-<img src="/images/self-hosting/dashboard-instance.png" alt="The Instance page with the Sign-up, Legal consent and Drive relay cards" class="dark:hidden" />
-<img src="/images/self-hosting/dashboard-instance-dark.png" alt="The Instance page with the Sign-up, Legal consent and Drive relay cards" class="hidden dark:block" />
+<img src="/images/self-hosting/dashboard-instance.webp" alt="The Instance page with the Sign-up, Legal consent and Drive relay cards" class="dark:hidden" />
+<img src="/images/self-hosting/dashboard-instance-dark.webp" alt="The Instance page with the Sign-up, Legal consent and Drive relay cards" class="hidden dark:block" />
 
 To set the starting values before the first start, use `METIS_DRIVE_RELAY_MAX_MB` and `METIS_DRIVE_RELAY_CONCURRENCY`.
 

@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
 import { type Browser, type BrowserContext, chromium, type Page } from "@playwright/test";
+import sharp from "sharp";
 import { z } from "zod";
 
 const CONTAINER = process.env.MCP_SHOTS_CONTAINER ?? "metis-mcp";
@@ -222,7 +223,7 @@ async function signIn(browser: Browser) {
   const ctx = await browser.newContext({
     baseURL: APP,
     viewport: VIEWPORT,
-    deviceScaleFactor: 1,
+    deviceScaleFactor: 2,
     colorScheme: "light",
     timezoneId: "UTC",
     locale: "en-US",
@@ -248,6 +249,11 @@ async function signIn(browser: Browser) {
     themeBrand: "amber",
   });
   return ctx;
+}
+
+async function shoot(page: Page, path: string) {
+  const png = await page.screenshot({ type: "png" });
+  await sharp(png).webp({ quality: 80 }).toFile(path);
 }
 
 async function typeLine(page: Page, line: string) {
@@ -290,7 +296,7 @@ async function authorize(browser: Browser, ctx: BrowserContext, consentFile: str
 
     startTerminal(false);
     await waitForTerminal();
-    const term = await browser.newPage({ viewport: VIEWPORT });
+    const term = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: 2 });
     try {
       await term.goto(`http://localhost:${PORT}/`);
       await term.locator(".xterm-rows").waitFor();
@@ -310,7 +316,7 @@ async function authorize(browser: Browser, ctx: BrowserContext, consentFile: str
       await approve.waitFor();
       if (consentFile) {
         await mkdir(dirname(consentFile), { recursive: true });
-        await page.screenshot({ path: consentFile, type: "jpeg", quality: 90 });
+        await shoot(page, consentFile);
       }
       await page.locator('input[autocomplete="one-time-code"]').click();
       await page.keyboard.type(await totp());
@@ -399,7 +405,7 @@ async function waitForText(page: Page, text: string, timeoutMs: number) {
 async function capture(browser: Browser, shot: Shot, file: string) {
   const page = await browser.newPage({
     viewport: VIEWPORT,
-    deviceScaleFactor: 1,
+    deviceScaleFactor: 2,
   });
   try {
     await page.goto(`http://localhost:${PORT}/`);
@@ -424,13 +430,13 @@ async function capture(browser: Browser, shot: Shot, file: string) {
         await settle(page, last ? (shot.settleMs ?? 2000) : 2000, Math.min(timeoutMs, 20_000));
       }
     } catch (error) {
-      const failed = join(tmpdir(), `mcp-shots-failed-${shot.name.replaceAll("/", "-")}.jpg`);
-      await page.screenshot({ path: failed, type: "jpeg", quality: 90 });
+      const failed = join(tmpdir(), `mcp-shots-failed-${shot.name.replaceAll("/", "-")}.webp`);
+      await shoot(page, failed);
       console.error(`[mcp-shots] screen at failure: ${failed}`);
       throw error;
     }
     await mkdir(dirname(file), { recursive: true });
-    await page.screenshot({ path: file, type: "jpeg", quality: 90 });
+    await shoot(page, file);
   } finally {
     await page.close();
   }
@@ -472,7 +478,7 @@ async function main() {
   try {
     const ctx = await signIn(browser);
     if (consent || !claudeAuthorized()) {
-      const file = consent ? join(OUT, `${CONSENT_SHOT}.jpg`) : null;
+      const file = consent ? join(OUT, `${CONSENT_SHOT}.webp`) : null;
       await authorize(browser, ctx, file);
       if (file) {
         manifest[CONSENT_SHOT] = null;
@@ -484,7 +490,7 @@ async function main() {
     startTerminal(withModel);
     await waitForTerminal();
     for (const shot of shots) {
-      const file = smoke ? join(tmpdir(), "mcp-shots-smoke.jpg") : join(OUT, `${shot.name}.jpg`);
+      const file = smoke ? join(tmpdir(), "mcp-shots-smoke.webp") : join(OUT, `${shot.name}.webp`);
       try {
         await capture(browser, shot, file);
         if (!smoke) manifest[shot.name] = null;

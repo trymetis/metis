@@ -47,7 +47,16 @@ test.beforeEach(async ({ page, account }) => {
   await expect(canvas(page)).toBeVisible();
 });
 
+test("the palette starts closed and Show steps opens it", async ({ page }) => {
+  await expect(page.getByRole("listbox")).toBeHidden();
+  await page.getByRole("button", { name: "Show steps", exact: true }).click();
+  await expect(page.getByRole("listbox")).toBeVisible();
+  await page.getByRole("button", { name: "Hide steps", exact: true }).click();
+  await expect(page.getByRole("listbox")).toBeHidden();
+});
+
 test("the palette groups steps by category and filters them by search", async ({ page }) => {
+  await page.getByRole("button", { name: "Show steps", exact: true }).click();
   const palette = page.getByRole("listbox");
   for (const heading of [
     "Triggers",
@@ -127,6 +136,44 @@ test("a simple condition opens as rows and switches to its expression and back",
   await expect(panel.getByRole("textbox", { name: "Value" })).toHaveValue("rebrand");
 });
 
+test("a pattern condition flags an invalid pattern and writes matches()", async ({ page }) => {
+  await openSeeded(page, REBRAND);
+  await step(page, "Filter").click();
+  const panel = inspector(page);
+  await panel.getByRole("combobox", { name: "Comparison" }).click();
+  await page.getByRole("option", { name: "matches pattern", exact: true }).click();
+  const value = panel.getByRole("textbox", { name: "Value" });
+  await value.fill("(");
+  await expect(panel.getByText("Not a valid pattern.")).toBeVisible();
+  await value.fill("^Rebrand");
+  await expect(panel.getByText("Not a valid pattern.")).toHaveCount(0);
+
+  await panel.getByRole("button", { name: "Edit as expression", exact: true }).click();
+  await expect(panel.getByRole("textbox", { name: "Keep when" })).toHaveValue(
+    'item.subject.matches("^Rebrand")',
+  );
+});
+
+test("Ask questions start collapsed to a summary and expand and collapse on click", async ({
+  page,
+}) => {
+  await openSeeded(page, "Triage with the decision model");
+  await step(page, "Ask").click();
+  const panel = inspector(page);
+  const summary = panel.getByRole("button", { name: /^Q1 Yes\/No Does this email ask/ });
+  await expect(summary).toHaveAttribute("aria-expanded", "false");
+  await expect(panel.getByRole("button", { name: /^Q2 Pick one Which team/ })).toBeVisible();
+  await expect(panel.getByRole("button", { name: /^Q3 Rate How urgent/ })).toBeVisible();
+  await expect(panel.getByRole("textbox", { name: "Q1", exact: true })).toHaveCount(0);
+
+  await summary.click();
+  await expect(panel.getByRole("textbox", { name: "Q1", exact: true })).toHaveValue(
+    /^Does this email ask/,
+  );
+  await panel.getByRole("button", { name: "Collapse Q1", exact: true }).click();
+  await expect(panel.getByRole("textbox", { name: "Q1", exact: true })).toHaveCount(0);
+});
+
 test("the revisions sheet lists saves and shows unsaved changes as a diff", async ({ page }) => {
   await openSeeded(page, REBRAND);
   await step(page, "Filter").click();
@@ -151,6 +198,7 @@ test("the revisions sheet lists saves and shows unsaved changes as a diff", asyn
 test("clicking a palette step adds it to the canvas, and Delete removes it", async ({ page }) => {
   await fromTemplate(page, "Label mail from a sender");
   const before = await canvas(page).getByRole("group").count();
+  await page.getByRole("button", { name: "Show steps", exact: true }).click();
   await page
     .getByRole("option")
     .filter({ has: page.getByText("Star", { exact: true }) })

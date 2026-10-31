@@ -40,6 +40,14 @@ export function microsoftCalendar(accessToken: string): CalendarAdapter {
 }
 
 const DELTA_PAGES = 20;
+const LIST_PAGES = 10;
+const LIST_PAGE_SIZE = 1000;
+const TIMES_SELECT = ["id", "start", "end", "isAllDay", "isCancelled", "showAs", "type"];
+
+interface ListPage {
+  value?: GraphEvent[];
+  "@odata.nextLink"?: string;
+}
 const DELTA_WINDOW_DAYS = 90;
 
 interface DeltaPage {
@@ -242,12 +250,23 @@ async function listEvents(accessToken: string, opts: ListEventsOptions): Promise
       let request = client
         .api(`/me/calendars/${cal.id}/calendarView`)
         .query({ startDateTime: opts.timeMin, endDateTime: opts.timeMax })
-        .top(opts.max ?? 250)
+        .top(Math.min(opts.max ?? LIST_PAGE_SIZE, LIST_PAGE_SIZE))
         .orderby("start/dateTime");
       if (opts.query) request = request.search(`"${opts.query}"`);
+      if (opts.fields === "times") request = request.select(TIMES_SELECT);
 
-      const data: { value?: GraphEvent[] } = await request.get();
-      return (data.value ?? []).map((raw) => toEvent(raw, cal.id, cal.name));
+      const items: GraphEvent[] = [];
+      let data: ListPage = await request.get();
+      for (let page = 1; ; page += 1) {
+        items.push(...(data.value ?? []));
+        const next = data["@odata.nextLink"];
+        if (!next || page >= LIST_PAGES || (opts.max !== undefined && items.length >= opts.max)) {
+          break;
+        }
+        // oxlint-disable-next-line eslint/no-await-in-loop -- each page needs the previous page's link
+        data = await client.api(next).get();
+      }
+      return items.slice(0, opts.max).map((raw) => toEvent(raw, cal.id, cal.name));
     }),
   );
 

@@ -94,4 +94,5 @@ export interface ListEventsOptions {
   timeMax: string;
   max?: number;
   query?: string;
+  fields?: "times";
 }

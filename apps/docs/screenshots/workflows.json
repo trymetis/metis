@@ -17,6 +17,9 @@
         "waitFor": ".react-flow__node[data-id=\"rebrand\"]"
       },
       {
+        "click": "role=button[name=\"Show steps\"s]"
+      },
+      {
         "click": "role=application >> role=button[name=\"Fit View\"]"
       },
       {
@@ -45,6 +48,7 @@
   },
   {
     "name": "workflows/first-workflow-canvas",
+    "clip": { "x": 250, "y": 0, "width": 1190, "height": 640 },
     "path": "{workspace}/workflow",
     "viewport": {
       "width": 1440,
@@ -130,6 +134,7 @@
   },
   {
     "name": "workflows/workflow-canvas",
+    "clip": { "x": 250, "y": 0, "width": 1190, "height": 600 },
     "path": "{workspace}/workflow",
     "viewport": {
       "width": 1440,
@@ -218,6 +223,7 @@
   },
   {
     "name": "workflows/combine-workflow",
+    "clip": { "x": 500, "y": 470, "width": 600, "height": 160 },
     "path": "{workspace}/workflow",
     "viewport": {
       "width": 1440,
@@ -266,6 +272,15 @@
       },
       {
         "waitFor": "role=region[name=\"Inspector\"s] >> role=button[name=\"Try on recent mail\"s]"
+      },
+      {
+        "click": "role=region[name=\"Inspector\"s] >> role=button[name=/^Q1 /]"
+      },
+      {
+        "click": "role=region[name=\"Inspector\"s] >> role=button[name=/^Q2 /]"
+      },
+      {
+        "click": "role=region[name=\"Inspector\"s] >> role=button[name=/^Q3 /]"
       },
       {
         "wait": 600
@@ -487,6 +502,9 @@
         "click": "role=region[name=\"Inspector\"s] >> role=button[name=\"Delete\"s]"
       },
       {
+        "click": "role=button[name=\"Show steps\"s]"
+      },
+      {
         "click": "role=option >> text=\"Before mail is sent\""
       },
       {
@@ -494,7 +512,7 @@
       },
       {
         "fill": "role=region[name=\"Inspector\"s] >> role=textbox[name=\"Address\"s]",
-        "value": "archive@demo.trymetis.email"
+        "value": "archive@example.com"
       },
       {
         "click": "role=application >> role=button[name=\"Tidy up the layout\"s]"

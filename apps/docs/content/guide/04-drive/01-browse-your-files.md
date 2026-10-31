@@ -11,8 +11,8 @@ Open the Drive section of your workspace. Metis opens the first drive in the wor
 
 If the workspace has no drive yet, you see **No drive in this workspace** and a **Go to drive settings** button. See [Add a drive](/guide/drive/add-a-drive) to connect one.
 
-<img src="/images/drive/explorer-list.png" alt="A drive open in list view, with the sidebar on the left and the files on the right" class="dark:hidden" />
-<img src="/images/drive/explorer-list-dark.png" alt="A drive open in list view, with the sidebar on the left and the files on the right" class="hidden dark:block" />
+<img src="/images/drive/explorer-list.webp" alt="A drive open in list view, with the sidebar on the left and the files on the right" class="dark:hidden" />
+<img src="/images/drive/explorer-list-dark.webp" alt="A drive open in list view, with the sidebar on the left and the files on the right" class="hidden dark:block" />
 
 ## Switch to another drive
 
@@ -22,8 +22,8 @@ The switcher at the top of the sidebar shows the drive you are in: its type and 
 - One row for each drive. The row says "All folders shown", or how many folders this workspace can see when the drive has a [folder restriction](/guide/drive/folder-restrictions).
 - **Add drive**, which opens the workspace's drive settings.
 
-<img src="/images/drive/switcher.png" alt="The Switch drive menu listing All drives, each drive, and Add drive" class="dark:hidden" />
-<img src="/images/drive/switcher-dark.png" alt="The Switch drive menu listing All drives, each drive, and Add drive" class="hidden dark:block" />
+<img src="/images/drive/switcher.webp" alt="The Switch drive menu listing All drives, each drive, and Add drive" class="dark:hidden" />
+<img src="/images/drive/switcher-dark.webp" alt="The Switch drive menu listing All drives, each drive, and Add drive" class="hidden dark:block" />
 
 ## Choose list or grid view
 
@@ -34,8 +34,8 @@ The toolbar has a button that switches between two views:
 
 Click **Switch to grid** or **Switch to list** to change the view. Metis remembers your choice in this browser, for every drive.
 
-<img src="/images/drive/explorer-grid.png" alt="The same drive in grid view, with a card for each folder and file" class="dark:hidden" />
-<img src="/images/drive/explorer-grid-dark.png" alt="The same drive in grid view, with a card for each folder and file" class="hidden dark:block" />
+<img src="/images/drive/explorer-grid.webp" alt="The same drive in grid view, with a card for each folder and file" class="dark:hidden" />
+<img src="/images/drive/explorer-grid-dark.webp" alt="The same drive in grid view, with a card for each folder and file" class="hidden dark:block" />
 
 ## Move through folders
 

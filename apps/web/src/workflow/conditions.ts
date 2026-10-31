@@ -10,6 +10,7 @@ export const RULE_OPS = {
     "isNot",
     "startsWith",
     "endsWith",
+    "matches",
     "isEmpty",
     "isNotEmpty",
   ],
@@ -28,6 +29,7 @@ export const RULE_OP_LABELS: Record<RuleOp, string> = {
   isNot: "is not",
   startsWith: "starts with",
   endsWith: "ends with",
+  matches: "matches pattern",
   isEmpty: "is empty",
   isNotEmpty: "is not empty",
   eq: "=",
@@ -99,6 +101,8 @@ function ruleCel(rule: Rule): string {
       return `lower(${path}).startsWith(${lowered})`;
     case "endsWith":
       return `lower(${path}).endsWith(${lowered})`;
+    case "matches":
+      return `${path}.matches(${quote(value)})`;
     case "isEmpty":
       return `size(${path}) == 0`;
     case "isNotEmpty":
@@ -195,6 +199,11 @@ const LEAF_PATTERNS: { re: RegExp; op: RuleOp; value: (m: RegExpMatchArray) => s
   {
     re: /^lower\((.+)\)\.endsWith\(("(?:[^"\\]|\\.)*")\)$/,
     op: "endsWith",
+    value: (m) => unquote(m[2] ?? ""),
+  },
+  {
+    re: /^(.+)\.matches\(("(?:[^"\\]|\\.)*")\)$/,
+    op: "matches",
     value: (m) => unquote(m[2] ?? ""),
   },
   { re: /^size\((.+)\) == 0$/, op: "isEmpty", value: () => "" },

@@ -10,8 +10,8 @@ You can download any file to your computer. For Google Drive and OneDrive, you c
 1. Click the **...** button on the file, or right-click it.
 2. Choose **Download**.
 
-<img src="/images/drive/file-menu.png" alt="The actions menu for a file, with Download, Rename and Delete" class="dark:hidden" />
-<img src="/images/drive/file-menu-dark.png" alt="The actions menu for a file, with Download, Rename and Delete" class="hidden dark:block" />
+<img src="/images/drive/file-menu.webp" alt="The actions menu for a file, with Download, Rename and Delete" class="dark:hidden" />
+<img src="/images/drive/file-menu-dark.webp" alt="The actions menu for a file, with Download, Rename and Delete" class="hidden dark:block" />
 
 You can also click **Download** at the top of the [preview pane](/guide/drive/preview-files).
 

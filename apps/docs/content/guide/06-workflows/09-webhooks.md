@@ -7,7 +7,7 @@ A **webhook** is a web address that another service calls when something happens
 
 ## Set up the trigger
 
-1. Open the workflow and add **Webhook** from the **Triggers** category of the step palette.
+1. Open the workflow and add **Webhook** from the **Triggers** category of the step palette, or press **w** then **a** and search for it.
 2. Click the trigger and choose its settings in the Inspector:
    - **Body fields** (optional): the fields you expect in the request's body. Each has a name, a **Type**, an optional description and a **Required** checkbox. See [Declared fields](/guide/workflows/expressions#declared-fields).
    - **Check**: how a request proves it comes from you. **Secret header** (the default) or **HMAC signature**. See [Send a request](#send-a-request).
@@ -21,8 +21,8 @@ The card says "Checked by a secret header" or "Signed with HMAC", plus "From" an
 
 ## Copy the address and the secret
 
-<img src="/images/workflows/webhook-trigger.png" alt="The Inspector for a Webhook trigger showing its address, the Show secret and New secret buttons, and its settings" class="dark:hidden" />
-<img src="/images/workflows/webhook-trigger-dark.png" alt="The Inspector for a Webhook trigger showing its address, the Show secret and New secret buttons, and its settings" class="hidden dark:block" />
+<img src="/images/workflows/webhook-trigger.webp" alt="The Inspector for a Webhook trigger showing its address, the Show secret and New secret buttons, and its settings" class="dark:hidden" />
+<img src="/images/workflows/webhook-trigger-dark.webp" alt="The Inspector for a Webhook trigger showing its address, the Show secret and New secret buttons, and its settings" class="hidden dark:block" />
 
 1. Click the trigger.
 2. Click the copy button next to the address field. A message says "Address copied".

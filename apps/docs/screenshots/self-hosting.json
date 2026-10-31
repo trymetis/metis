@@ -30,6 +30,7 @@
   {
     "name": "self-hosting/dashboard-save-bar",
     "viewport": { "width": 1440, "height": 1200 },
+    "clip": { "x": 456, "y": 890, "width": 756, "height": 310 },
     "path": "/dashboard/system/instance",
     "steps": [
       { "waitFor": "role=spinbutton[name=\"Max transfer size (MB)\"]" },

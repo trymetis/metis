@@ -46,6 +46,7 @@
   },
   {
     "name": "assistant/mail-ai-panel",
+    "clip": { "x": 800, "y": 0, "width": 640, "height": 900 },
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       { "waitFor": "role=main >> role=button[name=\"Toggle AI agent\"]" },
@@ -67,6 +68,7 @@
   },
   {
     "name": "assistant/calendar-ai-panel",
+    "clip": { "x": 800, "y": 0, "width": 640, "height": 900 },
     "path": "{workspace}/c/{calendar}",
     "seededWeek": true,
     "steps": [
@@ -85,6 +87,7 @@
   },
   {
     "name": "assistant/drive-ai-panel",
+    "clip": { "x": 800, "y": 0, "width": 640, "height": 900 },
     "path": "{workspace}/d/{drive:s3}",
     "steps": [
       { "waitFor": "role=navigation[name=\"breadcrumb\"]" },

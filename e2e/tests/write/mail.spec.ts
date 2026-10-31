@@ -1,3 +1,4 @@
+import { PEOPLE } from "@metis/e2e/lib/cast";
 import { env } from "@metis/e2e/lib/env";
 import type { Page } from "@playwright/test";
 
@@ -349,6 +350,25 @@ export default function mailSpecs() {
     await discardDrafts(rpc, account, subject);
   });
 
+  test("Enter adds a typed contact's full address as a chip", async ({
+    page,
+    rpc,
+    account,
+  }, testInfo) => {
+    const subject = uniqueName(testInfo);
+    const address = PEOPLE.kenji.email;
+    await goToFolder(page, account);
+    await folders(page).getByRole("button", { name: "Compose", exact: true }).click();
+    const box = composer(page);
+    await box.getByRole("textbox", { name: "Subject line…" }).fill(subject);
+    await box.getByRole("combobox", { name: "To recipients" }).fill(address);
+    await page.keyboard.press("Enter");
+    await expect(box.getByRole("toolbar").getByText(address, { exact: true })).toBeVisible();
+    await expect(box.getByRole("combobox", { name: "To recipients" })).toHaveValue("");
+    await closeComposer(page);
+    await discardDrafts(rpc, account, subject);
+  });
+
   test("send later, then cancel the scheduled send", async ({ page, rpc, account }, testInfo) => {
     const subject = uniqueName(testInfo);
     await goToFolder(page, account);
@@ -405,6 +425,37 @@ export default function mailSpecs() {
         .getByRole("menu", { name: "Snooze" })
         .getByRole("menuitem", { name: "Tomorrow 9 AM", exact: true })
         .click();
+      await expect(mailRow(page, TARGET)).toHaveCount(0);
+      expect((await snoozed).ok()).toBe(true);
+      await snoozeArmed(rpc, account, TARGET);
+      await goToFolder(page, account, "snoozed");
+      const row = snoozedRow(page, TARGET);
+      await expect(row).toContainText("Returns");
+      await row.getByRole("button", { name: "Wake now", exact: true }).click();
+      await expect(row).toHaveCount(0);
+      await expect.poll(async () => findIn(rpc, account, "inbox", TARGET), SLOW_POLL).toBeDefined();
+    } finally {
+      await unstrand(rpc, account);
+    }
+  });
+
+  test("snooze to a picked date and time, then wake it from Snoozed", async ({
+    page,
+    rpc,
+    account,
+  }) => {
+    const wake = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+    const value = `${wake.toISOString().slice(0, 10)}T10:00`;
+    await openTarget(page, account);
+    try {
+      await messageToolbar(page).getByRole("button", { name: "Snooze" }).click();
+      await page
+        .getByRole("menu", { name: "Snooze" })
+        .getByRole("menuitem", { name: "Pick date & time…", exact: true })
+        .click();
+      await page.getByLabel("When it comes back").fill(value);
+      const snoozed = page.waitForResponse("**/rpc/mail/messages/snooze");
+      await page.getByRole("button", { name: "Confirm snooze", exact: true }).click();
       await expect(mailRow(page, TARGET)).toHaveCount(0);
       expect((await snoozed).ok()).toBe(true);
       await snoozeArmed(rpc, account, TARGET);

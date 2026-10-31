@@ -10,13 +10,13 @@ The drive sidebar keeps two short lists of folders so you can get back to them q
 1. Click the **...** button on a folder, or right-click it.
 2. Choose **Pin to sidebar**.
 
-<img src="/images/drive/folder-menu.png" alt="The actions menu for a folder, with Pin to sidebar, Rename and Delete" class="dark:hidden" />
-<img src="/images/drive/folder-menu-dark.png" alt="The actions menu for a folder, with Pin to sidebar, Rename and Delete" class="hidden dark:block" />
+<img src="/images/drive/folder-menu.webp" alt="The actions menu for a folder, with Pin to sidebar, Rename and Delete" class="dark:hidden" />
+<img src="/images/drive/folder-menu-dark.webp" alt="The actions menu for a folder, with Pin to sidebar, Rename and Delete" class="hidden dark:block" />
 
 The folder appears under **Pinned** in the sidebar. Click it to open that folder.
 
-<img src="/images/drive/sidebar.png" alt="The drive sidebar with a pinned folder and the storage line" class="dark:hidden" />
-<img src="/images/drive/sidebar-dark.png" alt="The drive sidebar with a pinned folder and the storage line" class="hidden dark:block" />
+<img src="/images/drive/sidebar.webp" alt="The drive sidebar with a pinned folder and the storage line" class="dark:hidden" />
+<img src="/images/drive/sidebar-dark.webp" alt="The drive sidebar with a pinned folder and the storage line" class="hidden dark:block" />
 
 If the pin cannot be saved, you see "Could not pin that folder".
 
@@ -33,7 +33,7 @@ Removing a pin does not change the folder itself. If the pin cannot be removed, 
 
 **Recent** lists the last 8 folders you opened from the file list in this drive, newest first. Click one to open it again.
 
-<img src="/images/drive/recent-folders.png" alt="The drive sidebar with the Recent section" class="dark:hidden" />
-<img src="/images/drive/recent-folders-dark.png" alt="The drive sidebar with the Recent section" class="hidden dark:block" />
+<img src="/images/drive/recent-folders.webp" alt="The drive sidebar with the Recent section" class="dark:hidden" />
+<img src="/images/drive/recent-folders-dark.webp" alt="The drive sidebar with the Recent section" class="hidden dark:block" />
 
 Recent folders are kept only in this browser. They do not follow you to another browser or device.

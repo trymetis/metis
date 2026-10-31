@@ -25,4 +25,4 @@ In Day and Week view you can change an event's time with the mouse. Metis Suite 
 - An event cannot be shorter than 15 minutes.
 - You can drag only events that have a start and end time. Events in the **All day** row cannot be dragged.
 - In Month view you cannot drag events. To change an event there, open it and click **Edit event**. See [View, edit and delete events](/guide/calendar/view-edit-and-delete-events).
-- After you let go, the calendar refreshes. If your provider did not accept the change, the event appears back in its old place. Check the event's time after you move it.
+- After you let go, Metis Suite saves the change and the calendar refreshes. If the change could not be saved, an error message appears and the event stays in its old place.

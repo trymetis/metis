@@ -14,8 +14,8 @@ The **Review your sessions** button in a [sign-in alert](/guide/account/sign-in-
 1. Open your user menu (the round button with your initials at the bottom of the left rail).
 2. Click **Settings**. The **Account** page opens.
 
-<img src="/images/account/account.png" alt="The Account settings page with your profile and the list of signed-in browsers" class="dark:hidden" />
-<img src="/images/account/account-dark.png" alt="The Account settings page with your profile and the list of signed-in browsers" class="hidden dark:block" />
+<img src="/images/account/account.webp" alt="The Account settings page with your profile and the list of signed-in browsers" class="dark:hidden" />
+<img src="/images/account/account-dark.webp" alt="The Account settings page with your profile and the list of signed-in browsers" class="hidden dark:block" />
 
 ## Your profile
 

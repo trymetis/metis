@@ -28,7 +28,7 @@ import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useStoredItem, writeStoredItem } from "@/hooks/use-stored-item";
 import { useWorkspacePath, useWorkspaceScope } from "@/hooks/use-workspace-path";
 import { rpc } from "@/lib/orpc";
-import { refreshQuery } from "@/lib/query-client";
+import { refreshQueries, refreshQuery } from "@/lib/query-client";
 import type { CalendarSourceErrorDto, SessionCalendar } from "@/server/schema";
 import type { CalendarEvent } from "@/types/calendar";
 
@@ -76,6 +76,7 @@ export function useCalendar(): CalendarContextValue {
 }
 
 const NO_CALENDARS: SessionCalendar[] = [];
+const YEAR_EVENT_MAX = 250;
 
 function hiddenKey(workspaceSlug: string, calendarSlug: string): string {
   return `metis:calendar:hidden:${workspaceSlug}:${calendarSlug}`;
@@ -135,8 +136,9 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       calendarSlug: slug,
       timeMin: range.start.toISOString(),
       timeMax: range.end.toISOString(),
+      ...(view === "year" ? { max: YEAR_EVENT_MAX } : {}),
     }),
-    [scope, slug, range.start, range.end],
+    [scope, slug, range.start, range.end, view],
   );
 
   const eventsOptions = useMemo(
@@ -153,7 +155,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   );
   const loading = eventsQuery.isFetching;
   const load = useCallback(async () => {
-    await refreshQuery(eventsKey);
+    await Promise.all([refreshQuery(eventsKey), refreshQueries(rpc.calendarEvents.days.key())]);
   }, [eventsKey]);
 
   const [handoff, setHandoff] = useState<CalendarHandoff | null>(null);

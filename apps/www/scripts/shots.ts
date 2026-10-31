@@ -3,6 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 import { type Browser, chromium, type Page } from "@playwright/test";
+import sharp from "sharp";
 import { z } from "zod";
 
 const APP = process.env.DOCS_APP_URL ?? "http://localhost:3000";
@@ -100,7 +101,7 @@ function contextOptions() {
   return {
     baseURL: APP,
     viewport: VIEWPORT,
-    deviceScaleFactor: 1,
+    deviceScaleFactor: 2,
     colorScheme: "light" as const,
     timezoneId: "UTC",
     locale: "en-US",
@@ -208,6 +209,11 @@ function viewBox(el: Element): Box {
   };
 }
 
+async function shoot(page: Page, path: string) {
+  const png = await page.screenshot({ type: "png" });
+  await sharp(png).webp({ quality: 80 }).toFile(path);
+}
+
 async function focusBox(page: Page, focus: string | string[]): Promise<Box | null> {
   const boxes: Box[] = [];
   for (const selector of Array.isArray(focus) ? focus : [focus]) {
@@ -278,9 +284,9 @@ async function main() {
         box = await focusBox(page, want);
         if (!box && base.element && want !== base.element) box = await focusBox(page, base.element);
       }
-      const file = join(OUT, `${shot.name}.jpg`);
+      const file = join(OUT, `${shot.name}.webp`);
       await mkdir(dirname(file), { recursive: true });
-      await page.screenshot({ path: file, type: "jpeg", quality: 90 });
+      await shoot(page, file);
       manifest[shot.name] = box ? [box.x, box.y, box.width, box.height].map(Math.round) : null;
       console.log(
         `[www-shots] ok ${shot.name} ${box ? JSON.stringify(manifest[shot.name]) : "(whole)"}`,

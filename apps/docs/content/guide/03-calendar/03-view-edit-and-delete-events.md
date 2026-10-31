@@ -7,8 +7,8 @@ Click any event in the Day, Week, Month or Schedule view to open its details.
 
 ## See an event's details
 
-<img src="/images/calendar/event-details.png" alt="The details of an event, with its title, time, location and calendar" class="dark:hidden" />
-<img src="/images/calendar/event-details-dark.png" alt="The details of an event, with its title, time, location and calendar" class="hidden dark:block" />
+<img src="/images/calendar/event-details.webp" alt="The details of an event, with its title, time, location and calendar" class="dark:hidden" />
+<img src="/images/calendar/event-details-dark.webp" alt="The details of an event, with its title, time, location and calendar" class="hidden dark:block" />
 
 The details show, from top to bottom:
 
@@ -34,8 +34,8 @@ The buttons at the top right are **Edit event** (pencil), **Delete event** (bin)
 1. Open the event.
 2. Click **Edit event**. The **Edit event** dialog opens with the event's details filled in.
 
-   <img src="/images/calendar/edit-event-dialog.png" alt="The Edit event dialog with the event's details filled in" class="dark:hidden" />
-   <img src="/images/calendar/edit-event-dialog-dark.png" alt="The Edit event dialog with the event's details filled in" class="hidden dark:block" />
+   <img src="/images/calendar/edit-event-dialog.webp" alt="The Edit event dialog with the event's details filled in" class="dark:hidden" />
+   <img src="/images/calendar/edit-event-dialog-dark.webp" alt="The Edit event dialog with the event's details filled in" class="hidden dark:block" />
 
 3. Change what you need. The fields are the same as when you [create an event](/guide/calendar/create-an-event), except that you cannot add a Google Meet or Teams meeting while editing.
 4. Click **Save**.
@@ -57,8 +57,8 @@ Metis Suite has no option to change or delete every occurrence at once. To chang
 2. Click **Delete event**.
 3. Metis Suite asks "Delete &lt;event title&gt;?" It names the calendar the event is removed from and says "This can't be undone."
 
-   <img src="/images/calendar/delete-event.png" alt="The confirmation shown before an event is deleted" class="dark:hidden" />
-   <img src="/images/calendar/delete-event-dark.png" alt="The confirmation shown before an event is deleted" class="hidden dark:block" />
+   <img src="/images/calendar/delete-event.webp" alt="The confirmation shown before an event is deleted" class="dark:hidden" />
+   <img src="/images/calendar/delete-event-dark.webp" alt="The confirmation shown before an event is deleted" class="hidden dark:block" />
 
 4. Click **Delete** to delete the event, or **Cancel** to keep it.
 

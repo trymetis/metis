@@ -20,6 +20,7 @@
   {
     "name": "workspaces/workspace-menu",
     "viewport": { "width": 960, "height": 480 },
+    "clip": { "x": 0, "y": 0, "width": 320, "height": 250 },
     "path": "{workspace}/settings/general",
     "steps": [
       {
@@ -34,6 +35,7 @@
   {
     "name": "workspaces/account-menu",
     "viewport": { "width": 960, "height": 480 },
+    "clip": { "x": 0, "y": 120, "width": 320, "height": 360 },
     "path": "{workspace}/settings/general",
     "steps": [
       {
@@ -181,6 +183,7 @@
   },
   {
     "name": "workspaces/workspace-activity",
+    "clip": { "x": 240, "y": 20, "width": 1010, "height": 290 },
     "path": "{workspace}/settings/activity",
     "steps": [
       { "waitFor": "main >> role=heading[level=1][name=\"Activity\"]" },

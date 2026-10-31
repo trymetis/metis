@@ -10,7 +10,7 @@ An **If** step needs a rule you can write as a condition. When the rule is harde
 
 ## Before you start
 
-- **Your server has to offer decision steps.** If **Ask** and **Branch** are not in the step palette under **AI**, your administrator has not turned them on. A workflow that still has them shows "Ask and Branch steps are turned off on this instance".
+- **Your server has to offer decision steps.** If **Ask** and **Branch** are not under **AI** in the step palette or in the **Add step** window, your administrator has not turned them on. To open the palette, click **Show steps** in the top bar. A workflow that still has them shows "Ask and Branch steps are turned off on this instance".
 - **AI has to be on for everything the step reads.** AI must be allowed in the workspace and turned on for every mailbox, calendar and drive that the Ask step or the steps before it read. If it is not, the Ask step shows "Turn AI on for every mailbox, calendar and drive this step reads", and the workflow cannot be saved. See [Workspaces](/guide/workspaces) for the AI switches.
 - **Decision steps cannot run before a message is sent.** You cannot use them after **Before mail is sent**. If you try, the step shows "Ask cannot run before a message is sent" (or "Branch cannot run before a message is sent").
 
@@ -48,10 +48,12 @@ An **If** step needs a rule you can write as a condition. When the rule is harde
 
     For **Rate**, write at least two levels under **Levels, lowest first**, for example Low, Medium and High. Each level has the same optional note.
 
+    A new question opens expanded, so you can see its text box. When you open an Ask step that already has questions, each question with text is collapsed to a short summary. The first line shows its number and type, for example "Q1 Yes/No". The second line shows the start of its text. Click a summary to expand the question and edit its text, answers or levels. Click the up arrow next to the type to collapse it again. The **X** removes a question, whether it is collapsed or expanded. If you select another step and then come back, questions with text are collapsed again.
+
     All the questions in one Ask step are asked together, in one go for each item. Each question gets its own output on the right of the Ask step: **Q1**, **Q2** and so on. The card lists the first two questions.
 
-    <img src="/images/workflows/ask-step.png" alt="The Inspector for an Ask step with a Yes/No question, a Pick one question with three answers and a Rate question with three levels" class="dark:hidden" />
-    <img src="/images/workflows/ask-step-dark.png" alt="The Inspector for an Ask step with a Yes/No question, a Pick one question with three answers and a Rate question with three levels" class="hidden dark:block" />
+    <img src="/images/workflows/ask-step.webp" alt="The Inspector for an Ask step with a Yes/No question, a Pick one question with three answers and a Rate question with three levels" class="dark:hidden" />
+    <img src="/images/workflows/ask-step-dark.webp" alt="The Inspector for an Ask step with a Yes/No question, a Pick one question with three answers and a Rate question with three levels" class="hidden dark:block" />
 
   </Step>
 
@@ -68,7 +70,7 @@ Each question needs its own **Branch** step to act on the answer. An Ask output 
 
 <Steps>
   <Step title="Add and connect a Branch step">
-    Add **Branch** from the **AI** category of the step palette. Drag from one of the Ask step's outputs, such as **Q1**, to the Branch step's input on the left.
+    Add **Branch** from the **AI** category of the step palette, or press **w** then **a** and search for it. Drag from one of the Ask step's outputs, such as **Q1**, to the Branch step's input on the left.
 
     Until it is connected, the card says "Connect a question", and the Inspector says "Connect this step to a question on an Ask step." Once connected, the card says "On:" and the question, and the Inspector shows it, for example "Q1: Is this email a request for a refund?".
 
@@ -82,8 +84,8 @@ Each question needs its own **Branch** step to act on the answer. An Ask output 
 
     An answer that is not sure enough goes to **Unsure**. The Inspector says: "Anything below goes to Unsure." Higher values for **Yes when at least** and **Take the top answer at** send fewer items down **Yes** or an answer path, and more to **Unsure**. A higher value for **No when at most** sends more items to **No** and fewer to **Unsure**.
 
-    <img src="/images/workflows/branch-step.png" alt="The Inspector for a Branch step connected to a Pick one question, with its Take the top answer at slider" class="dark:hidden" />
-    <img src="/images/workflows/branch-step-dark.png" alt="The Inspector for a Branch step connected to a Pick one question, with its Take the top answer at slider" class="hidden dark:block" />
+    <img src="/images/workflows/branch-step.webp" alt="The Inspector for a Branch step connected to a Pick one question, with its Take the top answer at slider" class="dark:hidden" />
+    <img src="/images/workflows/branch-step-dark.webp" alt="The Inspector for a Branch step connected to a Pick one question, with its Take the top answer at slider" class="hidden dark:block" />
 
   </Step>
 
@@ -106,17 +108,17 @@ Each question needs its own **Branch** step to act on the answer. An Ask output 
 Before you save, you can see how the model answers your questions on real mail. Nothing in the mailbox changes.
 
 1. Click the Ask step, then click **Try on recent mail** at the bottom of the Inspector. The button is greyed out until the step has a question.
-2. A panel opens on the left, over the step palette. Pick a mailbox and click **Ask**. Only mailboxes with AI turned on are listed. If there are none, the panel says "No mailbox in this workspace has AI turned on."
+2. A panel opens on the left side of the page. Pick a mailbox and click **Ask**. Only mailboxes with AI turned on are listed. If there are none, the panel says "No mailbox in this workspace has AI turned on."
 3. The panel lists up to 10 of the newest messages in that mailbox's inbox. Under each subject and sender, it shows each question's answer and how sure the model was, for example "Q1: Yes 92%", and, for each connected Branch step, the path the message would take. "Refused" means the model declined to answer.
 4. Click **Close** (the **X**) to close the panel.
 
 <img
-  src="/images/workflows/try-on-recent-mail.png"
+  src="/images/workflows/try-on-recent-mail.webp"
   alt="The Try on recent mail panel on the left, listing recent messages with each answer and its path, beside the canvas and the Inspector"
   class="dark:hidden"
 />
 <img
-  src="/images/workflows/try-on-recent-mail-dark.png"
+  src="/images/workflows/try-on-recent-mail-dark.webp"
   alt="The Try on recent mail panel on the left, listing recent messages with each answer and its path, beside the canvas and the Inspector"
   class="hidden dark:block"
 />

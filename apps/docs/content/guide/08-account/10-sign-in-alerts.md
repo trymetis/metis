@@ -60,8 +60,8 @@ Act quickly:
 3. Find the **Sign-in alerts** card. It is below **Change password** and above **Disable two-factor authentication**.
 4. Click the switch to turn alerts off or on.
 
-<img src="/images/account/sign-in-alerts.png" alt="The Sign-in alerts card with its switch turned on" class="dark:hidden" />
-<img src="/images/account/sign-in-alerts-dark.png" alt="The Sign-in alerts card with its switch turned on" class="hidden dark:block" />
+<img src="/images/account/sign-in-alerts.webp" alt="The Sign-in alerts card with its switch turned on" class="dark:hidden" />
+<img src="/images/account/sign-in-alerts-dark.webp" alt="The Sign-in alerts card with its switch turned on" class="hidden dark:block" />
 
 The card shows your email address and says that alerts go there "each time someone signs in to this account, with the device, IP address and time, so a sign-in you didn’t make doesn’t go unnoticed." The switch is on the right side of the card.
 

@@ -13,8 +13,8 @@ When the assistant wants to take a sensitive action, an approval card appears in
 - A one-line summary from the assistant of what it is about to do.
 - Two buttons: **Approve** and **Decline**.
 
-<img src="/images/assistant/approval-card.png" alt="An approval card in the assistant with Approve and Decline buttons" class="dark:hidden" />
-<img src="/images/assistant/approval-card-dark.png" alt="An approval card in the assistant with Approve and Decline buttons" class="hidden dark:block" />
+<img src="/images/assistant/approval-card.webp" alt="An approval card in the assistant with Approve and Decline buttons" class="dark:hidden" />
+<img src="/images/assistant/approval-card-dark.webp" alt="An approval card in the assistant with Approve and Decline buttons" class="hidden dark:block" />
 
 While it waits for you, the step reads "Approve this before it runs" or the card's own text.
 
