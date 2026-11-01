@@ -14,10 +14,11 @@ Click the drive switcher at the top of the sidebar and choose **All drives**. Th
 
 ## What you see
 
-- **At the top level**, each drive appears as one folder, named with the email address of its account.
+- **At the top level**, each drive appears as one folder with the drive's name. See [How drives are named](/guide/drive/browse-your-files#how-drives-are-named).
 - **Inside one of those folders**, you work in that drive just as you would on its own page.
 - **The breadcrumbs** start with **All drives**. Click it to return to the top level.
 - **The search box** searches every drive at once. See [Search](/guide/drive/search).
+- **The Pinned list** in the sidebar shows your pinned folders from every drive. Under each folder, a second, smaller line shows the name of its drive.
 - **The storage line** in the sidebar says "Storage unavailable". Open a single drive to see its storage use.
 
 ## Upload or create a folder from the top level
@@ -28,7 +29,7 @@ At the top level there is no folder to put things in yet, so Metis asks you wher
 2. A dialog opens and asks where to put them:
    - For an upload, the dialog is titled **Upload**. It names your file (or the number of files) and asks which folder to upload into.
    - For a new folder, the dialog is titled **New folder**. It says "Choose the folder to create it in."
-3. The dialog starts at **Drives**, which lists each drive by its type or server name and its email address. Click a drive to open it, then click folders to go deeper. Use the path at the top of the dialog to go back.
+3. The dialog starts at **Drives**, which lists each drive by its name. Click a drive to open it, then click folders to go deeper. Use the path at the top of the dialog to go back.
 4. Click **Upload here** or **Create here**. The button stays off until you have opened a drive.
 5. For a new folder, type its name in the next dialog and click **Create**.
 

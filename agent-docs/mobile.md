@@ -75,6 +75,6 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [downloads.md](dow
 
 ## Deliberate limits
 
-- **The `about:blank` popups the desktop keeps in-app (print, view original) do not open on mobile.**
+- **Print opens its page in the popup route without a print dialog**: react-native-webview has no `window.print()` handler. View original opens there in full.
 - **The desktop-only settings (tray, autostart, start minimized, hardware acceleration, zoom, download folder) have no mobile counterpart.**
 - **iOS has no update check**, because it has no published build ([downloads.md](downloads.md)).

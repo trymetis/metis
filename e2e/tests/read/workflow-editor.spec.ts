@@ -47,12 +47,37 @@ test.beforeEach(async ({ page, account }) => {
   await expect(canvas(page)).toBeVisible();
 });
 
-test("the palette starts closed and Show steps opens it", async ({ page }) => {
+test("the palette starts closed and floats over the canvas from its corner icon", async ({
+  page,
+}) => {
   await expect(page.getByRole("listbox")).toBeHidden();
-  await page.getByRole("button", { name: "Show steps", exact: true }).click();
-  await expect(page.getByRole("listbox")).toBeVisible();
-  await page.getByRole("button", { name: "Hide steps", exact: true }).click();
-  await expect(page.getByRole("listbox")).toBeHidden();
+  await expect(
+    page.getByRole("banner").getByRole("button", { name: "Show steps", exact: true }),
+  ).toHaveCount(0);
+  const closed = await canvas(page).boundingBox();
+  const show = page.getByRole("button", { name: "Show steps", exact: true });
+  const corner = await show.boundingBox();
+  expect(corner && closed && corner.x - closed.x).toBeLessThan(40);
+  expect(corner && closed && corner.y - closed.y).toBeLessThan(40);
+
+  await show.click();
+  const palette = page.getByRole("listbox");
+  await expect(palette).toBeVisible();
+  expect((await canvas(page).boundingBox())?.width).toBe(closed?.width);
+  const hide = page.getByRole("button", { name: "Hide steps", exact: true });
+  const search = page.getByPlaceholder("Search steps");
+  const [hideBox, searchBox] = [await hide.boundingBox(), await search.boundingBox()];
+  expect(hideBox && searchBox && Math.abs(hideBox.y - searchBox.y)).toBeLessThan(12);
+
+  const fit = canvas(page).getByRole("button", { name: "Fit View", exact: true });
+  const fitBox = await fit.boundingBox();
+  expect(fitBox && closed && fitBox.x > closed.x + closed.width / 2).toBe(true);
+  expect(fitBox && closed && fitBox.y - closed.y).toBeLessThan(40);
+  await fit.click();
+
+  await hide.click();
+  await expect(palette).toBeHidden();
+  await expect(show).toBeVisible();
 });
 
 test("the palette groups steps by category and filters them by search", async ({ page }) => {

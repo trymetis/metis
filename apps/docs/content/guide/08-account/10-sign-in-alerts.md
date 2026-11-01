@@ -69,7 +69,7 @@ Your choice is saved right away. There is no **Save** button, and you do not nee
 
 The setting is for your whole account. It is the same in every workspace.
 
-Turning sign-in alerts off is recorded as **Sign-in alerts turned off** in your [Security activity](/guide/account/security-activity). Turning them back on is not recorded.
+Turning sign-in alerts off is recorded in your [Security activity](/guide/account/security-activity). The row starts with your name (or your email address, if your account has no name) and reads "… turned off sign-in alerts". To find it, pick **Sign-in alerts turned off** in the event type list. Turning them back on is not recorded.
 
 ## If you never get alerts
 

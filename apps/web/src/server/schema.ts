@@ -377,8 +377,10 @@ export const auditEventSchema = z.object({
   via: z.enum(AUDIT_VIAS),
   mcpClientId: z.string().nullable(),
   actorEmail: z.string(),
+  actorName: z.string().nullable().optional(),
   workspaceName: z.string().nullable(),
   targetLabel: z.string().nullable(),
+  targetName: z.string().nullable().optional(),
   resourceKind: z.enum(AUDIT_RESOURCE_KINDS).nullable(),
   detail: z.record(
     z.string(),
@@ -2386,6 +2388,7 @@ const workflowDirectoryEntrySchema = z.object({
   id: z.string(),
   slug: z.string(),
   email: z.string(),
+  name: z.string(),
   aiEnabled: z.boolean(),
 });
 

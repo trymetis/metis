@@ -1,5 +1,6 @@
 import "server-only";
 import { listWorkspaceCalendars, listWorkspaceDrives, listWorkspaceMailboxes } from "@/connections";
+import { driveName } from "@/drive/name";
 import type { WorkspaceRole } from "@/types/workspace";
 
 import type { WorkspaceScope } from "./index";
@@ -43,6 +44,7 @@ export async function workflowScopeFor(appUser: WorkflowScopeUser): Promise<
       driveId: d.id,
       linkId: d.linkId,
       email: d.email,
+      name: driveName(d, drives),
       slug: d.slug,
       aiEnabled: d.policy.ai,
     })),

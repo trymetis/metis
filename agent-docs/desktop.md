@@ -122,7 +122,7 @@ See also [AGENTS.md](../AGENTS.md), [mobile.md](mobile.md), [auth.md](auth.md), 
   - The shell intercepts `/api/connections/start/*`, gets a single-use ticket bound to that pathname (`POST /api/auth/native/connect-ticket`, valid for `CONNECT_TICKET_TTL_MS`), and opens `start?…&nativeTicket=…` in the browser.
   - The start route consumes the ticket in place of a browser session and writes `nativeUserId` into the HMAC-signed OAuth state.
   - Success and every post-decode error end at `/native/return?to=metis-suite://open?path=<the destination or error path the web would use>`; errors raised before the state decodes stay on the web error page.
-- **Downloads.** A top-level navigation to `/api/drive/download` that redirects to another origin goes to `downloadURL` (Electron's save dialog), except Google hosts. Every other cross-origin link, including `window.open`, opens in the system browser. `about:blank` popups (print, view original) stay in-app under the same rules.
+- **Downloads.** A top-level navigation to `/api/drive/download` that redirects to another origin goes to `downloadURL` (Electron's save dialog), except Google hosts. Every other cross-origin link, including `window.open`, opens in the system browser. Same-origin links that open a new window, such as Print and View original, open in an in-app child window.
 - **Reopen where you left off.**
   - Every main-frame navigation under `/w/` on the paired server is written to `lastPath` (beside `server`, not under `settings`); start-up opens it instead of `/w` while `restoreLastPage` is on.
   - It is cleared on sign-out, server change, reset, and when the setting is turned off; a deep link and a fresh sign-in land where they point.

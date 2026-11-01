@@ -104,6 +104,7 @@ See also [AGENTS.md](../AGENTS.md), [workflow-runtime.md](workflow-runtime.md), 
 - **The client address is the last `X-Forwarded-For` hop that is not a trusted proxy** (`clientAddress`, `trustedProxies` in the instance config); without trusted proxies only the nearest hop counts, else `X-Real-IP`.
 - **Push only wakes a trigger; the feed still reads the changes.** A Graph notification or a Google channel ping sets the trigger due now (`wakeTrigger`), so a forged or replayed push costs at most one early scan.
 - **Push is opt-in.** `renewEndpoints` subscribes armed Microsoft feed triggers and Google Calendar and Drive triggers only while a public URL is configured; everything else polls ([configuration.md](configuration.md)). Only a trigger that reached a provider counts against the per-tick renewal budget.
+- **A renewal re-points the subscription at the current public URL.** A Graph renewal PATCHes `notificationUrl` with the expiry and creates a new subscription when Microsoft answers 404; a Google channel is re-created at each renewal. A changed public URL takes effect at the next renewal, up to `RENEW_BEFORE_MS` before expiry.
 - **A push subscription outlives its trigger only until the next renewal pass.** Disabling or deleting a workflow drops its webhook endpoints at once; `renewEndpoints` stops the provider subscriptions of disarmed, disabled or deleted triggers first (`strandedEndpoints`), and all of them when the public URL is removed.
 - **Gmail mailboxes always poll.** Gmail push needs a Pub/Sub push subscription the operator would create by hand, so it is left out.
 - **The webhook secret is shown only to the workflow's owner and workspace admins** (`workflows.webhookSecret`), who may also rotate it.
@@ -133,6 +134,8 @@ See also [AGENTS.md](../AGENTS.md), [workflow-runtime.md](workflow-runtime.md), 
 - **The Revisions sheet diffs each saved revision against the one before**, and unsaved edits against the latest save (`diffGraphs`): steps added and removed, changed fields with the before and after binding, connections and settings.
 - **A param change that removes outputs asks before dropping their connections** (`staleEdges`).
 - **Ports are colored by the type they carry** (`portTone`), and the canvas refuses a connection into a trigger, a cycle, a second connection into a single input, or an Ask question into anything but a Branch.
+- **The step palette floats over the canvas, never as a column** (`step-palette.tsx` → `FloatingPalette`): closed, it is one icon in the canvas's top-left corner; open, that icon heads the panel beside the search box, and only the icon closes it. The saved column layout holds only the center and the inspector, and the phone layout keeps quick add instead.
+  - The canvas buttons (zoom, **Fit View**, **Tidy up the layout**, the minimap switch) are one row in the top-right corner (`workflow-canvas.tsx` → `CanvasControls`), in the palette's rounded, shadowed style, so the full-height panel never covers them; the minimap keeps the bottom-right in the same style.
 - **Unsaved changes are tracked against the last save**, and leaving or switching workflows asks first. The phone layout keeps the editor's panels in sheets (`ResponsiveAside`, `MobileAsideTrigger`).
 
 ### Principal and built-ins

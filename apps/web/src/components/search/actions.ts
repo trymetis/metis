@@ -914,7 +914,7 @@ function localActions(ctx: ActionContext, hit: LocalSearchHit): SearchAction[] {
                 async () => {
                   if (
                     await ctx.prompts.confirm({
-                      title: `Detach ${hit.email}?`,
+                      title: `Detach ${hit.title}?`,
                       body: "It stops being part of this workspace. The drive keeps working everywhere else.",
                       confirm: "Detach",
                     })

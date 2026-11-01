@@ -3,8 +3,10 @@
 import { Button } from "@metis/ui/components/button";
 import { Progress } from "@metis/ui/components/progress";
 import { Separator } from "@metis/ui/components/separator";
+import { cn } from "@metis/ui/lib/utils";
 import { Clock, HardDrive, Pin, X } from "lucide-react";
 
+import { driveName } from "@/drive/name";
 import { formatBytes } from "@/lib/utils";
 import type { DrivePin, DriveQuotaRow, WorkspaceDrive } from "@/server/schema";
 
@@ -19,6 +21,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export function DriveSidebar({
   drives,
+  showPinDrive,
   pins,
   recents,
   quota,
@@ -26,6 +29,7 @@ export function DriveSidebar({
   onUnpin,
 }: {
   drives: WorkspaceDrive[] | null;
+  showPinDrive: boolean;
   pins: DrivePin[];
   recents: DriveRecent[];
   quota: DriveQuotaRow | null;
@@ -44,27 +48,42 @@ export function DriveSidebar({
         <div>
           <SectionLabel>Pinned</SectionLabel>
           <div className="flex flex-col">
-            {pins.map((pin) => (
-              <div key={pin.id} className="group flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  className="h-8 min-w-0 flex-1 justify-start gap-2 px-2 text-[12px] font-normal"
-                  onClick={() => onOpenFolder(pin.folderId, pin.label)}
-                >
-                  <Pin className="h-3.5 w-3.5 shrink-0 text-faint" />
-                  <span className="truncate">{pin.label}</span>
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  aria-label={`Unpin ${pin.label}`}
-                  className="h-7 w-7 opacity-0 group-hover:opacity-100 pointer-coarse:opacity-100"
-                  onClick={() => onUnpin(pin.id)}
-                >
-                  <X className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            ))}
+            {pins.map((pin) => {
+              const drive = showPinDrive
+                ? drives?.find((item) => item.driveId === pin.driveId)
+                : undefined;
+              return (
+                <div key={pin.id} className="group flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "min-w-0 flex-1 justify-start gap-2 px-2 text-[12px] font-normal",
+                      drive ? "h-auto py-1.5" : "h-8",
+                    )}
+                    onClick={() => onOpenFolder(pin.folderId, pin.label)}
+                  >
+                    <Pin className="h-3.5 w-3.5 shrink-0 text-faint" />
+                    <span className="flex min-w-0 flex-col items-start">
+                      <span className="max-w-full truncate">{pin.label}</span>
+                      {drive && (
+                        <span className="max-w-full truncate text-[11px] text-faint">
+                          {driveName(drive, drives ?? [])}
+                        </span>
+                      )}
+                    </span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`Unpin ${pin.label}`}
+                    className="h-7 w-7 opacity-0 group-hover:opacity-100 pointer-coarse:opacity-100"
+                    onClick={() => onUnpin(pin.id)}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

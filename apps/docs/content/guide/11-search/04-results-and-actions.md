@@ -128,12 +128,16 @@ For a workflow run, the preview shows **Status**, **Started** and any **Error**.
 
 For a mailbox, a calendar account or a drive, the preview shows **Provider**, **Slug** (its short name in the page address) and whether **AI** is on. For a drive, it also shows **Server**.
 
+A drive's row shows its [drive name](/guide/drive/browse-your-files#how-drives-are-named), with its type on the line under it. You can also find a drive by its account's email address.
+
 | Action                                                | What it does                                                                                                                 |
 | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | **Open**                                              | Opens it.                                                                                                                    |
 | **Workspace settings**                                | Opens the workspace's **Mailboxes**, **Calendars** or **Drives** settings page.                                              |
 | **Detach from this workspace**                        | Asks you to confirm, then takes it out of this workspace. It keeps working in every other workspace. Owners and admins only. |
 | **Filter by this mailbox**, **calendar** or **drive** | Searches only there.                                                                                                         |
+
+For a drive, the question you confirm names the drive, for example "Detach Acme files?".
 
 Search also finds each calendar inside a calendar account, if the workspace shows it:
 

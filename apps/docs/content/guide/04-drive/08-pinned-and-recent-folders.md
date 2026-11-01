@@ -22,6 +22,8 @@ If the pin cannot be saved, you see "Could not pin that folder".
 
 Your pins are personal. Other people in the workspace do not see them. A pin belongs to the drive, so it also shows when you open the same drive in another workspace.
 
+In [All drives](/guide/drive/all-drives), the **Pinned** list shows your pins from every drive. Each pin shows the name of its drive on a second, smaller line.
+
 ## Remove a pin
 
 1. Point at the pinned folder in the sidebar. An **X** button appears next to it. On a touch screen, the **X** is always shown.

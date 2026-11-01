@@ -103,13 +103,13 @@ function ResourceSelect({
   spec: ParamSpec;
   bound: Binding | undefined;
   onChange: Change;
-  entries: readonly { id: string; email: string }[];
+  entries: readonly { id: string; name: string }[];
   anyLabel: string;
 }) {
   const value = literalString(bound);
   const options = [
     ...(spec.required ? [] : [{ value: ANY, label: anyLabel }]),
-    ...entries.map((entry) => ({ value: entry.id, label: entry.email })),
+    ...entries.map((entry) => ({ value: entry.id, label: entry.name })),
     ...(value && !entries.some((entry) => entry.id === value)
       ? [{ value, label: "Not in this workspace" }]
       : []),

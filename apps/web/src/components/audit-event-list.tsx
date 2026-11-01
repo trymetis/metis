@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@metis/ui/components/badge";
 import { Button } from "@metis/ui/components/button";
 import { Input } from "@metis/ui/components/input";
 import {
@@ -18,27 +17,16 @@ import {
 import { Loader2, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import { formatAuditEvent } from "@/audit/format";
 import { describeUserAgent } from "@/auth/user-agent";
 import { isOneOf } from "@/lib/guards";
-import { MCP_TOOL_MANIFEST } from "@/mcp/tools";
 import type { AuditEvent, AuditEventPage, AuditFilter } from "@/server/schema";
 import {
   AUDIT_ACTION_LABELS,
   AUDIT_ACTIONS,
   AUDIT_SEARCH_MAX_LENGTH,
   type AuditAction,
-  auditEventTitle,
 } from "@/types/audit";
-
-const TOOL_LABELS = new Map<string, string>(
-  MCP_TOOL_MANIFEST.map((tool) => [tool.key, tool.label]),
-);
-
-const ROLE_NAMES: Record<string, string> = {
-  owner: "owner",
-  admin: "admin",
-  member: "member",
-};
 
 const ALL_ACTIONS = "all";
 
@@ -51,31 +39,6 @@ const dateTime = new Intl.DateTimeFormat(undefined, {
   hour: "numeric",
   minute: "2-digit",
 });
-
-function eventSummary(event: AuditEvent): string {
-  const parts: string[] = [];
-  if (event.targetLabel) parts.push(event.targetLabel);
-  const { detail } = event;
-  if (
-    event.action === "member.role_changed" &&
-    typeof detail.from === "string" &&
-    typeof detail.to === "string"
-  ) {
-    parts.push(`${ROLE_NAMES[detail.from] ?? detail.from} → ${ROLE_NAMES[detail.to] ?? detail.to}`);
-  }
-  if (event.action === "workspace_invite.created" && typeof detail.role === "string") {
-    parts.push(`as ${detail.role}`);
-  }
-  const tools = detail.tools ?? detail.sensitiveTools;
-  if (Array.isArray(tools) && tools.length > 0) {
-    parts.push(`sensitive tools: ${tools.map((key) => TOOL_LABELS.get(key) ?? key).join(", ")}`);
-  }
-  if (detail.grantRevoked === true) parts.push("access revoked at the provider");
-  if (typeof detail.workspacesDeleted === "number" && detail.workspacesDeleted) {
-    parts.push(`${detail.workspacesDeleted} workspace(s) deleted with it`);
-  }
-  return parts.join(" · ");
-}
 
 function viaLabel(event: AuditEvent): string | null {
   if (event.via === "assistant") return "Workspace Assistant";
@@ -215,40 +178,20 @@ export function AuditEventList({
           ) : (
             <ul className="divide-y divide-border" aria-label="Audit events">
               {events.map((event) => {
-                const via = viaLabel(event);
-                const summary = eventSummary(event);
+                const before = [showWorkspace ? event.workspaceName : null, viaLabel(event)];
+                const after = [event.ip, event.userAgent && describeUserAgent(event.userAgent)];
                 return (
-                  <li
-                    key={event.id}
-                    className="flex flex-wrap items-start justify-between gap-x-6 gap-y-1 py-2.5"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="flex flex-wrap items-center gap-1.5 text-[13px] text-foreground">
-                        {auditEventTitle(event.action, event.resourceKind)}
-                        {via && <Badge variant="outline">{via}</Badge>}
-                      </p>
-                      {summary && (
-                        <p className="mt-0.5 text-[12px] break-words text-muted-foreground">
-                          {summary}
-                        </p>
-                      )}
-                      <p className="mt-0.5 text-[12px] break-words text-faint">
-                        by {event.actorEmail || "a deleted account"}
-                        {showWorkspace && event.workspaceName ? ` · ${event.workspaceName}` : ""}
-                      </p>
-                    </div>
-                    <div className="shrink-0 text-[11px] text-faint sm:text-right">
+                  <li key={event.id} className="py-2.5">
+                    <p className="text-[13px] break-words text-foreground">
+                      {formatAuditEvent(event)}
+                    </p>
+                    <p className="mt-0.5 text-[11px] break-words text-faint">
+                      {before.filter(Boolean).map((part) => `${part} · `)}
                       <time dateTime={new Date(event.createdAt).toISOString()}>
                         {dateTime.format(new Date(event.createdAt))}
                       </time>
-                      {(event.ip || event.userAgent) && (
-                        <p className="mt-0.5">
-                          {[event.ip, event.userAgent && describeUserAgent(event.userAgent)]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </p>
-                      )}
-                    </div>
+                      {after.filter(Boolean).map((part) => ` · ${part}`)}
+                    </p>
                   </li>
                 );
               })}

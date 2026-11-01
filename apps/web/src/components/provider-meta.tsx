@@ -25,6 +25,7 @@ import {
   type ProvidersFor,
   providerSupportsResource,
 } from "@/connections/types";
+import { DRIVE_PROVIDER_LABELS } from "@/drive/name";
 
 export { providerSupportsResource };
 
@@ -65,12 +66,12 @@ export const RESOURCE_PROVIDER_META: {
     caldav: { label: "CalDAV", Mark: CaldavServer },
   },
   drive: {
-    google: { label: "Google Drive", Mark: Drive },
-    microsoft: { label: "OneDrive", Mark: MicrosoftOnedrive },
-    s3: { label: "S3 storage", Mark: ObjectStorage },
-    webdav: { label: "WebDAV", Mark: WebdavServer },
-    ftp: { label: "FTP", Mark: FtpServer },
-    sftp: { label: "SFTP", Mark: SftpServer },
+    google: { label: DRIVE_PROVIDER_LABELS.google, Mark: Drive },
+    microsoft: { label: DRIVE_PROVIDER_LABELS.microsoft, Mark: MicrosoftOnedrive },
+    s3: { label: DRIVE_PROVIDER_LABELS.s3, Mark: ObjectStorage },
+    webdav: { label: DRIVE_PROVIDER_LABELS.webdav, Mark: WebdavServer },
+    ftp: { label: DRIVE_PROVIDER_LABELS.ftp, Mark: FtpServer },
+    sftp: { label: DRIVE_PROVIDER_LABELS.sftp, Mark: SftpServer },
   },
 };
 

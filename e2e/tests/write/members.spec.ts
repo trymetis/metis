@@ -312,13 +312,15 @@ export default function memberSpecs() {
     const events = page.getByRole("list", { name: "Audit events" });
     const revoked = events
       .getByRole("listitem")
-      .filter({ hasText: "Workspace invite revoked" })
-      .filter({ hasText: email });
+      .filter({ hasText: `revoked the invite for ${email}` });
 
     await page.goto(`/w/${account.workspaceSlug}/settings/general`);
     await page.getByRole("navigation").getByRole("link", { name: "Activity" }).click();
     await page.waitForURL(/\/settings\/activity$/);
     await expect(revoked).toBeVisible();
+    await expect(revoked.getByRole("paragraph").first()).toHaveText(
+      new RegExp(`^${env.user.name} revoked the invite for ${email.replaceAll(".", "\\.")}`),
+    );
 
     await page.goto("/settings/security");
     await expect(revoked).toBeVisible();

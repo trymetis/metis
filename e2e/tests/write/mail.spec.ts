@@ -369,6 +369,72 @@ export default function mailSpecs() {
     await discardDrafts(rpc, account, subject);
   });
 
+  test("the composer's Link button adds, edits and removes a link without a browser dialog", async ({
+    page,
+    rpc,
+    account,
+  }, testInfo) => {
+    const subject = uniqueName(testInfo);
+    const dialogs: string[] = [];
+    page.on("dialog", (dialog) => {
+      dialogs.push(dialog.message());
+      void dialog.dismiss();
+    });
+    await goToFolder(page, account);
+    await folders(page).getByRole("button", { name: "Compose", exact: true }).click();
+    const box = composer(page);
+    await box.getByRole("textbox", { name: "Subject line…" }).fill(subject);
+    const body = composerBody(page);
+    await body.click();
+    await page.keyboard.type("Read the guide");
+    await page.keyboard.press("ControlOrMeta+a");
+    const linkButton = box.getByRole("button", { name: "Link", exact: true });
+    const address = page.getByRole("textbox", { name: "Link address" });
+
+    await linkButton.click();
+    await address.fill("example.com");
+    await address.press("Enter");
+    const link = body.getByRole("link", { name: "Read the guide" });
+    await expect(link).toHaveAttribute("href", "https://example.com");
+
+    await link.click();
+    await linkButton.click();
+    await expect(address).toHaveValue("https://example.com");
+    await address.press("Escape");
+    await expect(address).toBeHidden();
+    await expect(box).toBeVisible();
+
+    await linkButton.click();
+    await page.getByRole("button", { name: "Remove link", exact: true }).click();
+    await expect(body.getByRole("link")).toHaveCount(0);
+    await expect(body).toContainText("Read the guide");
+
+    await page.keyboard.press("ControlOrMeta+a");
+    await linkButton.click();
+    await address.fill("javascript:alert(1)");
+    await address.press("Enter");
+    await expect(page.getByText("Use a web, email or phone address.")).toBeVisible();
+    await expect(address).toBeVisible();
+    await address.press("Escape");
+
+    await body.click();
+    await page.keyboard.press("ControlOrMeta+End");
+    for (const [typed, href] of <[string, string][]>[
+      ["ana@demo.trymetis.email", "mailto:ana@demo.trymetis.email"],
+      ["+1 555 123 4567", "tel:+15551234567"],
+      ["example.com:8080/guide", "https://example.com:8080/guide"],
+    ]) {
+      await page.keyboard.press("Enter");
+      await linkButton.click();
+      await address.fill(typed);
+      await address.press("Enter");
+      await expect(body.getByRole("link", { name: typed })).toHaveAttribute("href", href);
+    }
+    expect(dialogs).toEqual([]);
+    await closeComposer(page);
+    await discardDrafts(rpc, account, subject);
+  });
+
   test("send later, then cancel the scheduled send", async ({ page, rpc, account }, testInfo) => {
     const subject = uniqueName(testInfo);
     await goToFolder(page, account);
@@ -633,6 +699,35 @@ export default function mailSpecs() {
         }
         expect(dialogs).toEqual([]);
         expect(outside).toEqual([]);
+      } finally {
+        await setMailboxAi(rpc, account, true);
+      }
+    });
+
+    test("View original shows the start of an oversized message and offers only the download", async ({
+      page,
+      rpc,
+      account,
+    }) => {
+      test.setTimeout(5 * 60_000);
+      await setMailboxAi(rpc, account, false);
+      try {
+        await page.goto(mailPath(account));
+        await showTab(page, "All");
+        await searchAndOpen(page, "max-body-plain-20mb");
+        const opened = page.context().waitForEvent("page");
+        await messageToolbar(page)
+          .getByRole("link", { name: "View original", exact: true })
+          .click();
+        const tab = await opened;
+        await expect(
+          tab.getByText(
+            "This message is too large to show in full. Download the original to see all of it.",
+          ),
+        ).toBeVisible({ timeout: 60_000 });
+        await expect(tab.getByRole("button", { name: "Copy to clipboard" })).toHaveCount(0);
+        await expect(tab.getByRole("link", { name: "Download original" })).toBeVisible();
+        await tab.close();
       } finally {
         await setMailboxAi(rpc, account, true);
       }

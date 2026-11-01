@@ -67,7 +67,14 @@ export interface WorkspaceScope {
     slug: string;
     aiEnabled: boolean;
   }[];
-  drives: { driveId: string; linkId: string; email: string; slug: string; aiEnabled: boolean }[];
+  drives: {
+    driveId: string;
+    linkId: string;
+    email: string;
+    name: string;
+    slug: string;
+    aiEnabled: boolean;
+  }[];
 }
 
 export interface WorkflowEndpointView {

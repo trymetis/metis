@@ -180,7 +180,7 @@ export default function settingsSpecs() {
         page
           .getByRole("list", { name: "Audit events" })
           .getByRole("listitem")
-          .filter({ hasText: "Sign-in alerts turned off" })
+          .filter({ hasText: "turned off sign-in alerts" })
           .first(),
       ).toBeVisible();
     } finally {

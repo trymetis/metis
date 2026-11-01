@@ -11,6 +11,7 @@ See also [AGENTS.md](../AGENTS.md), [drive-providers.md](drive-providers.md), [d
 | Adapter interface + factory                                   | `src/drive/adapter.ts` → `DriveAdapter`, `DriveChangeSignal`, `getDriveAdapter` · wire types `src/types/drive.ts` → `DriveDownloadTarget`                                                               |
 | Providers                                                     | `src/drive/providers/google.ts` → `googleDrive` · `src/drive/providers/microsoft.ts` → `microsoftDrive` · S3, WebDAV, FTP, SFTP in [drive-providers.md](drive-providers.md)                             |
 | Surfaces, composite ids, root walk                            | `src/drive/aggregate.ts` → `DriveSurface`, `ResolvedDrive`, `compositeDriveId`, `isRootVisible`, `DriveNotVisibleError`                                                                                 |
+| Drive names                                                   | `src/drive/name.ts` → `driveName`, `DRIVE_PROVIDER_LABELS` (also the labels `provider-meta.tsx` shows)                                                                                                  |
 | Session                                                       | `src/drive/session.ts` → `DriveSession` · middleware `src/server/middlewares/drive-session.ts`                                                                                                          |
 | Slugs                                                         | `src/drive/slug.ts` → `uniqueDriveSlug`                                                                                                                                                                 |
 | Stores and tables                                             | `src/connections/drive-store.ts` · `src/db/schema.ts` → `drive`, `driveWorkspace`, `drivePin`                                                                                                           |
@@ -103,9 +104,13 @@ See also [AGENTS.md](../AGENTS.md), [drive-providers.md](drive-providers.md), [d
 
 ### UI
 
+- **A drive is shown by its name, never its account email** (`src/drive/name.ts` → `driveName`): a server drive by its server's name, Google Drive and OneDrive as "Google Drive · <email>". A server drive's email is the Metis user's own address, the same on every server drive.
+  - Server names are unique only per provider, so two server drives sharing a name both add their provider label; the same server connected twice keeps one name, since its bucket or remote user lives only in the sealed credentials.
+  - The `/d/all` roots, the breadcrumb (so the Drive AI `folderPath`), the page title and the `/d/all` pin rows use it too; the switcher and settings lists keep the account identity with the provider and server line.
+
 - **The delete dialog promises a trash only for Google Drive and OneDrive** (`drive-shell.tsx` → `hasTrash`); for the other drives it says the delete is permanent.
-- **The Drive AI panel mounts only after the drive list has loaded** (`drive-shell.tsx`), because each turn's `folderPath` starts with the root crumb: the drive's account email, or "All drives" on `/d/all`. Before the list arrives the crumb is the placeholder "Drive".
-- **A drive root is labeled by its server name (or provider) and account email wherever drives are listed side by side**, because one account often has several drives: the drive pickers (`drive-picker-dialog.tsx`) and the `@` picker (`ResolvedDrive.server`, read by `src/ai/reference-directory.ts`).
+- **The Drive AI panel mounts only after the drive list has loaded** (`drive-shell.tsx`), because each turn's `folderPath` starts with the root crumb: the drive's name, or "All drives" on `/d/all`. Before the list arrives the crumb is the placeholder "Drive".
+- **Wherever drives are listed side by side, each shows its drive name**, because one account often has several drives: the drive pickers (`drive-picker-dialog.tsx`), the `@` picker (`src/ai/reference-directory.ts`, whose labels reach the model in the reference legend), search hits and `drive:` suggestions, and the workflow resource pickers and step cards (the workflow directory's `name`).
 - **"Link a file from Drive" is offered only for drives with provider share links** (`SHARE_LINK_PROVIDERS`: Google Drive and OneDrive). Self-hosted drives return `webUrl: null`, so compose hides the button when no such drive is linked and the picker lists only those drives.
 - **File type icons are generated, never hand-written.** `icons:drive` keeps a curated allowlist from `catppuccin/vscode-icons` and throws if an allowlisted icon vanished upstream; attribution is in the repository-root `NOTICE`.
 
@@ -124,4 +129,5 @@ See also [AGENTS.md](../AGENTS.md), [drive-providers.md](drive-providers.md), [d
 
 ## Deliberate limits
 
+- **The `@` picker sees only drives with AI on**, so a drive whose same-named drive of another type has AI off shows there without the type it carries everywhere else.
 - **No attach-as-copy and no oversize-attachment-to-link.** Both need the browser to read provider bytes cross-origin, which only S3 reliably allows.

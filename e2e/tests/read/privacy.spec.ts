@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { expect, test } from "../fixtures";
 import { HARNESS, mailPath } from "../harness";
-import { openMail, showTab } from "../mail";
+import { messageToolbar, openMail, showTab } from "../mail";
 
 const PRIVACY = "This week at the shop";
 
@@ -53,6 +53,45 @@ test("Load images loads only images, never trackers, fonts, styles, media or ref
   const hits = await pixelHits();
   expect(hits.filter((path) => path.startsWith("/never/"))).toEqual([]);
   expect(hits.every((path) => path.startsWith("/image/"))).toBe(true);
+});
+
+async function openPrint(page: import("@playwright/test").Page) {
+  const opened = page.context().waitForEvent("page");
+  await messageToolbar(page).getByRole("link", { name: "Print", exact: true }).click();
+  const tab = await opened;
+  await expect(tab.getByText("Free shipping on orders over EUR 60")).toBeVisible();
+  await tab.waitForLoadState("networkidle");
+  return tab;
+}
+
+test("Print keeps blocked images blocked", async ({ page, account }) => {
+  await page.goto(mailPath(account));
+  await showTab(page, "All");
+  await openMail(page, PRIVACY);
+  await expect(blockedBanner(page)).toBeVisible();
+  await fetch(`${HARNESS}/pixel-hits`, { method: "DELETE" });
+  const tab = await openPrint(page);
+  expect(await pixelHits()).toEqual([]);
+  await tab.close();
+});
+
+test("Print after Load images loads the images and still never the trackers", async ({
+  page,
+  account,
+}) => {
+  await page.goto(mailPath(account));
+  await showTab(page, "All");
+  await openMail(page, PRIVACY);
+  await blockedBanner(page).getByRole("button", { name: "Load images", exact: true }).click();
+  await expect(blockedBanner(page)).toHaveCount(0);
+  await page.waitForLoadState("networkidle");
+  await fetch(`${HARNESS}/pixel-hits`, { method: "DELETE" });
+  const tab = await openPrint(page);
+  await expect.poll(pixelHits).toContainEqual(expect.stringMatching(/^\/image\/img/));
+  const hits = await pixelHits();
+  expect(hits.filter((path) => path.startsWith("/never/"))).toEqual([]);
+  expect(hits.every((path) => path.startsWith("/image/"))).toBe(true);
+  await tab.close();
 });
 
 test("the message frame is sandboxed without scripts", async ({ page, account }) => {

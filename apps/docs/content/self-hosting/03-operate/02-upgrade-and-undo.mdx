@@ -68,8 +68,8 @@ If you skip releases, read the notes of every release between yours and the one 
     once it is ready." Enter your authenticator code and click **Upgrade**.
     To use a backup code, click **Use a backup code instead** first.
 
-    <img src="/images/self-hosting/upgrade-dialog.webp" alt="The Upgrade to 1.2.0 dialog asking for an authenticator code" class="dark:hidden" />
-    <img src="/images/self-hosting/upgrade-dialog-dark.webp" alt="The Upgrade to 1.2.0 dialog asking for an authenticator code" class="hidden dark:block" />
+    <img src="/images/self-hosting/upgrade-dialog.webp" alt="The Upgrade dialog for a newer release, asking for an authenticator code" class="dark:hidden" />
+    <img src="/images/self-hosting/upgrade-dialog-dark.webp" alt="The Upgrade dialog for a newer release, asking for an authenticator code" class="hidden dark:block" />
 
   </Step>
 
@@ -168,20 +168,20 @@ There is only ever one undo. Each successful upgrade replaces the snapshot, so y
 
 The snapshot is kept in `/opt/metis-suite/.updater-snapshot/` on the server. Leave that folder alone if you want to keep the undo. If you delete it, the undo is gone.
 
-The undo is recorded in the **Audit log** as **Instance upgrade undone**, with the two versions and the owner who started it. It also shows in your own [Security activity](/guide/account/security-activity). The row is written once the undo has succeeded and the **Updates** page loads again. If you closed the page during the undo, it is written the next time you open **Updates**. See [Owner dashboard](/self-hosting/operate/owner-dashboard#audit-log).
+The undo is recorded in the **Audit log**. Its row starts with the name of the owner who started it and reads "… undid the last upgrade (&lt;version it left&gt; → &lt;version it returned to&gt;)". Its event type, in the event type list, is **Instance upgrade undone**. It also shows in your own [Security activity](/guide/account/security-activity). The row is written once the undo has succeeded and the **Updates** page loads again. If you closed the page during the undo, it is written the next time you open **Updates**. See [Owner dashboard](/self-hosting/operate/owner-dashboard#audit-log).
 
 ## When a step fails
 
 The card shows **Failed**, and a pop-up message says "The upgrade failed" or "The undo failed". A note says what the updater did, and the error is shown below it. When preflight failed, the error includes the end of its output, which names the database change that failed.
 
-In these examples, you ran 1.1.0 and upgraded to 1.2.0.
+In these notes, &lt;your release&gt; is the release that was running when the upgrade or undo started, and &lt;new release&gt; is the release you upgraded to.
 
-| Note                                                                                      | What happened                                                                                                           |
-| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| "1.2.0 was not installed; 1.1.0 kept running."                                            | The release could not be downloaded, the snapshot failed, or preflight failed on an instance without snapshots.         |
-| "1.2.0 failed, so the updater restored the database snapshot and switched back to 1.1.0." | Preflight failed, or the new release did not come up. The updater put the snapshot back and returned to your release.   |
-| "1.2.0 failed, so the updater switched back to 1.1.0."                                    | Without snapshots: the new release did not come up, and the updater returned to your release.                           |
-| "The undo did not start; 1.2.0 kept running."                                             | The previous release could not be downloaded, or the app could not be stopped. Your release and database are unchanged. |
+| Note                                                                                                                   | What happened                                                                                                           |
+| ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| "&lt;new release&gt; was not installed; &lt;your release&gt; kept running."                                            | The release could not be downloaded, the snapshot failed, or preflight failed on an instance without snapshots.         |
+| "&lt;new release&gt; failed, so the updater restored the database snapshot and switched back to &lt;your release&gt;." | Preflight failed, or the new release did not come up. The updater put the snapshot back and returned to your release.   |
+| "&lt;new release&gt; failed, so the updater switched back to &lt;your release&gt;."                                    | Without snapshots: the new release did not come up, and the updater returned to your release.                           |
+| "The undo did not start; &lt;your release&gt; kept running."                                                           | The previous release could not be downloaded, or the app could not be stopped. Your release and database are unchanged. |
 
 :::warning[Without snapshots, a failed preflight can leave changes behind]
 On Turso or your own database server, a release can apply some of its database changes and then fail. Your current release keeps running, but those changes stay in the database. This is why you back up before every upgrade on these instances.

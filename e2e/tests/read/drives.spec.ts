@@ -1,8 +1,19 @@
 import { BRIEF, CLIENTS, CLIENTS_FOLDER, REBRAND_FOLDER } from "@metis/e2e/lib/cast";
+import { env } from "@metis/e2e/lib/env";
+import type { Page } from "@playwright/test";
 
 import { driveSidebar, entry, files, folderPath, openPreview } from "../drive";
 import { expect, test } from "../fixtures";
-import { drivePath } from "../harness";
+import { type Account, drivePath } from "../harness";
+
+async function driveName(page: Page, account: Account, kind: string): Promise<string> {
+  await page.goto(drivePath(account, kind));
+  const current = page
+    .getByRole("navigation", { name: "breadcrumb" })
+    .locator('[aria-current="page"]');
+  await expect(current).not.toHaveText("Drive");
+  return (await current.textContent()) ?? "";
+}
 
 const UNRESTRICTED = ["s3", "s3Relay", "webdav", "ftps", "ftpsImplicit", "sftp"];
 
@@ -32,6 +43,16 @@ test("the Rebrand pins show on the S3 and WebDAV drives only", async ({ page, ac
   ).toHaveCount(0);
 });
 
+test("in /d/all each Rebrand pin names its drive", async ({ page, account }) => {
+  const owners = [await driveName(page, account, "s3"), await driveName(page, account, "webdav")];
+  await page.goto(drivePath(account, "all"));
+  const pins = driveSidebar(page)
+    .getByRole("button")
+    .filter({ hasText: /^Rebrand/ });
+  await expect(pins).toHaveCount(2);
+  for (const owner of owners) await expect(pins.filter({ hasText: owner })).toHaveCount(1);
+});
+
 test("the FTP drive's root restriction shows only Clients/ and refuses a direct link to a hidden file", async ({
   page,
   account,
@@ -53,12 +74,25 @@ test("the FTP drive's root restriction shows only Clients/ and refuses a direct 
   expect(visible.status()).toBe(302);
 });
 
-test("/d/all aggregates every drive", async ({ page, account }) => {
+test("every drive is named after its server, in its breadcrumb, its page title and /d/all", async ({
+  page,
+  account,
+}) => {
+  const names: string[] = [];
+  for (const kind of Object.keys(account.driveSlugs)) {
+    const name = await driveName(page, account, kind);
+    await expect(page).toHaveTitle(new RegExp(name));
+    names.push(name);
+  }
+  const { s3, webdav, ftp, sftp } = env.servers;
+  expect(names.toSorted()).toEqual([...s3, webdav, ...ftp, sftp].toSorted());
+
   await page.goto(drivePath(account, "all"));
   await expect(driveSidebar(page).getByRole("button", { name: "Switch drive" })).toContainText(
     "7 drives",
   );
-  await expect(entry(page, account.email)).toHaveCount(7);
+  for (const name of names) await expect(entry(page, name)).toBeVisible();
+  await expect(entry(page, account.email)).toHaveCount(0);
 });
 
 test("search finds a file by name on every drive", async ({ page, account }) => {

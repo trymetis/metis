@@ -103,6 +103,7 @@ export const workflowsRouter = {
             id: m.mailboxId,
             slug: m.slug,
             email: m.email,
+            name: m.email,
             aiEnabled:
               scope.mailboxes.find((box) => box.mailboxId === m.mailboxId)?.aiEnabled ?? false,
           })),
@@ -110,12 +111,14 @@ export const workflowsRouter = {
             id: c.accountId,
             slug: c.slug,
             email: c.email,
+            name: c.email,
             aiEnabled: c.aiEnabled,
           })),
           drives: scope.drives.map((d) => ({
             id: d.driveId,
             slug: d.slug,
             email: d.email,
+            name: d.name,
             aiEnabled: d.aiEnabled,
           })),
           members: members.map((m) => ({ userId: m.userId, name: m.name, email: m.email })),

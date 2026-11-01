@@ -6,6 +6,7 @@ import { listCalendarsAcross } from "@/calendar/aggregate";
 import { searchEvents } from "@/calendar/search";
 import { workspaceCalendarAccounts } from "@/calendar/session";
 import { listWorkspaceCalendars, listWorkspaceDrives, listWorkspaceMailboxes } from "@/connections";
+import { DRIVE_PROVIDER_LABELS, driveName } from "@/drive/name";
 import { searchFiles } from "@/drive/search";
 import { workspaceDrives } from "@/drive/session";
 import { suggestContacts } from "@/mail/contacts";
@@ -94,14 +95,16 @@ async function suggest(
       return (await listWorkspaceCalendars(workspaceId))
         .filter((c) => contains(prefix, c.slug, c.email))
         .map((c) => ({ value: c.slug, label: c.email, detail: c.provider }));
-    case "drive":
-      return (await listWorkspaceDrives(workspaceId))
+    case "drive": {
+      const drives = await listWorkspaceDrives(workspaceId);
+      return drives
         .filter((d) => contains(prefix, d.slug, d.email, d.server))
         .map((d) => ({
           value: d.slug,
-          label: d.email,
-          detail: d.server ?? d.provider,
+          label: driveName(d, drives),
+          detail: DRIVE_PROVIDER_LABELS[d.provider],
         }));
+    }
     case "sub-calendar": {
       const accounts = await workspaceCalendarAccounts(workspaceId);
       const { calendars } = await listCalendarsAcross(accounts);

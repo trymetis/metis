@@ -33,7 +33,7 @@ export const PLANS: Plan[] = [
     features: [
       "Mail, Calendar, Drive, Agent, Workflows and MCP",
       "Your own AI key: OpenAI, Anthropic or any compatible endpoint",
-      "Your domain, or a trymetis.email subdomain",
+      "Your domain, or a metis-suite.app subdomain",
     ],
     cta: { label: "Get started", href: CONSOLE_URL },
   },

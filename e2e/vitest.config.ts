@@ -3,6 +3,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     globalSetup: ["api/global-setup.ts"],
+    reporters: ["verbose"],
     fileParallelism: false,
     maxConcurrency: 8,
     testTimeout: 5 * 60_000,

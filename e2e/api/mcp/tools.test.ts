@@ -510,6 +510,7 @@ const READS: Case[] = [
       for (const event of out.events) {
         expect(event, "network details stay out of the model").not.toHaveProperty("ip");
         expect(event).not.toHaveProperty("userAgent");
+        expect(event.sentence, "each event reads as one sentence").toEqual(expect.any(String));
       }
       const times = out.events.map((e) => Date.parse(String(e.createdAt)));
       expect(times).toEqual(times.toSorted((a, b) => b - a));

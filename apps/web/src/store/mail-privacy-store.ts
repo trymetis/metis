@@ -2,14 +2,8 @@ import { create } from "zustand";
 
 import { orpc, rpc } from "@/lib/orpc";
 import { getQueryClient } from "@/lib/query-client";
-import { compileTrackers, type TrackerRules } from "@/mail/render/detect";
-import { compileLinkRules, type LinkRules } from "@/mail/render/links";
+import { compilePrivacyRules, type PrivacyRules } from "@/mail/render/rules";
 import type { RemoteAllowEntry, RemoteAllowInput } from "@/server/schema";
-
-export interface PrivacyRules {
-  trackers: TrackerRules;
-  links: LinkRules;
-}
 
 interface MailPrivacyState {
   rules: PrivacyRules | null;
@@ -33,21 +27,11 @@ export const useMailPrivacyStore = create<MailPrivacyState>((set) => ({
       rulesRequested = true;
       Promise.all([import("@/mail/render/trackers"), import("@/mail/render/clearurls")])
         .then(([t, c]) =>
-          set({
-            rules: {
-              trackers: compileTrackers(t.TRACKER_VENDORS),
-              links: compileLinkRules(c.CLEARURLS_PROVIDERS),
-            },
-          }),
+          set({ rules: compilePrivacyRules(t.TRACKER_VENDORS, c.CLEARURLS_PROVIDERS) }),
         )
         .catch((err) => {
           console.error("[mail-privacy] rules failed to load", err);
-          set({
-            rules: {
-              trackers: compileTrackers([]),
-              links: compileLinkRules([]),
-            },
-          });
+          set({ rules: compilePrivacyRules([], []) });
         });
     }
   },

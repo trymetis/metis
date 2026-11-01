@@ -1,5 +1,5 @@
 import "server-only";
-import { and, type Column, desc, eq, isNull, lt, or, type SQL, sql } from "drizzle-orm";
+import { and, type Column, desc, eq, inArray, isNull, lt, or, type SQL, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { auditEvent, user, workspace } from "@/db/schema";
@@ -12,8 +12,11 @@ import {
   type AuditDetail,
   type AuditResourceKind,
   type AuditVia,
+  AUDIT_ACTION_LABELS,
   auditEventTitle,
 } from "@/types/audit";
+
+import { auditPhrase } from "./format";
 
 export interface AuditActor {
   userId: string;
@@ -119,6 +122,8 @@ const AUDIT_TITLES = AUDIT_ACTIONS.flatMap((action) =>
     action,
     kind,
     title: auditEventTitle(action, kind).toLowerCase(),
+    label: AUDIT_ACTION_LABELS[action].toLowerCase(),
+    phrase: auditPhrase(action, kind),
   })),
 );
 
@@ -129,12 +134,14 @@ function containing(column: Column, q: string): SQL {
 
 function textMatch(q: string, withNetwork: boolean): SQL | undefined {
   const needle = q.toLowerCase();
-  const titles = AUDIT_TITLES.filter(({ title }) => title.includes(needle)).map(
-    ({ action, kind }) =>
-      and(
-        eq(auditEvent.action, action),
-        kind ? eq(auditEvent.resourceKind, kind) : isNull(auditEvent.resourceKind),
-      ),
+  const titles = AUDIT_TITLES.filter(
+    ({ title, label, phrase }) =>
+      title.includes(needle) || label.includes(needle) || phrase.includes(needle),
+  ).map(({ action, kind }) =>
+    and(
+      eq(auditEvent.action, action),
+      kind ? eq(auditEvent.resourceKind, kind) : isNull(auditEvent.resourceKind),
+    ),
   );
   return or(
     ...titles,
@@ -154,7 +161,21 @@ function filterScope(filter: AuditFilter, withNetwork: boolean): SQL | undefined
 
 type AuditRow = typeof auditEvent.$inferSelect;
 
-function toView(row: AuditRow, withNetwork: boolean): AuditEvent {
+async function memberNames(rows: AuditRow[]): Promise<Map<string, string>> {
+  const ids = [
+    ...new Set(
+      rows.flatMap((row) => [row.actorUserId, row.targetUserId]).filter((id) => id !== null),
+    ),
+  ];
+  if (ids.length === 0) return new Map();
+  const found = await db
+    .select({ id: user.id, name: user.name })
+    .from(user)
+    .where(inArray(user.id, ids));
+  return new Map(found.filter((row) => row.name).map((row) => [row.id, row.name]));
+}
+
+function toView(row: AuditRow, withNetwork: boolean, names?: Map<string, string>): AuditEvent {
   return {
     id: row.id,
     createdAt: row.createdAt,
@@ -162,6 +183,10 @@ function toView(row: AuditRow, withNetwork: boolean): AuditEvent {
     via: row.via,
     mcpClientId: row.mcpClientId,
     actorEmail: row.actorEmail,
+    ...(names && {
+      actorName: (row.actorUserId && names.get(row.actorUserId)) || null,
+      targetName: (row.targetUserId && names.get(row.targetUserId)) || null,
+    }),
     workspaceName: row.workspaceName,
     targetLabel: row.targetLabel,
     resourceKind: row.resourceKind,
@@ -184,8 +209,9 @@ async function listPage(
     .limit(AUDIT_PAGE_SIZE + 1);
   const page = rows.slice(0, AUDIT_PAGE_SIZE);
   const last = page.at(-1);
+  const names = await memberNames(page);
   return {
-    events: page.map((row) => toView(row, withNetwork)),
+    events: page.map((row) => toView(row, withNetwork, names)),
     nextCursor:
       rows.length > AUDIT_PAGE_SIZE && last ? `${last.createdAt.getTime()}.${last.id}` : null,
   };

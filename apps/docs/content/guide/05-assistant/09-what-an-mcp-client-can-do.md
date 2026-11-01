@@ -60,7 +60,7 @@ When a client creates, changes or deletes an event, or responds to an invitation
 
 ## Tools for the server owner
 
-If you are the owner of your Metis Suite server, your clients also see tools in the **Instance (owner)** and **System (owner)** groups. They give read-only views of the server, such as totals, AI usage, people, workspaces, settings and warnings. **Audit log** reads the server's audit log of security-relevant changes, 50 at a time, without IP addresses or devices. Secret settings are only reported as set or not set. **Run health check** is a sensitive tool. Other people never see these tools.
+If you are the owner of your Metis Suite server, your clients also see tools in the **Instance (owner)** and **System (owner)** groups. They give read-only views of the server, such as totals, AI usage, people, workspaces, settings and warnings. **Audit log** reads the server's audit log of security-relevant changes, 50 at a time, without IP addresses or devices. Each event comes with a one-sentence description of the change, the same one the dashboard shows. Secret settings are only reported as set or not set. **Run health check** is a sensitive tool. Other people never see these tools.
 
 ## What a client can never do
 

@@ -44,7 +44,7 @@
         "click": "role=button[name=\"Save invite.ics to a drive\"]"
       },
       {
-        "waitFor": "role=dialog[name=\"Save to Drive\"] >> role=button[name=/ · /]"
+        "waitFor": "role=dialog[name=\"Save to Drive\"] >> role=button[name=\"Shared Files\"]"
       }
     ],
     "element": "role=dialog[name=\"Save to Drive\"]"
@@ -268,6 +268,50 @@
       }
     ],
     "element": "div:has(> button[title=\"Previous message\"])"
+  },
+  {
+    "name": "mail/view-original",
+    "element": "main",
+    "path": "{workspace}/m/{mailbox}/inbox",
+    "steps": [
+      {
+        "click": "role=tab[name=/^All$/]"
+      },
+      {
+        "click": "main [aria-roledescription=\"draggable\"] >> text=\"Rebrand kickoff\""
+      },
+      {
+        "waitFor": "main h2:has-text(\"Rebrand kickoff\")"
+      },
+      {
+        "follow": "role=link[name=\"View original\"]"
+      },
+      {
+        "waitFor": "role=heading[level=1][name=\"Original message\"]"
+      }
+    ]
+  },
+  {
+    "name": "mail/print-page",
+    "clip": { "x": 0, "y": 0, "width": 1440, "height": 440 },
+    "path": "{workspace}/m/{mailbox}/inbox",
+    "steps": [
+      {
+        "click": "role=tab[name=/^All$/]"
+      },
+      {
+        "click": "main [aria-roledescription=\"draggable\"] >> text=\"Rebrand kickoff\""
+      },
+      {
+        "waitFor": "main h2:has-text(\"Rebrand kickoff\")"
+      },
+      {
+        "follow": "role=link[name=\"Print\"]"
+      },
+      {
+        "waitFor": "role=heading[level=1][name=\"Rebrand kickoff\"]"
+      }
+    ]
   },
   {
     "name": "mail/bulk-actions",

@@ -9,7 +9,7 @@ export default function PrivacyPage() {
     <LegalLayout
       path="/privacy-policy"
       title="Privacy Policy"
-      lastUpdated="October 26, 2026"
+      lastUpdated="November 1, 2026"
       intro={`${SITE_NAME} lets you connect accounts you already have (mail, calendars and drives from Google, Microsoft and Zoho, and IMAP, CalDAV, S3, WebDAV, FTP and SFTP servers) and work with them in one suite, with optional AI features. This policy explains what data we collect, how we use it, who we share it with, and the choices you have. It applies to ${SITE_NAME} as we run it on Metis Cloud: the web application, the desktop and Android apps, the MCP server, and their associated APIs. ${SITE_NAME} is also open-source software that anyone can run on their own server; on a self-hosted instance, the person or organization running it decides how your data is handled and is responsible for it, and this policy does not apply.`}
     >
       <h2>1. Who we are</h2>
@@ -339,8 +339,8 @@ export default function PrivacyPage() {
         </li>
         <li>
           <strong>Backups and DNS</strong> (Cloudflare) — continuous backups of your instance&apos;s
-          database in Cloudflare R2, deleted with the instance, and DNS for trymetis.email
-          addresses.
+          database in Cloudflare R2, deleted with the instance, and DNS for trymetis.email and
+          metis-suite.app addresses.
         </li>
         <li>
           <strong>Console hosting</strong> (Vercel) — runs the Metis Cloud console where you sign

@@ -8,6 +8,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@metis/ui/components/dropdown-menu";
+import { Input } from "@metis/ui/components/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@metis/ui/components/popover";
 import {
   Select,
   SelectContent,
@@ -21,7 +23,7 @@ import { Link } from "@tiptap/extension-link";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { Underline } from "@tiptap/extension-underline";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { type Editor, EditorContent, useEditor } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import { escapeText } from "entities";
 import {
@@ -232,7 +234,7 @@ export function ComposeDialog() {
       StarterKit,
       Underline,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Link.configure({ openOnClick: false }),
+      Link.extend({ inclusive: () => false }).configure({ openOnClick: false }),
       Placeholder.configure({ placeholder: "Write your message…" }),
     ],
     editorProps: {
@@ -245,6 +247,7 @@ export function ComposeDialog() {
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      if (e.target instanceof Element && e.target.closest('[data-slot="popover-content"]')) return;
       if (e.key === "Escape" && composeOpen) setComposeOpen(false);
     }
     window.addEventListener("keydown", onKey);
@@ -284,12 +287,6 @@ export function ComposeDialog() {
       setComposeInitial(null);
     }
   }, [composeOpen, composeInitial, setComposeInitial, editor]);
-
-  const setLink = useCallback(() => {
-    const url = window.prompt("URL");
-    if (!url) return;
-    editor?.chain().focus().setLink({ href: url }).run();
-  }, [editor]);
 
   const buildPayload = useCallback(() => {
     const editorHtml = editor?.getHTML() ?? "";
@@ -660,9 +657,7 @@ export function ComposeDialog() {
             >
               <ListOrdered className="h-3 w-3" />
             </FmtBtn>
-            <FmtBtn title="Link" active={editor?.isActive("link")} onClick={setLink}>
-              <Link2 className="h-3 w-3" />
-            </FmtBtn>
+            <LinkButton editor={editor} />
             <FmtBtn title="Attach files" onClick={() => fileInputRef.current?.click()}>
               <Paperclip className="h-3 w-3" />
             </FmtBtn>
@@ -827,6 +822,109 @@ function FmtBtn({
     >
       {children}
     </Button>
+  );
+}
+
+function linkHref(value: string): string {
+  if (/^[a-z][a-z0-9+.-]*:(?!\d)/i.test(value)) return value;
+  if (/^[^\s@/]+@[^\s@/]+\.[^\s@/]+$/.test(value)) return `mailto:${value}`;
+  if (/^\+?[\d\s().-]{6,}$/.test(value)) return `tel:${value.replace(/[\s().-]/g, "")}`;
+  return `https://${value}`;
+}
+
+function LinkButton({ editor }: { editor: Editor | null }) {
+  const [open, setOpen] = useState(false);
+  const [address, setAddress] = useState("");
+  const [invalid, setInvalid] = useState(false);
+  const onLink = editor?.isActive("link") ?? false;
+
+  function openChange(next: boolean) {
+    if (next) {
+      const href: unknown = editor?.getAttributes("link").href;
+      setAddress(typeof href === "string" ? href : "");
+      setInvalid(false);
+    }
+    setOpen(next);
+  }
+
+  function remove() {
+    editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+    setOpen(false);
+  }
+
+  function apply() {
+    if (!editor) return;
+    const value = address.trim();
+    if (!value) {
+      remove();
+      return;
+    }
+    const href = linkHref(value);
+    if (!editor.can().setLink({ href })) {
+      setInvalid(true);
+      return;
+    }
+    const chain = editor.chain().focus();
+    if (editor.state.selection.empty && !onLink) {
+      chain
+        .insertContent({ type: "text", text: value, marks: [{ type: "link", attrs: { href } }] })
+        .run();
+    } else {
+      chain.extendMarkRange("link").setLink({ href }).run();
+    }
+    setOpen(false);
+  }
+
+  return (
+    <Popover open={open} onOpenChange={openChange}>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title="Link"
+            className={cn(onLink ? "bg-hover text-foreground" : "text-faint")}
+          />
+        }
+      >
+        <Link2 className="h-3 w-3" />
+      </PopoverTrigger>
+      <PopoverContent side="top" align="start" className="w-80">
+        <form
+          className="flex flex-col gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            apply();
+          }}
+        >
+          <Input
+            autoFocus
+            value={address}
+            onChange={(e) => {
+              setAddress(e.target.value);
+              setInvalid(false);
+            }}
+            placeholder="https://example.com"
+            aria-label="Link address"
+            aria-invalid={invalid || undefined}
+            className="h-8 text-[12px]"
+          />
+          {invalid && (
+            <p className="text-[11px] text-destructive-text">Use a web, email or phone address.</p>
+          )}
+          <div className="flex justify-end gap-2">
+            {onLink && (
+              <Button type="button" variant="outline" size="sm" onClick={remove}>
+                Remove link
+              </Button>
+            )}
+            <Button type="submit" size="sm">
+              Apply
+            </Button>
+          </div>
+        </form>
+      </PopoverContent>
+    </Popover>
   );
 }
 

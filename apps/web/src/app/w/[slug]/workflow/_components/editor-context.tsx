@@ -78,7 +78,7 @@ export function directoryResources(
   return {
     mailbox: directory.mailboxes.map((m) => ({ id: m.id, label: m.email })),
     calendar: directory.calendars.map((c) => ({ id: c.id, label: c.email })),
-    drive: directory.drives.map((d) => ({ id: d.id, label: d.email })),
+    drive: directory.drives.map((d) => ({ id: d.id, label: d.name })),
     timezone,
   };
 }

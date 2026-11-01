@@ -35,7 +35,7 @@ Metis Suite is an open-source mail, calendar and drive client. It connects to th
 
 ## Get started
 
-**Metis Cloud.** We run a private instance for you, on your own domain or a `trymetis.email` subdomain. [Get started](https://console.trymetis.email).
+**Metis Cloud.** We run a private instance for you, on your own domain or a `metis-suite.app` subdomain. [Get started](https://console.trymetis.email).
 
 **Self-host.** Free under the AGPL. You need an Ubuntu server with root access; the script installs Docker and everything else:
 

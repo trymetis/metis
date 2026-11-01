@@ -1,23 +1,23 @@
 "use client";
 
 import "@xyflow/react/dist/style.css";
+import { Button } from "@metis/ui/components/button";
 import {
   applyEdgeChanges,
   applyNodeChanges,
   Background,
   BackgroundVariant,
   type Connection,
-  ControlButton,
-  Controls,
   type Edge,
   type EdgeChange,
   type IsValidConnection,
   MiniMap,
   type NodeChange,
+  Panel,
   ReactFlow,
   useReactFlow,
 } from "@xyflow/react";
-import { LayoutGrid, Map as MapIcon } from "lucide-react";
+import { LayoutGrid, Map as MapIcon, Maximize, ZoomIn, ZoomOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
   createContext,
@@ -135,6 +135,81 @@ export function useTidyLayout() {
         }),
     );
   }, [rf, store]);
+}
+
+function CanvasButton({
+  label,
+  pressed,
+  onClick,
+  className,
+  children,
+}: {
+  label: string;
+  pressed?: boolean;
+  onClick: () => void;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      className={className}
+      aria-label={label}
+      aria-pressed={pressed}
+      title={label}
+      onClick={onClick}
+    >
+      {children}
+    </Button>
+  );
+}
+
+function CanvasControls({
+  minimap,
+  onMinimap,
+  onTidy,
+}: {
+  minimap: boolean;
+  onMinimap: () => void;
+  onTidy: () => void;
+}) {
+  const rf = useReactFlow();
+  return (
+    <Panel
+      position="top-right"
+      className="!m-3 flex items-center gap-0.5 rounded-xl border border-border bg-panel p-1 shadow-lg"
+    >
+      <CanvasButton label="Zoom In" onClick={() => void rf.zoomIn({ duration: 200 })}>
+        <ZoomIn />
+      </CanvasButton>
+      <CanvasButton label="Zoom Out" onClick={() => void rf.zoomOut({ duration: 200 })}>
+        <ZoomOut />
+      </CanvasButton>
+      <CanvasButton
+        label="Fit View"
+        onClick={() =>
+          void rf.fitView({
+            ...graphFitOptions(isMobileViewport(), rf.getNodes(), rf.getEdges()),
+            duration: 200,
+          })
+        }
+      >
+        <Maximize />
+      </CanvasButton>
+      <CanvasButton label="Tidy up the layout" onClick={onTidy}>
+        <LayoutGrid />
+      </CanvasButton>
+      <CanvasButton
+        label={minimap ? "Hide the minimap" : "Show the minimap"}
+        pressed={minimap}
+        onClick={onMinimap}
+        className="max-md:hidden"
+      >
+        <MapIcon />
+      </CanvasButton>
+    </Panel>
+  );
 }
 
 export function WorkflowCanvas() {
@@ -280,24 +355,12 @@ export function WorkflowCanvas() {
           size={1}
           className="!bg-background"
         />
-        <Controls className="!border-border !bg-surface" showInteractive={false}>
-          <ControlButton aria-label="Tidy up the layout" title="Tidy up the layout" onClick={tidy}>
-            <LayoutGrid />
-          </ControlButton>
-          <ControlButton
-            aria-label={minimap ? "Hide the minimap" : "Show the minimap"}
-            aria-pressed={minimap}
-            title={minimap ? "Hide the minimap" : "Show the minimap"}
-            onClick={() => setMinimap((on) => !on)}
-          >
-            <MapIcon />
-          </ControlButton>
-        </Controls>
+        <CanvasControls minimap={minimap} onMinimap={() => setMinimap((on) => !on)} onTidy={tidy} />
         {minimap && (
           <MiniMap<StepFlowNode>
             pannable
             zoomable
-            className="!border-border !bg-surface max-md:hidden"
+            className="!m-3 overflow-hidden !rounded-xl !border !border-border !bg-panel !shadow-lg max-md:hidden"
             nodeColor={(node) => CATEGORY_COLOR[stepCategory(node.data.node.step)]}
             maskColor="rgba(0,0,0,0.35)"
           />

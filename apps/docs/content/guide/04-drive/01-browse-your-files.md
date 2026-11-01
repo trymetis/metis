@@ -14,6 +14,25 @@ If the workspace has no drive yet, you see **No drive in this workspace** and a 
 <img src="/images/drive/explorer-list.webp" alt="A drive open in list view, with the sidebar on the left and the files on the right" class="dark:hidden" />
 <img src="/images/drive/explorer-list-dark.webp" alt="A drive open in list view, with the sidebar on the left and the files on the right" class="hidden dark:block" />
 
+## How drives are named
+
+Metis shows each drive by a name, so you can tell your drives apart:
+
+- **Google Drive and OneDrive:** the type, then the email address of the account. For example, "Google Drive · you@example.com".
+- **Storage servers** (S3 storage, WebDAV, FTP, FTPS and SFTP): the name your administrator gave the server, for example "Acme files". No email address is shown.
+- **Two servers with the same name in one workspace:** each drive adds its type, for example "Acme files · S3 storage" and "Acme files · WebDAV". An FTPS server shows its type as "FTP".
+- **The same server added twice:** both drives show the same name.
+
+You see this name in these places:
+
+- the first breadcrumb above the files;
+- the browser tab title, after "Drive";
+- the folders at the top level of [All drives](/guide/drive/all-drives);
+- the dialogs where you pick a drive and a folder, such as **Save to Drive** on an attachment;
+- workspace search, the **@** list in Workspace AI, and the drive fields and cards of workflow steps.
+
+The drive switcher, the **Switch drive** menu, the **Add a drive** dialog and the drive lists in settings show the account's email address instead.
+
 ## Switch to another drive
 
 The switcher at the top of the sidebar shows the drive you are in: its type and the email address of its account. Click it to open the **Switch drive** menu. The menu holds:
@@ -40,7 +59,7 @@ Click **Switch to grid** or **Switch to list** to change the view. Metis remembe
 ## Move through folders
 
 - **Open a folder:** double-click it, or select it and press <kbd>Enter</kbd>.
-- **Go back up:** use the breadcrumbs above the files. The first one is the email address of the drive's account. Click any breadcrumb to jump back to that folder.
+- **Go back up:** use the breadcrumbs above the files. The first one is the [drive's name](#how-drives-are-named). Click any breadcrumb to jump back to that folder.
 - **Return later:** each folder has its own web address. You can reload the page or bookmark it, and the same folder opens.
 
 You can also go back and forward through the folders you visited with the keyboard. See [Keyboard shortcuts](/guide/drive/keyboard-shortcuts).

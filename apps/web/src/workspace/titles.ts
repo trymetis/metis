@@ -4,17 +4,13 @@ import {
   getWorkspaceCalendarBySlug,
   getWorkspaceDriveBySlug,
   getWorkspaceMailboxBySlug,
+  listWorkspaceDrives,
 } from "@/connections";
-import type { WorkspaceRole } from "@/types/workspace";
+import { driveName } from "@/drive/name";
 
 import { ALL_CALENDARS_SLUG, ALL_DRIVES_SLUG, ALL_MAILBOXES_SLUG } from "./path";
 
-type ResourceLookup = (
-  slug: string,
-  userId: string,
-  workspaceId: string,
-  role: WorkspaceRole,
-) => Promise<{ email: string } | null>;
+type ResourceTitle = (slug: string, workspaceId: string) => Promise<string | null>;
 
 async function resourceTitle(
   headers: Headers,
@@ -22,18 +18,12 @@ async function resourceTitle(
   resourceSlug: string,
   allSlug: string,
   allLabel: string,
-  lookup: ResourceLookup,
+  title: ResourceTitle,
 ): Promise<string | null> {
   const appUser = await getAppUser(headers, workspaceSlug);
   if (!isWorkspaceUser(appUser)) return null;
   if (resourceSlug === allSlug) return allLabel;
-  const row = await lookup(
-    resourceSlug,
-    appUser.userId,
-    appUser.workspaceId,
-    appUser.workspaceRole,
-  );
-  return row?.email ?? null;
+  return title(resourceSlug, appUser.workspaceId);
 }
 
 export function mailboxTitle(
@@ -47,7 +37,8 @@ export function mailboxTitle(
     mailboxSlug,
     ALL_MAILBOXES_SLUG,
     "All mailboxes",
-    getWorkspaceMailboxBySlug,
+    async (slug, workspaceId) =>
+      (await getWorkspaceMailboxBySlug(slug, workspaceId))?.email ?? null,
   );
 }
 
@@ -62,7 +53,8 @@ export function calendarTitle(
     calendarSlug,
     ALL_CALENDARS_SLUG,
     "All calendars",
-    getWorkspaceCalendarBySlug,
+    async (slug, workspaceId) =>
+      (await getWorkspaceCalendarBySlug(slug, workspaceId))?.email ?? null,
   );
 }
 
@@ -77,6 +69,12 @@ export function driveTitle(
     driveSlug,
     ALL_DRIVES_SLUG,
     "All drives",
-    getWorkspaceDriveBySlug,
+    async (slug, workspaceId) => {
+      const [drive, drives] = await Promise.all([
+        getWorkspaceDriveBySlug(slug, workspaceId),
+        listWorkspaceDrives(workspaceId),
+      ]);
+      return drive ? driveName(drive, drives) : null;
+    },
   );
 }

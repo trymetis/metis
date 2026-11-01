@@ -46,8 +46,6 @@ import {
   Keyboard,
   Loader2,
   MoreHorizontal,
-  PanelLeftClose,
-  PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
   Play,
@@ -99,7 +97,7 @@ import { Inspector } from "./inspector";
 import { LabelOptionsProvider } from "./label-options";
 import { RevisionsSheet } from "./revisions-sheet";
 import { RunsPanel } from "./runs-panel";
-import { QuickAdd, StepPalette } from "./step-palette";
+import { FloatingPalette, QuickAdd } from "./step-palette";
 import { type ReplayTarget, TestPanel } from "./test-panel";
 import { CanvasElementContext, useTidyLayout, WorkflowCanvas } from "./workflow-canvas";
 
@@ -289,17 +287,11 @@ function EditorShell({
   const [replay, setReplay] = useState<ReplayTarget | null>(null);
   const [inputsOpen, setInputsOpen] = useState(false);
   const [runInputs, setRunInputs] = useState<InputValues>({});
-  const [paletteOpen, setPaletteOpen] = useState(false);
   const [inspectorOpen, setInspectorOpen] = useState(true);
   const [dockOpen, setDockOpen] = useState(false);
-  const paletteRef = usePanelRef();
   const inspectorRef = usePanelRef();
   const dockRef = usePanelRef();
-  const columns = useSavedLayout("metis-workflow-editor-columns", [
-    "palette",
-    "center",
-    "inspector",
-  ]);
+  const columns = useSavedLayout("metis-workflow-editor-columns", ["center", "inspector"]);
   const rows = useSavedLayout("metis-workflow-editor-rows", ["canvas", "dock"]);
 
   useEffect(() => onDirtyChange(dirty), [dirty, onDirtyChange]);
@@ -473,14 +465,6 @@ function EditorShell({
   const topBar = (
     <div className="flex shrink-0 flex-wrap items-center gap-2 border-border border-b bg-panel px-2 py-1.5">
       <MobileAsideTrigger className="size-8 shrink-0" />
-      {!isMobile && (
-        <IconButton
-          label={paletteOpen ? "Hide steps" : "Show steps"}
-          onClick={() => togglePanel(paletteRef)}
-        >
-          {paletteOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
-        </IconButton>
-      )}
       <input
         value={name}
         onChange={(e) => store.getState().setName(e.target.value)}
@@ -646,7 +630,10 @@ function EditorShell({
       onLayoutChanged={rows.onLayoutChanged}
     >
       <ResizablePanel id="canvas" minSize={160}>
-        <WorkflowCanvas />
+        <div className="relative h-full">
+          <WorkflowCanvas />
+          {!isMobile && <FloatingPalette />}
+        </div>
       </ResizablePanel>
       <ResizableHandle />
       <ResizablePanel
@@ -680,20 +667,6 @@ function EditorShell({
                     groupRef={columns.groupRef}
                     onLayoutChanged={columns.onLayoutChanged}
                   >
-                    <ResizablePanel
-                      id="palette"
-                      panelRef={paletteRef}
-                      collapsible
-                      defaultSize={0}
-                      minSize={200}
-                      maxSize={360}
-                      onResize={(size) => setPaletteOpen(size.inPixels > 0)}
-                    >
-                      <div className="h-full border-border border-r">
-                        <StepPalette />
-                      </div>
-                    </ResizablePanel>
-                    <ResizableHandle />
                     <ResizablePanel id="center" minSize={320}>
                       {center}
                     </ResizablePanel>

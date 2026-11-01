@@ -12,4 +12,5 @@ FROM scratch
 COPY --from=build /out/fakes /fakes
 COPY e2e/mcp-client/tls/ /tls/mcp-client/
 COPY e2e/resend/tls/ /tls/resend/
+COPY apps/web/package.json CHANGELOG.md /release/
 ENTRYPOINT ["/fakes"]

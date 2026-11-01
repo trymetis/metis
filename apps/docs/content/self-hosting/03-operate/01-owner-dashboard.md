@@ -5,7 +5,7 @@ description: Every page of the owner dashboard, from usage stats to instance set
 
 The owner dashboard shows what your instance is carrying and holds its settings. Only the owner can open it: the account whose email matches `METIS_OWNER_EMAIL`. For everyone else, and for everyone when no owner email is set, the dashboard does not exist.
 
-The owner is not an administrator of other people's data. The dashboard shows counts, settings and the audit log, never anyone's mail, events or files. The audit log does show people's email addresses, and the IP addresses and devices their changes came from.
+The owner is not an administrator of other people's data. The dashboard shows counts, settings and the audit log, never anyone's mail, events or files. The audit log does show people's account names (or their email addresses, when they have no name or their account was deleted), the email addresses of invited people, connected accounts, mailboxes, calendars and drives, the names of MCP clients, and the IP addresses and devices changes came from.
 
 ## Open the dashboard
 
@@ -94,10 +94,10 @@ The **All events** card lists changes such as turned-off two-factor authenticati
 
 Each row shows:
 
-- What happened, with a **Workspace Assistant** or **MCP client** badge when the change came through one of them.
-- What it was about, such as an email address, a client's name or a role change. A deleted account's row also says how many workspaces were deleted with it, if any.
-- Who made it ("by" and their email address), and the workspace's name when there is one.
-- The date and time, and the IP address and device it came from, when known.
+- **A sentence** that starts with who made the change and says what they did, for example "Alice Martin removed the drive alice@example.com and revoked its access at the provider". A deleted account's row also says how many workspaces were deleted with it, if any, for example "… deleted their account and 2 workspaces with it". [Security activity](/guide/account/security-activity#what-is-recorded) shows how each kind of row reads.
+- **A second, lighter line** with these parts, separated by a dot (·): the workspace's name, when the change happened in one; **Workspace Assistant** or **MCP client**, when the change came through one of them; the date and time; and the IP address and device it came from, when known.
+
+The person who made the change, and a member it was done to, are shown by the name on their account today. With no name, or for a deleted account, the row shows their email address. With neither, it says "A deleted account". Invited people, MCP clients, mailboxes, calendars, drives and connected accounts are shown as they were named when the change was made.
 
 The newest change is at the top, 50 at a time. Click **Load more** for older ones. The log cannot be edited from the app. If nothing has been recorded yet, the card says "No audit events yet."
 
@@ -106,12 +106,13 @@ The newest change is at the top, 50 at a time. Click **Load more** for older one
 Above the list are a search box ("Search events") and a list of event types, which starts at **All events**.
 
 - **Search:** looks through the whole log, not only the rows already on screen. The list updates shortly after you stop typing. Search finds your text in:
-  - the row title;
-  - what the change was about, such as an email address or a client's name;
-  - the email address of the person who made the change;
+  - the event type, such as **Workspace invite revoked**. Event type names show only in the event type list, not on rows;
+  - the fixed words of the sentence, without the names, email addresses, workspaces, roles, tools or versions in it. For example, "revoked the invite", "turned off" and "deleted their account" find rows, but "role from member" does not. Such a search finds every change of that type;
+  - what the change was about, such as an invited person's or member's email address, a client's name, the email address of a mailbox, calendar or drive, or the versions of an undone upgrade;
+  - the email address of the person who made the change, not their name;
   - the workspace's name;
   - the IP address.
-- **Not searched:** the extra details on a row (such as the role change or the sensitive tools), the device, the date and time, and the badges.
+- **Not searched:** people's names, the roles and tool names in a sentence, the device, the date and time, the words **Workspace Assistant** and **MCP client** on the second line, and "a deleted account".
 - **Filter:** pick an event type. The list has **Account deleted** and every type in the [Security activity filter](/guide/account/security-activity#filter-by-event-type). **Resource removed** and **Resource detached from a workspace** each cover mailboxes, calendars and drives.
 - **Both together:** a row must match both. If no row matches, the card says "No events match your search." **Load more** keeps showing older matches, 50 at a time.
 
@@ -133,7 +134,7 @@ The card also says: "Anyone with access to the database can change this log, so 
 
 Each user sees their own part of this log under **Settings**, **Security**, **Security activity**. Workspace owners and admins see the changes in their workspace on its **Activity** page, without IP addresses or devices. See [Security activity](/guide/account/security-activity) and [Workspace activity](/guide/workspaces/workspace-activity).
 
-Your MCP clients can read this log with the **Audit log** tool in the **Instance (owner)** group. It is on by default for your clients, returns 50 events at a time with the number of days events are kept, and leaves out IP addresses and devices. The tool cannot search or filter by event type. It only pages through the log, newest first.
+Your MCP clients can read this log with the **Audit log** tool in the **Instance (owner)** group. It is on by default for your clients, returns 50 events at a time with the number of days events are kept, and leaves out IP addresses and devices. Each event comes with a one-sentence description that reads like its row on this page, and with the current account names of the people involved. The tool cannot search or filter by event type. It only pages through the log, newest first.
 
 ## System
 

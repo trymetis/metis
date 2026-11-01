@@ -13,6 +13,7 @@ import { isToolUIPart, readUIMessageStream, type UIMessage } from "ai";
 import { TURN_PART_TYPE, toAgentEmail } from "../../../../src/ai/turn";
 import { viewRange } from "../../../../src/calendar/layout";
 import { getCalendarSession } from "../../../../src/calendar/session";
+import { driveName } from "../../../../src/drive/name";
 import { getDriveSession } from "../../../../src/drive/session";
 import {
   type ChatStream,
@@ -166,7 +167,8 @@ async function driveChat(session: RecordSession, kind: string): Promise<void> {
   if (!driveSlug) throw new Error(`no ${kind} drive enrolled`);
   const drive = await getDriveSession(headers, enrollment.workspaceSlug, driveSlug);
   if (!drive) throw new Error(`drive ${kind} (${driveSlug}) not reachable`);
-  const root = drive.drives.find((d) => d.driveSlug === driveSlug)?.email ?? "Drive";
+  const current = drive.drives.find((d) => d.driveSlug === driveSlug);
+  const root = current ? driveName(current, drive.drives) : "Drive";
   await converse(
     `chat:drive:${kind}`,
     kind === DRIVE_CHAT.conversationDrive ? DRIVE_CHAT.turns : DRIVE_CHAT.turns.slice(0, 1),

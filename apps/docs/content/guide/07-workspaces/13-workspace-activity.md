@@ -21,14 +21,16 @@ The page says "Role changes, ownership transfers, removed members, invites and d
 
 ## What it lists
 
-| Row title                                                       | Recorded when                                                                                                                                                                                                                                                   |
-| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Member role changed**                                         | The owner changes a member's role. The row shows the old and new role, for example "member → admin".                                                                                                                                                            |
-| **Member removed**                                              | An owner or admin removes a member, or an admin removes themselves.                                                                                                                                                                                             |
-| **Ownership transferred**                                       | The owner makes another member the owner.                                                                                                                                                                                                                       |
-| **Workspace invite sent**                                       | An owner or admin invites someone. The row shows the role, "as admin" or "as member".                                                                                                                                                                           |
-| **Workspace invite revoked**                                    | An owner or admin cancels a pending invite.                                                                                                                                                                                                                     |
-| **Mailbox detached**, **Calendar detached**, **Drive detached** | Someone takes a mailbox, calendar or drive out of this workspace. This can happen on the workspace's **Mailboxes**, **Calendars** or **Drives** page, with **Detach from this workspace** in search, or in the account settings of the person who connected it. |
+The **Event type** column holds the names in the [event type list](#filter-by-event-type). Search also finds rows by these names. They do not appear on the rows themselves. In the **The row reads** column, "…" stands for the person who made the change.
+
+| Event type                             | The row reads                                           | Recorded when                                                                                                                                                                                                                                                   |
+| -------------------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Member role changed**                | "… changed Bob Lee's role from member to admin"         | The owner changes a member's role.                                                                                                                                                                                                                              |
+| **Member removed**                     | "… removed Bob Lee from Design"                         | An owner or admin removes a member, or an admin removes themselves.                                                                                                                                                                                             |
+| **Ownership transferred**              | "… transferred ownership of Design to Bob Lee"          | The owner makes another member the owner.                                                                                                                                                                                                                       |
+| **Workspace invite sent**              | "… invited carol@example.com to Design as an admin"     | An owner or admin invites someone.                                                                                                                                                                                                                              |
+| **Workspace invite revoked**           | "… revoked the invite for carol@example.com to Design"  | An owner or admin cancels a pending invite.                                                                                                                                                                                                                     |
+| **Resource detached from a workspace** | "… detached the calendar alice@example.com from Design" | Someone takes a mailbox, calendar or drive out of this workspace. This can happen on the workspace's **Mailboxes**, **Calendars** or **Drives** page, with **Detach from this workspace** in search, or in the account settings of the person who connected it. |
 
 Each change is recorded after it succeeds. Some changes that affect the workspace are not listed here:
 
@@ -40,10 +42,20 @@ The person who made one of these changes sees it in their own [Security activity
 
 ## What each row shows
 
-- **What happened**, such as **Member removed**.
-- **A badge** if the change came from an AI tool: **Workspace Assistant** or **MCP client**.
-- **What it was about**, such as the member's or the invited person's email address.
-- **Who made the change**: "by" and their email address.
+Each row is one change, shown on two lines.
+
+The first line is one sentence. It starts with who made the change and says what they did, for example "Alice Martin removed Bob Lee from Design". Many sentences name the workspace.
+
+How people are named in the sentence:
+
+- **The person who made the change, and a member it was done to,** are shown by the name on their account today.
+- **If the account has no name, or it was deleted,** the row shows their email address instead.
+- **If neither is known,** the row says "A deleted account" (or "a deleted account" in the middle of the sentence).
+- **Invited people, mailboxes, calendars and drives** are shown as they were named when the change was made, such as an email address.
+
+The second line is smaller and lighter. It shows:
+
+- **Where the change came from**, if it came from an AI tool: **Workspace Assistant** or **MCP client**, followed by a dot (·). A change made in the app shows nothing here.
 - **When** it happened (date and time).
 
 This page does not show IP addresses or devices.
@@ -65,12 +77,15 @@ Search looks through every row this page can show, not only the rows already on 
 
 Search finds rows where your text appears in:
 
-- the row title, such as **Mailbox detached**;
-- what the change was about, such as the member's or the invited person's email address;
-- the email address of the person who made the change;
+- the event type, such as **Member removed** or **Workspace invite revoked**. These are the names in the [event type list](#filter-by-event-type);
+- the fixed words of the sentence, without the names, email addresses, workspaces or roles in it. For example, "revoked the invite" and "role from" find rows, but "role from member" does not;
+- what the change was about: the member's or the invited person's email address, or the email address of the mailbox, calendar or drive;
+- the email address of the person who made the change. Their name is not searched;
 - the workspace's name. Every row on this page belongs to this workspace, so typing the workspace's name shows every row.
 
-Search does not look at the role change ("member → admin"), the invite role ("as admin"), the date and time, or the **Workspace Assistant** and **MCP client** badges.
+A search for the sentence's words finds every change of that type, not only rows that read exactly like your text. For example, "detached the drive" finds every detached drive.
+
+Search does not look at people's names, the roles in a sentence (such as "member to admin"), the date and time, the words **Workspace Assistant** and **MCP client** on the second line, or "a deleted account".
 
 How the text is matched:
 
@@ -92,7 +107,7 @@ Pick a type to show only those rows:
 - **Workspace invite sent**
 - **Workspace invite revoked**
 
-Rows say **Mailbox detached**, **Calendar detached** or **Drive detached**, but the list has one type for all three: **Resource detached from a workspace**. Pick it to see every detached mailbox, calendar and drive.
+A row's sentence names the kind of resource, such as "detached the drive", but the list has one type for all three: **Resource detached from a workspace**. Pick it to see every detached mailbox, calendar and drive.
 
 To clear the filter, pick **All events**.
 

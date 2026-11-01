@@ -181,7 +181,7 @@ export async function pickDrive(
   expect(drive?.server, `drive ${driveSlug} has a server name`).toBeTruthy();
   await dialog
     .getByRole("button", {
-      name: `${drive?.server} · ${drive?.email}`,
+      name: drive?.server ?? "",
       exact: true,
     })
     .click();

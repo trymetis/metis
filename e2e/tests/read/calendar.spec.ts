@@ -8,6 +8,7 @@ test.beforeEach(async ({ page }) => {
 
 test("day, week, month, year and schedule views, and today", async ({ page, account }) => {
   await page.goto(calendarPath(account));
+  expect(await page.title()).toContain(account.email);
   await expect(
     toolbar(page).getByRole("heading", { level: 1, name: "October 2026" }),
   ).toBeVisible();

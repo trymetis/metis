@@ -1,0 +1,134 @@
+import { MCP_TOOL_MANIFEST } from "@/mcp/tools";
+import type { AuditEvent } from "@/server/schema";
+import type { AuditAction, AuditResourceKind } from "@/types/audit";
+
+const TOOL_LABELS = new Map<string, string>(
+  MCP_TOOL_MANIFEST.map((tool) => [tool.key, tool.label]),
+);
+
+const ROLE_PHRASES: Record<string, string> = {
+  owner: "an owner",
+  admin: "an admin",
+  member: "a member",
+};
+
+function list(values: string[]): string {
+  if (values.length <= 1) return values.join("");
+  return `${values.slice(0, -1).join(", ")} and ${values.at(-1)}`;
+}
+
+function toolNames(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.flatMap((key) => (typeof key === "string" ? [TOOL_LABELS.get(key) ?? key] : []))
+    : [];
+}
+
+function text(value: unknown): string | null {
+  return typeof value === "string" && value ? value : null;
+}
+
+export function formatAuditEvent(event: AuditEvent): string {
+  const actor = event.actorName || event.actorEmail || "A deleted account";
+  const person = event.targetName || event.targetLabel || "a deleted account";
+  const target = event.targetLabel ?? "";
+  const kind = event.resourceKind ?? "resource";
+  const workspace = event.workspaceName;
+  const { detail } = event;
+  const tools = toolNames(detail.tools ?? detail.sensitiveTools);
+
+  switch (event.action) {
+    case "account.deleted": {
+      const deleted = typeof detail.workspacesDeleted === "number" ? detail.workspacesDeleted : 0;
+      const along =
+        deleted > 0 ? ` and ${deleted} ${deleted === 1 ? "workspace" : "workspaces"} with it` : "";
+      return `${actor} deleted their account${along}`;
+    }
+    case "two_factor.disabled":
+      return `${actor} turned off two-factor authentication`;
+    case "sign_in_alerts.disabled":
+      return `${actor} turned off sign-in alerts`;
+    case "mcp_client.created":
+      return `${actor} added the MCP client ${target}`;
+    case "mcp_client.approved":
+      return `${actor} approved the MCP client ${target}${tools.length > 0 ? ` with sensitive tools ${list(tools)}` : ""}`;
+    case "mcp_client.enabled":
+      return `${actor} re-enabled the MCP client ${target}`;
+    case "mcp_client.sensitive_tools_enabled":
+      return `${actor} turned on sensitive tools for ${target}${tools.length > 0 ? `: ${list(tools)}` : ""}`;
+    case "connection.deleted":
+      return `${actor} disconnected ${target}`;
+    case "resource.deleted":
+      return `${actor} removed the ${kind} ${target}${detail.grantRevoked === true ? " and revoked its access at the provider" : ""}`;
+    case "resource.detached":
+      return `${actor} detached the ${kind} ${target}${workspace ? ` from ${workspace}` : ""}`;
+    case "member.role_changed": {
+      const from = text(detail.from);
+      const to = text(detail.to);
+      return from && to
+        ? `${actor} changed ${person}'s role from ${from} to ${to}`
+        : `${actor} changed ${person}'s role`;
+    }
+    case "member.removed":
+      return `${actor} removed ${person}${workspace ? ` from ${workspace}` : ""}`;
+    case "workspace.ownership_transferred":
+      return `${actor} transferred ownership of ${workspace ?? "the workspace"} to ${person}`;
+    case "workspace.deleted":
+      return `${actor} deleted the workspace ${workspace ?? target}`;
+    case "workspace_invite.created": {
+      const role = text(detail.role);
+      return `${actor} invited ${target}${workspace ? ` to ${workspace}` : ""}${role ? ` as ${ROLE_PHRASES[role] ?? role}` : ""}`;
+    }
+    case "workspace_invite.revoked":
+      return `${actor} revoked the invite for ${target}${workspace ? ` to ${workspace}` : ""}`;
+    case "signup_invite.created":
+      return `${actor} sent a sign-up invite to ${target}`;
+    case "signup_invite.revoked":
+      return `${actor} revoked the sign-up invite for ${target}`;
+    case "instance.upgrade_undone":
+      return `${actor} undid the last upgrade (${target})`;
+  }
+}
+
+export function auditPhrase(action: AuditAction, kind: AuditResourceKind | null): string {
+  const resource = kind ?? "resource";
+  switch (action) {
+    case "account.deleted":
+      return "deleted their account";
+    case "two_factor.disabled":
+      return "turned off two-factor authentication";
+    case "sign_in_alerts.disabled":
+      return "turned off sign-in alerts";
+    case "mcp_client.created":
+      return "added the mcp client";
+    case "mcp_client.approved":
+      return "approved the mcp client with sensitive tools";
+    case "mcp_client.enabled":
+      return "re-enabled the mcp client";
+    case "mcp_client.sensitive_tools_enabled":
+      return "turned on sensitive tools for";
+    case "connection.deleted":
+      return "disconnected";
+    case "resource.deleted":
+      return `removed the ${resource} and revoked its access at the provider`;
+    case "resource.detached":
+      return `detached the ${resource} from`;
+    case "member.role_changed":
+      return "changed 's role from to";
+    case "member.removed":
+      return "removed from";
+    case "workspace.ownership_transferred":
+      return "transferred ownership of to";
+    case "workspace.deleted":
+      return "deleted the workspace";
+    case "workspace_invite.created":
+      return "invited to as";
+    case "workspace_invite.revoked":
+      return "revoked the invite for to";
+    case "signup_invite.created":
+      return "sent a sign-up invite to";
+    case "signup_invite.revoked":
+      return "revoked the sign-up invite for";
+    case "instance.upgrade_undone":
+      return "undid the last upgrade";
+  }
+}

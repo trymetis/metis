@@ -75,6 +75,7 @@ See also [AGENTS.md](../AGENTS.md), [mcp.md](mcp.md), [updater.md](updater.md), 
 - **A small long-running fake is a role of the Go binary in `e2e/fakes/`.** A fake implements the outside service's contract (the updater protocol, Resend's API, CIMD documents), never the app's, so it needs nothing from the TypeScript suites.
   - The `replay` service, which replays recordings with keys the TypeScript recorder computes, stays TypeScript.
   - The updater fake mirrors the Go updater ([updater.md](updater.md)).
+- **A recording's key ignores the request's clock** (`e2e/lib/llm-key.ts` → `normalizeLlmRequest`): `sent-at`, `time-zone`, `modified`, `modifiedAt`, `requestedAt` and the workflow agent's `Run time:` are blanked before hashing, so a request sent at another time replays the same recording. A new prompt that embeds the time needs its pattern here, or the record plan misses it on every run.
 - **Outside services are faked inside the stack under their real names; app code is unchanged.** The fake Resend API is the network alias `api.resend.com` with a certificate from the e2e CA, as `mcp-client` is for CIMD; the app keeps calling the hard-coded URL. `replay` answers as `openrouter.ai` and `api.typesafe.ai` the same way (`harness/tls/models.crt`), so the stack's model base URLs are the real ones.
 
 ### Recordings

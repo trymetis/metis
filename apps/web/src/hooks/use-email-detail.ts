@@ -1,10 +1,10 @@
 "use client";
 
 import { skipToken, useQueries, useQuery } from "@tanstack/react-query";
-import { escapeText } from "entities";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { rpc } from "@/lib/orpc";
+import { textToHtml } from "@/mail/text";
 import { useMailStore } from "@/store/mail-store";
 import type { Attachment, Email, UnsubscribeMethod, UnsubscribeStatus } from "@/types/mail";
 
@@ -44,10 +44,6 @@ function bodyFrom(data: { bodyHtml?: string; bodyText?: string }): MessageBody {
   if (data.bodyHtml) return { kind: "html", html: data.bodyHtml };
   if (data.bodyText) return { kind: "text", text: data.bodyText };
   return { kind: "empty" };
-}
-
-export function textToHtml(text: string): string {
-  return `<p>${escapeText(text).replace(/\r?\n/g, "<br>")}</p>`;
 }
 
 export function bodyAsHtml(body: MessageBody | null): string {

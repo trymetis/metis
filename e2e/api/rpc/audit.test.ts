@@ -127,6 +127,12 @@ test("revoking a workspace invite is recorded with the invitee", async () => {
       expect.objectContaining({ action, via: "app", targetLabel: email }),
     );
   }
+
+  const found = await rpc<AuditPage>("audit.workspace", { ...ws, q: "revoked the invite" });
+  expect(found.events).toContainEqual(
+    expect.objectContaining({ action: "workspace_invite.revoked", targetLabel: email }),
+  );
+  expect(found.events.every((event) => event.action === "workspace_invite.revoked")).toBe(true);
 });
 
 test("turning on a sensitive MCP tool is recorded with the tools", async () => {

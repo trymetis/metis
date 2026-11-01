@@ -18,7 +18,7 @@ Paths are from `e2e/`. The names live in `lib/cast.ts`; the seed in `seed/mailbo
 
 ## Company and domain
 
-- **Instance:** `demo.trymetis.email`, the Metis Cloud slug form `<slug>.trymetis.email`. The `demo` slug is reserved in the Metis Cloud console.
+- **Instance:** `demo.trymetis.email`, the address of the Metis demo account, kept apart from Metis Cloud instances, which live at `<slug>.metis-suite.app`.
 - **Company:** Fernhill Studio, a brand and design studio in Lisbon with a London desk, running a rebrand for Aozora Ceramics.
 - **Timeline:** fixed dates from November 2024 to October 2026. The seeded week is 5 to 9 October 2026 (`DOCS_CLOCK` 2026-10-08T12:00:00Z). Edge mail is dated June 2024.
 

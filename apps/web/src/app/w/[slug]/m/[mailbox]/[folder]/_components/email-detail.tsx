@@ -10,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@metis/ui/components/alert-dialog";
-import { Button } from "@metis/ui/components/button";
+import { Button, buttonVariants } from "@metis/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,9 +58,12 @@ import {
   Tag as TagIcon,
   Trash2,
 } from "lucide-react";
+import type { Route } from "next";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { viewerTimeZone } from "@/ai/turn";
 import { type DrivePick, DrivePickerDialog } from "@/components/drive-picker-dialog";
 import { PickTimeDialog } from "@/components/pick-time-dialog";
 import { useScopePolicy } from "@/components/scope-policy-context";
@@ -97,13 +100,12 @@ import {
   useMutedThreadIds,
   useReadLaterIds,
 } from "@/mail/mail-cache";
-import { printEmail, viewOriginalEmail } from "@/mail/popup";
 import { cleanUrl as cleanTrackedUrl, renderEmailHtml } from "@/mail/render/pipeline";
 import type { RemoteImages } from "@/mail/render/types";
 import type { AnalysisResultOutput, ThreadSummaryOutput } from "@/server/schema";
 import { type ComposeInitial, useMailStore } from "@/store/mail-store";
 import type { Attachment } from "@/types/mail";
-import { ALL_DRIVES_SLUG } from "@/workspace/path";
+import { ALL_DRIVES_SLUG, mailPath } from "@/workspace/path";
 
 import { MessageContent } from "./message-content";
 import { type SummaryActions, ThreadSummaryCards } from "./thread-summary";
@@ -980,20 +982,29 @@ export function EmailDetail() {
           </ToolBtn>
         )}
         <ToolBtn
-          onClick={() =>
-            printEmail(
-              selectedEmail,
-              (body?.kind === "html"
-                ? privacy.render(body.html, "view", images, "light")?.html
-                : null) ?? bodyAsHtml(body),
-              { images, proxyEndpoint: privacy.proxyEndpoint },
-            )
-          }
+          href={mailPath(
+            scope.workspaceSlug,
+            scope.mailboxSlug,
+            "print",
+            `?${new URLSearchParams({
+              id: selectedEmail.id,
+              tz: viewerTimeZone(),
+              ...(images !== "block" && { images: "shown" }),
+              ...(!privacy.cleanLinks && { links: "keep" }),
+            })}`,
+          )}
         >
           <Printer className="size-3.25" strokeWidth={2} />
           Print
         </ToolBtn>
-        <ToolBtn onClick={() => viewOriginalEmail(selectedEmail, scope)}>
+        <ToolBtn
+          href={mailPath(
+            scope.workspaceSlug,
+            scope.mailboxSlug,
+            "original",
+            `?${new URLSearchParams({ id: selectedEmail.id })}`,
+          )}
+        >
           <FileCode className="size-3.25" strokeWidth={2} />
           View original
         </ToolBtn>
@@ -1520,16 +1531,37 @@ export function EmailDetail() {
 function ToolBtn({
   children,
   onClick,
+  href,
   danger,
   disabled,
   title,
 }: {
   children: React.ReactNode;
   onClick?: () => void;
+  href?: Route;
   danger?: boolean;
   disabled?: boolean;
   title?: string;
 }) {
+  const className = cn(
+    "bg-transparent text-muted-foreground dark:bg-transparent",
+    danger &&
+      "hover:border-destructive/20 hover:bg-destructive/10 hover:text-destructive-text dark:hover:bg-destructive/10",
+  );
+  if (href) {
+    return (
+      <Link
+        href={href}
+        prefetch={false}
+        target="_blank"
+        rel="noopener"
+        title={title}
+        className={cn(buttonVariants({ variant: "outline", size: "sm" }), className)}
+      >
+        {children}
+      </Link>
+    );
+  }
   return (
     <Button
       variant="outline"
@@ -1537,11 +1569,7 @@ function ToolBtn({
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className={cn(
-        "bg-transparent text-muted-foreground dark:bg-transparent",
-        danger &&
-          "hover:border-destructive/20 hover:bg-destructive/10 hover:text-destructive-text dark:hover:bg-destructive/10",
-      )}
+      className={className}
     >
       {children}
     </Button>

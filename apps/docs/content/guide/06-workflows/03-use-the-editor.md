@@ -9,7 +9,7 @@ This page explains how to work with steps in the workflow editor. To see what ea
 
 There are two ways to add a step:
 
-- **From the step palette** on the left of the editor. If the palette is closed, click **Show steps** in the top bar to open it. Click a step to add it to the canvas, or drag it onto the canvas and drop it where you want it. Type in **Search steps** to filter the list. If nothing fits, the palette says "No step matches."
+- **From the step palette**, which floats over the left side of the canvas. If the palette is closed, click the **Show steps** icon in the top-left corner of the canvas to open it. Under the search box, the palette says "Drag a step onto the canvas, or click it". Click a step to add it to the canvas, or drag it onto the canvas and drop it where you want it. Type in **Search steps** to filter the list. If nothing fits, the palette says "No step matches." Click **Hide steps** to close the palette.
 - **From the Add step window.** Press **w** then **a** (or tap **Add step** on a phone). Type to search, then press **Enter** to add the highlighted step, or click a step.
 
 <img src="/images/workflows/add-step-menu.webp" alt="The Add step window with its search box and steps grouped by category" class="dark:hidden" />
@@ -30,7 +30,7 @@ Each step shows as a card. The card gives a short summary of the step's settings
 - **Remove a connection:** click the line and press Delete or Backspace.
 - **Copy steps:** select them and press Ctrl + C (Cmd + C on a Mac), then Ctrl + V to paste. The connections between the copied steps come along. You can paste into another workflow too. Ctrl + D, or **Duplicate** in the Inspector, makes a copy in one go. Pasted steps get new step ids.
 - **Undo a change:** click **Undo** in the top bar, or press Ctrl + Z. **Redo** brings it back. The editor keeps the last 100 changes. Typing in one field, or one drag, counts as one change.
-- **Move around:** drag the empty canvas to pan. The buttons in the corner of the canvas zoom in and out, fit the whole workflow in view (**Fit View**), tidy it (**Tidy up the layout**) and hide or show the small map (**Hide the minimap**).
+- **Move around:** drag the empty canvas to pan. The row of buttons in the top-right corner of the canvas zooms in and out (**Zoom In**, **Zoom Out**), fits the whole workflow in view (**Fit View**), tidies it (**Tidy up the layout**) and hides or shows the small map (**Hide the minimap** or **Show the minimap**). The small map sits in the bottom-right corner.
 
 **Tidy up the layout** arranges the steps in columns from left to right and fits them in view. It is also in the **More workflow actions** menu (**...**) in the top bar, and on the keyboard as **w** then **l**. See [Keyboard shortcuts](/guide/reference/keyboard-shortcuts#workflows) for every key.
 
@@ -98,4 +98,4 @@ Each save keeps a new version of the workflow, called a revision. Runs that alre
 
 ## On a phone
 
-On a phone there is no step palette. Tap **Add step** (the **+** button) in the top bar to open the **Add step** window. Tap a step on the canvas to open its settings in a panel at the bottom of the screen.
+On a phone there is no step palette. Tap **Add step** (the **+** button) in the top bar to open the **Add step** window. Tap a step on the canvas to open its settings in a panel at the bottom of the screen. There is no small map on a phone, so the row of buttons on the canvas has no minimap button.

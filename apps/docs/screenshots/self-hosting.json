@@ -97,7 +97,7 @@
     "steps": [
       { "waitFor": "main >> role=button[name=\"Upgrade\"s]" },
       { "click": "main >> role=button[name=\"Upgrade\"s]" },
-      { "waitFor": "role=alertdialog[name=\"Upgrade to 1.2.0\"]" },
+      { "waitFor": "role=alertdialog[name=/^Upgrade to /]" },
       { "wait": 300 }
     ],
     "element": "role=alertdialog"

@@ -8,6 +8,7 @@ import {
   listWorkspaceDrives,
   listWorkspaceMailboxes,
 } from "@/connections";
+import { DRIVE_PROVIDER_LABELS, driveName } from "@/drive/name";
 import { suggestContacts } from "@/mail/contacts";
 import { listCustomLabels } from "@/mail/custom-labels";
 import { LABEL_OPTIONS } from "@/mail/label-meta";
@@ -351,8 +352,8 @@ async function drives(ctx: LocalSearchContext) {
     hit: {
       kind: "drive",
       id: `drive:${d.id}`,
-      title: d.email,
-      subtitle: d.server ?? d.provider,
+      title: driveName(d, rows),
+      subtitle: DRIVE_PROVIDER_LABELS[d.provider],
       driveId: d.id,
       linkId: d.linkId,
       slug: d.slug,
@@ -363,8 +364,8 @@ async function drives(ctx: LocalSearchContext) {
     },
     doc: {
       type: "drive",
-      text: [d.email, d.slug, d.server ?? ""],
-      name: [d.email, d.slug, d.server ?? ""],
+      text: [driveName(d, rows), d.email, d.slug],
+      name: [driveName(d, rows), d.email, d.slug],
       provider: d.provider,
       drive: [d.slug, d.email],
     },

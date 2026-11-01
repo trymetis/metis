@@ -1,3 +1,4 @@
+import { env } from "@metis/e2e/lib/env";
 import { expect, test } from "vitest";
 
 import type { Account } from "../../clients/harness";
@@ -169,7 +170,10 @@ test("local search returns members, labels, mail folders and the workspace's res
 
   const drives = await local(rpc, account, "type:drive provider:sftp");
   expect(drives.hits.length).toBeGreaterThan(0);
-  for (const hit of drives.hits) expect(hit.provider).toBe("sftp");
+  for (const hit of drives.hits) {
+    expect(hit.provider).toBe("sftp");
+    expect(hit.title).toBe(env.servers.sftp);
+  }
 
   const connections = await local(rpc, account, "type:connection");
   expect(connections.hits.length).toBeGreaterThan(0);

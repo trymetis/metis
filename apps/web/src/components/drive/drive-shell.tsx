@@ -28,6 +28,7 @@ import { usePlatformPolicy } from "@/components/platform-policy-context";
 import { RESOURCE_PROVIDER_META } from "@/components/provider-meta";
 import { useScopePolicy } from "@/components/scope-policy-context";
 import { ShortcutsHelp } from "@/components/shortcuts-help";
+import { driveName } from "@/drive/name";
 import { listenDriveActions, listenDrivePreviews, takeDrivePreview } from "@/drive/pending-open";
 import { useStoredItem, writeStoredItem } from "@/hooks/use-stored-item";
 import { useWorkspacePath, useWorkspaceSlug } from "@/hooks/use-workspace-path";
@@ -178,15 +179,20 @@ export function DriveShell({ trail }: { trail: string[] }) {
       ),
   });
 
+  const listedDrives = drivesQuery.data?.drives;
   const crumbs: Crumb[] = useMemo(
     () => [
       {
         id: null,
-        name: isAll ? "All drives" : (activeDrive?.email ?? "Drive"),
+        name: isAll
+          ? "All drives"
+          : activeDrive
+            ? driveName(activeDrive, listedDrives ?? [])
+            : "Drive",
       },
       ...trail.map((id) => ({ id, name: names[id] ?? fetchedNames[id] ?? "…" })),
     ],
-    [trail, names, fetchedNames, isAll, activeDrive],
+    [trail, names, fetchedNames, isAll, activeDrive, listedDrives],
   );
 
   const openFolder = useCallback(
@@ -297,6 +303,7 @@ export function DriveShell({ trail }: { trail: string[] }) {
       <ResponsiveAside label="Drives">
         <DriveSidebar
           drives={drives}
+          showPinDrive={isAll}
           pins={pins}
           recents={recents}
           quota={quota}

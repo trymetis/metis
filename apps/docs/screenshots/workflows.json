@@ -515,6 +515,9 @@
         "value": "archive@example.com"
       },
       {
+        "click": "role=button[name=\"Hide steps\"s]"
+      },
+      {
         "click": "role=application >> role=button[name=\"Tidy up the layout\"s]"
       },
       {

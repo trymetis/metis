@@ -7,6 +7,7 @@ import { Client } from "@microsoft/microsoft-graph-client";
 import { getInstanceConfig } from "@/config/runtime";
 import { oauthToken } from "@/connections/types";
 import { sanitizeError } from "@/lib/errors/sanitize-error";
+import { errorStatus } from "@/lib/token-map";
 
 import { resolvePrincipal, resourceAuth } from "../authorization";
 import { errorCode } from "../diagnostics";
@@ -110,6 +111,20 @@ function graphResource(
   return { resource: "me/drive/root", changeType: "updated", minutes: GRAPH_DRIVE_MINUTES };
 }
 
+async function renewGraph(
+  client: Client,
+  subscriptionId: string,
+  body: { expirationDateTime: string; notificationUrl: string },
+): Promise<boolean> {
+  try {
+    await client.api(`/subscriptions/${subscriptionId}`).patch(body);
+    return true;
+  } catch (err) {
+    if (errorStatus(err) === 404) return false;
+    throw err;
+  }
+}
+
 async function subscribe(due: DueTrigger, existing: EndpointRow | undefined): Promise<boolean> {
   const principal = await resolvePrincipal(due.definition);
   if (!principal.ok) return false;
@@ -138,10 +153,13 @@ async function subscribe(due: DueTrigger, existing: EndpointRow | undefined): Pr
         kind: "graph",
         secret,
       }));
-    if (existing?.externalId) {
-      await client
-        .api(`/subscriptions/${existing.externalId}`)
-        .patch({ expirationDateTime: expires.toISOString() });
+    if (
+      existing?.externalId &&
+      (await renewGraph(client, existing.externalId, {
+        expirationDateTime: expires.toISOString(),
+        notificationUrl: endpointUrl(endpoint.id),
+      }))
+    ) {
       await upsertEndpoint({
         workflowId: due.definition.id,
         triggerId: due.trigger.id,

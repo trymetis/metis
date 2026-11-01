@@ -35,7 +35,7 @@ Click **Google Drive** or **OneDrive**. You sign in with Google or Microsoft, th
 
 Fill in:
 
-- **Email address**: your email address. Metis lists the drive under this address.
+- **Email address**: your email address. Metis lists the drive under the server's name, and shows this address in the drive switcher and in the drive lists in settings.
 - **Bucket**: the storage bucket to open.
 - **Folder prefix**: optional. Fill it in to limit this drive to one folder in the bucket.
 
@@ -45,7 +45,7 @@ You do not enter any keys. Your administrator holds them.
 
 Fill in:
 
-- **Email address**: your email address. Metis lists the drive under this address.
+- **Email address**: your email address. Metis lists the drive under the server's name, and shows this address in the drive switcher and in the drive lists in settings.
 - **Username**: your login on the server. If you leave it empty, your email address is used.
 - **Password**: your password on the server.
 - **Folder**: optional. Fill it in to limit this drive to one folder on the server.

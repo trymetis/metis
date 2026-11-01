@@ -10,7 +10,7 @@ An **If** step needs a rule you can write as a condition. When the rule is harde
 
 ## Before you start
 
-- **Your server has to offer decision steps.** If **Ask** and **Branch** are not under **AI** in the step palette or in the **Add step** window, your administrator has not turned them on. To open the palette, click **Show steps** in the top bar. A workflow that still has them shows "Ask and Branch steps are turned off on this instance".
+- **Your server has to offer decision steps.** If **Ask** and **Branch** are not under **AI** in the step palette or in the **Add step** window, your administrator has not turned them on. To open the palette, click the **Show steps** icon in the top-left corner of the canvas. A workflow that still has them shows "Ask and Branch steps are turned off on this instance".
 - **AI has to be on for everything the step reads.** AI must be allowed in the workspace and turned on for every mailbox, calendar and drive that the Ask step or the steps before it read. If it is not, the Ask step shows "Turn AI on for every mailbox, calendar and drive this step reads", and the workflow cannot be saved. See [Workspaces](/guide/workspaces) for the AI switches.
 - **Decision steps cannot run before a message is sent.** You cannot use them after **Before mail is sent**. If you try, the step shows "Ask cannot run before a message is sent" (or "Branch cannot run before a message is sent").
 

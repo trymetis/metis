@@ -26,6 +26,7 @@ export interface FrameDocumentOptions {
   title?: string;
   header?: string;
   print?: boolean;
+  printNonce?: string;
 }
 
 const BASE_POLICY = [
@@ -46,8 +47,13 @@ export function imageSources(images: RemoteImages, proxyEndpoint?: string | null
 export function frameContentSecurityPolicy(
   images: RemoteImages,
   proxyEndpoint?: string | null,
+  scriptNonce?: string,
 ): string {
-  return [...BASE_POLICY, `img-src ${imageSources(images, proxyEndpoint)}`].join("; ");
+  return [
+    ...BASE_POLICY,
+    `img-src ${imageSources(images, proxyEndpoint)}`,
+    ...(scriptNonce ? [`script-src 'nonce-${scriptNonce}'`] : []),
+  ].join("; ");
 }
 
 function escapeAttr(value: string): string {
@@ -60,6 +66,13 @@ export function frameColorScheme(
   return options.adaptive && !options.print ? options.theme : "light";
 }
 
+const PRINT_STYLE = [
+  ".print-header { margin: 40px 40px 24px; padding-bottom: 16px; border-bottom: 1px solid #e5e5e5; font-family: system-ui, sans-serif; color: #111; }",
+  ".print-header h1 { margin: 0 0 12px; font-family: Georgia, serif; font-size: 24px; }",
+  ".print-header p { margin: 2px 0; font-size: 12px; color: #555; }",
+  ".print-body { padding: 0 40px 40px; }",
+].join("\n");
+
 function baseStyle(options: FrameDocumentOptions): string {
   const scheme = frameColorScheme(options);
   const adaptive = options.adaptive && !options.print;
@@ -68,16 +81,17 @@ function baseStyle(options: FrameDocumentOptions): string {
     adaptive && options.textColor ? `color: ${options.textColor.replace(/[;{}<>]/g, "")};` : "";
   return [
     `:root { color-scheme: ${scheme}; }`,
-    `html { background: ${page || options.print ? "#fff" : "transparent"}; ${page ? "padding: 16px;" : ""} overflow-x: auto; overflow-y: hidden; }`,
+    `html { background: ${page || options.print ? "#fff" : "transparent"}; ${page ? "padding: 16px;" : ""} ${options.print ? "" : "overflow-x: auto; overflow-y: hidden;"} }`,
     `body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; ${color} }`,
     "img { max-width: 100%; height: auto; }",
     `img[${BLOCKED_SRC_ATTR}], image[${BLOCKED_SRC_ATTR}] { cursor: pointer; }`,
     "pre { white-space: pre-wrap; }",
+    options.print ? PRINT_STYLE : "",
   ].join("\n");
 }
 
 export function buildFrameDocument(bodyHtml: string, options: FrameDocumentOptions): string {
-  const csp = frameContentSecurityPolicy(options.images, options.proxyEndpoint);
+  const csp = frameContentSecurityPolicy(options.images, options.proxyEndpoint, options.printNonce);
   return [
     "<!doctype html>",
     "<html><head>",
@@ -91,7 +105,10 @@ export function buildFrameDocument(bodyHtml: string, options: FrameDocumentOptio
     `<style>${baseStyle(options)}</style>`,
     "</head><body>",
     options.header ?? "",
-    bodyHtml,
+    options.print ? `<div class="print-body">${bodyHtml}</div>` : bodyHtml,
+    options.printNonce
+      ? `<script nonce="${escapeAttr(options.printNonce)}">addEventListener("load", () => print());</script>`
+      : "",
     "</body></html>",
   ].join("");
 }

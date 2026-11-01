@@ -13,6 +13,8 @@ The e2e stack is a seeded environment that two suites drive: Vitest in `api/` fo
 - **Second calendar visibility setting:** needs a second calendar connection or a second workspace.
 - **Workspace logo:** needs an image file.
 - **Six audit events:** `account.deleted`, `two_factor.disabled`, `mcp_client.approved`, `mcp_client.enabled`, `connection.deleted` and `resource.deleted` (`src/types/audit.ts` → `AUDIT_ACTIONS`) are never checked by name; the other 13 are, in `api/rpc/audit.test.ts`, `api/mcp/tools.test.ts`, `api/system/sign-in-alerts.test.ts`, `tests/write/members.spec.ts` and `tests/write/updates.spec.ts`. Retention pruning (`pruneAuditEvents`, the `system:audit-prune` workflow) is not run either; only `retentionDays` is read.
+- **Sender check results:** no seeded message carries an `Authentication-Results` header, so View original's PASS and FAIL rows and its "as reported by" note are never shown; every row reads **Not reported**. Adding the header to an existing anchor message changes no recorded model request (the classifier sends from, subject and snippet; summaries send only automation headers) and no screenshot.
+- **An empty message body on the print page:** the only seeded message with no body (`min-headers-only`, edge seed) has no subject either, so no test can find it by search, and the print page's "No content" is never shown.
 - **One-click and `mailto` unsubscribes:** the seeded Kestrel Supply Co. newsletters offer both, but nothing performs them; the `unsubscribe` case appends its own link-only message over IMAP and removes it.
 
 ## 2. Small infrastructure

@@ -11,7 +11,7 @@ Use this to keep a copy of your sent mail in an archive mailbox, or to copy a te
 
 1. Click **Workflows** in the left rail.
 2. Click **New workflow** and pick **Start from a manual trigger**. Remove its **Run by hand** trigger: point at the card and click **Remove step** (the **X**).
-3. If the step palette is closed, click **Show steps** in the top bar to open it. From its **Triggers** category, click or drag **Before mail is sent** onto the canvas. You can also press **w** then **a** and search for it.
+3. If the step palette is closed, click the **Show steps** icon in the top-left corner of the canvas to open it. From its **Triggers** category, click or drag **Before mail is sent** onto the canvas. You can also press **w** then **a** and search for it.
 4. With the trigger selected, choose under **Only from** in the Inspector: one mailbox, so the copy is only added to mail sent from that address, or leave it empty for every mailbox.
 5. From the **Mail** category of the step palette, add **Add a Bcc**.
 6. With **Add a Bcc** selected, enter the address to copy under **Address** in the Inspector, for example `archive@example.com`.

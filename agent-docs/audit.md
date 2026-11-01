@@ -15,6 +15,7 @@ See also [AGENTS.md](../AGENTS.md), [workspaces.md](workspaces.md) (the data exp
 | Retention                 | `src/audit/prune.ts` → `pruneAuditEvents` · run by the `system:audit-prune` workflow (`src/workflow/builtins/system.ts`) · `METIS_AUDIT_RETENTION_DAYS` in `src/config/schema.ts` → `auditConfigSchema`                   |
 | Procedures                | `src/server/routes/audit.ts` → `audit.mine`, `audit.workspace` · `src/server/routes/dashboard.ts` → `dashboard.audit` (`src/dashboard/stats.ts` → `dashboardAudit`)                                                       |
 | Owner MCP tool            | `getInstanceAuditLog` in `src/mastra/mcp/tools/instance.ts` (body `src/ops/instance.ts` → `instanceAuditLog`)                                                                                                             |
+| Sentences                 | `src/audit/format.ts` → `formatAuditEvent` (one sentence per event), `auditPhrase` (its fixed wording, for search) · names looked up in `src/audit/index.ts` → `memberNames`                                              |
 | UI                        | shared list `src/components/audit-event-list.tsx` → `AuditEventList` · `src/app/settings/security/_components/security-activity-section.tsx` · `src/app/w/[slug]/settings/activity/page.tsx` · `src/app/dashboard/audit/` |
 | Export                    | `src/account/export.ts` → `securityActivity` ([workspaces.md](workspaces.md))                                                                                                                                             |
 
@@ -56,8 +57,10 @@ See also [AGENTS.md](../AGENTS.md), [workspaces.md](workspaces.md) (the data exp
 ### Search and filter
 
 - **All three views search and filter on the server, inside their scope.** `audit.mine`, `audit.workspace` and `dashboard.audit` take `q` and `action` beside `cursor`, so paging stays correct; filtering loaded pages in the browser would miss older events.
-- **Search matches the text a row shows:** its title, the target, the actor's email, the workspace name, and the IP in the views that show IPs.
-  - Titles live in code, not in the row, so `filterScope` matches `q` against every `auditEventTitle` (action × resource kind) and turns the hits into `action`/`resource_kind` conditions.
+- **Search matches the text a row shows:** its title and its sentence's fixed wording, the target, the actor's email, the workspace name, and the IP in the views that show IPs.
+  - Titles and sentence wording live in code, not in the row, so `filterScope` matches `q` against every `auditEventTitle`, `AUDIT_ACTION_LABELS` entry (the Event type list's name, matched for every resource kind) and `auditPhrase` (action × resource kind) and turns the hits into `action`/`resource_kind` conditions.
+- **Each row reads as one sentence led by the actor** (`formatAuditEvent`), with the workspace, channel, time and network details as a muted line under it; the instance audit-log tool returns the same `sentence`.
+  - Actor and target names are looked up live from `actor_user_id` and `target_user_id` while listing; a deleted account, an invitee and anyone with no name fall back to the stored email, so names are not searchable and the data export carries no names.
   - The workspace view never searches IP, the same way it never returns it.
 - **Each view's type filter lists only the actions it can contain.** The dashboard lists `AUDIT_ACTIONS`, Security activity `USER_AUDIT_ACTIONS` (no `account.deleted`, which no user's feed can hold), workspace Activity `WORKSPACE_AUDIT_ACTIONS`.
   - A new action written with a `workspaceId` joins `WORKSPACE_AUDIT_ACTIONS`, or workspace admins cannot filter for it.

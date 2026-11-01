@@ -14,8 +14,8 @@ import { ChevronRight, Loader2 } from "lucide-react";
 import { useState } from "react";
 
 import { DriveIcon } from "@/components/drive-icon";
-import { RESOURCE_PROVIDER_META } from "@/components/provider-meta";
 import type { DriveProvider } from "@/connections/types";
+import { driveName } from "@/drive/name";
 import { useWorkspaceSlug } from "@/hooks/use-workspace-path";
 import { rpc } from "@/lib/orpc";
 import type { DriveEntryRow, WorkspaceDrive } from "@/server/schema";
@@ -76,8 +76,7 @@ export function DrivePickerDialog({
     if (current.id !== null) return entry.name;
     const drive = drives.find((d) => d.driveId === entry.driveId);
     if (!drive) return entry.name;
-    const where = drive.server ?? RESOURCE_PROVIDER_META.drive[drive.provider].label;
-    return `${where} · ${drive.email}`;
+    return driveName(drive, drives);
   };
 
   const [wasOpen, setWasOpen] = useState(open);

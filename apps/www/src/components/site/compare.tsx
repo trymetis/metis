@@ -15,7 +15,7 @@ const ROWS: [string, string, string][] = [
     "Your own key: OpenAI, Anthropic or any OpenAI-compatible endpoint",
     "Your own key, or a model on your own hardware",
   ],
-  ["Domain", "Your domain or a trymetis.email subdomain", "Your domain, with HTTPS from Caddy"],
+  ["Domain", "Your domain or a metis-suite.app subdomain", "Your domain, with HTTPS from Caddy"],
   ["Mail at your own domain through Cloudflare Email or Resend", "Not available", "Available"],
   [
     "What Metis keeps",

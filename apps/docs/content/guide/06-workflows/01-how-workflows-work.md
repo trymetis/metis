@@ -18,15 +18,17 @@ The **sidebar** on the left lists every workflow you can see:
 The **editor** shows the workflow you picked. It has five parts:
 
 - **The top bar** holds the workflow's name, the **Enabled** switch, the save status and the buttons **Test**, **Run now** and **Save**.
-- **The step palette** lists every step you can add. It starts closed. Click **Show steps** (the panel icon at the left end of the top bar) to open it on the left of the canvas.
+- **The step palette** lists every step you can add. It starts closed, as a small icon named **Show steps** in the top-left corner of the canvas. Click the icon to open the palette. It floats over the left side of the canvas.
 - **The canvas** in the middle shows the workflow as connected steps. This is where you build and change it.
 - **The Inspector** on the right shows the settings of the step you select. When no step is selected, it shows a summary of the workflow and its **Workflow settings**.
 - **The dock** under the canvas has two tabs, **Runs** and **Test run**. Click **Expand** at its right end to open it, and **Collapse** to close it again.
 
-<img src="/images/workflows/workflows-page.webp" alt="The Workflows page with the list of workflows, the step palette, a workflow on the canvas and the Inspector" class="dark:hidden" />
-<img src="/images/workflows/workflows-page-dark.webp" alt="The Workflows page with the list of workflows, the step palette, a workflow on the canvas and the Inspector" class="hidden dark:block" />
+<img src="/images/workflows/workflows-page.webp" alt="The Workflows page with the list of workflows, the open step palette over the canvas, a workflow on the canvas and the Inspector" class="dark:hidden" />
+<img src="/images/workflows/workflows-page-dark.webp" alt="The Workflows page with the list of workflows, the open step palette over the canvas, a workflow on the canvas and the Inspector" class="hidden dark:block" />
 
-You can drag the edges of the palette, the Inspector and the dock to resize them. The palette starts closed, so the canvas has more room. Click **Show steps** in the top bar to open it, and **Hide steps** to close it again. Use **Hide the inspector** to make more room for the canvas. If you resize the palette or the Inspector while the palette is open, this browser remembers the layout and opens the palette on your next visit.
+The palette opens with the **Show steps** icon and closes with the **Hide steps** icon, which takes its place beside the search box at the top of the open palette. Each time you open a workflow, the palette starts closed. It also closes when you save a new workflow for the first time. The palette lies on top of the canvas, so the canvas keeps its full width.
+
+You can drag the edges of the Inspector and the dock to resize them. Use **Hide the inspector** to make more room for the canvas. This browser remembers the sizes of the Inspector and the dock.
 
 The page opens the first workflow in the list. If you have none, it opens the **Start from a manual trigger** template, not yet saved.
 

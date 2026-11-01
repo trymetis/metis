@@ -1,6 +1,7 @@
 import "server-only";
 import { z } from "zod";
 
+import { formatAuditEvent } from "@/audit/format";
 import type { ConnectionProvider } from "@/connections/types";
 import { latestPreflightRun } from "@/dashboard/preflight";
 import {
@@ -63,7 +64,9 @@ export const instanceWorkspacesOutput = dashboardWorkspacesOutputSchema;
 export const instanceAutomationOutput = dashboardAutomationOutputSchema;
 export const instanceMcpClientsOutput = dashboardMcpOutputSchema;
 export const instanceAuditLogOutput = dashboardAuditOutputSchema.extend({
-  events: z.array(auditEventSchema.omit({ ip: true, userAgent: true })),
+  events: z.array(
+    auditEventSchema.omit({ ip: true, userAgent: true }).extend({ sentence: z.string() }),
+  ),
 });
 export const systemCheckOutput = dashboardSystemCheckOutputSchema;
 export const preflightWarningsOutput = dashboardPreflightOutputSchema;
@@ -89,7 +92,10 @@ export const instanceAuditLog = async (
   const page = await dashboardAudit({ cursor });
   return {
     ...page,
-    events: page.events.map(({ ip: _, userAgent: __, ...event }) => event),
+    events: page.events.map(({ ip: _, userAgent: __, ...event }) => ({
+      ...event,
+      sentence: formatAuditEvent({ ...event, ip: null, userAgent: null }),
+    })),
   };
 };
 

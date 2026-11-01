@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@metis/ui/components/button";
 import {
   Command,
   CommandDialog,
@@ -10,6 +11,8 @@ import {
   CommandList,
 } from "@metis/ui/components/command";
 import { cn } from "@metis/ui/lib/utils";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { useState } from "react";
 
 import { CATEGORY_BADGE, NodeIcon } from "@/components/workflow-graph/node-meta";
 import { allSteps, CATEGORY_LABELS, STEP_CATEGORIES, type StepDef } from "@/workflow/steps";
@@ -86,16 +89,45 @@ function StepList({ onPick, draggable }: { onPick: (step: string) => void; dragg
   );
 }
 
-export function StepPalette() {
+export function FloatingPalette() {
   const addStep = useAddStep();
+  const [open, setOpen] = useState(false);
+  const label = open ? "Hide steps" : "Show steps";
+  const toggle = (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      aria-label={label}
+      aria-expanded={open}
+      title={label}
+      className="shrink-0"
+      onClick={() => setOpen((value) => !value)}
+    >
+      {open ? <PanelLeftClose /> : <PanelLeftOpen />}
+    </Button>
+  );
+
+  if (!open) {
+    return (
+      <div className="absolute top-3 left-3 z-10 rounded-xl border border-border bg-panel p-1 shadow-lg">
+        {toggle}
+      </div>
+    );
+  }
+
   return (
     <Command
       aria-label="Steps"
-      className="h-full rounded-none! bg-panel"
+      className="absolute top-3 bottom-3 left-3 z-10 h-auto w-72 origin-top-left rounded-xl! border border-border bg-panel p-1 shadow-lg duration-150 animate-in fade-in-0 zoom-in-95"
       filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
     >
-      <CommandInput placeholder="Search steps" />
-      <p className="px-3 pt-2 pb-1 text-[11px] text-faint">
+      <div className="flex items-center gap-1">
+        {toggle}
+        <div className="min-w-0 flex-1 *:data-[slot=command-input-wrapper]:p-0">
+          <CommandInput placeholder="Search steps" />
+        </div>
+      </div>
+      <p className="px-2 pt-2 pb-1 text-[11px] text-faint">
         Drag a step onto the canvas, or click it
       </p>
       <div className="min-h-0 flex-1 overflow-y-auto">

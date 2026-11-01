@@ -133,7 +133,6 @@ async function detectRegion(accessToken: string): Promise<Region> {
       const res = await fetch(`https://mail.zoho.${region}/api/accounts`, {
         headers: { Authorization: `Zoho-oauthtoken ${accessToken}` },
       });
-      console.log(`[zoho-mail] detectRegion mail.zoho.${region}/api/accounts → ${res.status}`);
       if (res.ok) {
         regionCache.set(accessToken, region);
         await getCache().set(key, region, REGION_TTL_SEC);
@@ -221,9 +220,6 @@ async function loadAccount(accessToken: string): Promise<AccountCache> {
   const accountsRes = await zohoFetch(accessToken, "/accounts");
   const accountsData = await accountsRes.json();
   const account = accountsData?.data?.[0];
-  console.log(
-    `[zoho-mail] loadAccount → ${accountsData?.data?.length ?? 0} account(s), using ${account?.accountId ?? "none"}`,
-  );
   if (!account?.accountId) throw new Error("No Zoho account found for user");
 
   const accountId = String(account.accountId);
@@ -236,7 +232,6 @@ async function loadAccount(accessToken: string): Promise<AccountCache> {
     const name = String(folder?.folderName ?? "");
     if (name) folderIds[name.toLowerCase()] = String(folder.folderId);
   }
-  console.log(`[zoho-mail] loadAccount → ${Object.keys(folderIds).length} folder(s)`);
 
   const entry: AccountCache = {
     accountId,

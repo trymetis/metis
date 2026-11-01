@@ -19,6 +19,7 @@ const THEMES = [
 
 const stepSchema = z.union([
   z.object({ goto: z.string() }),
+  z.object({ follow: z.string() }),
   z.object({ click: z.string(), nth: z.number().optional() }),
   z.object({ dblclick: z.string() }),
   z.object({ rightClick: z.string() }),
@@ -154,7 +155,11 @@ async function drag(page: Page, from: string, to: string) {
 async function run(page: Page, step: Step, a: Account) {
   if ("clearReadLater" in step) await clearReadLater(page, a);
   else if ("goto" in step) await page.goto(resolve(step.goto, a));
-  else if ("click" in step)
+  else if ("follow" in step) {
+    const href = await page.locator(step.follow).first().getAttribute("href");
+    if (!href) throw new Error(`${step.follow} has no href`);
+    await page.goto(new URL(href, page.url()).href);
+  } else if ("click" in step)
     await page
       .locator(step.click)
       .nth(step.nth ?? 0)
@@ -239,7 +244,8 @@ async function capture(page: Page, shot: Shot, path: string) {
   else await shoot(page, path, { fullPage: shot.fullPage });
 }
 
-async function switchTheme(page: Page, theme: string) {
+async function switchTheme(page: Page, theme: "light" | "dark") {
+  await page.emulateMedia({ colorScheme: theme });
   await page.evaluate((value) => {
     localStorage.setItem("theme", value);
     window.dispatchEvent(new StorageEvent("storage", { key: "theme", newValue: value }));

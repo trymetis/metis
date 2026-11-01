@@ -1,6 +1,7 @@
 import "server-only";
 import { z } from "zod";
 
+import { driveName } from "@/drive/name";
 import {
   cancelWorkflowRunOutputSchema,
   previewDecisionOutputSchema,
@@ -129,6 +130,7 @@ export async function workspaceScope(ctx: WorkspaceCtx): Promise<WorkspaceScope>
       driveId: d.driveId,
       linkId: d.linkId,
       email: d.email,
+      name: driveName(d, ctx.drives),
       slug: d.driveSlug,
       aiEnabled: d.policy.ai,
     })),

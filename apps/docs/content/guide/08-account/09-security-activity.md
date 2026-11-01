@@ -24,19 +24,31 @@ The card says "Security-relevant changes you made, and changes other people made
 
 ## What each row shows
 
-Each row is one change:
+Each row is one change, shown on two lines.
 
-- **What happened**, such as **Member role changed** or **Workspace invite sent**.
-- **A badge** if the change came from an AI tool: **Workspace Assistant** when the assistant made it for you, or **MCP client** when an outside AI app made it. A change you made yourself in the app has no badge.
-- **What it was about**, such as an email address or a client's name. Some rows add more:
-  - a role change shows the old and new role, for example "member → admin";
-  - a workspace invite shows the role, "as admin" or "as member";
-  - an MCP client row lists the sensitive tools that were turned on;
-  - a removed mailbox, calendar or drive says "access revoked at the provider" when Metis Suite also took back its access at the provider.
-- **Who made the change**: "by" and their email address. If the account no longer exists and its address is unknown, the row says "by a deleted account".
+The first line is one sentence. It starts with who made the change and says what they did. For example:
+
+- "Alice Martin changed Bob Lee's role from member to admin"
+- "Alice Martin invited carol@example.com to Design as an admin"
+- "Alice Martin revoked the invite for carol@example.com to Design"
+- "Alice Martin removed the drive alice@example.com and revoked its access at the provider"
+- "Alice Martin turned off sign-in alerts"
+
+The table under [What is recorded](#what-is-recorded) shows how each kind of row reads.
+
+How people are named in the sentence:
+
+- **The person who made the change, and a member it was done to,** are shown by the name on their account today.
+- **If the account has no name, or it was deleted,** the row shows their email address instead.
+- **If neither is known,** the row says "A deleted account" (or "a deleted account" in the middle of the sentence).
+- **Invited people, MCP clients, mailboxes, calendars, drives and connected accounts** are shown as they were named when the change was made, such as an email address or a client's name.
+
+The second line is smaller and lighter. It lists these parts, separated by a dot (·), leaving out any that do not apply:
+
 - **The workspace**, when the change happened in one. Changes in a workspace that was deleted later still show its name.
+- **Where the change came from**, if it came from an AI tool: **Workspace Assistant** when the assistant made it for you, or **MCP client** when an outside AI app made it. A change you made yourself in the app shows nothing here.
 - **When** it happened (date and time).
-- **Where it came from**: the network address (IP address) and the device, such as "Chrome 130 on Windows", when Metis Suite knows them.
+- **The network address** (IP address) and **the device**, such as "Chrome 130 on Windows", when Metis Suite knows them.
 
 The newest change is at the top. The card shows 50 rows at a time. Click **Load more** to see older ones. You cannot edit or delete rows.
 
@@ -55,18 +67,22 @@ Search looks through all your security activity, not only the rows already on sc
 
 Search finds rows where your text appears in:
 
-- the row title, such as **Member removed** or **Drive detached**;
-- what the change was about, such as an email address or a client's name;
-- the email address of the person who made the change;
+- the event type, such as **Member removed** or **Workspace invite revoked**. These are the names in the [event type list](#filter-by-event-type);
+- the fixed words of the sentence, without the names, email addresses, workspaces, roles, tools or versions in it. For example, "revoked the invite", "turned off", "role from" and "sent a sign-up invite" all find rows, but "role from member" does not;
+- what the change was about: the invited person's or member's email address, the client's name, the email address of the mailbox, calendar or drive, or the versions of an undone upgrade;
+- the email address of the person who made the change. Their name is not searched;
 - the workspace's name;
 - the IP address.
 
+A search for the sentence's words finds every change of that type, not only rows that read exactly like your text. For example, "revoked its access at the provider" finds every removed mailbox, calendar and drive, also the ones whose access was not revoked.
+
 Search does not look at:
 
-- the extra details on a row: the role change ("member → admin"), the invite role ("as admin"), the sensitive tools, or "access revoked at the provider";
+- people's names. Search for their email address instead;
+- the roles and the names of tools in a sentence, such as "member to admin";
 - the device, such as "Chrome 130 on Windows";
 - the date and time;
-- the **Workspace Assistant** and **MCP client** badges. Typing "MCP client" still finds rows whose title contains it, such as **MCP client approved**;
+- the words **Workspace Assistant** and **MCP client** on the second line. Typing "MCP client" still finds rows whose event type or sentence contains it, such as **MCP client approved** or "added the MCP client";
 - "a deleted account".
 
 How the text is matched:
@@ -101,7 +117,7 @@ Pick a type to show only those rows:
 - **Sign-up invite revoked**
 - **Instance upgrade undone**
 
-Rows name the kind of resource, such as **Mailbox removed** or **Drive detached**. The list uses one type for all three kinds:
+A row's sentence names the kind of resource, such as "removed the mailbox" or "detached the drive". The list uses one type for all three kinds:
 
 - **Resource removed** shows every removed mailbox, calendar and drive.
 - **Resource detached from a workspace** shows every detached mailbox, calendar and drive.
@@ -116,25 +132,29 @@ There is no filter by date. Search and filter only narrow the list. They never s
 
 ## What is recorded
 
-| Row title                                                       | Recorded when                                                                                                                                                                                                                                                      |
-| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Account deleted**                                             | Someone deletes their Metis Suite account. Only the owner of your Metis Suite server sees this row. See [Delete your account](/guide/account/delete-your-account).                                                                                                 |
-| **Two-factor authentication disabled**                          | Someone clicks **Disable 2FA** and confirms. See [Two-factor authentication](/guide/account/two-factor-authentication#turn-two-factor-authentication-off-and-on-again).                                                                                            |
-| **Sign-in alerts turned off**                                   | Someone turns off the **Sign-in alerts** switch. Turning it back on is not recorded. See [Sign-in alerts](/guide/account/sign-in-alerts#turn-sign-in-alerts-off-or-on).                                                                                            |
-| **MCP client added**                                            | Someone adds an MCP client by hand under **Settings**, **MCP clients**.                                                                                                                                                                                            |
-| **MCP client approved**                                         | Someone approves an AI app's request to connect.                                                                                                                                                                                                                   |
-| **MCP client re-enabled**                                       | Someone turns a client that was off back on.                                                                                                                                                                                                                       |
-| **Sensitive MCP tools turned on**                               | Someone turns on one or more sensitive tools for a client. See [Manage MCP clients](/guide/assistant/manage-mcp-clients).                                                                                                                                          |
-| **Account disconnected**                                        | Someone disconnects a connected account.                                                                                                                                                                                                                           |
-| **Mailbox removed**, **Calendar removed**, **Drive removed**    | Someone deletes a mailbox, calendar or drive from their account settings. See [Manage your connected accounts](/guide/workspaces/manage-connected-accounts).                                                                                                       |
-| **Mailbox detached**, **Calendar detached**, **Drive detached** | Someone takes a mailbox, calendar or drive out of one workspace. This can happen in account settings, on the workspace's **Mailboxes**, **Calendars** or **Drives** page, or with **Detach from this workspace** in search.                                        |
-| **Member role changed**                                         | The owner changes a member's role.                                                                                                                                                                                                                                 |
-| **Member removed**                                              | An owner or admin removes a member, or an admin removes themselves.                                                                                                                                                                                                |
-| **Ownership transferred**                                       | The owner makes another member the owner.                                                                                                                                                                                                                          |
-| **Workspace deleted**                                           | The owner deletes a workspace.                                                                                                                                                                                                                                     |
-| **Workspace invite sent**, **Workspace invite revoked**         | An owner or admin invites someone to a workspace, or cancels a pending invite. See [Members and roles](/guide/workspaces/members-and-roles).                                                                                                                       |
-| **Sign-up invite sent**, **Sign-up invite revoked**             | Someone invites a person to create an account, or revokes that invite. See [Invite people to Metis Suite](/guide/account/invite-people).                                                                                                                           |
-| **Instance upgrade undone**                                     | The owner of your Metis Suite server undoes the last upgrade of the server. The row shows the version it left and the version it returned to. Only that owner sees this row. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo#undo-the-last-upgrade). |
+The **Event type** column holds the names in the [event type list](#filter-by-event-type). **Account deleted** is only in the server owner's list. Search also finds rows by these names. They do not appear on the rows themselves. In the **The row reads** column, "…" stands for the person who made the change.
+
+| Event type                             | The row reads                                                                         | Recorded when                                                                                                                                                                                                                                                                 |
+| -------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Account deleted**                    | "… deleted their account"                                                             | Someone deletes their Metis Suite account. If workspaces were deleted with it, the row adds how many, for example "and 2 workspaces with it". Only the owner of your Metis Suite server sees this row. See [Delete your account](/guide/account/delete-your-account).         |
+| **Two-factor authentication disabled** | "… turned off two-factor authentication"                                              | Someone clicks **Disable 2FA** and confirms. See [Two-factor authentication](/guide/account/two-factor-authentication#turn-two-factor-authentication-off-and-on-again).                                                                                                       |
+| **Sign-in alerts turned off**          | "… turned off sign-in alerts"                                                         | Someone turns off the **Sign-in alerts** switch. Turning it back on is not recorded. See [Sign-in alerts](/guide/account/sign-in-alerts#turn-sign-in-alerts-off-or-on).                                                                                                       |
+| **MCP client added**                   | "… added the MCP client Notes App"                                                    | Someone adds an MCP client by hand under **Settings**, **MCP clients**.                                                                                                                                                                                                       |
+| **MCP client approved**                | "… approved the MCP client Notes App"                                                 | Someone approves an AI app's request to connect. If sensitive tools were turned on too, the row adds "with sensitive tools" and their names.                                                                                                                                  |
+| **MCP client re-enabled**              | "… re-enabled the MCP client Notes App"                                               | Someone turns a client that was off back on.                                                                                                                                                                                                                                  |
+| **Sensitive MCP tools turned on**      | "… turned on sensitive tools for Notes App", followed by the tools' names             | Someone turns on one or more sensitive tools for a client. See [Manage MCP clients](/guide/assistant/manage-mcp-clients).                                                                                                                                                     |
+| **Account disconnected**               | "… disconnected alice@example.com"                                                    | Someone disconnects a connected account.                                                                                                                                                                                                                                      |
+| **Resource removed**                   | "… removed the drive alice@example.com"                                               | Someone deletes a mailbox, calendar or drive from their account settings. If Metis Suite also took back its access at the provider, the row adds "and revoked its access at the provider". See [Manage your connected accounts](/guide/workspaces/manage-connected-accounts). |
+| **Resource detached from a workspace** | "… detached the calendar alice@example.com from Design"                               | Someone takes a mailbox, calendar or drive out of one workspace. This can happen in account settings, on the workspace's **Mailboxes**, **Calendars** or **Drives** page, or with **Detach from this workspace** in search.                                                   |
+| **Member role changed**                | "… changed Bob Lee's role from member to admin"                                       | The owner changes a member's role.                                                                                                                                                                                                                                            |
+| **Member removed**                     | "… removed Bob Lee from Design"                                                       | An owner or admin removes a member, or an admin removes themselves.                                                                                                                                                                                                           |
+| **Ownership transferred**              | "… transferred ownership of Design to Bob Lee"                                        | The owner makes another member the owner.                                                                                                                                                                                                                                     |
+| **Workspace deleted**                  | "… deleted the workspace Design"                                                      | The owner deletes a workspace.                                                                                                                                                                                                                                                |
+| **Workspace invite sent**              | "… invited carol@example.com to Design as an admin"                                   | An owner or admin invites someone to a workspace. See [Members and roles](/guide/workspaces/members-and-roles).                                                                                                                                                               |
+| **Workspace invite revoked**           | "… revoked the invite for carol@example.com to Design"                                | An owner or admin cancels a pending invite.                                                                                                                                                                                                                                   |
+| **Sign-up invite sent**                | "… sent a sign-up invite to carol@example.com"                                        | Someone invites a person to create an account. See [Invite people to Metis Suite](/guide/account/invite-people).                                                                                                                                                              |
+| **Sign-up invite revoked**             | "… revoked the sign-up invite for carol@example.com"                                  | Someone revokes a sign-up invite.                                                                                                                                                                                                                                             |
+| **Instance upgrade undone**            | "… undid the last upgrade (&lt;version it left&gt; → &lt;version it returned to&gt;)" | The owner of your Metis Suite server undoes the last upgrade of the server. The brackets hold the version the undo left and the version it returned to. Only that owner sees this row. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo#undo-the-last-upgrade).  |
 
 You see a row only if you made the change or it was made to you.
 
@@ -158,4 +178,4 @@ Act quickly:
 - Check your MCP clients, and turn off or remove any you do not know. See [Manage MCP clients](/guide/assistant/manage-mcp-clients).
 - If the change happened in a workspace, tell its owner or an admin.
 
-A [sign-in alert](/guide/account/sign-in-alerts) can warn you sooner. If you get one for a sign-in you did not make, follow the same steps. If you see **Sign-in alerts turned off** and you did not turn them off, turn them back on.
+A [sign-in alert](/guide/account/sign-in-alerts) can warn you sooner. If you get one for a sign-in you did not make, follow the same steps. If you see a row that says someone "turned off sign-in alerts" and you did not turn them off, turn them back on.

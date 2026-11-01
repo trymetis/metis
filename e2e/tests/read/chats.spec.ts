@@ -68,10 +68,8 @@ test("the drive chats replay their scripted turns", async ({ page, account }) =>
     await test.step(kind, async () => {
       await page.goto(drivePath(account, kind));
       await expect(
-        page
-          .getByRole("navigation", { name: "breadcrumb" })
-          .getByText(account.email, { exact: true }),
-      ).toBeVisible();
+        page.getByRole("navigation", { name: "breadcrumb" }).locator('[aria-current="page"]'),
+      ).not.toHaveText("Drive");
       await page.getByRole("button", { name: "Drive AI", exact: true }).click();
       await converse(
         page,

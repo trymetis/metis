@@ -8,9 +8,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Whi
 
 ### Changed
 
+- Activity and audit logs show each event as one sentence that names who did it, such as "Alice Martin revoked the invite for carol@example.com to Design", with the workspace, time and device on a line under it. Searching by the sentence's wording finds the event.
 - Drive: a file or folder with no modified date or size leaves that cell empty instead of showing a dash.
-- Workflows: the step palette starts closed so the canvas gets the full width; **Show steps** in the top bar opens it.
+- Workflows: the step palette floats over the canvas instead of taking a column beside it. It starts closed as an icon in the canvas's top-left corner; the icon opens it with its search box and closes it again. The zoom, Fit View, Tidy up the layout and minimap buttons move to a row in the canvas's top-right corner, so the open palette never covers them.
 - Workflows: an Ask step's questions start collapsed to their number, type and text, so a step with several questions stays short; click a question to edit it and **Collapse** to fold it again. A new question opens ready to type.
+- Mail: Zoho mailboxes stop writing a server log line for every region probe and account lookup.
+- Mail: **Print** and **View original** open in a new tab instead of a pop-up window, so a pop-up blocker no longer stops them. View original shows a summary with the SPF, DKIM and DMARC results, a **Download original** button for the `.eml` file and **Copy to clipboard**. Both now open in the mobile app too; on mobile, Print shows the print page without a print dialog.
+- Compose: the **Link** button takes the address in a small field above the toolbar, with **Remove link** when the cursor is on a link, instead of the browser's prompt. An address without `https://` gets it added, an email address becomes an email link and a phone number a phone link.
 - Mail: the message toolbar drops its Reply button, since the Reply bar under the message does the same, and shows Draft apology, Print and View original as buttons instead of in a **More actions** menu.
 
 ### Added
@@ -20,10 +24,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Whi
 
 ### Fixed
 
+- Drive: drives are named after their server (S3, WebDAV, FTP, SFTP) or as "Google Drive · <email>" and "OneDrive · <email>" in All drives, the breadcrumb, the browser tab, search and its suggestions, the drive picker, the assistant's @ picker and workflow steps, instead of all showing the same email address; pinned folders in All drives show their drive under the folder name.
+- Mail, calendar and drive pages show the mailbox, calendar or drive in the browser tab title, which was missing.
 - Calendar: Year view marks each day that has events with a dot, instead of showing every month empty.
 - Calendar: Google and Microsoft calendars show every event in a view, instead of stopping after each calendar's first 250 events.
 - Calendar: moving or resizing an event by dragging shows an error when the change could not be saved, instead of leaving the event in its old place without a word.
 - Mail: **Pick date & time…** for Send later and Snooze accepts any future time, such as ten minutes from now; it starts at the next whole hour but no longer refuses an earlier time with **OK**.
+- Workflows: Microsoft push follows a changed **Public URL for webhooks and push** at its next renewal, instead of notifying the old address until the URL is cleared and set again, and a Microsoft subscription that no longer exists is created again instead of failing at every renewal.
 - Compose: pressing Enter after typing a saved contact's full address adds it as a recipient, instead of clearing the text; with a suggestion highlighted, Enter still picks the suggestion.
 
 ## 0.2.1 - 2026-10-30

@@ -18,6 +18,7 @@ import type {
 } from "@/types/drive";
 
 import { type DriveAdapter, getDriveAdapter } from "./adapter";
+import { driveName } from "./name";
 
 const MAX_DEPTH = 32;
 
@@ -370,7 +371,7 @@ export function aggregateDriveSurface(drives: ResolvedDrive[]): DriveSurface {
         return {
           entries: drives.map((account) => ({
             id: compositeDriveId(account.driveId, ""),
-            name: account.email,
+            name: driveName(account, drives),
             kind: "folder" as const,
             mimeType: null,
             size: null,

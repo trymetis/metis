@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"maps"
 	"net"
 	"net/http"
 	"os"
@@ -33,9 +34,15 @@ const (
 	defaultUpdaterSocket = "/run/metis-updater/updater.sock"
 	updaterReadyError    = "http://app:3000/api/readyz was not ready within 2m0s (last: answered 503)"
 	updaterSnapshotDir   = "/opt/metis-suite/.updater-snapshot"
+	defaultReleaseDir    = "/release"
+	nextReleaseNotes     = "### Added\n\n- Saved searches can be pinned to the sidebar.\n\n### Fixed\n\n- Calendar invites from Outlook show the organizer's time zone."
 )
 
-var releasePattern = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`)
+var (
+	releasePattern  = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`)
+	releaseHeading  = regexp.MustCompile(`(?m)^## ([0-9]+\.[0-9]+\.[0-9]+)\b`)
+	releaseDefaults updaterSettings
+)
 
 type updaterSettings struct {
 	Current   string            `json:"current"`
@@ -47,16 +54,60 @@ type updaterSettings struct {
 	StepMs    int               `json:"stepMs"`
 }
 
-func defaultUpdaterSettings() updaterSettings {
+func loadReleaseDefaults(dir string) (updaterSettings, error) {
+	pkg, err := os.ReadFile(filepath.Join(dir, "package.json"))
+	if err != nil {
+		return updaterSettings{}, err
+	}
+	var manifest struct {
+		Version string `json:"version"`
+	}
+	if err := json.Unmarshal(pkg, &manifest); err != nil {
+		return updaterSettings{}, fmt.Errorf("package.json: %w", err)
+	}
+	current := manifest.Version
+	if !releasePattern.MatchString(current) {
+		return updaterSettings{}, fmt.Errorf("package.json version %q is not a release version", current)
+	}
+	changelog, err := os.ReadFile(filepath.Join(dir, "CHANGELOG.md"))
+	if err != nil {
+		return updaterSettings{}, err
+	}
+	history := []string{current}
+	for _, match := range releaseHeading.FindAllStringSubmatch(string(changelog), -1) {
+		if version := match[1]; !slices.Contains(history, version) && olderRelease(version, current) {
+			history = append(history, version)
+		}
+	}
+	slices.SortFunc(history, func(a, b string) int {
+		if olderRelease(a, b) {
+			return 1
+		}
+		return -1
+	})
+	parts := strings.Split(current, ".")
+	minor, _ := strconv.Atoi(parts[1])
+	next := fmt.Sprintf("%s.%d.0", parts[0], minor+1)
+	rollback := ""
+	if len(history) > 1 {
+		rollback = history[1]
+	}
 	return updaterSettings{
-		Current:   "1.1.0",
-		Releases:  []string{"1.2.0", "1.1.0", "1.0.0"},
-		Notes:     map[string]string{"1.2.0": "### Added\n\n- Faster inbox loading"},
-		Rollback:  "1.0.0",
+		Current:   current,
+		Releases:  append([]string{next}, history...),
+		Notes:     map[string]string{next: nextReleaseNotes},
+		Rollback:  rollback,
 		Snapshots: true,
 		Outcome:   "succeed",
 		StepMs:    1_000,
-	}
+	}, nil
+}
+
+func defaultUpdaterSettings() updaterSettings {
+	settings := releaseDefaults
+	settings.Releases = slices.Clone(releaseDefaults.Releases)
+	settings.Notes = maps.Clone(releaseDefaults.Notes)
+	return settings
 }
 
 type upgradePlan struct {
@@ -416,6 +467,15 @@ func runUpdater() error {
 	if socket == "" {
 		socket = defaultUpdaterSocket
 	}
+	releaseDir := os.Getenv("E2E_RELEASE_DIR")
+	if releaseDir == "" {
+		releaseDir = defaultReleaseDir
+	}
+	defaults, err := loadReleaseDefaults(releaseDir)
+	if err != nil {
+		return fmt.Errorf("release history: %w", err)
+	}
+	releaseDefaults = defaults
 	fake := &updaterFake{socket: socket, settings: defaultUpdaterSettings(), snapshotAt: time.Now().Add(-time.Hour)}
 	if err := fake.up(); err != nil {
 		return err

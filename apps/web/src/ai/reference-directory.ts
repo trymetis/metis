@@ -10,6 +10,7 @@ import {
 import { workspaceCalendarAccounts } from "@/calendar/session";
 import type { MailProvider } from "@/connections/types";
 import { driveSurfaceFor, type ResolvedDrive } from "@/drive/aggregate";
+import { DRIVE_PROVIDER_LABELS, driveName } from "@/drive/name";
 import { workspaceDrives } from "@/drive/session";
 import type { MailAdapter } from "@/mail/adapter";
 import { adapterForMailbox, type ResolvedMailbox } from "@/mail/aggregate";
@@ -172,13 +173,13 @@ async function suggestCalendars(
 
 function suggestDrives(scope: ReferenceScope, query: string, limit: number): ResolvedReference[] {
   return scope.drives
-    .filter((d) => matches(query, d.email, d.driveSlug))
+    .filter((d) => matches(query, driveName(d, scope.drives), d.email, d.driveSlug))
     .slice(0, limit)
     .map((d) => ({
       type: "drive" as const,
       id: d.driveId,
-      label: d.email,
-      detail: d.provider,
+      label: driveName(d, scope.drives),
+      detail: DRIVE_PROVIDER_LABELS[d.provider],
     }));
 }
 
@@ -317,7 +318,7 @@ async function suggestFiles(
         type: "file" as const,
         id: packReferenceId(entry.driveId, entry.id),
         label: entry.name,
-        detail: drive?.server ?? drive?.provider ?? entry.driveSlug,
+        detail: drive ? driveName(drive, scope.drives) : entry.driveSlug,
       };
     });
 }
@@ -372,8 +373,8 @@ function resolveDrive(scope: ReferenceScope, ref: AgentReference): ReferenceDeta
   if (!drive) return null;
   return {
     ...ref,
-    label: drive.email,
-    detail: drive.provider,
+    label: driveName(drive, scope.drives),
+    detail: DRIVE_PROVIDER_LABELS[drive.provider],
     toolArgs: { driveId: drive.driveId },
   };
 }
