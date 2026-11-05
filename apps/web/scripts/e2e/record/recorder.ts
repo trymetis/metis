@@ -33,6 +33,8 @@ export interface ScenarioUsage {
   recorded: number;
   misses: number;
   failures: string[];
+  costNanoUsd: number;
+  uncosted: number;
   pending: number;
   lastActivity: number;
 }
@@ -92,6 +94,63 @@ function hasError(json: string): boolean {
   } catch {
     return false;
   }
+}
+
+const DECISION_PATH = "/systemone";
+const NANO_USD_PER_USD = 1_000_000_000;
+export const DECISION_INPUT_NANO_USD_PER_TOKEN = 42;
+export const DECISION_OUTPUT_NANO_USD_PER_TOKEN = 0;
+
+const usageSchema = z.object({
+  usage: z
+    .object({
+      cost: z.number().optional(),
+      input_tokens: z.number().optional(),
+      output_tokens: z.number().optional(),
+    })
+    .nullish(),
+});
+
+type ResponseUsage = NonNullable<z.infer<typeof usageSchema>["usage"]>;
+
+export function formatUsd(nanoUsd: number): string {
+  return `$${(nanoUsd / NANO_USD_PER_USD).toFixed(9)}`;
+}
+
+function usageCost(path: string, usage: ResponseUsage): number | null {
+  if (path !== DECISION_PATH) {
+    return usage.cost === undefined ? null : Math.round(usage.cost * NANO_USD_PER_USD);
+  }
+  if (usage.input_tokens === undefined && usage.output_tokens === undefined) return null;
+  return (
+    (usage.input_tokens ?? 0) * DECISION_INPUT_NANO_USD_PER_TOKEN +
+    (usage.output_tokens ?? 0) * DECISION_OUTPUT_NANO_USD_PER_TOKEN
+  );
+}
+
+function payloads(response: LlmResponse): string[] {
+  if (!response.contentType.includes("text/event-stream")) return [response.body];
+  return response.body
+    .split("\n")
+    .filter((line) => line.startsWith("data:"))
+    .map((line) => line.slice("data:".length).trim())
+    .filter((data) => data !== "" && data !== "[DONE]");
+}
+
+function responseCost(path: string, response: LlmResponse): number | null {
+  let total: number | null = null;
+  for (const payload of payloads(response)) {
+    let json: unknown;
+    try {
+      json = JSON.parse(payload);
+    } catch {
+      continue;
+    }
+    const usage = usageSchema.safeParse(json).data?.usage;
+    const cost = usage ? usageCost(path, usage) : null;
+    if (cost !== null) total = (total ?? 0) + cost;
+  }
+  return total;
 }
 
 function bodyFailure(response: LlmResponse): string | null {
@@ -212,6 +271,8 @@ export async function startRecorder(options: RecorderOptions): Promise<Recorder>
         recorded: 0,
         misses: 0,
         failures: [],
+        costNanoUsd: 0,
+        uncosted: 0,
         pending: 0,
         lastActivity: Date.now(),
       };
@@ -230,13 +291,14 @@ export async function startRecorder(options: RecorderOptions): Promise<Recorder>
   }
 
   function targetFor(path: string): UpstreamTarget | null {
-    return path === "/systemone" ? options.decision : options.llm;
+    return path === DECISION_PATH ? options.decision : options.llm;
   }
 
   async function callUpstream(
     target: UpstreamTarget,
     path: string,
     request: Record<string, unknown>,
+    scenarioId: string,
   ): Promise<Outcome> {
     const label = `${path} ${String(request.model)}`;
     let last: Outcome = { ok: false, message: `${label}: no attempt made` };
@@ -251,7 +313,10 @@ export async function startRecorder(options: RecorderOptions): Promise<Recorder>
       } catch (err) {
         failure = `network: ${describe(err)}`;
       }
+      const cost = fetched ? responseCost(path, fetched) : null;
+      if (cost !== null) usage(scenarioId).costNanoUsd += cost;
       if (!failure && fetched) {
+        if (cost === null) usage(scenarioId).uncosted++;
         const { retryAfterMs: _, ...response } = fetched;
         return { ok: true, seed: { path, request, response } };
       }
@@ -300,7 +365,7 @@ export async function startRecorder(options: RecorderOptions): Promise<Recorder>
       limit = semaphore(target.concurrency);
       limits.set(target, limit);
     }
-    const outcome = await limit(() => callUpstream(target, path, request));
+    const outcome = await limit(() => callUpstream(target, path, request, scenarioId));
     if (outcome.ok) {
       options.journal.append({
         runId: options.runId,
@@ -312,7 +377,10 @@ export async function startRecorder(options: RecorderOptions): Promise<Recorder>
         at: new Date().toISOString(),
       });
       thisRun.set(key, outcome.seed);
-      console.log(`[record] ${scenarioId} recorded ${key} ${path} ${String(request.model)}`);
+      const cost = responseCost(path, outcome.seed.response);
+      console.log(
+        `[record] ${scenarioId} recorded ${key} ${path} ${String(request.model)} ${cost === null ? "no cost or usage in the response" : formatUsd(cost)}`,
+      );
     }
     return outcome;
   }

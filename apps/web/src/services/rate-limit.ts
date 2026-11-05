@@ -47,15 +47,6 @@ export async function enforceRateLimit(
   if (!result.ok) throw new RateLimitedError(result, message);
 }
 
-export function getClientIp(headers: Headers): string {
-  return (
-    headers.get("cf-connecting-ip") ??
-    headers.get("x-real-ip") ??
-    headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown"
-  );
-}
-
 export function tooManyRequests(result: RateLimitResult): Response {
   const retryAfterSec = Math.ceil(result.resetMs / 1000);
   return new Response(

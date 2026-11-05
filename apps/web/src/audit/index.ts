@@ -4,7 +4,7 @@ import { and, type Column, desc, eq, inArray, isNull, lt, or, type SQL, sql } fr
 import { db } from "@/db";
 import { auditEvent, user, workspace } from "@/db/schema";
 import type { AuditEvent, AuditEventPage, AuditFilter, AuditPageInput } from "@/server/schema";
-import { getClientIp } from "@/services/rate-limit";
+import { clientIp } from "@/services/client-ip";
 import {
   AUDIT_ACTIONS,
   AUDIT_RESOURCE_KINDS,
@@ -52,8 +52,7 @@ const USER_AGENT_MAX = 512;
 
 function requestIp(headers: Headers | undefined): string | null {
   if (!headers) return null;
-  const ip = getClientIp(headers);
-  return ip === "unknown" ? null : ip;
+  return clientIp(headers);
 }
 
 async function userEmail(userId: string | null | undefined) {

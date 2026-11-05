@@ -31,6 +31,7 @@ function lazyResolved(found: WorkspaceCalendarRow): ResolvedCalendar {
     accountSlug: found.slug,
     accountEmail: found.email,
     provider: found.provider,
+    server: found.server,
     visibleCalendarIds: found.visibleCalendarIds,
     policy: found.policy,
     auth: () => {

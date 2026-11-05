@@ -5,6 +5,7 @@ import { getLlm } from "@/services/llm";
 import { phishingDetectionEnabled } from "@/services/phishing-detection";
 
 import { workspaceMemory } from "../memory";
+import { chatStopWhen, finalAnswerStep, searchBudget } from "../step-budget";
 import { sortedTools, workspaceToolSearch } from "../tool-search";
 import { workspaceResidentTools } from "../tools/workspace-tools";
 
@@ -77,6 +78,7 @@ export const workspaceAgent = new Agent({
     ),
   model: () => getLlm().chat,
   tools: workspaceResidentTools,
-  inputProcessors: () => [workspaceToolSearch(), sortedTools],
+  inputProcessors: () => [workspaceToolSearch(), searchBudget, finalAnswerStep, sortedTools],
+  defaultOptions: { stopWhen: chatStopWhen },
   memory: workspaceMemory,
 });

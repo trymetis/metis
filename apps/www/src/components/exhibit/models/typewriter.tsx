@@ -173,9 +173,11 @@ export function TypewriterModel() {
   }, [scene]);
 
   useEffect(() => {
-    void document.fonts?.load(`40px ${typeface.style.fontFamily}`).then(() => {
+    const repaint = () => {
       built.shown = "";
-    });
+    };
+    const face = typeface.style.fontFamily.split(",")[0];
+    void document.fonts?.load(`40px ${face}`).then(repaint, repaint);
   }, [built]);
 
   useFrame((s, dt) => {

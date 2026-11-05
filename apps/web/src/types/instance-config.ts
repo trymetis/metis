@@ -1,4 +1,4 @@
-export const INSTANCE_CONFIG_KINDS = ["seed", "edit", "revert"] as const;
+export const INSTANCE_CONFIG_KINDS = ["seed", "edit", "revert", "reset"] as const;
 export type InstanceConfigKind = (typeof INSTANCE_CONFIG_KINDS)[number];
 
 export const CONFIG_SECTIONS = [
@@ -10,6 +10,8 @@ export const CONFIG_SECTIONS = [
   "legal",
   "relay",
   "imageProxy",
+  "proxies",
+  "mailCache",
   "cache",
   "workflowRunner",
   "google",
@@ -35,6 +37,8 @@ export const CONFIG_SECTION_LABELS: Record<ConfigSection, string> = {
   legal: "Legal consent",
   relay: "Drive relay",
   imageProxy: "Mail image proxy",
+  proxies: "Proxies",
+  mailCache: "Mail cache",
   cache: "Cache",
   workflowRunner: "Workflow runner",
   google: "Google",

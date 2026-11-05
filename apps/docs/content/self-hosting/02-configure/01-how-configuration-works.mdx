@@ -32,13 +32,13 @@ Everything else is stored in the database and changed by the owner under **Dashb
 - Outgoing email.
 - The cache.
 - The workflow runner.
-- Sign-up, legal consent, drive transfer limits and the mail image proxy.
+- Sign-up, legal consent, drive transfer limits, the mail image proxy, the mail cache (how long message bodies are kept) and trusted proxies.
 
-The first time preflight runs, it stores these settings. Each one takes its value from the environment or the config file if you set it there, and from its default otherwise. The defaults are: AI, the decision model and phishing detection off, outgoing email written to the server log, an in-memory cache, background work inside the app, invite-only sign-up, the mail image proxy off, and no providers.
+The first time preflight runs, it stores these settings. Each one takes its value from the environment or the config file if you set it there, and from its default otherwise. The defaults are: AI, the decision model and phishing detection off, outgoing email written to the server log, an in-memory cache, background work inside the app, invite-only sign-up, the mail image proxy off, message bodies kept for 30 days after they were last opened, no trusted proxies, and no providers.
 
-After an update that adds the decision model and mail image proxy to the dashboard, the next preflight stores them the same way, from the environment, the config file or the default. **History** lists this as a **Seed** version.
+When an update adds a new card to the dashboard, such as the decision model, the mail image proxy, **Mail cache** or **Proxies**, the next preflight stores it the same way, from the environment, the config file or the default. This happens on an instance that already runs too. **History** lists this as a **Seed** version.
 
-Once preflight has stored a setting, the environment no longer changes it. If a value in the environment later differs from the stored one, the stored value is used and the dashboard shows a warning under **Deploy checks**. Change the setting in the dashboard, or remove it from the environment.
+Once preflight has stored a setting, the environment no longer changes it. If a value in the environment later differs from the stored one, the stored value is used and the dashboard shows a warning under **Deploy checks**. Change the setting in the dashboard, or remove it from the environment. You can also click **Reset to environment** on the setting's card to apply the environment values again. The app reads the environment when it starts, so after you edit `.env` or the config file, apply the change as shown [above](#settings-fixed-at-startup) before you reset. See [Reset a card to the environment](/self-hosting/operate/owner-dashboard#reset-a-card-to-the-environment).
 
 ## Saving a change in the dashboard
 
@@ -46,12 +46,55 @@ Each **System** page edits its own settings:
 
 1. Change a field. A bar at the bottom shows how many changes are not saved yet, with **Reset** and **Save changes**.
 2. Click **Save changes** and enter a code from your authenticator app. Backup codes work too.
-3. The changed settings are checked against the real service before anything is stored. If a check fails, you see **Check failed** and "Nothing was saved."
+3. The changed settings are checked against the real service before anything is stored. If a check fails, you see **Check failed** and "Nothing was saved. Fix the fields below and save again, or save anyway." See [Save anyway](#save-anyway).
 4. If the check passes, you see "Saved as version N". The line at the top of the page says that every process picks up a change within 30 seconds.
 
-Every saved change becomes a new version of the configuration. You can compare any two versions and restore an older one under **System**, **History**. See [Owner dashboard](/self-hosting/operate/owner-dashboard).
+Some values are refused before any check runs, for example a value that is not valid. Nothing is saved, and the error says why.
+
+Every saved change becomes a new version of the configuration. So does every reset to the environment, which **History** lists as a **Reset** version. You can compare any two versions and restore an older one under **System**, **History**. See [Owner dashboard](/self-hosting/operate/owner-dashboard).
 
 Secrets such as API keys and passwords are never shown again after you save them. The page shows **Set** or **Not set**. Leave a secret field empty to keep the stored value.
+
+### What a save checks
+
+A save checks only the cards you changed. Each check shows its result as **OK**, **Warning**, **Failed** or **Skipped**. A save is refused only when a result is **Failed**.
+
+On a server list page, such as **IMAP** or **S3**, a save contacts only two kinds of entries:
+
+- Entries you added.
+- Entries whose connection settings you changed. Renaming an entry counts as a change. [Server lists](/self-hosting/configure/server-lists#what-a-save-checks) says which fields are connection settings for each provider.
+
+The save does not contact the other entries. Each one gets one of these results instead:
+
+- **Warning**, "Unchanged. The last deploy check reported: " followed by the problem, when the last deploy found a problem with that entry.
+- **Skipped**, "Unchanged, so not checked again." This is the result in every other case.
+
+Neither result can stop the save. So an entry you did not touch never blocks your change, and a save that only removes entries is never refused.
+
+The **Warning** result repeats what the last deploy found. It is not a new test, so it can be out of date. It stops once you change the entry's connection settings and save, because that save checks the entry again. To test every entry now, click **Run check** in the page's **Health** card.
+
+On the **Google**, **Microsoft** and **Zoho** pages, every field is a connection setting, so any change is checked.
+
+Restoring a version under **History** and **Reset to environment** follow the same rules.
+
+### Save anyway
+
+When a check fails, the **Check failed** card has a **Save anyway** button. It stores your changes even though the check failed.
+
+1. Click **Save anyway**. A dialog titled **Save anyway** says: "The check above failed. Saving anyway stores these changes as they are, so whatever failed the check may not work until it is fixed."
+2. Enter a code from your authenticator app and click **Save anyway**.
+
+You see "Saved as version N". **History** lists the version as an ordinary **Edit**.
+
+**Save anyway** is on every **System** page whose cards run a check when you save: **LLM** (with the decision model), **Phishing detection**, **Mail**, **Cache**, **Workflow runner**, **Google**, **Microsoft**, **Zoho** and every server list page. It does not help with a value that is refused before any check runs. Fix that value first.
+
+To store an older version whose check failed, use **Restore anyway** under **History**. See [History](/self-hosting/operate/owner-dashboard#history). **Reset to environment** has no such button.
+
+### Warnings after a save
+
+When a save succeeds, each **Warning** result appears as its own message. This also happens after **Save anyway**, a restore, **Restore anyway** and a reset to the environment. For a server entry, the message starts with the entry's name, then the check's name and the problem. For other settings, it starts with the check's name. For example, a model that your LLM provider does not list shows as "Models endpoint: not in the provider's model list:" followed by the model names.
+
+When a save is refused, the warnings appear in the **Check failed** card instead, next to the failed results.
 
 ## The optional config file
 
@@ -63,7 +106,7 @@ Instead of environment variables, you can put settings in a YAML, JSON or TOML f
 
 The file and the environment work key by key. When both set the same setting, the environment wins. An empty variable counts as not set.
 
-The file uses nested sections instead of variable names. For example, this YAML file turns on open sign-up, sets the legal links and sets up outgoing email over SMTP:
+The file uses nested sections instead of variable names. For example, this YAML file turns on open sign-up, sets the legal links, lists two trusted proxies and sets up outgoing email over SMTP:
 
 ```yaml
 app:
@@ -71,6 +114,10 @@ app:
 legal:
   termsUrl: https://example.com/terms
   privacyUrl: https://example.com/privacy
+proxies:
+  trustedProxies:
+    - 198.51.100.0/24
+    - 2001:db8::/32
 mailer:
   driver: smtp
   mailFrom: Metis Suite <noreply@example.com>
@@ -81,7 +128,9 @@ mailer:
   secure: true
 ```
 
-As with the environment, settings that the dashboard manages are read from the file only once, the first time preflight runs.
+`trustedProxies` takes a list, as above, or one string with the entries separated by commas.
+
+As with the environment, preflight reads the settings that the dashboard manages from the file only once, the first time it runs. After that, **Reset to environment** on a card applies the file's values to that card again, as the file was when the app last started.
 
 :::note
 The Compose stack does not mount a config file into its containers. With the Compose stack, use `.env`.

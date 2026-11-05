@@ -9,7 +9,7 @@ export default function PrivacyPage() {
     <LegalLayout
       path="/privacy-policy"
       title="Privacy Policy"
-      lastUpdated="November 1, 2026"
+      lastUpdated="November 3, 2026"
       intro={`${SITE_NAME} lets you connect accounts you already have (mail, calendars and drives from Google, Microsoft and Zoho, and IMAP, CalDAV, S3, WebDAV, FTP and SFTP servers) and work with them in one suite, with optional AI features. This policy explains what data we collect, how we use it, who we share it with, and the choices you have. It applies to ${SITE_NAME} as we run it on Metis Cloud: the web application, the desktop and Android apps, the MCP server, and their associated APIs. ${SITE_NAME} is also open-source software that anyone can run on their own server; on a self-hosted instance, the person or organization running it decides how your data is handled and is responsible for it, and this policy does not apply.`}
     >
       <h2>1. Who we are</h2>
@@ -301,11 +301,11 @@ export default function PrivacyPage() {
       </ul>
       <p>
         All data is encrypted in transit (TLS). On Metis Cloud, your instance and its database run
-        on their own storage volume on our servers in Helsinki, Finland, and are backed up
-        continuously to Cloudflare R2, which encrypts them at rest. Account tokens and server logins
-        are also encrypted by {SITE_NAME} itself before they are stored. Access to production
-        systems is restricted to authorized personnel of {ORG_NAME} and protected by strong
-        authentication.
+        on their own storage volume on our servers in Helsinki, Finland, and are backed up nightly
+        to Cloudflare R2, which encrypts them at rest; the two most recent backups are kept. Account
+        tokens and server logins are also encrypted by {SITE_NAME} itself before they are stored.
+        Access to production systems is restricted to authorized personnel of {ORG_NAME} and
+        protected by strong authentication.
       </p>
       <p>
         When you disconnect an account, we delete its OAuth tokens or server login and cease all
@@ -338,9 +338,9 @@ export default function PrivacyPage() {
           described in Section 6.
         </li>
         <li>
-          <strong>Backups and DNS</strong> (Cloudflare) — continuous backups of your instance&apos;s
-          database in Cloudflare R2, deleted with the instance, and DNS for trymetis.email and
-          metis-suite.app addresses.
+          <strong>Backups and DNS</strong> (Cloudflare) — nightly backups of your instance and its
+          database in Cloudflare R2, the two most recent kept and all deleted with the instance, and
+          DNS for trymetis.email and metis-suite.app addresses.
         </li>
         <li>
           <strong>Console hosting</strong> (Vercel) — runs the Metis Cloud console where you sign
@@ -358,11 +358,21 @@ export default function PrivacyPage() {
           your instance owner sets up their own mail service.
         </li>
         <li>
-          <strong>AI model providers you choose</strong> — {SITE_NAME} does not provide AI models.
-          AI features use the provider whose key your instance owner configures. When an AI feature
-          you turned on runs, the messages, events, or files it requires are sent to that provider,
-          under the owner&apos;s agreement with it, solely to generate that response. AI features
-          never send your whole mailbox, calendar, or drive.
+          <strong>Included AI</strong> (OpenRouter) — Metis Cloud plans include monthly AI credits.
+          While your instance uses them, the messages, events, or files an AI feature you turned on
+          requires are sent through our proxy to OpenRouter, solely to generate that response. Every
+          request is routed only to model endpoints with a zero data retention policy, which do not
+          keep your prompts or the responses after processing. To meter the credits we record each
+          request&apos;s token counts and cost, never its content.
+        </li>
+        <li>
+          <strong>AI model providers your instance owner chooses</strong> — the owner can use their
+          own provider&apos;s key instead of the included AI. When an AI feature you turned on runs,
+          the messages, events, or files it requires are sent to that provider, under the
+          owner&apos;s agreement with it, solely to generate that response.
+        </li>
+        <li>
+          AI features never send your whole mailbox, calendar, or drive, whichever model they use.
         </li>
         <li>
           <strong>Phishing detection</strong> (operated by {ORG_NAME}) — when phishing detection is

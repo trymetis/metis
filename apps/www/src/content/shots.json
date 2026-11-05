@@ -75,7 +75,7 @@
   "security/ai": [484, 232, 759, 189],
   "security/invites": [456, 23, 759, 254],
   "security/magic-link": [530, 270, 380, 320],
-  "security/servers": [456, 23, 759, 760],
+  "security/servers": [456, 0, 759, 900],
   "security/two-factor": [520, 290, 400, 320],
   "selfhost/checks": [456, 23, 759, 254],
   "selfhost/dashboard": null,

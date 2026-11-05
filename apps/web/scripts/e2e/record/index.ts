@@ -15,8 +15,14 @@ import {
 import { catalog, matches, type Scenario } from "./catalog";
 import { Journal } from "./journal";
 import { manifestSchema, mergeOutputs, readJson } from "./merge";
-import { openRouterUsage, preflight } from "./preflight";
-import { startRecorder, type UpstreamTarget } from "./recorder";
+import { preflight } from "./preflight";
+import {
+  DECISION_INPUT_NANO_USD_PER_TOKEN,
+  DECISION_OUTPUT_NANO_USD_PER_TOKEN,
+  formatUsd,
+  startRecorder,
+  type UpstreamTarget,
+} from "./recorder";
 import { type Outcome, schedule } from "./scheduler";
 import { killWorkers, runWorker } from "./spawn";
 
@@ -69,7 +75,7 @@ function upstream(
   return url && key ? { name, url, key, concurrency: UPSTREAM_CONCURRENCY } : null;
 }
 
-const usageBefore = await preflight({ plan });
+await preflight({ plan });
 const enrollment = enrollmentSchema.parse(JSON.parse(await readFile(ENROLLMENT, "utf8")));
 const scenarios = catalog(Object.keys(enrollment.driveSlugs));
 const selected = withSources(scenarios, only);
@@ -199,17 +205,17 @@ journal.close();
 const rows = selected.map((scenario) => {
   const outcome = outcomes.get(scenario.id);
   const used = recorder.usage(scenario.id);
-  return `  ${(outcome?.status ?? "not run").padEnd(16)} ${scenario.id.padEnd(28)} ${String(used.reused).padStart(4)} reused ${String(used.recorded).padStart(4)} recorded${plan ? ` ${String(used.misses).padStart(4)} missing` : ""}`;
+  return `  ${(outcome?.status ?? "not run").padEnd(16)} ${scenario.id.padEnd(28)} ${String(used.reused).padStart(4)} reused ${String(used.recorded).padStart(4)} recorded${plan ? ` ${String(used.misses).padStart(4)} missing` : ` ${formatUsd(used.costNanoUsd)}`}`;
 });
 console.log(`[record] summary:\n${rows.join("\n")}`);
 
-if (usageBefore) {
-  const usageAfter = await openRouterUsage().catch(() => null);
-  if (usageAfter) {
-    console.log(
-      `[record] OpenRouter credits spent this run: ${(usageAfter.usage - usageBefore.usage).toFixed(4)} (the key's usage can lag a few seconds)`,
-    );
-  }
+if (!plan) {
+  const used = selected.map((scenario) => recorder.usage(scenario.id));
+  const cost = used.reduce((sum, u) => sum + u.costNanoUsd, 0);
+  const uncosted = used.reduce((sum, u) => sum + u.uncosted, 0);
+  console.log(
+    `[record] cost this run: ${formatUsd(cost)} (OpenRouter from each response's cost field, TypeSafe at ${DECISION_INPUT_NANO_USD_PER_TOKEN} n$ per input token and ${DECISION_OUTPUT_NANO_USD_PER_TOKEN} n$ per output token)${uncosted > 0 ? `; ${uncosted} recorded response(s) carry no cost or usage and are not in it` : ""}`,
+  );
 }
 
 const unfinished = selected.filter((scenario) => outcomes.get(scenario.id)?.status !== "ok");

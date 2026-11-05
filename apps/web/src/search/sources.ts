@@ -1,6 +1,7 @@
 import "server-only";
 import type { WorkspaceUserSession } from "@/auth/session";
 import { listCalendarsAcross } from "@/calendar/aggregate";
+import { cachedCalendarList } from "@/calendar/list-cache";
 import { workspaceCalendarAccounts } from "@/calendar/session";
 import {
   listWorkspaceCalendars,
@@ -8,6 +9,7 @@ import {
   listWorkspaceDrives,
   listWorkspaceMailboxes,
 } from "@/connections";
+import { CALENDAR_PROVIDER_LABELS, calendarName } from "@/connections/calendar-name";
 import { DRIVE_PROVIDER_LABELS, driveName } from "@/drive/name";
 import { suggestContacts } from "@/mail/contacts";
 import { listCustomLabels } from "@/mail/custom-labels";
@@ -31,7 +33,6 @@ import { matcherFor, type SearchDoc } from "./match";
 const MAX_CHAT_TEXT_THREADS = 40;
 const MAX_RUNS = 50;
 const SUBSCRIPTION_SCAN = 50;
-const SUB_CALENDAR_TTL_MS = 60_000;
 
 export interface LocalSearchContext {
   appUser: WorkspaceUserSession;
@@ -64,11 +65,6 @@ function folderTitle(folder: string): string {
 function hasFreeText(ast: ParserAst | null): boolean {
   return ast !== null && tags(ast).some((tag) => tagKey(tag) === null);
 }
-
-const subCalendarCache = new Map<
-  string,
-  { at: number; calendars: Awaited<ReturnType<typeof listCalendarsAcross>> }
->();
 
 async function chats(ctx: LocalSearchContext, ast: ParserAst | null) {
   const threads = await listAssistantThreads({
@@ -274,14 +270,8 @@ async function mailboxes(ctx: LocalSearchContext) {
 
 async function subCalendars(ctx: LocalSearchContext) {
   const accounts = await workspaceCalendarAccounts(ctx.appUser.workspaceId);
-  const key = `${ctx.appUser.userId}:${accounts.map((a) => a.accountId).join(",")}`;
-  const cached = subCalendarCache.get(key);
-  if (cached && Date.now() - cached.at < SUB_CALENDAR_TTL_MS) {
-    return cached.calendars;
-  }
-  const listed = await listCalendarsAcross(accounts);
-  subCalendarCache.set(key, { at: Date.now(), calendars: listed });
-  return listed;
+  const field = `${ctx.appUser.userId}:${accounts.map((a) => a.accountId).join(",")}`;
+  return cachedCalendarList(ctx.appUser.workspaceId, field, () => listCalendarsAcross(accounts));
 }
 
 async function calendars(ctx: LocalSearchContext) {
@@ -293,8 +283,8 @@ async function calendars(ctx: LocalSearchContext) {
     hit: {
       kind: "calendar",
       id: `calendar:${c.id}`,
-      title: c.email,
-      subtitle: c.provider,
+      title: calendarName(c, rows),
+      subtitle: CALENDAR_PROVIDER_LABELS[c.provider],
       accountId: c.id,
       linkId: c.linkId,
       slug: c.slug,
@@ -306,8 +296,8 @@ async function calendars(ctx: LocalSearchContext) {
     },
     doc: {
       type: "calendar",
-      text: [c.email, c.slug],
-      name: [c.email, c.slug],
+      text: [calendarName(c, rows), c.email, c.slug],
+      name: [calendarName(c, rows), c.email, c.slug],
       provider: c.provider,
       calendar: [c.slug, c.email],
     },
@@ -322,7 +312,7 @@ async function calendars(ctx: LocalSearchContext) {
           kind: "calendar",
           id: `sub-calendar:${cal.accountId}:${cal.id}`,
           title: cal.name,
-          subtitle: cal.accountEmail,
+          subtitle: calendarName(account, rows),
           accountId: cal.accountId,
           linkId: account.linkId,
           slug: account.slug,
@@ -334,7 +324,7 @@ async function calendars(ctx: LocalSearchContext) {
         },
         doc: {
           type: "calendar",
-          text: [cal.name, cal.accountEmail],
+          text: [cal.name, calendarName(account, rows), cal.accountEmail],
           name: cal.name,
           "sub-calendar": cal.name,
           provider: cal.provider,

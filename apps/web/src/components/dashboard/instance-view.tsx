@@ -94,6 +94,13 @@ export function InstanceView() {
               </ToneBadge>
             ),
           },
+          mailCache: {
+            description: "How long this instance keeps copies of message bodies it has shown.",
+          },
+          proxies: {
+            description:
+              "How this instance finds a visitor's address behind a load balancer or CDN. Workflow webhook IP allow lists use the Workflow runner's own list.",
+          },
         }}
       />
     </Sections>

@@ -1,7 +1,9 @@
 import { SyntaxError as LiqeSyntaxError, parse } from "liqe";
 
+import { parseSize } from "@/lib/size";
+
 import { type ParserAst, parenDepth, tagKey, tagOperator, tags, tagText } from "./ast";
-import { parseSearchDate, parseSize } from "./dates";
+import { parseSearchDate } from "./dates";
 import { fieldValues, RETIRED_KEYS, searchField } from "./fields";
 
 export const MAX_SEARCH_DEPTH = 5;

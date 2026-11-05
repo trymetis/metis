@@ -1,6 +1,7 @@
 import { getInstanceConfig } from "@/config/runtime";
 
 import type { OAuthProfile, TokenSet } from "../types";
+import { parseZohoAccounts, pickZohoAccount, zohoAccountAddress } from "../zoho-accounts";
 import { zohoRegionOrder } from "../zoho-regions";
 import { createOAuthDriver, postForm } from "./oauth";
 
@@ -12,16 +13,6 @@ interface ZohoUserInfo {
   first_name?: string;
   ZUID?: string | number;
   user_id?: string | number;
-}
-
-interface ZohoMailAccount {
-  primaryEmailAddress?: string;
-  mailboxAddress?: string;
-  emailAddress?: string;
-  displayName?: string;
-  firstName?: string;
-  accountId?: string | number;
-  zuid?: string | number;
 }
 
 const accountsServer = (dc: string) => `https://accounts.zoho.${dc}`;
@@ -52,9 +43,8 @@ async function getProfile(token: TokenSet): Promise<OAuthProfile> {
     });
     if (mailRes.ok) {
       try {
-        const parsed: { data?: ZohoMailAccount[] } = await mailRes.json();
-        const acc = parsed?.data?.[0];
-        email = acc?.primaryEmailAddress ?? acc?.mailboxAddress ?? acc?.emailAddress ?? "";
+        const acc = pickZohoAccount(parseZohoAccounts(await mailRes.json()), "");
+        email = acc ? zohoAccountAddress(acc) : "";
         name = name || acc?.displayName || acc?.firstName || "";
         id = id || String(acc?.accountId ?? acc?.zuid ?? "");
       } catch {}

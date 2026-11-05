@@ -11,6 +11,7 @@ import { checkLlm } from "@/dashboard/system-checks";
 import { db } from "@/db";
 import { migrateDatabase } from "@/db/migrations";
 import type { PreflightWarning, PreflightWarningKind } from "@/types/preflight";
+import { ensureSystemWorkflows } from "@/workflow/builtins/system";
 
 import { MIGRATIONS } from "../migrations";
 
@@ -48,6 +49,9 @@ if (seeded.kind === "seeded") {
     );
   }
 }
+
+await ensureSystemWorkflows();
+console.log("[preflight] system workflows up to date");
 
 const instance = await loadInstanceConfig();
 

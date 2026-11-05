@@ -8,6 +8,7 @@
   },
   "scripts": {
     "up": "docker compose --env-file .env.fixture up --build --wait app proxy cron worker srh",
+    "up:ss": "docker compose --env-file .env.fixture -f compose.yml -f ../apps/docs/scripts/compose.screenshots.yml up --build --wait app proxy",
     "down": "docker compose --env-file .env.fixture down --volumes --remove-orphans",
     "generate": "bun run --cwd ../apps/web e2e:generate",
     "generate:record": "bun run --cwd ../apps/web e2e:generate:record",

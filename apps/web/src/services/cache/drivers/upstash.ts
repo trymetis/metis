@@ -3,7 +3,7 @@ import { Redis } from "@upstash/redis";
 
 import type { UpstashCacheConfig } from "@/config/schema";
 
-import { INCR_EXPIRE } from "../incr-expire";
+import { HSET_EXPIRE, INCR_EXPIRE } from "../lua-scripts";
 import type { CacheDriver } from "../types";
 
 const PREFIX = "metis:";
@@ -44,6 +44,17 @@ export function createUpstashDriver(cfg: UpstashCacheConfig): CacheDriver {
     },
     async incr(key, ttlSec) {
       return Number(await redis.eval(INCR_EXPIRE, [prefixed(key)], [String(ttlSec)]));
+    },
+    async hget(key, field) {
+      return redis.hget<string>(prefixed(key), field);
+    },
+    async hmget(key, fields) {
+      if (fields.length === 0) return [];
+      const found = await redis.hmget<Record<string, string | null>>(prefixed(key), ...fields);
+      return fields.map((field) => found?.[field] ?? null);
+    },
+    async hsetExpiring(key, field, value, ttlSec) {
+      await redis.eval(HSET_EXPIRE, [prefixed(key)], [field, value, String(ttlSec)]);
     },
   };
 }

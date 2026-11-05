@@ -105,7 +105,15 @@ function useCaption(plate: number) {
   return moved ? "caption-in" : "";
 }
 
-function Top({ plates, hero }: { plates: PlateDef[]; hero?: ReactNode }) {
+function Top({
+  plates,
+  hero,
+  band,
+}: {
+  plates: PlateDef[];
+  hero?: ReactNode;
+  band: React.RefObject<HTMLDivElement | null>;
+}) {
   const plate = useExhibit((s) => s.plate);
   const caption = useCaption(plate);
   const p = plates[plate];
@@ -113,7 +121,7 @@ function Top({ plates, hero }: { plates: PlateDef[]; hero?: ReactNode }) {
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-[3] px-[var(--gx)] pb-14 pt-[calc(var(--nav)+3.2vh)] text-center [background:linear-gradient(to_bottom,var(--color-bg)_48%,transparent)]">
       <div key={plate} className={`${caption} mx-auto max-w-[980px]`}>
-        <div aria-hidden="true" className="display text-[clamp(40px,5.1vw,86px)]">
+        <div ref={band} aria-hidden="true" className="display text-[clamp(40px,5.1vw,86px)]">
           {plate === 0 && hero ? hero : p.title}
         </div>
       </div>
@@ -121,14 +129,22 @@ function Top({ plates, hero }: { plates: PlateDef[]; hero?: ReactNode }) {
   );
 }
 
-function Bottom({ plates, actions }: { plates: PlateDef[]; actions?: ReactNode }) {
+function Bottom({
+  plates,
+  actions,
+  band,
+}: {
+  plates: PlateDef[];
+  actions?: ReactNode;
+  band: React.RefObject<HTMLDivElement | null>;
+}) {
   const plate = useExhibit((s) => s.plate);
   const caption = useCaption(plate);
   const p = plates[plate];
   if (!p) return null;
   return (
     <div className="absolute inset-x-0 bottom-0 z-[3] px-[var(--gx)] pb-[4.5vh] pt-16 text-center [background:linear-gradient(to_top,var(--color-bg)_45%,transparent)]">
-      <div key={plate} className={`${caption} mx-auto max-w-[620px]`} aria-hidden="true">
+      <div ref={band} key={plate} className={`${caption} mx-auto max-w-[620px]`} aria-hidden="true">
         <p className="prose-lede">{p.text}</p>
         {p.chips ? <Chips chips={p.chips} /> : null}
         {plate === 0 && actions ? (
@@ -183,6 +199,9 @@ export function Exhibit({
   actions?: ReactNode;
 }) {
   const track = useRef<HTMLElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
+  const above = useRef<HTMLDivElement>(null);
+  const below = useRef<HTMLDivElement>(null);
   const n = plates.length;
 
   useEffect(() => {
@@ -217,6 +236,13 @@ export function Exhibit({
       live.sy = damp(live.sy, live.py, 2.5, dt);
       const plate = Math.min(n - 1, Math.round(p));
       if (plate !== exhibit.get().plate) exhibit.set({ plate, pick: null });
+      const frame = stage.current?.getBoundingClientRect();
+      if (frame && frame.height > 0) {
+        const head = above.current?.getBoundingClientRect().bottom ?? frame.top;
+        const foot = below.current?.getBoundingClientRect().top ?? frame.bottom;
+        live.top = damp(live.top, (head - frame.top) / frame.height, 6, dt);
+        live.bottom = damp(live.bottom, (foot - frame.top) / frame.height, 6, dt);
+      }
     };
     raf = requestAnimationFrame(tick);
     return () => {
@@ -241,11 +267,11 @@ export function Exhibit({
       style={{ height: `${(n - 1) * STEP * 100 + 130}svh` }}
     >
       <div className="sticky top-0 h-[100svh] overflow-hidden">
-        <div className="absolute inset-x-0 -top-[2vh] bottom-[2vh] z-[1]">
+        <div ref={stage} className="absolute inset-x-0 -top-[2vh] bottom-[2vh] z-[1]">
           <Stage model={model} poses={poses} />
         </div>
-        <Top plates={plates} hero={hero} />
-        <Bottom plates={plates} actions={actions} />
+        <Top plates={plates} hero={hero} band={above} />
+        <Bottom plates={plates} actions={actions} band={below} />
         <Rail plates={plates} onGo={go} />
         <ScrollCue />
       </div>

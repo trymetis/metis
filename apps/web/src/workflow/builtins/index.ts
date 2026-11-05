@@ -21,4 +21,10 @@ export {
   snoozeMessage,
   unsnoozeMessage,
 } from "./snooze";
-export { AUDIT_PRUNE_ID, CIMD_PRUNE_ID, ensureSystemWorkflows, WORKFLOW_PRUNE_ID } from "./system";
+export {
+  AUDIT_PRUNE_ID,
+  CIMD_PRUNE_ID,
+  ensureSystemWorkflows,
+  MAIL_CACHE_PRUNE_ID,
+  WORKFLOW_PRUNE_ID,
+} from "./system";

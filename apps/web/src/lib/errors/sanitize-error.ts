@@ -1,6 +1,7 @@
 import "server-only";
 import { isRecord } from "@/lib/guards";
 
+import { NotVisibleError } from "./not-visible";
 import { ProviderError, statusOf } from "./provider-error";
 
 const OPERATIONS: Record<string, string> = {
@@ -182,6 +183,7 @@ function fromText(raw: string, what: string | undefined): string {
 }
 
 export function sanitizeError(err: unknown, path?: readonly string[]): string {
+  if (err instanceof NotVisibleError) return err.clientMessage;
   const what = operationFor(path);
 
   const status = statusOf(err);

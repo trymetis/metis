@@ -96,11 +96,16 @@ See also [AGENTS.md](../AGENTS.md), [drive-providers.md](drive-providers.md), [d
 - **`visible_root_ids` is an app-level restriction, never provider isolation**: the token still reads the whole drive, so describe it as a product guarantee only. Empty means no restriction.
 - **Every read except a root listing, and every write, checks the entry's top-level ancestor.**
   - Root listings filter cheaply.
-  - `get`, `search`, download and writes walk `parentId` to the top (`topAncestor`, memoized per scope, capped at `MAX_DEPTH`).
-  - The walk reads only `adapter.getEntry(...).parentId`, so it works for Google's `parents[0]`, Graph's `parentReference.id`, S3's key prefix and the root-relative paths of WebDAV, FTP and SFTP alike.
+  - **Path-addressed providers answer the top ancestor from the id, with no request** (`DriveAdapter.topAncestor`, `topOfPath` in `src/drive/path-ids.ts`): S3 takes the first segment after the connection's prefix, WebDAV, FTP and SFTP the first segment of the root-relative path. A `HeadObject` per search result would be billed and throttled.
+  - Google and Graph walk `parentId` to the top instead (`topAncestor` in `aggregate.ts`, memoized per scope, capped at `MAX_DEPTH`), reading `adapter.getEntry(...).parentId`; `visibleOnly` starts each search result's walk from the `parentId` it already carries, so the result itself is never fetched again.
+  - S3's walk would stop at the connection's prefix (`p/`) rather than the top-level folder (`p/a/`), because a root child's `parentId` is the prefix; deriving the top from the key is what makes restrictions work on a prefixed bucket.
 - **A file hidden by a root restriction is a 404 reading "We couldn't find that."**, on download and on every `drive.*` procedure, so the answer does not reveal that the file exists.
   - `assertVisible` throws `DriveNotVisibleError`, a `NotVisibleError` whose `clientMessage` is that text; `/api/drive/download` and `base` ([orpc.md](orpc.md)) both answer with it.
-  - The error carries no HTTP status: agent tools word it through `sanitizeError`, and a status would change the text the agent sees.
+  - Agent tools word it through `sanitizeError`, which returns a `NotVisibleError`'s `clientMessage` before anything else, so the agent reads "We couldn't find that." too, never a retry hint.
+- **A search result whose visibility check fails is dropped and the failure is reported as a `driveErrors` entry**, never swallowed (`visibleOnly`), so a throttled or failing provider shows up as a partial search, not a short one.
+  - A 404 during the walk means the entry vanished after the search returned it, so it is dropped with no error.
+  - The drive page shows a notice naming the drives that failed, the search dialog lists them, and the agent and MCP drive searches (one drive, all drives, a member's drives) return them as `errors`.
+  - Workflows read drives through a strict surface (`src/ops/values.ts` → `surfaceOf`, `driveSurfaceFor(drive, { strictVisibility: true })`) that throws the provider's own error instead, so the step fails and is retried with its real reason rather than emitting a partial list.
 
 ### UI
 

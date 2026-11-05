@@ -19,7 +19,7 @@ See also [AGENTS.md](../AGENTS.md), [workflow-graph.md](workflow-graph.md), [wor
 | Tick bookkeeping and claims  | `src/workflow/store.ts` → `recordTick`, `claimDiscovery`, `claimRuns`, `CLAIM_SLICES` · table `workflowTick`                                                                                |
 | Discovery                    | `src/workflow/discovery.ts` → `discoverTrigger` · change feeds `src/workflow/feeds/` ([workflow-graph.md](workflow-graph.md))                                                               |
 | Push subscriptions           | `src/workflow/inbound/subscriptions.ts` → `renewEndpoints` (called from the tick's maintenance stage)                                                                                       |
-| System workflows             | `src/workflow/builtins/system.ts` → `ensureSystemWorkflows` (called at the start of every tick)                                                                                             |
+| System workflows             | `src/workflow/builtins/system.ts` → `ensureSystemWorkflows` (called by preflight)                                                                                                           |
 
 ## Rules
 
@@ -66,7 +66,6 @@ See also [AGENTS.md](../AGENTS.md), [workflow-graph.md](workflow-graph.md), [wor
 ## How it works
 
 - **A tick.** `runTick` stamps an invocation id and logs one logfmt `[workflow-runner] tick` line, then `runWorkflowTick`:
-  - ensures the system workflows;
   - takes the cadence claim and, when it wins, discovers due triggers;
   - closes stranded cancels and finishes pending send resolutions ([workflow-runs.md](workflow-runs.md)), and renews or stops provider push subscriptions (`renewEndpoints`, at most ten per tick, only while a public URL is configured);
   - claims and drains ready runs within the tick budget;

@@ -119,7 +119,7 @@ function EventPreview({ hit }: { hit: EventSearchHitDto }) {
         </Field>
         <Field label="Where">{hit.location}</Field>
         <Field label="Calendar">
-          {[hit.calendarName, hit.accountEmail].filter(Boolean).join(" · ")}
+          {[hit.calendarName, hit.accountName ?? hit.accountEmail].filter(Boolean).join(" · ")}
         </Field>
         <Field label="Organizer">{hit.organizer?.name || hit.organizer?.email}</Field>
         <Field label="Guests">
@@ -312,7 +312,7 @@ function LocalPreview({
                     </span>
                   )}
                 </Field>
-                <Field label="Account">{hit.email}</Field>
+                <Field label="Account">{hit.subtitle ?? hit.email}</Field>
               </>
             ) : (
               <>

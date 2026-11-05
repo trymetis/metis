@@ -18,6 +18,7 @@ import { GoogleCalendar } from "@metis/ui/components/svgs/googleCalendar";
 import { MicrosoftOutlook } from "@metis/ui/components/svgs/microsoft-outlook";
 import { MicrosoftOnedrive } from "@metis/ui/components/svgs/microsoftOnedrive";
 
+import { CALENDAR_PROVIDER_LABELS } from "@/connections/calendar-name";
 import {
   type ConnectionProvider,
   type ConnectionResource,
@@ -60,10 +61,10 @@ export const RESOURCE_PROVIDER_META: {
     resend: { label: "Resend", Mark: ResendMail },
   },
   calendar: {
-    google: { label: "Google Calendar", Mark: GoogleCalendar },
-    microsoft: { label: "Outlook Calendar", Mark: OutlookCalendar },
-    zoho: { label: "Zoho Calendar", Mark: ZohoCalendar },
-    caldav: { label: "CalDAV", Mark: CaldavServer },
+    google: { label: CALENDAR_PROVIDER_LABELS.google, Mark: GoogleCalendar },
+    microsoft: { label: CALENDAR_PROVIDER_LABELS.microsoft, Mark: OutlookCalendar },
+    zoho: { label: CALENDAR_PROVIDER_LABELS.zoho, Mark: ZohoCalendar },
+    caldav: { label: CALENDAR_PROVIDER_LABELS.caldav, Mark: CaldavServer },
   },
   drive: {
     google: { label: DRIVE_PROVIDER_LABELS.google, Mark: Drive },

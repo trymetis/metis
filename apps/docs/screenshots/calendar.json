@@ -93,7 +93,7 @@
         "click": "role=dialog[name=\"New event\"] >> role=combobox[name=\"Calendar\"]"
       },
       {
-        "click": "role=listbox >> role=option[name=\"Work · ana@demo.trymetis.email\"]"
+        "click": "role=listbox >> role=option[name=\"Work · Fernhill Calendar\"]"
       },
       {
         "waitFor": "role=dialog[name=\"New event\"] >> role=combobox[name=\"Calendar\"] >> text=Work"

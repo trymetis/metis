@@ -68,6 +68,8 @@ See also [AGENTS.md](../AGENTS.md), [mcp.md](mcp.md), [updater.md](updater.md), 
   - Labels are not seeded: the browser setup's first inbox page classifies the mail, and recorded summary requests carry those labels, so a summary asked for earlier is a replay miss.
   - `mail:decision` also classifies the inbox beyond its first page, after the summaries: the Unread, Starred and label filters list that mail and the list classifies whatever it shows; recording it after the summaries keeps their requests free of those labels.
   - `mail:sent`, `mail:drafts`, `mail:archive`, `mail:spam` and `mail:trash` start from `mail:decision` and record each folder's first page the same way, because the list classifies every folder it shows.
+  - `mail:label-retry` starts from `mail:decision` and classifies the first page again while `RETRY_LABEL` exists, because a custom label change clears the unsure flags and the list then asks again with that label among the options.
+    - The browser test names its label with the same constant, so the questions match; a scenario of its own keeps those labels out of `mail:decision`'s database.
   - Every write in either suite puts back what it changed, and each suite's teardown fails on any replay miss.
 
 ### Fakes

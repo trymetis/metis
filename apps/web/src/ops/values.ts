@@ -478,7 +478,7 @@ export function fileValue(driveId: string, entry: DriveEntry): FileValue {
 }
 
 export function surfaceOf(drive: ResolvedDrive): DriveSurface {
-  return driveSurfaceFor(drive);
+  return driveSurfaceFor(drive, { strictVisibility: true });
 }
 
 export async function listFileValues(

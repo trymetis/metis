@@ -10,7 +10,7 @@ import { useCalendar } from "../calendar-context";
 import { useEventColor } from "../event-colors";
 
 export function ScheduleView() {
-  const { events, range, setSelected } = useCalendar();
+  const { events, range, setSelected, accountName } = useCalendar();
   const colorFor = useEventColor();
 
   const groups = useMemo(() => scheduleGroups(events, range), [events, range]);
@@ -75,8 +75,8 @@ export function ScheduleView() {
                   {event.title}
                 </span>
                 {event.accountEmail && (
-                  <span className="max-w-[40%] shrink-0 truncate font-mono text-[10px] text-faint max-md:hidden">
-                    {event.accountEmail}
+                  <span className="max-w-[40%] shrink-0 truncate text-[10px] text-faint max-md:hidden">
+                    {accountName(event.accountId, event.accountEmail)}
                   </span>
                 )}
               </button>

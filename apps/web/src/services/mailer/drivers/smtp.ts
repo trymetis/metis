@@ -6,8 +6,9 @@ import type { SmtpMailerConfig } from "@/config/schema";
 import type { MailSenderDriver } from "../types";
 
 export function createSmtpTransport(cfg: SmtpMailerConfig) {
+  const requireTLS = cfg.plain !== true;
   if (cfg.url) {
-    return createTransport(cfg.url);
+    return createTransport({ url: cfg.url, requireTLS });
   }
   const host = cfg.host;
   const port = cfg.port ?? 587;
@@ -16,6 +17,7 @@ export function createSmtpTransport(cfg: SmtpMailerConfig) {
     host,
     port,
     secure,
+    requireTLS: !secure && requireTLS,
     auth: cfg.user ? { user: cfg.user, pass: cfg.pass ?? "" } : undefined,
   });
 }

@@ -1,5 +1,6 @@
 import { and, desc, eq, isNull, notInArray, type SQL } from "drizzle-orm";
 
+import { forgetCalendarLists } from "@/calendar/list-cache";
 import { uniqueCalendarSlug } from "@/calendar/slug";
 import { db } from "@/db";
 import { calendar, calendarWorkspace, connection, workspace, workspaceMember } from "@/db/schema";
@@ -259,6 +260,7 @@ export async function attachCalendar(args: {
     visibleCalendarIds: [],
     createdAt: new Date(),
   });
+  await forgetCalendarLists(workspaceId);
   return { linkId, slug };
 }
 
@@ -271,6 +273,7 @@ export async function detachCalendar(args: { linkId: string; workspaceId: string
         eq(calendarWorkspace.workspaceId, args.workspaceId),
       ),
     );
+  await forgetCalendarLists(args.workspaceId);
 }
 
 export async function setCalendarVisibility(args: {
@@ -287,6 +290,7 @@ export async function setCalendarVisibility(args: {
         eq(calendarWorkspace.workspaceId, args.workspaceId),
       ),
     );
+  await forgetCalendarLists(args.workspaceId);
 }
 
 export async function deleteCalendar(target: Calendar): Promise<boolean> {

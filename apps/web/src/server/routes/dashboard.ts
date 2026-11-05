@@ -29,6 +29,7 @@ import {
   configDiff,
   configForm,
   configHistory,
+  resetConfigSection,
   revertConfig,
   saveConfigSections,
 } from "@/dashboard/system-config";
@@ -44,6 +45,8 @@ import {
   dashboardConfigDiffOutputSchema,
   dashboardConfigFormInputSchema,
   dashboardConfigFormOutputSchema,
+  dashboardConfigResetInputSchema,
+  dashboardConfigResetOutputSchema,
   dashboardConfigHistoryOutputSchema,
   dashboardConfigRevertInputSchema,
   dashboardConfigSaveOutputSchema,
@@ -187,6 +190,30 @@ export const dashboardRouter = {
           message: "Enter your authenticator code to restore that version",
         });
         return revertConfig(input, context.appUser.userId);
+      }),
+
+    reset: ownerSession
+      .input(dashboardConfigResetInputSchema)
+      .output(dashboardConfigResetOutputSchema)
+      .handler(async ({ input, context }) => {
+        if (input.code !== undefined) {
+          await requireTotp({
+            userId: context.appUser.userId,
+            code: input.code,
+            headers: context.headers,
+            scope: "instance-config",
+            message: "Enter your authenticator code to reset this section",
+          });
+        }
+        return resetConfigSection(
+          {
+            section: input.section,
+            expectedVersion: input.expectedVersion,
+            apply: input.code !== undefined,
+            force: input.force,
+          },
+          context.appUser.userId,
+        );
       }),
 
     preflight: ownerSession

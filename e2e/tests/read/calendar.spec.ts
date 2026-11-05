@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 
 test("day, week, month, year and schedule views, and today", async ({ page, account }) => {
   await page.goto(calendarPath(account));
-  expect(await page.title()).toContain(account.email);
+  expect(await page.title()).toContain("Fernhill Calendar");
   await expect(
     toolbar(page).getByRole("heading", { level: 1, name: "October 2026" }),
   ).toBeVisible();
@@ -40,7 +40,7 @@ test("day, week, month, year and schedule views, and today", async ({ page, acco
   await expect(timedEvent(page, "Design review 3pm – 4pm")).toBeVisible();
 
   await chooseView(page, "Schedule");
-  await expect(timedEvent(page, "3pm – 4pm Design review ana@demo.trymetis.email")).toBeVisible();
+  await expect(timedEvent(page, "3pm – 4pm Design review Fernhill Calendar")).toBeVisible();
 
   await chooseView(page, "Month");
   await toolbar(page).getByRole("button", { name: "Next", exact: true }).click();

@@ -1,8 +1,13 @@
 import { createHash } from "node:crypto";
+import { isIP } from "node:net";
 
 import { z } from "zod";
 
 import { isRecord, keysOf } from "@/lib/guards";
+import { parseSize } from "@/lib/size";
+
+const S3_PART_SIZE_MIN = 5 * 1024 ** 2;
+const S3_PART_SIZE_MAX = 5 * 1024 ** 3;
 
 const envBoolBaseSchema = z.enum(["true", "false", "0", "1"]);
 export const envBoolSchema = (defaultVal?: boolean) => {
@@ -121,19 +126,27 @@ const serverHostSchema = z
 
 const serverPortSchema = z.coerce.number().int().min(1).max(65535);
 
+const PLAIN_WITH_IMPLICIT_TLS = "Allow unencrypted applies only when implicit TLS is off";
+
+function mailEndpointSchema(defaultPort: number) {
+  return z
+    .object({
+      host: serverHostSchema,
+      port: serverPortSchema.default(defaultPort),
+      secure: z.boolean().default(true),
+      plain: z.boolean().default(false),
+    })
+    .refine((endpoint) => !(endpoint.secure && endpoint.plain), {
+      message: PLAIN_WITH_IMPLICIT_TLS,
+      path: ["plain"],
+    });
+}
+
 const imapServerSchema = z.object({
   id: serverIdSchema.optional(),
   name: serverNameSchema,
-  imap: z.object({
-    host: serverHostSchema,
-    port: serverPortSchema.default(993),
-    secure: z.boolean().default(true),
-  }),
-  smtp: z.object({
-    host: serverHostSchema,
-    port: serverPortSchema.default(465),
-    secure: z.boolean().default(true),
-  }),
+  imap: mailEndpointSchema(993),
+  smtp: mailEndpointSchema(465),
   allowInsecureTls: z.boolean().default(false),
 });
 
@@ -165,26 +178,45 @@ const gatewayServerSchema = z.object({
     .transform((value) => value.replace(/\/+$/, "")),
 });
 
-const s3ServerSchema = z.object({
-  id: serverIdSchema.optional(),
-  name: serverNameSchema,
-  endpoint: z
-    .string()
-    .trim()
-    .refine(
-      (value) => /^https?:\/\//i.test(value),
-      "The S3 endpoint must include http:// or https://",
-    )
-    .refine((value) => URL.canParse(value), "That is not a valid URL")
-    .transform((value) => value.replace(/\/+$/, "")),
-  region: z.string().trim().min(1).default("us-east-1"),
-  accessKeyId: z.string().trim().min(1),
-  secretAccessKey: z.string().min(1),
-  forcePathStyle: z.boolean().default(true),
-  allowInsecureTls: z.boolean().default(false),
-  transfer: z.enum(["direct", "relay"]).default("direct"),
-  checksums: z.enum(["required", "supported"]).default("required"),
-});
+const s3ServerSchema = z
+  .object({
+    id: serverIdSchema.optional(),
+    name: serverNameSchema,
+    endpoint: z
+      .string()
+      .trim()
+      .refine(
+        (value) => /^https?:\/\//i.test(value),
+        "The S3 endpoint must include http:// or https://",
+      )
+      .refine((value) => URL.canParse(value), "That is not a valid URL")
+      .transform((value) => value.replace(/\/+$/, "")),
+    region: z.string().trim().min(1).default("us-east-1"),
+    accessKeyId: z.string().trim().min(1),
+    secretAccessKey: z.string().min(1),
+    forcePathStyle: z.boolean().default(true),
+    allowInsecureTls: z.boolean().default(false),
+    transfer: z.enum(["direct", "relay"]).default("direct"),
+    checksums: z.enum(["required", "supported"]).default("required"),
+    partSize: z.string().trim().default("32 MB"),
+  })
+  .superRefine((server, ctx) => {
+    if (server.transfer !== "relay") return;
+    const bytes = /[a-z]$/i.test(server.partSize) ? parseSize(server.partSize) : null;
+    if (bytes === null) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Enter a size with its unit, such as 32 MB",
+        path: ["partSize"],
+      });
+    } else if (bytes < S3_PART_SIZE_MIN || bytes > S3_PART_SIZE_MAX) {
+      ctx.addIssue({
+        code: "custom",
+        message: "The part size must be between 5 MB and 5 GB",
+        path: ["partSize"],
+      });
+    }
+  });
 
 const webdavServerSchema = z.object({
   id: serverIdSchema.optional(),
@@ -261,6 +293,17 @@ export const ZOHO_REGIONS = ["com", "in", "eu", "com.au", "jp"] as const;
 
 const zohoRegionSchema = z.enum(ZOHO_REGIONS).default("com");
 
+export const SERVER_ENTRY_SCHEMAS = {
+  imapServers: imapServerSchema,
+  caldavServers: caldavServerSchema,
+  cloudflareServers: gatewayServerSchema,
+  resendServers: gatewayServerSchema,
+  s3Servers: s3ServerSchema,
+  webdavServers: webdavServerSchema,
+  ftpServers: ftpServerSchema,
+  sftpServers: sftpServerSchema,
+} as const;
+
 export const imapServersSchema = serverListSchema("imap", imapServerSchema);
 export const caldavServersSchema = serverListSchema("caldav", caldavServerSchema);
 export const cloudflareServersSchema = serverListSchema("cloudflare", gatewayServerSchema);
@@ -313,6 +356,7 @@ const mailerDriverSchema = z
       user: z.string().optional(),
       pass: z.string().optional(),
       secure: envBoolSchema().optional(),
+      plain: envBoolSchema().optional(),
     }),
     z.object({
       driver: z.literal("console"),
@@ -328,6 +372,13 @@ const mailerDriverSchema = z
         code: "custom",
         message: "SMTP_URL or SMTP_HOST is required when METIS_MAIL_DRIVER=smtp",
         path: ["host"],
+      });
+    }
+    if (val.driver === "smtp" && val.plain === true && val.secure === true) {
+      ctx.addIssue({
+        code: "custom",
+        message: PLAIN_WITH_IMPLICIT_TLS,
+        path: ["plain"],
       });
     }
   });
@@ -466,19 +517,30 @@ export const cacheConfigSchema = withDefaultDriver(
 export const CRON_TICK_ROUTE_MAX_SECONDS = 60;
 const CRON_TICK_BUDGET_MAX_MS = (CRON_TICK_ROUTE_MAX_SECONDS - 5) * 1000;
 
+export function isIpOrRange(entry: string): boolean {
+  const [address = "", prefix, ...rest] = entry.split("/");
+  const family = isIP(address);
+  if (!family || rest.length > 0) return false;
+  if (prefix === undefined) return true;
+  if (!/^\d{1,3}$/.test(prefix)) return false;
+  return Number(prefix) <= (family === 4 ? 32 : 128);
+}
+
 const trustedProxiesSchema = z
   .union([z.array(z.string()), z.string()])
   .transform((value) =>
     (Array.isArray(value) ? value : value.split(",")).map((entry) => entry.trim()).filter(Boolean),
   )
-  .pipe(
-    z
-      .array(
-        z.string().regex(/^[0-9a-fA-F.:]+(\/\d{1,3})?$/, "must be an IP address or CIDR range"),
-      )
-      .max(50),
-  )
+  .pipe(z.array(z.string().refine(isIpOrRange, "must be an IP address or CIDR range")).max(50))
   .default([]);
+
+export const mailCacheSectionSchema = z.object({
+  retentionDays: z.coerce.number().int().min(1).max(3650).default(30),
+});
+
+export const proxiesSectionSchema = z.object({
+  trustedProxies: trustedProxiesSchema,
+});
 
 const workflowRunnerShared = {
   cadenceSec: z.coerce.number().int().min(1).max(86_400).default(60),
@@ -589,6 +651,8 @@ export const instanceConfigSchema = z.object({
   legal: legalConfigSchema,
   relay: relaySectionSchema,
   imageProxy: imageProxySectionSchema,
+  proxies: proxiesSectionSchema,
+  mailCache: mailCacheSectionSchema,
   cache: cacheConfigSchema,
   workflowRunner: workflowRunnerConfigSchema,
   google: oauthClientSchema,

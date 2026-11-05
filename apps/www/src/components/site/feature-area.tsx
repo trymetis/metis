@@ -117,21 +117,36 @@ export function FeatureArea({
   const frame = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!hasShots) return;
+    const panel = frame.current;
+    if (!hasShots || !panel) return;
     const wide = window.matchMedia("(min-width: 1024px)");
     let raf = 0;
+    let lift = 0;
+    const lifted = (next: number) => {
+      lift = next;
+      panel.style.translate = lift ? `0 ${lift}px` : "";
+    };
     const measure = () => {
       raf = 0;
       const items = list.current?.children;
-      if (!items) return;
-      const vh = window.innerHeight;
-      const below = frame.current?.getBoundingClientRect().bottom ?? 0;
-      const line = wide.matches ? vh * 0.5 : below + (vh - below) * 0.3;
-      let pick = 0;
-      for (const [i, item] of [...items].entries()) {
-        if (item.getBoundingClientRect().top <= line) pick = i;
+      if (!items?.length) return;
+      const rows = [...items];
+      if (wide.matches) {
+        lifted(0);
+        const line = window.innerHeight * 0.5;
+        let pick = 0;
+        for (const [i, item] of rows.entries()) {
+          if (item.getBoundingClientRect().top <= line) pick = i;
+        }
+        setActive(pick);
+        return;
       }
-      setActive(pick);
+      const below = panel.getBoundingClientRect().bottom - lift;
+      const lastTop = rows[rows.length - 1]?.getBoundingClientRect().top ?? below;
+      lifted(Math.min(0, lastTop - below));
+      const edge = below + lift;
+      const pick = rows.findIndex((item) => item.getBoundingClientRect().top >= edge - 12);
+      setActive(pick === -1 ? rows.length - 1 : pick);
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(measure);
@@ -143,6 +158,7 @@ export function FeatureArea({
       cancelAnimationFrame(raf);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
+      panel.style.translate = "";
     };
   }, [hasShots]);
 
@@ -184,7 +200,7 @@ export function FeatureArea({
           >
             <div
               ref={frame}
-              className={`sticky top-[var(--nav)] z-[2] -mx-[var(--gx)] bg-bg px-[var(--gx)] pb-4 pt-3 lg:top-[max(calc(var(--nav)+24px),calc(50svh-min(19vw,260px)))] lg:mx-0 lg:bg-transparent lg:p-0 ${flip ? "lg:order-2" : ""}`}
+              className={`sticky top-[var(--nav)] z-[2] -mx-[var(--gx)] bg-bg px-[var(--gx)] pb-4 pt-3 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-6 after:bg-gradient-to-b after:from-bg after:to-transparent lg:after:hidden lg:top-[max(calc(var(--nav)+24px),calc(50svh-min(19vw,260px)))] lg:mx-0 lg:bg-transparent lg:p-0 ${flip ? "lg:order-2" : ""}`}
             >
               <div className="relative aspect-[16/10] w-full overflow-hidden rounded-[18px] bg-panel shadow-[0_50px_90px_-50px_rgba(42,38,32,0.45)] ring-1 ring-black/10">
                 {shots.map((s) => (

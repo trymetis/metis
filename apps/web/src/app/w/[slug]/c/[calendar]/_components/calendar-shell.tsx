@@ -79,7 +79,7 @@ function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAge
   const platformAi = usePlatformPolicy().ai;
   const policy = useScopePolicy();
   const calendarSlug = useWorkspacePath().calendarSlug ?? "all";
-  const { refresh, errors } = useCalendar();
+  const { refresh, errors, accountName } = useCalendar();
   const { armed, bindings, helpOpen, setHelpOpen } = useCalendarShortcuts({
     onToggleAgent,
   });
@@ -164,7 +164,9 @@ function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAge
 
         {errors.length > 0 && (
           <div className="shrink-0 border-b border-destructive/25 bg-destructive/8 px-4 py-2 text-[12px] text-destructive-text">
-            {errors.map((e) => `${e.accountEmail}: ${e.error}`).join(" · ")}
+            {errors
+              .map((e) => `${accountName(e.accountId, e.accountEmail)}: ${e.error}`)
+              .join(" · ")}
           </div>
         )}
 

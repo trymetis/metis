@@ -1,6 +1,7 @@
 import "server-only";
 import { z } from "zod";
 
+import { resolvedCalendarName } from "@/calendar/aggregate";
 import { driveName } from "@/drive/name";
 import {
   cancelWorkflowRunOutputSchema,
@@ -123,6 +124,7 @@ export async function workspaceScope(ctx: WorkspaceCtx): Promise<WorkspaceScope>
       accountId: c.accountId,
       linkId: c.linkId,
       email: c.accountEmail,
+      name: resolvedCalendarName(c, ctx.calendars),
       slug: c.accountSlug,
       aiEnabled: c.policy.ai,
     })),

@@ -14,7 +14,7 @@ See also [AGENTS.md](../AGENTS.md), [mail.md](mail.md), [calendar.md](calendar.m
 | Which kinds a query can match, and pruning it per kind | `src/search/kinds.ts` → `kindsFor`, `pruneFor`                                                                                                                                                                                                        |
 | Matching an item: the rewrite liqe's `test` runs on    | `src/search/match.ts` → `forMatching`, `matcherFor`, `needsKey`                                                                                                                                                                                       |
 | Pushdown planning shared by every provider             | `src/search/pushdown.ts` → `Dialect`, `compileWith`, `planPushdown`, `pickText`, `bindTags`                                                                                                                                                           |
-| Dates and sizes in values                              | `src/search/dates.ts` → `parseSearchDate`, `parseSize`                                                                                                                                                                                                |
+| Dates and sizes in values                              | `src/search/dates.ts` → `parseSearchDate` · `src/lib/size.ts` → `parseSize`                                                                                                                                                                           |
 | Input tokens and the caret context for autocomplete    | `src/search/tokens.ts` → `searchTokens`, `caretContext`                                                                                                                                                                                               |
 | The adapter contract                                   | `src/search/types.ts` → `AstSearch`, `Accept` · `searchAst` on `MailAdapter`, `CalendarAdapter` (`EventAstSearch` adds the window), `DriveAdapter` and `DriveSurface`                                                                                 |
 | Provider dialects                                      | `src/mail/providers/gmail.ts` → `gmailDialect` · `microsoft.ts` → `kqlDialect` · `zoho.ts` → `zohoDialect` · `imap.ts` → `imapDialect` · `gateway-client.ts` → `searchAst` · `src/drive/providers/google.ts` → `googleDialect`                        |
@@ -67,6 +67,9 @@ See also [AGENTS.md](../AGENTS.md), [mail.md](mail.md), [calendar.md](calendar.m
 - **Every result action calls an existing procedure, with that procedure's own checks.** `search.*` holds only the search procedures.
 - **Saved searches are personal**: `saved_search` is keyed user × workspace, capped at `MAX_SAVED_SEARCHES`. Recent searches stay in the viewer's browser storage.
 - **Role changes, removal and ownership transfer live once, in `useMemberAdmin`**, used by the profile page and the search dialog; settings → General shows a short list that links to `/members` ([workspaces.md](workspaces.md) has the rules).
+
+- **The sub-calendar list behind calendar results is cached per workspace for a minute** (`cachedCalendarList` in `src/calendar/list-cache.ts`, one cache hash per workspace, one field per user and account set); a listing with an account error is not kept.
+  - `attachCalendar`, `detachCalendar` and `setCalendarVisibility` (`src/connections/calendar-store.ts`) drop the workspace's hash, so a calendar shown, hidden, linked or unlinked shows in search at once on every process.
 
 ## How it works
 

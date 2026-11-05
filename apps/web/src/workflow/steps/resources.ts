@@ -378,6 +378,11 @@ export const RESOURCE_STEPS = [
   maintenance("system.cimdPrune", "Prune MCP clients", "Removes abandoned MCP clients."),
   maintenance("system.auditPrune", "Prune audit events", "Removes audit events past retention."),
   maintenance(
+    "system.mailCachePrune",
+    "Prune cached message bodies",
+    "Clears stored message bodies not opened within the mail cache period.",
+  ),
+  maintenance(
     "system.workflowPrune",
     "Prune workflow data",
     "Clears old step data and deletes old run history.",

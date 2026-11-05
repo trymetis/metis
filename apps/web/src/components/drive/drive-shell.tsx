@@ -121,6 +121,14 @@ export function DriveShell({ trail }: { trail: string[] }) {
   const loadingMore = pages.isFetchingNextPage;
   const error =
     pages.error && !pages.data ? pages.error.message || "Could not load this drive" : null;
+  const listedDrives = drivesQuery.data?.drives;
+  const failedDrives = useMemo(() => {
+    if (!search || !pagesData || !listedDrives) return [];
+    const failed = new Set(
+      pagesData.pages.flatMap((page) => page.driveErrors ?? []).map((e) => e.driveId),
+    );
+    return listedDrives.filter((d) => failed.has(d.driveId)).map((d) => driveName(d, listedDrives));
+  }, [search, pagesData, listedDrives]);
   const isAll = scope.driveSlug === ALL_DRIVES_SLUG;
   const needsTarget = isAll && parentId === null;
   const activeDrive = drives?.find((d) => d.slug === scope.driveSlug) ?? null;
@@ -179,7 +187,6 @@ export function DriveShell({ trail }: { trail: string[] }) {
       ),
   });
 
-  const listedDrives = drivesQuery.data?.drives;
   const crumbs: Crumb[] = useMemo(
     () => [
       {
@@ -353,6 +360,17 @@ export function DriveShell({ trail }: { trail: string[] }) {
               value={progress.total > 0 ? (progress.loaded / progress.total) * 100 : 100}
               className="gap-0"
             />
+          </div>
+        )}
+
+        {failedDrives.length > 0 && (
+          <div className="flex shrink-0 items-center gap-3 border-b border-border-soft bg-surface px-4 py-2 text-[12px] text-faint">
+            <span className="min-w-0 flex-1">
+              Couldn't search all of {failedDrives.join(", ")}, so some results may be missing.
+            </span>
+            <Button variant="outline" size="xs" onClick={load}>
+              Try again
+            </Button>
           </div>
         )}
 

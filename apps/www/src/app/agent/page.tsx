@@ -53,10 +53,10 @@ export default function AgentPage() {
             label: "Your model",
             title: (
               <>
-                Bring <em>your own model.</em>
+                Included, <em>or your own.</em>
               </>
             ),
-            text: "Metis brings no model of its own. Add a key for any model you run or pay for, on Metis Cloud or your own server.",
+            text: "Metis Cloud includes AI every month, so the agent works from the first day. Or add a key for any model you run or pay for, on Metis Cloud or your own server.",
           },
         ]}
       />

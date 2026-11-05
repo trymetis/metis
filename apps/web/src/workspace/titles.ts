@@ -4,8 +4,10 @@ import {
   getWorkspaceCalendarBySlug,
   getWorkspaceDriveBySlug,
   getWorkspaceMailboxBySlug,
+  listWorkspaceCalendars,
   listWorkspaceDrives,
 } from "@/connections";
+import { calendarName } from "@/connections/calendar-name";
 import { driveName } from "@/drive/name";
 
 import { ALL_CALENDARS_SLUG, ALL_DRIVES_SLUG, ALL_MAILBOXES_SLUG } from "./path";
@@ -53,8 +55,13 @@ export function calendarTitle(
     calendarSlug,
     ALL_CALENDARS_SLUG,
     "All calendars",
-    async (slug, workspaceId) =>
-      (await getWorkspaceCalendarBySlug(slug, workspaceId))?.email ?? null,
+    async (slug, workspaceId) => {
+      const [calendar, calendars] = await Promise.all([
+        getWorkspaceCalendarBySlug(slug, workspaceId),
+        listWorkspaceCalendars(workspaceId),
+      ]);
+      return calendar ? calendarName(calendar, calendars) : null;
+    },
   );
 }
 

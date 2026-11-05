@@ -3,7 +3,7 @@ import { createClient } from "redis";
 
 import type { RedisCacheConfig } from "@/config/schema";
 
-import { INCR_EXPIRE } from "../incr-expire";
+import { HSET_EXPIRE, INCR_EXPIRE } from "../lua-scripts";
 import type { CacheDriver } from "../types";
 
 function supportsIncrex(info: string) {
@@ -92,6 +92,22 @@ export function createRedisDriver(cfg: RedisCacheConfig): CacheDriver {
           arguments: [String(ttlSec)],
         }),
       );
+    },
+    async hget(key, field) {
+      const c = await connected();
+      return (await c.hGet(prefixed(key), field)) ?? null;
+    },
+    async hmget(key, fields) {
+      if (fields.length === 0) return [];
+      const c = await connected();
+      return c.hmGet(prefixed(key), fields);
+    },
+    async hsetExpiring(key, field, value, ttlSec) {
+      const c = await connected();
+      await c.eval(HSET_EXPIRE, {
+        keys: [prefixed(key)],
+        arguments: [field, value, String(ttlSec)],
+      });
     },
   };
 }

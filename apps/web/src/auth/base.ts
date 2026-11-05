@@ -8,6 +8,7 @@ import { jwt, magicLink, twoFactor } from "better-auth/plugins";
 
 import type { db } from "@/db";
 import * as schema from "@/db/schema";
+import { CLIENT_IP_HEADER } from "@/lib/client-ip-header";
 import type { rateLimit } from "@/services/rate-limit";
 
 import { native } from "./native";
@@ -53,6 +54,7 @@ export function authOptions(deps: AuthDeps) {
     },
     verification: { storeInDatabase: true },
     secondaryStorage: deps.secondaryStorage,
+    advanced: { ipAddress: { ipAddressHeaders: [CLIENT_IP_HEADER] } },
     rateLimit: {
       enabled: true,
       storage: "secondary-storage",

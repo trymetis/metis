@@ -19,7 +19,7 @@ See also [AGENTS.md](../AGENTS.md), [auth.md](auth.md), [configuration.md](confi
 | Editing a page's sections                     | `src/components/dashboard/config-form.tsx` → `ConfigForm` · slot `system-nav.ts` → `SAVE_BAR_SLOT_ID` · `config-fields.tsx` → `ConfigFieldRows`, `fieldDirty` · `src/dashboard/config-forms.ts` (field descriptors, form ↔ section, diff)                                      |
 | Saving and verifying                          | `src/dashboard/system-config.ts` → `configForm`, `saveConfigSections` · `src/dashboard/system-checks.ts` → `verifySections`                                                                                                                                                    |
 | Unsaved-changes guard                         | `src/store/unsaved-changes-store.ts` → `useUnsavedChangesStore` · `src/components/dashboard/guarded-link.tsx` → `GuardedLink`                                                                                                                                                  |
-| History and restore                           | `src/app/dashboard/system/history/` · `src/dashboard/system-config.ts` → `configHistory`, `configDiff`, `revertConfig`                                                                                                                                                         |
+| History and restore                           | `src/app/dashboard/system/history/` · `src/dashboard/system-config.ts` → `configHistory`, `configDiff`, `revertConfig`, `resetConfigSection`                                                                                                                                   |
 | Deploy checks: data                           | table `preflight_run` (`src/db/schema.ts` → `preflightRun`) · kinds `src/types/preflight.ts` · `src/dashboard/preflight.ts` → `recordPreflightRun`, `latestPreflightRun`, `acknowledgePreflightRun` · written by `scripts/preflight.ts`                                        |
 | Deploy checks: UI                             | page `src/app/dashboard/system/preflight/` · sidebar bar `src/app/dashboard/_components/preflight-bar.tsx` · shared query `src/store/preflight-store.ts` → `preflightQuery`, `acknowledgePreflight`                                                                            |
 | Updates                                       | page `src/app/dashboard/system/updates/` ([updater.md](updater.md))                                                                                                                                                                                                            |
@@ -58,11 +58,17 @@ See also [AGENTS.md](../AGENTS.md), [auth.md](auth.md), [configuration.md](confi
   - Drivers on their driver page, the decision model on the LLM page; sign-up, legal, relay and the mail image proxy on Instance; an OAuth pair or a server list on its provider page.
   - The card shows the editable value itself; a page shows each config value once.
 - **One save covers a whole page.** `dashboard.system.update` takes every changed section of the page with one TOTP code and stores them as one version.
-- **Every config write takes TOTP.** `dashboard.system.update` and `dashboard.system.revert` call `requireTotp` (scope `instance-config`) before anything else.
-- **A section is checked against the real service before it is saved, and a failed check refuses the save.** `verifySections` runs the section's own check against the candidate config; a section with nothing external to reach has none.
+- **Every config write takes TOTP.** `dashboard.system.update`, `dashboard.system.revert` and `dashboard.system.reset` with a code call `requireTotp` (scope `instance-config`) before anything else.
+- **A section is checked against the real service before it is saved, and a failed check refuses the save unless the owner saves anyway.** `verifySections` runs the section's own check against the candidate config; a section with nothing external to reach has none.
+  - **Save anyway** (and **Restore anyway** in History) sends `force` with a fresh TOTP code and stores the version despite failed results; the failures still come back in `check`.
+- **A server-list or OAuth section probes only checks whose inputs changed.** Each `ServerCheck` carries `probe`, the exact inputs its probe reads; a check whose provider, server, part and `probe` hash match one in the stored config is not run again.
+  - An unchanged check reports the latest preflight run's `server` warning for its label (`warning`, "Unchanged. The last deploy check reported: …") only when the check's key also matches the config version that run checked (`readConfigRow(run.configVersion)`), so a fix saved after the deploy drops the old warning; otherwise it is `skipped`.
+  - An unchanged check never refuses a save, so a save that only removes entries always passes.
+  - A save, restore or reset that stores a version returns the check's `warning` results in `warnings`, so they toast even when nothing failed.
 - **Secrets are write-only.** Forms carry `{ set, hint }` for each secret.
   - An empty or absent field keeps the stored value, `null` removes an optional one, and a string replaces it.
   - A list entry's secret is kept by matching the entry's id.
+- **A new server-list entry starts with the entry schema's defaults filled in** (`blankEntry` in `src/dashboard/config-forms.ts`, read off `SERVER_ENTRY_SCHEMAS`), so a switch or port shows the value a save stores; an untouched empty field is left out of the save and takes the schema default.
 - **A stale form is refused.** Each save sends the version the form was opened at; a different current version answers `CONFLICT` with the current version.
 - **Diffs show secrets only as changed or unchanged.**
 - **Every link out of a dashboard page is a `GuardedLink`.** While a page has unsaved changes it cancels the navigation (`Link`'s `onNavigate`) and shakes the save bar.
@@ -100,7 +106,7 @@ See also [AGENTS.md](../AGENTS.md), [auth.md](auth.md), [configuration.md](confi
   - Save asks for one TOTP code and sends only the changed sections.
 - **Saving (`saveConfigSections`).**
   - Parses each section through its schema, refuses when nothing changed or `validateInstanceConfig` fails, and runs `verifySections` on every changed section.
-  - Stores one version (`kind: edit`) with the owner as author; a failed check is shown above the cards and nothing is stored.
+  - Stores one version (`kind: edit`) with the owner as author; a failed check is shown above the cards with **Save anyway**, and nothing is stored unless the owner uses it.
   - Reloads the snapshot at once and reruns quarantine when an OAuth or server-list section changed ([connections.md](connections.md)).
   - With no stored row yet, the first save seeds one.
 - **Deploy checks.**
@@ -110,7 +116,12 @@ See also [AGENTS.md](../AGENTS.md), [auth.md](auth.md), [configuration.md](confi
   - The owner's MCP clients read the same data through `getPreflightWarnings` ([mcp.md](mcp.md)).
 - **History.** `/dashboard/system/history` lists every version with its kind, author, time and `changed_keys`.
   - Compare diffs any two (`configDiff`, field by field through the form descriptors).
-  - Restore (`revertConfig`) inserts a copy of the chosen version (`kind: revert`, `reverted_from_version`) for every section that differs, after the same TOTP and verification as an edit.
+  - Restore (`revertConfig`) inserts a copy of the chosen version (`kind: revert`, `reverted_from_version`) for every section that differs, after the same TOTP and verification as an edit; a refused restore offers **Restore anyway**.
+- **Reset to environment.** Each section card's **Reset to environment** calls `dashboard.system.reset` (`resetConfigSection` in `src/dashboard/system-config.ts`), which compares the stored section with `instanceSeed[section]`.
+  - Without a code it changes nothing and returns `updated: false`, both sides as form values (`sectionForm`), the secret keys that differ (`changedSecrets`), the warnings and `inUse`; the dialog (`src/components/dashboard/reset-section-dialog.tsx`) builds the field diff in the browser from that.
+  - With a code it takes TOTP, then stores the seed as a `reset` version after the same `refuseInvalid` and `verifySections` as an edit, and returns the same view with `updated: true`.
+  - `inUse` lists every active connection the reset would quarantine (`quarantineImpact` in `src/connections/quarantine.ts`, the same rule `reconcileQuarantine` applies); a non-empty list refuses the reset with `PRECONDITION_FAILED` unless `force` is set, which the dialog's "Reset anyway" checkbox sends.
+  - The button is disabled while the page has unsaved edits and when the form's `matchesEnvironment` says the section already equals the seed.
 
 ## Deliberate limits
 

@@ -1,11 +1,13 @@
 import "server-only";
 import type { WorkspaceUserSession } from "@/auth/session";
 import {
+  accountNameIn,
   adapterForCalendar,
   isCalendarVisible,
   listCalendarsAcross,
   listEventsAcross,
   type ResolvedCalendar,
+  resolvedCalendarName,
 } from "@/calendar/aggregate";
 import { workspaceCalendarAccounts } from "@/calendar/session";
 import type { MailProvider } from "@/connections/types";
@@ -167,7 +169,7 @@ async function suggestCalendars(
       type: "calendar" as const,
       id: packReferenceId(c.accountId, c.id),
       label: c.name,
-      detail: c.accountEmail,
+      detail: accountNameIn(scope.calendars, c.accountId, c.accountEmail),
     }));
 }
 
@@ -259,7 +261,9 @@ async function suggestEvents(
           type: "event" as const,
           id: packReferenceId(accountId, e.calendarId, e.id),
           label: e.title || "(untitled event)",
-          detail: `${e.start} · ${e.calendarName ?? e.accountEmail ?? ""}`.trim(),
+          detail: `${e.start} · ${
+            e.calendarName ?? accountNameIn(scope.calendars, e.accountId, e.accountEmail ?? "")
+          }`.trim(),
         },
       ];
     });
@@ -465,7 +469,7 @@ function resolveEventRef(scope: ReferenceScope, ref: AgentReference): EventRefEn
     detail: {
       ...ref,
       label: "Event",
-      detail: account.accountEmail,
+      detail: resolvedCalendarName(account, scope.calendars),
       toolArgs: { calendarAccountId: accountId, calendarId, eventId },
     },
   };
@@ -482,7 +486,7 @@ function resolveCalendarRef(scope: ReferenceScope, ref: AgentReference): Calenda
     detail: {
       ...ref,
       label: calendarId,
-      detail: account.accountEmail,
+      detail: resolvedCalendarName(account, scope.calendars),
       toolArgs: { calendarAccountId: accountId, calendarId },
     },
   };
@@ -534,7 +538,7 @@ async function hydrateCalendars(scope: ReferenceScope, entries: CalendarRefEntry
   }
 }
 
-async function hydrateEvents(entries: EventRefEntry[]): Promise<void> {
+async function hydrateEvents(scope: ReferenceScope, entries: EventRefEntry[]): Promise<void> {
   await Promise.all(
     entries.slice(0, MAX_HYDRATIONS).map(async (entry) => {
       try {
@@ -542,7 +546,7 @@ async function hydrateEvents(entries: EventRefEntry[]): Promise<void> {
         const event = await adapter.getEvent(entry.calendarId, entry.eventId);
         entry.detail.label = event.title || "(untitled event)";
         entry.detail.detail = `${event.start} · ${
-          event.calendarName ?? entry.account.accountEmail
+          event.calendarName ?? resolvedCalendarName(entry.account, scope.calendars)
         }`;
       } catch {
         entry.detail.label = "Event";
@@ -679,7 +683,7 @@ export async function resolveReferences(
   if (opts.hydrate) {
     await Promise.all([
       hydrateEmails(emails),
-      hydrateEvents(events),
+      hydrateEvents(scope, events),
       hydrateCalendars(scope, calendars),
     ]);
   }

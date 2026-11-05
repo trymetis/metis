@@ -20,7 +20,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Which AI model does it use?",
     answer:
-      "The one you bring. Metis includes no model on any plan, Cloud included: whoever runs your instance adds a key for OpenAI, Anthropic or any OpenAI-compatible endpoint, which can be a model on your own hardware. AI stays off for every mailbox, calendar and drive until you turn it on, and turning it on asks for your two-factor code.",
+      "On Metis Cloud, every plan includes AI credits each billing month, for the AI model and the decision model, so AI works from the first day. A credit that runs out stops until the next billing day, with no top-ups, and the instance owner can switch to their own key at any time. Self-hosted instances bring their own: a key for OpenAI, Anthropic or any OpenAI-compatible endpoint, which can be a model on your own hardware. AI stays off for every mailbox, calendar and drive until you turn it on, and turning it on asks for your two-factor code.",
   },
   {
     question: "Can the agent send mail or delete things on its own?",

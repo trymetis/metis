@@ -110,7 +110,7 @@ export async function resolveConnectionAuth(
 
   const accessToken = await getFreshAccessToken(target);
   if (!accessToken) return null;
-  return { kind: "oauth", accessToken };
+  return { kind: "oauth", accessToken, email: target.email };
 }
 
 function splitScopes(scope: string | null): string[] {

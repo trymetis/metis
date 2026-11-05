@@ -321,6 +321,7 @@ export interface ServerCheck {
   server: string | null;
   part: string;
   label: string;
+  probe: unknown;
   run: () => Promise<unknown>;
 }
 
@@ -337,6 +338,7 @@ export function serverChecks(cfg: InstanceConfig = getInstanceConfig()): ServerC
       server: null,
       part: "Token endpoint",
       label: `oauth ${provider}`,
+      probe: { ...providerCredentials(provider, cfg), endpoint: oauthTokenEndpoint(provider, cfg) },
       run: () => probeOAuthClient(provider, cfg),
     });
   }
@@ -347,6 +349,7 @@ export function serverChecks(cfg: InstanceConfig = getInstanceConfig()): ServerC
       server: server.name,
       part: "IMAP",
       label: `imap "${server.name}" (${server.imap.host}:${server.imap.port})`,
+      probe: { endpoint: server.imap, allowInsecureTls: server.allowInsecureTls },
       run: () =>
         probeSocket({
           ...server.imap,
@@ -359,6 +362,7 @@ export function serverChecks(cfg: InstanceConfig = getInstanceConfig()): ServerC
       server: server.name,
       part: "SMTP",
       label: `smtp "${server.name}" (${server.smtp.host}:${server.smtp.port})`,
+      probe: { endpoint: server.smtp, allowInsecureTls: server.allowInsecureTls },
       run: () =>
         probeSocket({
           ...server.smtp,
@@ -374,6 +378,7 @@ export function serverChecks(cfg: InstanceConfig = getInstanceConfig()): ServerC
       server: server.name,
       part: "CalDAV endpoint",
       label: `caldav "${server.name}" (${server.url})`,
+      probe: { url: server.url, allowInsecureTls: server.allowInsecureTls },
       run: async () => {
         const res = await probeHttp(server.url, server.allowInsecureTls);
         if (res.status === 401 || res.status === 403) return;
@@ -405,6 +410,7 @@ export function serverChecks(cfg: InstanceConfig = getInstanceConfig()): ServerC
       server: server.name,
       part: "Gateway health",
       label: `${kind} "${server.name}" (${server.endpoint})`,
+      probe: { endpoint: server.endpoint },
       run: async () => {
         const res = await probeHttp(`${server.endpoint}/v1/health`, false);
         if (res.status === 401) return;
@@ -424,6 +430,7 @@ export function serverChecks(cfg: InstanceConfig = getInstanceConfig()): ServerC
       server: server.name,
       part: "Access key",
       label: `s3 "${server.name}" (${server.endpoint})`,
+      probe: server,
       run: async () => {
         const res = await s3ProbeCredentials(server);
         if (res.ok || res.code === "AccessDenied") return;
@@ -441,6 +448,7 @@ export function serverChecks(cfg: InstanceConfig = getInstanceConfig()): ServerC
       server: server.name,
       part: "WebDAV endpoint",
       label: `webdav "${server.name}" (${server.url})`,
+      probe: { url: server.url, allowInsecureTls: server.allowInsecureTls },
       run: async () => {
         const res = await probeHttp(server.url, server.allowInsecureTls, {
           method: "PROPFIND",
@@ -463,6 +471,7 @@ export function serverChecks(cfg: InstanceConfig = getInstanceConfig()): ServerC
       server: server.name,
       part: server.secure === "none" ? "Greeting" : "Greeting and TLS",
       label: `ftp "${server.name}" (${server.host}:${server.port}, ${server.secure})`,
+      probe: server,
       run: () => probeFtp(server),
     });
   }
@@ -473,6 +482,7 @@ export function serverChecks(cfg: InstanceConfig = getInstanceConfig()): ServerC
       server: server.name,
       part: "Handshake and host key",
       label: `sftp "${server.name}" (${server.host}:${server.port})`,
+      probe: server,
       run: () => probeSftp(server),
     });
   }

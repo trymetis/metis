@@ -12,7 +12,7 @@ const ROWS: [string, string, string][] = [
   ["Updates", "Handled by us", "One click in the owner dashboard, with automatic rollback"],
   [
     "AI model",
-    "Your own key: OpenAI, Anthropic or any OpenAI-compatible endpoint",
+    "Included every month, or your own key: OpenAI, Anthropic or any OpenAI-compatible endpoint",
     "Your own key, or a model on your own hardware",
   ],
   ["Domain", "Your domain or a metis-suite.app subdomain", "Your domain, with HTTPS from Caddy"],

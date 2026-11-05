@@ -64,6 +64,7 @@ See also [AGENTS.md](../AGENTS.md), [servers.md](servers.md), [database.md](data
 ### The stored config
 
 - **The database wins once a row exists.** Preflight seeds an empty table, and later only a section the row has never stored; afterwards it only warns for each section the environment or config file sets to something other than the stored value (`suppliedSections`).
+  - The owner puts a section back to the environment and config file with the dashboard's **Reset to environment**, which stores that section of `instanceSeed` as a new `reset` version ([dashboard.md](dashboard.md)); `instanceSeed` is read at boot, so a changed variable needs a restart first.
 - **One table, one current row.** `is_current` carries a partial unique index; every write is one short transaction that clears the current flag where `version` is the expected one, refuses when that touched nothing, then inserts. SQLite has no `FOR UPDATE`; the conditional update is the fence.
 - **Each secret is its own `encryptedText` column; only the server lists are JSON**, in one sealed `servers` column, because they are variable-shaped lists that carry S3 secret keys. Adding a setting is a schema change and a migration ([database.md](database.md)).
 - **Cross-section checks (`validateInstanceConfig`, against the boot config) run on every candidate config, and only there.**
@@ -106,6 +107,9 @@ See also [AGENTS.md](../AGENTS.md), [servers.md](servers.md), [database.md](data
   - `MAIL_FROM_AUTH` and `MAIL_FROM_INVITE` fall back to `MAIL_FROM`.
   - Legal consent is off only when both `METIS_TERMS_URL` and `METIS_PRIVACY_URL` are unset.
   - `METIS_CONFIG_PATH` and `SKIP_ENV_VALIDATION` are read outside the schema.
+- **The `smtp` mail driver requires STARTTLS on a connection without implicit TLS** (`requireTLS` in `src/services/mailer/drivers/smtp.ts` → `createSmtpTransport`), for `SMTP_URL` and `SMTP_HOST` alike.
+  - `SMTP_PLAIN=true` (column `mail_smtp_plain`, dashboard **Allow unencrypted**) keeps the opportunistic upgrade, for a local relay without TLS; the schema refuses it with `SMTP_SECURE=true`.
+  - A `requireTLS` query parameter in `SMTP_URL` overrides both, because nodemailer applies URL options last.
 - **The `console` mail driver** (`METIS_MAIL_DRIVER=console`, `src/services/mailer/drivers/console.ts`) delivers the instance's own mail (every message in `src/services/mailer/send.ts`) to the Metis Cloud console, so a new Cloud user gets it there before setting up a mailer of their own.
   - Its endpoint (`CONSOLE_MAIL_URL`) and the per-tenant bearer credential the console issues (`CONSOLE_MAIL_TOKEN`) are mailer settings stored like a Resend key (`mail_console_url`, `mail_console_token`), so the owner can later switch to their own SMTP or Resend from the dashboard.
   - Each message is one `POST <endpoint>` with `Authorization: Bearer <token>` and a JSON body `{ to, from, subject, html, text }`; any 2xx means accepted, anything else fails the send.
@@ -113,11 +117,19 @@ See also [AGENTS.md](../AGENTS.md), [servers.md](servers.md), [database.md](data
 - **Structured outputs on `openai-compatible`.** Off, the endpoint gets `json_object` mode and the schema goes into the prompt (`structuredOutput` in `src/services/llm/structured-output.ts`, decided per call), so summaries need a much larger context window. Turn it on only when the endpoint supports `json_schema`.
 - **The runner section also carries workflow retention and inbound settings**: `stepDataDays` and `historyDays` ([workflow-runs.md](workflow-runs.md)), and `publicUrl` and `trustedProxies` ([workflow-graph.md](workflow-graph.md)).
   - Webhook and push addresses use `publicUrl`, else `BETTER_AUTH_URL` (`inboundBase`); push subscriptions start only while `publicUrl` is set.
-  - `trustedProxies` takes a list or one comma-separated string; the dashboard edits it as text.
+  - `trustedProxies` takes a list or one comma-separated string; the dashboard edits it as text. It serves only the webhook **Only from these IPs** check.
+- **The `proxies` section is the app's own trusted-proxy list** (`METIS_TRUSTED_PROXIES`, column `trusted_proxies`, the Instance page's Proxies card).
+  - `clientIp` reads it per request for rate limits, Better Auth and the audit log ([auth.md](auth.md)).
+  - It is separate from the runner's list on purpose, so a workflow setting never decides sign-in limits.
+- **Both trusted-proxy lists accept only real addresses and in-range prefixes** (`isIpOrRange` in `src/config/schema.ts`), because `BlockList.addSubnet` throws on a bad prefix and the lookup runs on every sign-in.
+  - A stored entry that fails the check is dropped when the row loads (`rowToInstanceConfig`), so an older row never stops the config from loading.
 - **A keyless SystemOne server.** With `METIS_DECISION_API_KEY` unset, the driver sends `KEYLESS_PLACEHOLDER` (`src/services/decision/drivers/systemone.ts`), because the TypeSafe provider always sends a bearer; preflight warns.
 
 ## Deliberate limits
 
+- **Every cache driver implements the same `CacheDriver` (`src/services/cache/types.ts`), including a small hash API for grouped entries** (`hget`, `hmget`, `hsetExpiring`; `del` drops the whole hash).
+  - `cachedField` and `forgetHash` (`src/services/cache/hash-cache.ts`) are the read-through helpers on top: they read a field, validate it with a Zod schema, load and store it on a miss, share an identical in-flight load within the process, and only log when the cache driver fails.
+  - `hsetExpiring` sets a field and gives the hash a lifetime only if it has none, in one Lua script (`HSET_EXPIRE` in `src/services/cache/lua-scripts.ts`) like `incr`'s `INCR_EXPIRE`, so it runs on every Redis version and on Upstash.
 - **Changing the cache driver drops rate-limit counters.** Sessions and verification tokens live in the database, so they survive ([auth.md](auth.md)); the replaced Redis client closes after `CLOSE_GRACE_MS` (`src/services/cache/registry.ts`).
 - **A process with no database reachable at boot runs on the environment** until a poll succeeds.
 - **Versions are never pruned.** They are small, and pruning would break `reverted_from_version`.

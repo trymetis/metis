@@ -140,6 +140,95 @@ export default function dashboardSpecs() {
     expect(await currentVersion(page)).toBe(before);
   });
 
+  test("resetting a section to the environment shows what changes, stores a Reset version and puts the environment value back", async ({
+    page,
+  }) => {
+    await page.goto("/dashboard/system/instance");
+    const max = Number(await relayMax(page).inputValue());
+    const card = main(page)
+      .locator("section")
+      .filter({ has: page.getByRole("spinbutton", { name: "Max transfer size (MB)" }) });
+    const resetButton = card.getByRole("button", { name: "Reset to environment" });
+
+    await relayMax(page).fill(String(max + 3));
+    await expect(resetButton).toBeDisabled();
+    await saveBar(page).getByRole("button", { name: "Save changes" }).click();
+    await confirmTotp(page, "Save changes", "Save");
+    await expect(saveBar(page)).toHaveCount(0);
+    const saved = await currentVersion(page);
+
+    await resetButton.click();
+    const dialog = page.getByRole("alertdialog", { name: "Reset Drive relay to environment" });
+    await expect(dialog).toBeVisible();
+    const change = dialog.getByText("Max transfer size (MB)", { exact: true }).locator("..");
+    await expect(change).toContainText(String(max + 3));
+    const environment = Number((await change.locator("span.font-mono").last().innerText()).trim());
+    await enterCode(page, await harness.totp());
+    await dialog.getByRole("button", { name: "Reset", exact: true }).click();
+    await expect(dialog).toBeHidden();
+    await expect(
+      toasts(page).getByText(`Drive relay reset to environment as version ${saved + 1}`, {
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expect(relayMax(page)).toHaveValue(String(environment));
+    await expect(resetButton).toBeDisabled();
+
+    await sidebar(page).getByRole("link", { name: "History", exact: true }).click();
+    const current = main(page)
+      .getByRole("row")
+      .filter({ has: page.getByRole("cell", { name: `${saved + 1} Current`, exact: true }) });
+    await expect(current).toContainText("Reset");
+    await expect(current).toContainText("Drive relay");
+
+    if (environment !== max) {
+      await page.goto("/dashboard/system/instance");
+      await relayMax(page).fill(String(max));
+      await saveBar(page).getByRole("button", { name: "Save changes" }).click();
+      await confirmTotp(page, "Save changes", "Save");
+      await expect(saveBar(page)).toHaveCount(0);
+    }
+  });
+
+  test("a server list save checks only new or changed servers, can be saved anyway, and saves a removal without refusing", async ({
+    page,
+  }) => {
+    await page.goto("/dashboard/system/providers/webdav");
+    const before = await currentVersion(page);
+    const refused = main(page).locator("section").filter({ hasText: "Check failed" });
+
+    await main(page).getByRole("button", { name: "Add server" }).click();
+    await main(page).getByRole("textbox", { name: "Name", exact: true }).last().fill("Nowhere");
+    await main(page)
+      .getByRole("textbox", { name: "WebDAV URL" })
+      .last()
+      .fill("http://webdav.localhost:1/");
+    await saveBar(page).getByRole("button", { name: "Save changes" }).click();
+    await confirmTotp(page, "Save changes", "Save");
+
+    await expect(refused).toContainText("Nothing was saved.");
+    await expect(refused.getByText("Nowhere · WebDAV endpoint")).toBeVisible();
+    await expect(refused.getByText("Shared Files · WebDAV endpoint")).toBeVisible();
+    await expect(refused).toContainText(/Unchanged/);
+    expect(await currentVersion(page)).toBe(before);
+
+    await refused.getByRole("button", { name: "Save anyway" }).click();
+    await confirmTotp(page, "Save anyway", "Save anyway");
+    await expect(
+      toasts(page).getByText(`Saved as version ${before + 1}`, { exact: true }),
+    ).toBeVisible();
+    await expect(saveBar(page)).toHaveCount(0);
+
+    await main(page).getByRole("button", { name: "Remove Nowhere" }).click();
+    await saveBar(page).getByRole("button", { name: "Save changes" }).click();
+    await confirmTotp(page, "Save changes", "Save");
+    await expect(
+      toasts(page).getByText(`Saved as version ${before + 2}`, { exact: true }),
+    ).toBeVisible();
+    await expect(refused).toHaveCount(0);
+    await expect(main(page).getByText("Nowhere", { exact: true })).toHaveCount(0);
+  });
+
   test("the people, workspaces, connections and MCP pages list the seeded instance", async ({
     page,
     account,

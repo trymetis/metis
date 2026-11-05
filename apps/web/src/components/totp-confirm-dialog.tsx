@@ -21,6 +21,8 @@ export function TotpConfirmDialog({
   title,
   body,
   confirmLabel = "Confirm",
+  confirmDisabled = false,
+  children,
   onOpenChange,
   onConfirm,
 }: {
@@ -28,6 +30,8 @@ export function TotpConfirmDialog({
   title: string;
   body: string;
   confirmLabel?: string;
+  confirmDisabled?: boolean;
+  children?: React.ReactNode;
   onOpenChange: (open: boolean) => void;
   onConfirm: (code: string) => Promise<void>;
 }) {
@@ -60,18 +64,19 @@ export function TotpConfirmDialog({
         onOpenChange(next);
       }}
     >
-      <AlertDialogContent>
+      <AlertDialogContent size={children ? "lg" : "default"}>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{body}</AlertDialogDescription>
         </AlertDialogHeader>
 
+        {children}
         <TwoFactorInput autoFocus field={code.field} />
         {error && <p className="text-center text-[12px] text-destructive-text">{error}</p>}
 
         <AlertDialogFooter>
           <AlertDialogCancel disabled={busy}>Cancel</AlertDialogCancel>
-          <AlertDialogAction disabled={busy || !code.complete} onClick={submit}>
+          <AlertDialogAction disabled={busy || !code.complete || confirmDisabled} onClick={submit}>
             {busy ? "Saving…" : confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>

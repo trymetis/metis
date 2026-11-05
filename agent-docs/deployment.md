@@ -113,6 +113,7 @@ See also [AGENTS.md](../AGENTS.md), [updater.md](updater.md), [self-host.md](sel
 - **Preflight** (`bun run --cwd apps/web preflight`, idempotent, once per deployment; `--conditions=react-server` because `credentials.ts` imports `server-only`) runs in order:
   - applies pending migrations, creating the schema of an empty database from `0000_baseline` ([database.md](database.md));
   - seeds the stored config when the table is empty, else warns where the environment differs ([configuration.md](configuration.md));
+  - creates or revises the system workflows (`ensureSystemWorkflows`, [workflow-graph.md](workflow-graph.md)), so ticks only run work;
   - probes every server and OAuth client in the stored config (`verifyConnectServers`, [servers.md](servers.md));
   - checks the decision model when a decision feature is on;
   - runs `backfillServerIds` and `reconcileQuarantine` ([connections.md](connections.md));

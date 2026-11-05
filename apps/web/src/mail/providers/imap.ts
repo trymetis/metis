@@ -34,6 +34,7 @@ import { decodeMimeHeader } from "../recipients";
 import {
   type FolderMap,
   type ImapContext,
+  requiresStartTls,
   SEARCH_FOLDERS,
   withImap,
   withImapMailbox,
@@ -813,16 +814,9 @@ async function sendMessage(
   payload: DraftPayload,
   from: string,
 ): Promise<{ id: string | null }> {
-  const login = smtpLogin(credentials);
   const raw = await buildMime(payload, from);
 
-  const transporter = createTransport({
-    host: credentials.smtp.host,
-    port: credentials.smtp.port,
-    secure: credentials.smtp.secure,
-    auth: { user: login.user, pass: login.pass },
-    tls: { rejectUnauthorized: !credentials.allowInsecureTls },
-  });
+  const transporter = smtpTransport(credentials);
 
   try {
     await transporter.sendMail({
@@ -961,15 +955,20 @@ async function downloadAttachment(
   });
 }
 
-export async function imapVerifySmtp(credentials: ImapCredentials): Promise<void> {
+function smtpTransport(credentials: ImapCredentials) {
   const login = smtpLogin(credentials);
-  const transporter = createTransport({
+  return createTransport({
     host: credentials.smtp.host,
     port: credentials.smtp.port,
     secure: credentials.smtp.secure,
+    requireTLS: requiresStartTls(credentials.smtp),
     auth: { user: login.user, pass: login.pass },
     tls: { rejectUnauthorized: !credentials.allowInsecureTls },
   });
+}
+
+export async function imapVerifySmtp(credentials: ImapCredentials): Promise<void> {
+  const transporter = smtpTransport(credentials);
   try {
     await transporter.verify();
   } finally {

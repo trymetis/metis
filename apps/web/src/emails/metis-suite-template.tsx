@@ -3,6 +3,7 @@ import {
   Button,
   Column,
   Container,
+  Font,
   Head,
   Heading,
   Hr,
@@ -12,6 +13,10 @@ import {
   Section,
   Text,
 } from "@react-email/components";
+
+import { config } from "@/config";
+
+import { EMAIL_FONT_PATH } from "./font";
 
 export interface MetisSuiteDetail {
   label: string;
@@ -30,158 +35,149 @@ export interface MetisSuiteTemplateProps {
   footer?: string;
 }
 
-const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
-const SERIF = "Georgia, 'Times New Roman', serif";
+const FONT_URL = new URL(EMAIL_FONT_PATH, config.auth.url).toString();
 
-const darkModeCss = `
+const FONT_STACK =
+  "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+
+const INK = "#0a0a0a";
+const TEXT = "#404040";
+const MUTED = "#737373";
+const LINE = "#e5e5e5";
+
+const darkRules = `
+    .m-body { background-color: #0a0a0a !important; }
+    .m-ink { color: #fafafa !important; }
+    .m-text { color: #d4d4d4 !important; }
+    .m-muted { color: #a3a3a3 !important; }
+    .m-line { border-color: #262626 !important; }
+    .m-button { background-color: #fafafa !important; color: #0a0a0a !important; }
+`;
+
+const colorSchemeCss = `
   :root { color-scheme: light dark; supported-color-schemes: light dark; }
-  @media (prefers-color-scheme: dark) {
-    .m-body,
-    .m-body > table > tbody > tr > td { background-color: #111110 !important; }
-    .m-card { background-color: #1b1a17 !important; border-color: #35322b !important; }
-    .m-heading { color: #f6f3ec !important; }
-    .m-text { color: #cdc8bb !important; }
-    .m-muted { color: #9c968a !important; }
-    .m-url { color: #cdc8bb !important; }
-    .m-divider { border-color: #35322b !important; }
-    .m-mark { background-color: #f6f3ec !important; color: #111110 !important; }
-    .m-wordmark { color: #f6f3ec !important; }
-  }
-  [data-ogsc] .m-body,
-  [data-ogsc] .m-body > table > tbody > tr > td { background-color: #111110 !important; }
-  [data-ogsc] .m-card { background-color: #1b1a17 !important; border-color: #35322b !important; }
-  [data-ogsc] .m-heading { color: #f6f3ec !important; }
-  [data-ogsc] .m-text { color: #cdc8bb !important; }
-  [data-ogsc] .m-muted { color: #9c968a !important; }
-  [data-ogsc] .m-url { color: #cdc8bb !important; }
-  [data-ogsc] .m-divider { border-color: #35322b !important; }
-  [data-ogsc] .m-mark { background-color: #f6f3ec !important; color: #111110 !important; }
-  [data-ogsc] .m-wordmark { color: #f6f3ec !important; }
+  @media (prefers-color-scheme: dark) {${darkRules}  }
+  ${darkRules
+    .trim()
+    .split("\n")
+    .map((rule) => `[data-ogsc] ${rule.trim()}`)
+    .join("\n  ")}
 `;
 
 const bodyStyle: React.CSSProperties = {
-  fontFamily: SANS,
-  backgroundColor: "#faf8f4",
-  padding: "32px 16px",
-  color: "#111110",
   margin: 0,
+  padding: "48px 20px",
+  backgroundColor: "#ffffff",
+  color: INK,
+  fontFamily: FONT_STACK,
+  WebkitFontSmoothing: "antialiased",
 };
 
 const containerStyle: React.CSSProperties = {
-  maxWidth: "480px",
+  maxWidth: "460px",
   margin: "0 auto",
-  backgroundColor: "#ffffff",
-  borderRadius: "12px",
-  padding: "32px",
-  border: "1px solid #e9e3d6",
 };
 
-const brandRowStyle: React.CSSProperties = {
-  margin: "0 0 24px",
-};
-
-const markCellStyle: React.CSSProperties = {
-  width: "28px",
-  height: "28px",
-  backgroundColor: "#111110",
-  color: "#ffffff",
-  fontFamily: SERIF,
-  fontSize: "16px",
-  fontWeight: 700,
-  lineHeight: "28px",
-  textAlign: "center",
-  borderRadius: "6px",
-};
-
-const wordmarkCellStyle: React.CSSProperties = {
-  fontFamily: SERIF,
-  fontSize: "16px",
+const wordmarkStyle: React.CSSProperties = {
+  margin: "0 0 40px",
+  fontSize: "14px",
+  lineHeight: "20px",
   fontWeight: 600,
-  color: "#111110",
-  letterSpacing: "0.2px",
-  paddingLeft: "10px",
+  letterSpacing: "-0.01em",
+  color: INK,
 };
 
 const headingStyle: React.CSSProperties = {
-  fontFamily: SERIF,
-  fontSize: "24px",
+  margin: "0 0 12px",
+  fontSize: "22px",
+  lineHeight: "30px",
   fontWeight: 600,
-  color: "#111110",
-  margin: "0 0 8px",
+  letterSpacing: "-0.02em",
+  color: INK,
 };
 
 const introStyle: React.CSSProperties = {
-  fontSize: "14px",
-  lineHeight: "1.6",
-  color: "#46443d",
-  margin: "0 0 24px",
+  margin: "0 0 28px",
+  fontSize: "15px",
+  lineHeight: "24px",
+  color: TEXT,
 };
 
 const detailsStyle: React.CSSProperties = {
-  margin: "0 0 24px",
+  margin: "0 0 28px",
+  borderTop: `1px solid ${LINE}`,
 };
 
-const detailLineStyle: React.CSSProperties = {
+const detailCellStyle: React.CSSProperties = {
+  padding: "10px 0",
+  borderBottom: `1px solid ${LINE}`,
   fontSize: "13px",
-  lineHeight: "1.6",
-  color: "#46443d",
-  margin: "0 0 4px",
+  lineHeight: "20px",
+  verticalAlign: "top",
 };
 
 const detailLabelStyle: React.CSSProperties = {
-  color: "#6f6a5f",
+  ...detailCellStyle,
+  width: "112px",
+  paddingRight: "16px",
+  color: MUTED,
+};
+
+const detailValueStyle: React.CSSProperties = {
+  ...detailCellStyle,
+  color: INK,
+  wordBreak: "break-word",
 };
 
 const buttonStyle: React.CSSProperties = {
   display: "inline-block",
-  backgroundColor: "#c8922a",
-  color: "#111110",
-  fontWeight: 600,
-  textDecoration: "none",
-  padding: "12px 24px",
+  padding: "12px 20px",
   borderRadius: "8px",
+  backgroundColor: INK,
+  color: "#ffffff",
   fontSize: "14px",
+  lineHeight: "20px",
+  fontWeight: 500,
+  textDecoration: "none",
   boxSizing: "border-box",
 };
 
 const expiryStyle: React.CSSProperties = {
-  fontSize: "12px",
-  lineHeight: "1.6",
-  color: "#6f6a5f",
-  margin: "12px 0 0",
+  margin: "16px 0 0",
+  fontSize: "13px",
+  lineHeight: "20px",
+  color: MUTED,
 };
 
 const fallbackStyle: React.CSSProperties = {
-  fontSize: "12px",
-  lineHeight: "1.6",
-  color: "#6f6a5f",
-  margin: "24px 0 0",
+  margin: "32px 0 0",
+  fontSize: "13px",
+  lineHeight: "20px",
+  color: MUTED,
 };
 
 const urlStyle: React.CSSProperties = {
+  color: TEXT,
   wordBreak: "break-all",
-  color: "#46443d",
 };
 
 const dividerStyle: React.CSSProperties = {
-  borderColor: "#e9e3d6",
-  borderStyle: "solid",
-  borderWidth: "1px 0 0",
-  margin: "24px 0 16px",
+  margin: "40px 0 20px",
+  border: "none",
+  borderTop: `1px solid ${LINE}`,
 };
 
 const footerStyle: React.CSSProperties = {
-  fontSize: "12px",
-  lineHeight: "1.6",
-  color: "#6f6a5f",
   margin: 0,
+  fontSize: "12px",
+  lineHeight: "18px",
+  color: MUTED,
 };
 
 const addressStyle: React.CSSProperties = {
+  ...footerStyle,
+  margin: "8px 0 0",
   fontSize: "11px",
-  lineHeight: "1.6",
-  color: "#6f6a5f",
-  margin: "12px 0 0",
 };
 
 export function MetisSuiteTemplate({
@@ -201,24 +197,23 @@ export function MetisSuiteTemplate({
         <title>{heading}</title>
         <meta name="color-scheme" content="light dark" />
         <meta name="supported-color-schemes" content="light dark" />
+        <Font
+          fontFamily="DM Sans"
+          fallbackFontFamily={["Helvetica", "Arial", "sans-serif"]}
+          webFont={{ url: FONT_URL, format: "woff2" }}
+          fontWeight="100 1000"
+        />
         {/* oxlint-disable-next-line react/no-danger --static stylesheet, no interpolation */}
-        <style dangerouslySetInnerHTML={{ __html: darkModeCss }} />
+        <style dangerouslySetInnerHTML={{ __html: colorSchemeCss }} />
       </Head>
       <Preview>{preview}</Preview>
       <Body style={bodyStyle} className="m-body">
-        <Container style={containerStyle} className="m-card">
-          <Section style={brandRowStyle}>
-            <Row>
-              <Column width={28} style={markCellStyle} className="m-mark" data-skip-in-text="true">
-                M
-              </Column>
-              <Column style={wordmarkCellStyle} className="m-wordmark">
-                Metis Suite
-              </Column>
-            </Row>
-          </Section>
+        <Container style={containerStyle}>
+          <Text style={wordmarkStyle} className="m-ink">
+            Metis Suite
+          </Text>
 
-          <Heading as="h1" style={headingStyle} className="m-heading">
+          <Heading as="h1" style={headingStyle} className="m-ink">
             {heading}
           </Heading>
 
@@ -230,19 +225,21 @@ export function MetisSuiteTemplate({
           {children}
 
           {details?.length ? (
-            <Section style={detailsStyle}>
+            <Section style={detailsStyle} className="m-line">
               {details.map((detail) => (
-                <Text key={detail.label} style={detailLineStyle} className="m-text">
-                  <span style={detailLabelStyle} className="m-muted">
+                <Row key={detail.label}>
+                  <Column style={detailLabelStyle} className="m-muted m-line">
                     {detail.label}
-                  </span>{" "}
-                  {detail.value}
-                </Text>
+                  </Column>
+                  <Column style={detailValueStyle} className="m-ink m-line">
+                    {detail.value}
+                  </Column>
+                </Row>
               ))}
             </Section>
           ) : null}
 
-          <Button href={url} style={buttonStyle}>
+          <Button href={url} style={buttonStyle} className="m-button">
             {buttonLabel}
           </Button>
 
@@ -253,14 +250,14 @@ export function MetisSuiteTemplate({
           ) : null}
 
           <Text style={fallbackStyle} className="m-muted" data-skip-in-text="true">
-            If the button doesn&apos;t work, paste this URL into your browser:
+            Or paste this link into your browser:
             <br />
-            <span style={urlStyle} className="m-url">
+            <span style={urlStyle} className="m-text">
               {url}
             </span>
           </Text>
 
-          <Hr style={dividerStyle} className="m-divider" />
+          <Hr style={dividerStyle} className="m-line" />
 
           <Text style={footerStyle} className="m-muted">
             {footer}

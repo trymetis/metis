@@ -1,7 +1,7 @@
 import type { instanceConfig } from "@/db/schema";
 import { isRecord } from "@/lib/guards";
 
-import { type InstanceConfig, instanceConfigSchema } from "./schema";
+import { type InstanceConfig, instanceConfigSchema, isIpOrRange } from "./schema";
 
 export type InstanceConfigRow = typeof instanceConfig.$inferSelect;
 
@@ -81,6 +81,7 @@ export function instanceConfigToRow(rt: InstanceConfig): InstanceConfigSettings 
     mailSmtpUser: smtp?.user ?? null,
     mailSmtpPass: smtp?.pass ?? null,
     mailSmtpSecure: smtp?.secure ?? null,
+    mailSmtpPlain: smtp?.plain ?? null,
     mailConsoleUrl: mailer.driver === "console" ? mailer.endpoint : null,
     mailConsoleToken: mailer.driver === "console" ? mailer.token : null,
     signupDisabled: rt.signup.signupDisabled,
@@ -91,6 +92,8 @@ export function instanceConfigToRow(rt: InstanceConfig): InstanceConfigSettings 
     relayConcurrency: rt.relay.relayConcurrency,
     imageProxyEnabled: rt.imageProxy.enabled,
     imageProxyMaxMb: rt.imageProxy.maxMb,
+    trustedProxies: rt.proxies.trustedProxies,
+    mailCacheDays: rt.mailCache.retentionDays,
     cacheDriver: cache.driver,
     cacheUrl: cache.driver === "memory" ? null : cache.url,
     cacheToken: cache.driver === "upstash" ? cache.token : null,
@@ -164,6 +167,7 @@ export function rowToInstanceConfig(row: InstanceConfigSettings): InstanceConfig
       user: u(row.mailSmtpUser),
       pass: u(row.mailSmtpPass),
       secure: u(row.mailSmtpSecure),
+      plain: u(row.mailSmtpPlain),
       endpoint: u(row.mailConsoleUrl),
       token: u(row.mailConsoleToken),
     },
@@ -180,6 +184,12 @@ export function rowToInstanceConfig(row: InstanceConfigSettings): InstanceConfig
     imageProxy: {
       enabled: u(row.imageProxyEnabled),
       maxMb: u(row.imageProxyMaxMb),
+    },
+    proxies: {
+      trustedProxies: (row.trustedProxies ?? []).filter(isIpOrRange),
+    },
+    mailCache: {
+      retentionDays: u(row.mailCacheDays),
     },
     cache: {
       driver: row.cacheDriver,
@@ -198,7 +208,7 @@ export function rowToInstanceConfig(row: InstanceConfigSettings): InstanceConfig
       stepDataDays: row.runnerStepDataDays,
       historyDays: row.runnerHistoryDays,
       publicUrl: u(row.runnerPublicUrl),
-      trustedProxies: row.runnerTrustedProxies ?? [],
+      trustedProxies: (row.runnerTrustedProxies ?? []).filter(isIpOrRange),
     },
     google: {
       clientId: u(row.googleClientId),

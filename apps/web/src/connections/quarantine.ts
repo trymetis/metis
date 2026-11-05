@@ -1,5 +1,5 @@
 import "server-only";
-import { and, count, eq, inArray, isNotNull, isNull, not, or } from "drizzle-orm";
+import { and, count, eq, inArray, isNotNull, isNull, not, or, sql } from "drizzle-orm";
 
 import type { InstanceConfig } from "@/config";
 import { getInstanceConfig } from "@/config/runtime";
@@ -8,7 +8,7 @@ import { connection } from "@/db/schema";
 
 import { parseConnectionCredentials } from "./credential-schema";
 import { connectServers, resolveServerCredentials } from "./servers";
-import { isCredentialProvider } from "./types";
+import { type ConnectionProvider, isCredentialProvider } from "./types";
 
 export interface QuarantineResult {
   providers: string[];
@@ -18,9 +18,19 @@ export interface QuarantineResult {
   unavailable: number;
 }
 
-export async function reconcileQuarantine(
-  cfg: InstanceConfig = getInstanceConfig(),
-): Promise<QuarantineResult> {
+export interface QuarantineImpact {
+  provider: ConnectionProvider;
+  server: string | null;
+  connections: number;
+}
+
+interface QuarantineScan {
+  configuredProviders: ConnectionProvider[];
+  missingServerIds: string[];
+  renamed: { id: string; name: string }[];
+}
+
+async function scanConnections(cfg: InstanceConfig): Promise<QuarantineScan> {
   const configuredProviders = [...new Set(connectServers(cfg).map((server) => server.provider))];
   const credentialProviders = configuredProviders.filter(isCredentialProvider);
 
@@ -49,26 +59,54 @@ export async function reconcileQuarantine(
     }
   }
 
+  return { configuredProviders, missingServerIds, renamed };
+}
+
+function quarantineConditions({ configuredProviders, missingServerIds }: QuarantineScan) {
+  const missingServers =
+    missingServerIds.length > 0 ? inArray(connection.id, missingServerIds) : undefined;
+  const unconfiguredProvider = not(inArray(connection.provider, configuredProviders));
+  return {
+    missingServers,
+    toQuarantine: and(
+      isNull(connection.quarantinedAt),
+      missingServers ? or(unconfiguredProvider, missingServers) : unconfiguredProvider,
+    ),
+  };
+}
+
+export async function quarantineImpact(cfg: InstanceConfig): Promise<QuarantineImpact[]> {
+  const { toQuarantine } = quarantineConditions(await scanConnections(cfg));
+  const rows = await db
+    .select({
+      provider: connection.provider,
+      server: sql<string | null>`coalesce(${connection.serverName}, ${connection.server})`,
+      connections: count(),
+    })
+    .from(connection)
+    .where(toQuarantine)
+    .groupBy(connection.provider, connection.serverName, connection.server);
+  return rows;
+}
+
+export async function reconcileQuarantine(
+  cfg: InstanceConfig = getInstanceConfig(),
+): Promise<QuarantineResult> {
+  const scan = await scanConnections(cfg);
+  const { configuredProviders, missingServerIds, renamed } = scan;
+
   await Promise.all(
     renamed.map(({ id, name }) =>
       db.update(connection).set({ serverName: name }).where(eq(connection.id, id)),
     ),
   );
 
-  const missingServers =
-    missingServerIds.length > 0 ? inArray(connection.id, missingServerIds) : undefined;
-
-  const unconfiguredProvider = not(inArray(connection.provider, configuredProviders));
+  const { missingServers, toQuarantine } = quarantineConditions(scan);
 
   const quarantined = await db
     .update(connection)
     .set({ quarantinedAt: new Date() })
-    .where(
-      and(
-        isNull(connection.quarantinedAt),
-        missingServers ? or(unconfiguredProvider, missingServers) : unconfiguredProvider,
-      ),
-    )
+    .where(toQuarantine)
     .returning({ id: connection.id });
 
   const restored = await db

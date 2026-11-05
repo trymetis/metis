@@ -422,7 +422,7 @@ function eventActions(ctx: ActionContext, hit: EventSearchHitDto): SearchAction[
         type: "event",
         id: packReferenceId(hit.accountId, hit.calendarId, hit.id),
         label: hit.title || "Event",
-        detail: hit.accountEmail,
+        detail: hit.accountName ?? hit.accountEmail,
       }),
     );
   }
@@ -878,7 +878,7 @@ function localActions(ctx: ActionContext, hit: LocalSearchHit): SearchAction[] {
                 async () => {
                   if (
                     await ctx.prompts.confirm({
-                      title: `Detach ${hit.email}?`,
+                      title: `Detach ${hit.title}?`,
                       body: "It stops being part of this workspace. The calendar keeps working everywhere else.",
                       confirm: "Detach",
                     })

@@ -144,6 +144,8 @@ They all have:
 - **Only in calendar** (optional): one calendar of that account. Leave it empty for every calendar of the account.
 - **Only when** (optional): a condition on the event.
 
+The card says "In" and the [account's name](/guide/calendar/views-and-navigation#how-calendar-accounts-are-named), for example "In Google Calendar · you@example.com". If you cannot see that calendar account, the card says "In a calendar you can't see". If no account is picked yet, it says "Pick a calendar".
+
 **Event starting** has **Minutes before**, from 0 to 10080 (one week). It starts at 15. The card says, for example, "15 minutes before".
 
 **Reply to an invitation** passes on the event (`trigger.event`), the attendee who replied (`trigger.attendee`) and their previous answer (`trigger.previous`).

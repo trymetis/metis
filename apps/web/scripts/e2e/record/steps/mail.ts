@@ -1,10 +1,16 @@
-import { CLASSIFY_BATCH_SIZE, GATED_SUBJECTS, INBOX_PAGE_SIZE } from "@metis/e2e/lib/llm-scenarios";
+import {
+  CLASSIFY_BATCH_SIZE,
+  GATED_SUBJECTS,
+  INBOX_PAGE_SIZE,
+  RETRY_LABEL,
+} from "@metis/e2e/lib/llm-scenarios";
 import { inArray } from "drizzle-orm";
 import { z } from "zod";
 
 import { db } from "../../../../src/db";
 import { mailLabel } from "../../../../src/db/schema";
 import { classifyMessages } from "../../../../src/mail/classify";
+import { createCustomLabel, deleteCustomLabel } from "../../../../src/mail/custom-labels";
 import { mailboxIds, scopeMessage } from "../../../../src/mail/session";
 import { generateSmartReplies } from "../../../../src/mail/smart-replies";
 import { buildThreadSummary } from "../../../../src/mail/thread-summary";
@@ -120,10 +126,31 @@ async function recordGated(ctx: StepContext): Promise<void> {
   }
 }
 
+async function recordLabelRetry(ctx: StepContext): Promise<void> {
+  const { mail } = ctx.session;
+  const { inbox } = await loadWorld(ctx);
+  const created = await createCustomLabel({
+    userId: mail.userId,
+    mailboxIds: mailboxIds(mail),
+    name: RETRY_LABEL,
+  });
+  if ("error" in created) throw new Error(`creating "${RETRY_LABEL}": ${created.error}`);
+  const retried = await classifyLikeTheList(ctx, inbox);
+  console.log(
+    `[record] decision classifier labelled ${retried}/${inbox.length} with "${RETRY_LABEL}"`,
+  );
+  const removed = await deleteCustomLabel({ mailboxIds: mailboxIds(mail), id: created.id });
+  if ("error" in removed) throw new Error(`deleting "${RETRY_LABEL}": ${removed.error}`);
+}
+
 export async function run(ctx: StepContext): Promise<void> {
   const folder = ctx.scenario.arg;
   if (folder === "gated") {
     await recordGated(ctx);
+    return;
+  }
+  if (folder === "label-retry") {
+    await recordLabelRetry(ctx);
     return;
   }
   if (folder) {

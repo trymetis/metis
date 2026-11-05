@@ -50,7 +50,7 @@ function toIso(date: Date, allDay: boolean): string {
 export function EventDialog() {
   const scope = useWorkspaceScope();
   const calendarSlug = useWorkspacePath().calendarSlug ?? "all";
-  const { draft, setDraft, editing, setEditing, calendars, refresh } = useCalendar();
+  const { draft, setDraft, editing, setEditing, calendars, accountName, refresh } = useCalendar();
 
   const open = draft !== null || editing !== null;
   const writable = useMemo(() => calendars.filter((c) => !c.readOnly), [calendars]);
@@ -286,7 +286,7 @@ export function EventDialog() {
                 onValueChange={(value) => setTarget(String(value))}
                 items={writable.map((c) => ({
                   value: `${c.accountId}::${c.id}`,
-                  label: `${c.name} · ${c.accountEmail}`,
+                  label: `${c.name} · ${accountName(c.accountId, c.accountEmail)}`,
                 }))}
               >
                 <SelectTrigger aria-label="Calendar" className="w-full">
@@ -295,7 +295,7 @@ export function EventDialog() {
                 <SelectContent>
                   {writable.map((c) => (
                     <SelectItem key={`${c.accountId}::${c.id}`} value={`${c.accountId}::${c.id}`}>
-                      {c.name} · {c.accountEmail}
+                      {c.name} · {accountName(c.accountId, c.accountEmail)}
                     </SelectItem>
                   ))}
                 </SelectContent>

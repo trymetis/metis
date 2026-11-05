@@ -214,6 +214,7 @@ export function systemPhishing(): DashboardSystemPhishing {
 function systemSmtp(): DashboardSystemMail["smtp"] {
   const mailer = getInstanceConfig().mailer;
   if (mailer.driver !== "smtp") return null;
+  const plain = mailer.plain === true;
   if (mailer.url) {
     try {
       const url = new URL(mailer.url);
@@ -223,6 +224,7 @@ function systemSmtp(): DashboardSystemMail["smtp"] {
         host: url.hostname || null,
         port: url.port ? Number(url.port) : secure ? 465 : 587,
         secure,
+        plain,
         user: url.username ? decodeURIComponent(url.username) : null,
         password: secretSummary(url.password || undefined),
       };
@@ -232,6 +234,7 @@ function systemSmtp(): DashboardSystemMail["smtp"] {
         host: null,
         port: null,
         secure: null,
+        plain,
         user: null,
         password: { set: false, hint: null },
       };
@@ -243,6 +246,7 @@ function systemSmtp(): DashboardSystemMail["smtp"] {
     host: mailer.host ?? null,
     port,
     secure: mailer.secure ?? port === 465,
+    plain,
     user: mailer.user ?? null,
     password: secretSummary(mailer.pass),
   };
@@ -315,7 +319,7 @@ async function setupCodeState(): Promise<DashboardSystemInstance["setupCode"]> {
 export async function systemInstance(): Promise<DashboardSystemInstance> {
   const instance = getInstanceConfig();
   return {
-    config: configState(["signup", "legal", "relay", "imageProxy"]),
+    config: configState(["signup", "legal", "relay", "imageProxy", "mailCache", "proxies"]),
     appUrl: config.auth.url,
     secureCookies: config.auth.secureCookies,
     signupDisabled: instance.signup.signupDisabled,
@@ -436,6 +440,7 @@ function providerEntries(
         allowInsecureTls: server.allowInsecureTls,
         transfer: server.transfer,
         checksums: server.checksums,
+        partSize: server.partSize,
       }));
     case "ftp":
       return servers.ftpServers.map((server) => ({

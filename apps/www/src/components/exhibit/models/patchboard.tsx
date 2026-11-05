@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { clamp01, damp, exhibit, lerp, live, seg, useExhibit } from "../engine";
-import { overlay } from "../overlay";
+import { labelPosition, overlay } from "../overlay";
 import { type Fonts, makeCanvasTexture } from "../textures";
 import { basicMaterial, findMesh, findNode, litMap } from "./shared";
 
@@ -102,6 +102,7 @@ function Tag({ i }: { i: number }) {
       center
       zIndexRange={[3, 0]}
       portal={overlay}
+      calculatePosition={labelPosition}
       pointerEvents="none"
     >
       <div

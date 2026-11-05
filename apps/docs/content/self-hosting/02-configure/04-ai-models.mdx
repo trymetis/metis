@@ -28,7 +28,9 @@ All four model fields are required when a driver is on. Enter the model names yo
 
 Without structured outputs, summaries need a model with a context window of about 8k tokens or more.
 
-Click **Save changes** and enter your authenticator code. Saving a change to these fields checks the LLM before anything is stored: it lists your provider's models with your key and confirms that every model you entered is offered. If the check fails, for example with "the API key was rejected (401)", nothing is saved. A model that is "not in the provider's model list" does not stop the save. The save does not show this warning. Click **Run check** to see it.
+Click **Save changes** and enter your authenticator code. Saving a change to these fields checks the LLM before anything is stored: it lists your provider's models with your key and confirms that every model you entered is offered. If the check fails, for example with "the API key was rejected (401)", nothing is saved. Fix the field and save again, or click **Save anyway** on the **Check failed** card to store the change as it is. See [Save anyway](/self-hosting/configure/how-configuration-works#save-anyway).
+
+A model that is "not in the provider's model list" does not stop the save. After the save, a warning message names the models the provider does not list.
 
 Then click **Run check** in the **Health** card. It runs the same check without saving and shows every result. If it reports "the API key was rejected (401)" or "not in the provider's model list", fix the key or the model name.
 
@@ -104,6 +106,8 @@ A driver alone turns nothing on. Each feature has its own switch in the card, al
 | **Inbox labels**            | Uses the decision model to label incoming mail.                   |
 | **Summary gate**            | Uses the decision model as a gate for thread summaries.           |
 | **Workflow Ask and Branch** | Uses the decision model in the Ask and Branch steps of workflows. |
+
+With **Inbox labels** on, a message the decision model is not sure about stays unlabelled and is not tried again for up to 7 days, or until someone adds or deletes a custom label in its mailbox.
 
 **Inbox label calls at a time** (1 to 25, default 5) sets how many inbox label calls run at the same time.
 

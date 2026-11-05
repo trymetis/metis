@@ -1,6 +1,6 @@
 import { DOCS_URL, LICENSE_URL } from "@/lib/site";
 
-import { ENTRY_PLAN } from "./pricing";
+import { ENTRY_PLAN, usd } from "./pricing";
 
 export type Cell = { text: string; source?: string };
 
@@ -56,7 +56,7 @@ export const METIS: Record<RowKey, Cell> = {
     source: `${DOCS_URL}/guide/assistant/approve-or-decline-actions`,
   },
   modelChoice: {
-    text: "Bring your own: OpenAI, Anthropic or any OpenAI-compatible endpoint, including one you run yourself",
+    text: "Included every month on Metis Cloud, or bring your own: OpenAI, Anthropic or any OpenAI-compatible endpoint, including one you run yourself",
     source: `${DOCS_URL}/self-hosting/configure/ai-models`,
   },
   mcp: {
@@ -72,7 +72,7 @@ export const METIS: Record<RowKey, Cell> = {
     source: `${DOCS_URL}/guide/apps/download`,
   },
   pricing: {
-    text: `Free to self-host; Metis Cloud from $${ENTRY_PLAN.cost.yearly / 12} a month billed yearly, or $${ENTRY_PLAN.cost.monthly} monthly, per instance`,
+    text: `Free to self-host; Metis Cloud from ${usd(ENTRY_PLAN.cost.yearly / 12)} a month billed yearly, or ${usd(ENTRY_PLAN.cost.monthly)} monthly, per instance`,
   },
 };
 

@@ -10,6 +10,7 @@ import type {
   UnsubscribeInfo,
 } from "@/types/mail";
 
+import { forgetContacts } from "./contacts";
 import type { MessageHeaders } from "./headers";
 import { followMoves } from "./moves";
 import { gatewayMail, gatewayTarget } from "./providers/gateway-client";
@@ -63,7 +64,7 @@ const gateway = (auth: ConnectionAuth) =>
 const MAIL_ADAPTERS: Record<MailProvider, (auth: ConnectionAuth) => MailAdapter> = {
   google: (auth) => gmailMail(oauthToken(auth)),
   microsoft: (auth) => microsoftMail(oauthToken(auth)),
-  zoho: (auth) => zohoMail(oauthToken(auth)),
+  zoho: (auth) => zohoMail({ accessToken: oauthToken(auth), email: auth.email }),
   imap: (auth) => imapMail(imapCredentials(auth), credentialEmail(auth)),
   cloudflare: gateway,
   resend: gateway,
@@ -74,5 +75,13 @@ export function getMailAdapter(
   auth: ConnectionAuth,
   mailboxId: string,
 ): MailAdapter {
-  return followMoves(MAIL_ADAPTERS[provider](auth), mailboxId);
+  const adapter = followMoves(MAIL_ADAPTERS[provider](auth), mailboxId);
+  return {
+    ...adapter,
+    sendMessage: async (payload) => {
+      const sent = await adapter.sendMessage(payload);
+      await forgetContacts(mailboxId);
+      return sent;
+    },
+  };
 }

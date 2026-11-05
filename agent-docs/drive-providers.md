@@ -6,6 +6,7 @@ The four credential drive adapters: what the operator configures versus what the
 
 | Concern                 | Where                                                                                                                         |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Search listing cache    | `src/drive/search-cache.ts` → `cachedSearchListing`, `cachedFolderListing`, `afterSearchChange`                               |
 | S3 adapter              | `src/drive/providers/s3/index.ts` → `s3Drive`, `SEARCH_MAX_PAGES`, `SEARCH_PAGE_RESULTS`                                      |
 | S3 clients              | `src/drive/providers/s3/client.ts` → `s3Client`, `createS3Client`, `s3ErrorStatus`                                            |
 | WebDAV adapter          | `src/drive/providers/webdav/index.ts` → `webdavDrive`                                                                         |
@@ -18,6 +19,11 @@ The four credential drive adapters: what the operator configures versus what the
 | Bundler externals       | `next.config.ts` → `serverExternalPackages`                                                                                   |
 
 ## Rules
+
+- **Search on S3, WebDAV, FTP and SFTP reuses its listings for 30 seconds through the cache driver** (`src/drive/search-cache.ts` → `cachedSearchListing`, `cachedFolderListing`, `afterSearchChange`), because the search box and the `@` picker re-run per keystroke pause and listing is the expensive request (R2's Class A on S3).
+  - S3 caches the flat bucket pages its search scans (compact key, size and modified date per object, plus the next cursor), keyed by prefix and cursor in one hash per server and bucket; WebDAV, FTP and SFTP cache each folder their walk lists, keyed by login, root and folder in one hash per server.
+  - Any write through the drive (upload, upload session, create folder, rename, move, delete) drops that whole hash, so overlapping prefixes, roots and logins stay in step, on every process when the cache driver is Redis or Upstash.
+  - The hash gets its lifetime from its first stored listing (`hsetExpiring`), so nothing is older than 30 seconds; browsing (`listFolder` from the drive page) is never cached.
 
 ### S3
 
@@ -37,6 +43,9 @@ The four credential drive adapters: what the operator configures versus what the
 - **A direct-mode download is presigned with `ResponseContentDisposition: attachment`** (`contentDisposition`, shared with the relay), so a text file downloads instead of replacing the app; preview `fetch`es the same URL and ignores the header.
 - **Every `fileId` and `parentId` must start with the configured prefix and contain no `..`** (`resolveKey`), so no id leaves the user's prefix.
 - **Relay uploads buffer at most one part per transfer.** `writeStream` uses `@aws-sdk/lib-storage`'s `Upload` with one part in flight; anything up to one part is a single `PutObject`.
+- **The part size is the entry's `partSize`, a size string kept as typed and parsed at upload by `parseSize` (`src/lib/size.ts`, binary units, so `MB` is 1024²).**
+  - On a `relay` entry only, the entry's `superRefine` requires a unit and 5 MB to 5 GB, S3's limits for every part but the last; a `direct` entry's value is never used, so it is never checked; with S3's 10,000-part cap, 5 MB parts still cover 50 GB, far above the relay's file cap.
+  - Each running relay upload holds about one part in memory, so the part size times `relayConcurrency` bounds one user's upload memory.
 - **The CORS preflight runs at connect time** (`corsPreflight` in `s3Verify`), because the bucket is unknown until a user names it; a `relay` entry skips it, since it needs no CORS.
 
 ### WebDAV
@@ -86,6 +95,8 @@ The four credential drive adapters: what the operator configures versus what the
   - SFTP (`probeSftp`): the SSH handshake completes with the pinned host key.
 - **Connect-time verify** (`s3Verify`, `webdavVerify`, `ftpVerify`, `sftpVerify`) authenticates with the user's login. WebDAV also requires the root to be a folder.
 - **S3 transfers.** Direct mode presigns GET and PUT with `@aws-sdk/s3-request-presigner`; relay mode streams GET bodies and uploads through `Upload`; a failed or aborted relay upload aborts its multipart upload.
+  - A relay transfer sends no extra `HeadObject`, because every S3 request is billed: `readStream` takes name, size and type from the `GetObject` response, and `writeStream` builds its entry from the upload, counting the bytes as they stream (`modifiedAt` is the app's clock).
+  - Signing a relay download keeps its one `HeadObject` (`getDownloadTarget`), which the relay cap needs before the URL exists.
 - **WebDAV quota** reads RFC 4331 properties and returns null when the server has none.
 - **Pool pressure.** When an entry's pool is full and another login needs a connection, an idle connection is closed to make room; otherwise the request waits FIFO. Idle connections close after `IDLE_MS`.
 - **FTP metadata.** FTP has no stat for folders, so `getEntry` lists the parent; `modifiedAt` is null when the server lacks MLSD.

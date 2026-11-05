@@ -44,7 +44,7 @@ When there are more messages, **Load more** at the end of the group shows the ne
 
 Each row shows the title, the calendar and the location, and when it starts.
 
-The preview shows **When**, **Where**, **Calendar**, **Organizer**, **Guests**, **Your answer**, **Meeting** (the meeting link) and the description.
+The preview shows **When**, **Where**, **Calendar** (the calendar's name and the [account name](/guide/calendar/views-and-navigation#how-calendar-accounts-are-named), for example "Work · Google Calendar · you@example.com"), **Organizer**, **Guests**, **Your answer**, **Meeting** (the meeting link) and the description.
 
 | Action                              | What it does                                                                                          |
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------- |
@@ -107,7 +107,9 @@ For a pending invite, the actions are **Copy email** and, for owners and admins,
 
 ## Contacts
 
-People from your recent sent and received mail. Like a member's, the preview shows recent mail and upcoming events with them.
+People from your recent sent and received mail. New people can take up to 10 minutes to show. See [Who sees what, and limits](/guide/search/limits#contacts).
+
+Like a member's, the preview shows recent mail and upcoming events with them.
 
 The actions are **Search everything with** and their name, **Email**, **Invite to an event** and **Copy email**.
 
@@ -130,6 +132,8 @@ For a mailbox, a calendar account or a drive, the preview shows **Provider**, **
 
 A drive's row shows its [drive name](/guide/drive/browse-your-files#how-drives-are-named), with its type on the line under it. You can also find a drive by its account's email address.
 
+A calendar account's row shows its [account name](/guide/calendar/views-and-navigation#how-calendar-accounts-are-named), with its type on the line under it: "Google Calendar", "Outlook Calendar", "Zoho Calendar" or "CalDAV". You can also find a calendar account by its email address.
+
 | Action                                                | What it does                                                                                                                 |
 | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | **Open**                                              | Opens it.                                                                                                                    |
@@ -137,9 +141,9 @@ A drive's row shows its [drive name](/guide/drive/browse-your-files#how-drives-a
 | **Detach from this workspace**                        | Asks you to confirm, then takes it out of this workspace. It keeps working in every other workspace. Owners and admins only. |
 | **Filter by this mailbox**, **calendar** or **drive** | Searches only there.                                                                                                         |
 
-For a drive, the question you confirm names the drive, for example "Detach Acme files?".
+For a drive or a calendar account, the question you confirm names it, for example "Detach Acme files?" or "Detach Google Calendar · you@example.com?". For a mailbox, it names the mailbox's email address.
 
-Search also finds each calendar inside a calendar account, if the workspace shows it:
+Search also finds each calendar inside a calendar account, if the workspace shows it. Its row shows the calendar's name, with the account's name on the line under it. Its preview shows **Color** and, under **Account**, the account's name. The actions are:
 
 | Action                      | What it does                                                                                |
 | --------------------------- | ------------------------------------------------------------------------------------------- |

@@ -83,6 +83,14 @@ export function mailConfigFromEnv(e: Env): Record<string, unknown> {
   };
 }
 
+export function mailCacheConfigFromEnv(e: Env): Record<string, unknown> {
+  return { retentionDays: e.METIS_MAIL_CACHE_DAYS };
+}
+
+export function proxiesConfigFromEnv(e: Env): Record<string, unknown> {
+  return { trustedProxies: e.METIS_TRUSTED_PROXIES };
+}
+
 export function mailerConfigFromEnv(e: Env): Record<string, unknown> {
   return {
     driver: e.METIS_MAIL_DRIVER,
@@ -96,6 +104,7 @@ export function mailerConfigFromEnv(e: Env): Record<string, unknown> {
     user: e.SMTP_USER,
     pass: e.SMTP_PASS,
     secure: e.SMTP_SECURE,
+    plain: e.SMTP_PLAIN,
     endpoint: e.CONSOLE_MAIL_URL,
     token: e.CONSOLE_MAIL_TOKEN,
   };

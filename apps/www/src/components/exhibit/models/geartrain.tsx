@@ -6,7 +6,7 @@ import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 
 import { clamp01, damp, exhibit, smooth, useExhibit } from "../engine";
-import { overlay } from "../overlay";
+import { labelPosition, overlay } from "../overlay";
 import { type Fonts, makeCanvasTexture } from "../textures";
 import { basicMaterial, findMesh, findNode, litMap } from "./shared";
 
@@ -46,7 +46,14 @@ function cycle(t: number) {
 function Question() {
   const plate = useExhibit((s) => s.plate);
   return (
-    <Html position={QUESTION_AT} center zIndexRange={[3, 0]} portal={overlay} pointerEvents="none">
+    <Html
+      position={QUESTION_AT}
+      center
+      zIndexRange={[3, 0]}
+      portal={overlay}
+      calculatePosition={labelPosition}
+      pointerEvents="none"
+    >
       <div
         className={`pointer-events-none whitespace-nowrap rounded-[10px] border border-line bg-bg/95 px-3 py-2 shadow-[0_10px_30px_-12px_rgba(42,38,32,0.35)] transition-all duration-500 ${
           plate === 2 ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"

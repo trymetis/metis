@@ -112,7 +112,7 @@ export const MORE_AREAS = {
         icon: Cpu,
         t: "Bring your own model",
         shot: "agent/model",
-        d: "OpenAI, Anthropic or any OpenAI-compatible endpoint, with a different model per task if you like.",
+        d: "Metis Cloud includes AI every month. Or bring OpenAI, Anthropic or any OpenAI-compatible endpoint, with a different model per task if you like.",
         tag: INSTANCE,
       },
       {

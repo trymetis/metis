@@ -46,6 +46,7 @@ const KIND_BADGE: Record<InstanceConfigKind, { label: string; tone: SystemTone }
   seed: { label: "Seed", tone: "neutral" },
   edit: { label: "Edit", tone: "warning" },
   revert: { label: "Restore", tone: "warning" },
+  reset: { label: "Reset", tone: "warning" },
 };
 
 type Version = DashboardConfigHistory["versions"][number];
@@ -173,6 +174,8 @@ export function HistoryView() {
   const [pair, setPair] = useState<{ from: number; to: number } | null>(null);
   const [restoring, setRestoring] = useState<Version | null>(null);
   const [check, setCheck] = useState<DashboardSystemCheck | null>(null);
+  const [refused, setRefused] = useState<Version | null>(null);
+  const [forcing, setForcing] = useState(false);
 
   const current = history?.current ?? 0;
   const versions = history?.versions ?? [];
@@ -181,29 +184,32 @@ export function HistoryView() {
   const to = pair?.to ?? current;
 
   const restore = useCallback(
-    async (code: string) => {
-      if (!restoring) return;
+    async (target: Version | null, code: string, force: boolean) => {
+      if (!target) return;
       setCheck(null);
+      setRefused(null);
       const result = await orpc.dashboard.system.revert({
-        version: restoring.version,
+        version: target.version,
         expectedVersion: current,
         code,
+        force,
       });
       for (const warning of result.warnings) toast.warning(warning);
       if (result.saved) {
-        toast.success(`Version ${restoring.version} restored as version ${result.version}`);
+        toast.success(`Version ${target.version} restored as version ${result.version}`);
         setPair(null);
         await reload();
         return;
       }
       if (result.check) {
         setCheck(result.check);
+        setRefused(target);
         toast.error("The check failed, so nothing was restored");
         return;
       }
       toast.message("That version matches the current one");
     },
-    [restoring, current, reload],
+    [current, reload],
   );
 
   if (!history) return <Loading />;
@@ -239,6 +245,13 @@ export function HistoryView() {
           description="A section's check failed against the restored values."
         >
           <CheckResults check={check} />
+          {refused && (
+            <div className="mt-3 flex justify-end">
+              <Button variant="outline" size="sm" onClick={() => setForcing(true)}>
+                Restore anyway
+              </Button>
+            </div>
+          )}
         </Section>
       )}
 
@@ -319,7 +332,16 @@ export function HistoryView() {
         onOpenChange={(open) => {
           if (!open) setRestoring(null);
         }}
-        onConfirm={restore}
+        onConfirm={(code) => restore(restoring, code, false)}
+      />
+
+      <TotpConfirmDialog
+        open={forcing}
+        title={`Restore version ${refused?.version ?? ""} anyway`}
+        body="The check above failed. Restoring anyway stores this version as it is, so whatever failed the check may not work until it is fixed."
+        confirmLabel="Restore anyway"
+        onOpenChange={setForcing}
+        onConfirm={(code) => restore(refused, code, true)}
       />
     </Sections>
   );

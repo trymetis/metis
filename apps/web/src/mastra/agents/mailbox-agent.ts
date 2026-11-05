@@ -4,6 +4,7 @@ import { Agent } from "@mastra/core/agent";
 import { getLlm } from "@/services/llm";
 import { phishingDetectionEnabled } from "@/services/phishing-detection";
 
+import { chatStopWhen, finalAnswerStep } from "../step-budget";
 import { mailboxTools } from "../tools/mailbox-tools";
 
 const mailboxInstructions = (
@@ -62,4 +63,6 @@ export const mailboxAgent = new Agent({
     ),
   model: () => getLlm().chat,
   tools: () => mailboxTools(),
+  inputProcessors: [finalAnswerStep],
+  defaultOptions: { stopWhen: chatStopWhen },
 });

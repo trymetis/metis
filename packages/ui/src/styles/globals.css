@@ -61,6 +61,16 @@
   --provider-zoho: #931214;
   --provider-neutral: #4f4f4f;
 
+  --destructive: var(--red-dot);
+  --destructive-foreground: #e8e4d8;
+  --chart-2: var(--green-dot);
+  --chart-3: var(--red-dot);
+
+  --radius: 0.5rem;
+}
+
+:root,
+.theme-neutral {
   --background: var(--bg-base);
   --foreground: var(--text-primary);
   --card: var(--bg-surface);
@@ -75,14 +85,10 @@
   --muted-foreground: var(--text-secondary);
   --accent: var(--bg-hover);
   --accent-foreground: var(--text-primary);
-  --destructive: var(--red-dot);
-  --destructive-foreground: #e8e4d8;
   --input: var(--border);
   --ring: var(--brand);
 
   --chart-1: var(--brand);
-  --chart-2: var(--green-dot);
-  --chart-3: var(--red-dot);
   --chart-4: var(--text-secondary);
   --chart-5: var(--text-muted);
 
@@ -94,8 +100,6 @@
   --sidebar-accent-foreground: var(--text-primary);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--brand);
-
-  --radius: 0.5rem;
 }
 
 .dark,

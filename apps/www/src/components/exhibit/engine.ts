@@ -2,7 +2,18 @@
 
 import { useSyncExternalStore } from "react";
 
-export const live = { p: 0, ps: 0, px: 0, py: 0, sx: 0, sy: 0, n: 1 };
+export const live = {
+  p: 0,
+  ps: 0,
+  px: 0,
+  py: 0,
+  sx: 0,
+  sy: 0,
+  n: 1,
+  top: 0.2,
+  bottom: 0.7,
+  modelTop: 1,
+};
 
 type State = { plate: number; pick: number | null };
 

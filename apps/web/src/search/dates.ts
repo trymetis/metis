@@ -5,15 +5,6 @@ const ISO_DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
 const ISO_MONTH = /^(\d{4})-(\d{2})$/;
 const ISO_YEAR = /^(\d{4})$/;
 
-const SIZE = /^(\d+(?:\.\d+)?)\s*(b|kb|mb|gb|tb)?$/i;
-const SIZE_UNITS: Record<string, number> = {
-  b: 1,
-  kb: 1024,
-  mb: 1024 ** 2,
-  gb: 1024 ** 3,
-  tb: 1024 ** 4,
-};
-
 export interface DateSpan {
   start: number;
   end: number;
@@ -139,13 +130,4 @@ export function parseSearchDate(
 
 export function instantDay(at: number, timeZone: string): DateSpan {
   return dayOf(at, timeZone);
-}
-
-export function parseSize(raw: string): number | null {
-  const match = SIZE.exec(raw.trim());
-  if (!match) return null;
-  const unit = (match[2] ?? "b").toLowerCase();
-  const factor = SIZE_UNITS[unit];
-  if (!factor) return null;
-  return Math.round(Number(match[1]) * factor);
 }

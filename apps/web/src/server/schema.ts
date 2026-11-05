@@ -856,6 +856,7 @@ export const calendarEventSchema = z.object({
 export const calendarSourceErrorSchema = z.object({
   accountId: z.string(),
   accountEmail: z.string(),
+  accountName: z.string().optional(),
   error: z.string(),
 });
 
@@ -1582,6 +1583,7 @@ const dashboardEndpointSchema = z.object({
   host: z.string(),
   port: z.number(),
   secure: z.boolean(),
+  plain: z.boolean(),
 });
 
 export const dashboardProviderEntrySchema = z.discriminatedUnion("kind", [
@@ -1612,6 +1614,7 @@ export const dashboardProviderEntrySchema = z.discriminatedUnion("kind", [
     allowInsecureTls: z.boolean(),
     transfer: z.string(),
     checksums: z.string(),
+    partSize: z.string(),
   }),
   dashboardEntryBaseSchema.extend({
     kind: z.literal("ftp"),
@@ -1741,6 +1744,8 @@ export const dashboardConfigFormOutputSchema = z.object({
   fields: z.array(configFieldSchema),
   values: configValuesSchema,
   secrets: configSecretsSchema,
+  blank: configValuesSchema,
+  matchesEnvironment: z.boolean(),
   entries: z.array(
     z.object({
       id: z.string(),
@@ -1764,6 +1769,7 @@ export const dashboardConfigUpdateInputSchema = z.object({
     )
     .min(1),
   code: totpCodeSchema,
+  force: z.boolean().default(false),
 });
 
 export const dashboardConfigSaveOutputSchema = z.object({
@@ -1817,6 +1823,46 @@ export const dashboardConfigRevertInputSchema = z.object({
   version: z.number().int().min(1),
   expectedVersion: z.number().int().min(1),
   code: totpCodeSchema,
+  force: z.boolean().default(false),
+});
+
+export const dashboardConfigResetInputSchema = z.object({
+  section: configSectionSchema,
+  expectedVersion: z.number().int().min(0),
+  code: totpCodeSchema.optional(),
+  force: z.boolean().default(false),
+});
+
+const configSectionValuesSchema = z.object({
+  values: configValuesSchema,
+  secrets: configSecretsSchema,
+  entries: z.array(
+    z.object({
+      id: z.string(),
+      values: configValuesSchema,
+      secrets: configSecretsSchema,
+    }),
+  ),
+});
+
+export const dashboardConfigResetOutputSchema = z.object({
+  updated: z.boolean(),
+  version: z.number(),
+  check: dashboardSystemCheckOutputSchema.nullable(),
+  warnings: z.array(z.string()),
+  list: z.boolean(),
+  fields: z.array(configFieldSchema),
+  current: configSectionValuesSchema,
+  environment: configSectionValuesSchema,
+  changedSecrets: z.array(z.string()),
+  inUse: z.array(
+    z.object({
+      provider: z.string(),
+      label: z.string(),
+      server: z.string().nullable(),
+      connections: z.number(),
+    }),
+  ),
 });
 
 export const dashboardPreflightOutputSchema = z.object({
@@ -1930,6 +1976,7 @@ export const dashboardSystemMailOutputSchema = z.object({
       host: z.string().nullable(),
       port: z.number().nullable(),
       secure: z.boolean().nullable(),
+      plain: z.boolean(),
       user: z.string().nullable(),
       password: dashboardSecretSchema,
     })
@@ -3049,6 +3096,7 @@ export const searchMailOutputSchema = z.object({
 
 export const eventSearchHitSchema = calendarEventSchema.extend({
   ai: z.boolean().optional(),
+  accountName: z.string().optional(),
 });
 
 export const searchEventsOutputSchema = z.object({
@@ -3305,6 +3353,8 @@ export type DashboardConfigField = DashboardConfigForm["fields"][number];
 export type DashboardConfigValue = DashboardConfigForm["values"][string];
 export type DashboardConfigUpdateInput = z.infer<typeof dashboardConfigUpdateInputSchema>;
 export type DashboardConfigSave = z.infer<typeof dashboardConfigSaveOutputSchema>;
+export type DashboardConfigResetInput = z.infer<typeof dashboardConfigResetInputSchema>;
+export type DashboardConfigReset = z.infer<typeof dashboardConfigResetOutputSchema>;
 export type DashboardConfigHistory = z.infer<typeof dashboardConfigHistoryOutputSchema>;
 export type DashboardConfigDiff = z.infer<typeof dashboardConfigDiffOutputSchema>;
 export type DashboardPreflight = z.infer<typeof dashboardPreflightOutputSchema>;

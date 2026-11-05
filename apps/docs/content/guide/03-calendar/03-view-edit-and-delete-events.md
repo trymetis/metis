@@ -23,7 +23,7 @@ The details show, from top to bottom:
 - "Organized by" and the name of the person who organized the event. When there is no name, the email address shows instead.
 - The number of guests and up to eight of their names. A check mark shows who has accepted.
 - The description. A long description is cut short after 600 characters.
-- The calendar the event belongs to.
+- The calendar the event belongs to. If the calendar's name is not known, you see the [account's name](/guide/calendar/views-and-navigation#how-calendar-accounts-are-named) instead.
 
 Which of these details appear depends on your calendar. Google Calendar can show all of them. Outlook Calendar shows the name of the meeting service, the dial-in numbers with their PIN, and the organizer's name, but no meeting ID or passcode. Zoho Calendar shows the meeting link, the meeting ID and the organizer's email address, but no passcode or dial-in numbers. CalDAV calendars show the meeting link, dial-in numbers and organizer's name that the event includes. When the event has no meeting link of its own, Metis Suite looks in the event's web address, location and notes. It picks up a Google Meet, Zoom, Microsoft Teams, Whereby, Webex or Zoho Meeting link that starts with "https://".
 

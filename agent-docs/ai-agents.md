@@ -18,6 +18,7 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [mcp.md](
 | Workflow agents                           | `src/mastra/agents/workflow-agents.ts` → `WORKFLOW_AGENTS`, `workflowWriterAgent` · the steps that call them `src/workflow/run/ai.ts` ([workflow-graph.md](workflow-graph.md))                                                                                                                           |
 | Per-turn context injected into the prompt | `src/ai/turn.ts` → `TurnEnvelope`, `turnEnvelopeSchema` · `src/mastra/turn-envelope.ts` → `applyTurnEnvelopes` · `src/mastra/chat-context.ts` → `mailboxLabelDirectory`                                                                                                                                  |
 | Tool search for the workspace agent       | `src/mastra/tool-search.ts` → `workspaceToolSearch`, `sortedTools`                                                                                                                                                                                                                                       |
+| Chat step budget                          | `src/mastra/step-budget.ts` → `chatStopWhen`, `finalAnswerStep`, `searchBudget` and the limits                                                                                                                                                                                                           |
 | Assistant threads                         | `src/mastra/memory.ts` → `workspaceMemory` · procedures `src/server/routes/assistant.ts` · UI `src/app/w/[slug]/assistant/`                                                                                                                                                                              |
 | Inline references                         | `src/ai/references.ts` → `REFERENCE_TYPES` · `src/ai/reference-directory.ts` → `suggestReferences`, `resolveReferences` · `src/mastra/reference-legend.ts` → `referenceLegend` · composer node `src/components/agent/references/reference-node.tsx` · procedures `src/server/routes/agent-references.ts` |
 | Approval UI                               | `src/components/agent/agent-tool-call.tsx` · `sendAutomaticallyWhen` in each chat panel                                                                                                                                                                                                                  |
@@ -79,6 +80,16 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [mcp.md](
 - **The data export reads every thread of the user through `exportAssistantThreads`** ([workspaces.md](workspaces.md)).
 - **The drive agent runs on the page's own surface, as the mailbox agent runs on the page's own adapter**, so the ids in the envelope and in tool results are the ids the explorer shows. Root visibility applies on both surfaces.
 - **The workspace agent and MCP address files as a `driveId` plus a bare `fileId`**, resolved by `requireDrive` into that drive's surface, as `requireMailbox` resolves a mailbox.
+
+### Step budget
+
+- **Every chat agent sets `defaultOptions.stopWhen` to `chatStopWhen` and never `maxSteps`**, because Mastra stops a run after 5 steps when a call passes neither.
+  - `chatStopWhen` counts work steps (any step that is not only `search_tools` calls) and all steps, each against its own limit; steps Mastra marks `retry` count toward neither.
+  - Steps are typed as the AI SDK v5 `StepResult` Mastra bundles (`ProcessInputStepArgs["steps"]`), never the app's `ai` package: the loop hands `stopWhen` its own step objects, processors a `DefaultStepResult`, and a resumed run steps rebuilt from its JSON snapshot. Tool calls are read from `content` (`tool-call` parts), the one field all three carry; `toolCalls` is a getter the snapshot drops.
+  - The agent default also covers the approval resume, since `agent.resumeStream` merges `defaultOptions`; a call that passes its own `maxSteps`, like the workflow Agent step, overrides it.
+- **A chat turn always ends in an answer.** `finalAnswerStep` turns the step before either limit into `toolChoice: 'none'` with a system reminder to answer now, so a run never stops on a tool call.
+- **The workspace agent's tool searches have their own budget.** Once a turn has made the limit's worth of `search_tools` calls, `searchBudget` removes `search_tools` from the step's tools and tells the model to work with what is loaded.
+  - It runs after `workspaceToolSearch()`, which adds `search_tools`, and before `sortedTools`.
 
 ### Workflow agents
 

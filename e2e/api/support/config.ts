@@ -4,9 +4,32 @@ import { z } from "zod";
 import { harness } from "../../clients/harness";
 import { type Rpc, RpcError } from "../../clients/rpc";
 
-interface ConfigForm {
+type Values = Record<string, unknown>;
+
+interface ConfigEntry {
+  id: string;
+  values: Values;
+}
+
+export interface ConfigForm {
   version: number;
-  values: Record<string, unknown>;
+  values: Values;
+  blank: Values;
+  entries: ConfigEntry[];
+}
+
+interface SectionValues {
+  values: Values;
+  entries: ConfigEntry[];
+}
+
+export interface ResetView {
+  updated: boolean;
+  version: number;
+  check: { results: CheckResult[] } | null;
+  current: SectionValues;
+  environment: SectionValues;
+  inUse: { provider: string; label: string; server: string | null; connections: number }[];
 }
 
 interface CheckResult {
@@ -23,21 +46,10 @@ export interface Saved {
 
 const MAX_WAIT_SEC = 300;
 
-export async function setSection(
-  rpc: Rpc,
-  section: string,
-  values: Record<string, unknown>,
-): Promise<Saved> {
+async function withTotp<T>(run: (code: string) => Promise<T>): Promise<T> {
   for (;;) {
-    const form = await rpc<ConfigForm>("dashboard.system.form", { section });
     try {
-      const saved = await rpc<Saved>("dashboard.system.update", {
-        expectedVersion: form.version,
-        sections: [{ section, values: { ...form.values, ...values }, entries: null }],
-        code: await harness.totp(),
-      });
-      expect(saved.saved, `${section} was not saved: ${JSON.stringify(saved.check)}`).toBe(true);
-      return saved;
+      return await run(await harness.totp());
     } catch (err) {
       if (!(err instanceof RpcError) || err.status !== 429) throw err;
       const wait = z.object({ retryAfterSec: z.number() }).safeParse(err.data).data?.retryAfterSec;
@@ -46,6 +58,61 @@ export async function setSection(
       );
     }
   }
+}
+
+export function sectionForm(rpc: Rpc, section: string): Promise<ConfigForm> {
+  return rpc<ConfigForm>("dashboard.system.form", { section });
+}
+
+export function setSection(rpc: Rpc, section: string, values: Values): Promise<Saved> {
+  return withTotp(async (code) => {
+    const form = await sectionForm(rpc, section);
+    const saved = await rpc<Saved>("dashboard.system.update", {
+      expectedVersion: form.version,
+      sections: [{ section, values: { ...form.values, ...values }, entries: null }],
+      code,
+    });
+    expect(saved.saved, `${section} was not saved: ${JSON.stringify(saved.check)}`).toBe(true);
+    return saved;
+  });
+}
+
+export function addServer(rpc: Rpc, section: string, values: Values): Promise<Saved> {
+  return withTotp(async (code) => {
+    const form = await sectionForm(rpc, section);
+    const saved = await rpc<Saved>("dashboard.system.update", {
+      expectedVersion: form.version,
+      sections: [
+        {
+          section,
+          values: {},
+          entries: [
+            ...form.entries.map((entry) => ({ id: entry.id, values: entry.values })),
+            { id: null, values: { ...form.blank, ...values } },
+          ],
+        },
+      ],
+      code,
+    });
+    expect(saved.saved, `${section} was not saved: ${JSON.stringify(saved.check)}`).toBe(true);
+    return saved;
+  });
+}
+
+export async function resetSection(
+  rpc: Rpc,
+  section: string,
+  options: { apply?: boolean; force?: boolean } = {},
+): Promise<ResetView> {
+  const reset = async (code?: string) => {
+    const { version } = await sectionForm(rpc, section);
+    return rpc<ResetView>("dashboard.system.reset", {
+      section,
+      expectedVersion: version,
+      ...(code === undefined ? {} : { code, force: options.force ?? false }),
+    });
+  };
+  return options.apply ? withTotp(reset) : reset();
 }
 
 export async function checkDriver(rpc: Rpc, driver: string): Promise<CheckResult[]> {

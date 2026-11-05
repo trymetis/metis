@@ -21,6 +21,8 @@ Open **Dashboard**, **System**, **Instance**. The **Drive relay** card has two l
 
 Change a value, click **Save changes** and enter your authenticator code.
 
+Relayed S3 uploads go to the bucket in parts. Each S3 entry sets the size of those parts in its **Part size** field. See [S3](/self-hosting/configure/server-lists#s3). Each running upload holds about one part in memory. A larger part size, or a higher **Transfers per user, per process**, raises your server's memory use.
+
 <img src="/images/self-hosting/dashboard-instance.webp" alt="The Instance page with the Sign-up, Legal consent and Drive relay cards" class="dark:hidden" />
 <img src="/images/self-hosting/dashboard-instance-dark.webp" alt="The Instance page with the Sign-up, Legal consent and Drive relay cards" class="hidden dark:block" />
 

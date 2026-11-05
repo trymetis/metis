@@ -24,6 +24,35 @@ The button at the top of the sidebar shows which calendar you are looking at. It
 
 **Add calendar** at the bottom of the menu opens the workspace's calendar settings.
 
+## How calendar accounts are named
+
+A calendar account is one login you connected, such as your Google account. Metis Suite shows each calendar account by a name, so you can tell your accounts apart:
+
+- **Google Calendar, Outlook Calendar and Zoho Calendar:** the type, then the email address of the account. For example, "Google Calendar · you@example.com".
+- **CalDAV:** the name your administrator gave the CalDAV server, for example "Acme calendars".
+- **The same CalDAV server connected twice:** both accounts show the same name. The button at the top of the sidebar and its **Switch calendar** menu show each account's email address, so you can tell them apart there.
+
+If your administrator renames a CalDAV server, your account shows the new name.
+
+You see this name in these places:
+
+- the browser tab title, when you look at one account;
+- the group headings in the sidebar of **All calendars**;
+- the calendar picker at the bottom of the **New event** and **Edit event** dialogs;
+- each row of the Schedule view;
+- the red banner when an account does not load;
+- the event details, when the calendar's own name is not known;
+- in workspace search, the rows for calendar accounts and calendars, an event's **Calendar** field, a calendar's **Account** field, the **Some places could not be searched** line, and the question you confirm after **Detach from this workspace**;
+- the **@** list in Workspace AI, next to each calendar, and next to an event when its calendar's own name is not known;
+- the **Add to calendar** menu in mail, under each calendar;
+- the **Calendar** field and the card of workflow steps.
+
+These places show the account's email address instead:
+
+- the button at the top of the sidebar and its **Switch calendar** menu;
+- the **Calendars** settings of the workspace and of your account, and **Connections**;
+- in search, the **In a resource** menu and the suggestions for `calendar:`.
+
 ## Choose a view
 
 Click the view button at the right of the header. It shows the name of the current view. Pick one of these:
@@ -56,7 +85,7 @@ Each day shows up to three events. If a day has more, a link such as "2 more" ap
 
 ### Schedule
 
-Schedule lists your events day by day. Each row shows the time, a colored dot, the title and the email address of the account the event belongs to. If there is nothing to show, you see "Nothing scheduled in this range."
+Schedule lists your events day by day. Each row shows the time, a colored dot, the title and the [name of the account](#how-calendar-accounts-are-named) the event belongs to. On a narrow screen, the account's name is hidden. If there is nothing to show, you see "Nothing scheduled in this range."
 
 <img src="/images/calendar/schedule-view.webp" alt="The calendar in Schedule view, listing events day by day" class="dark:hidden" />
 <img src="/images/calendar/schedule-view-dark.webp" alt="The calendar in Schedule view, listing events day by day" class="hidden dark:block" />
@@ -90,7 +119,7 @@ If you and a teammate are in different time zones, you each see the same event a
 
 ## If a calendar account does not load
 
-If one calendar account cannot be reached, a red banner above the calendar shows that account's email address and the problem. Events from your other calendar accounts still show.
+If one calendar account cannot be reached, a red banner above the calendar shows that account's name and the problem. Events from your other calendar accounts still show.
 
 ## On a phone
 

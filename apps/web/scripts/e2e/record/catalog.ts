@@ -85,6 +85,7 @@ export function catalog(driveKinds: string[]): Scenario[] {
       }),
     ),
     scenario({ id: "mail:gated", step: "mail", arg: "gated" }),
+    scenario({ id: "mail:label-retry", step: "mail", arg: "label-retry" }),
     workspaceChat("stored", { mastra: true }),
     scenario({
       id: "mail:llm",

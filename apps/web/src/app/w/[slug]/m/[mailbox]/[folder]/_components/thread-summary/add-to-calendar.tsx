@@ -13,6 +13,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { viewerTimeZone } from "@/calendar/layout";
+import { calendarName } from "@/connections/calendar-name";
 import { useWorkspaceScope } from "@/hooks/use-workspace-path";
 import { orpc } from "@/lib/orpc";
 import type { SummaryCardProps } from "@/mail/summary-catalog";
@@ -25,7 +26,7 @@ interface WritableCalendar {
   accountId: string;
   calendarId: string;
   name: string;
-  accountEmail: string;
+  accountName: string;
 }
 
 const EMAIL = /[^\s<>(),;"]+@[^\s<>(),;"]+\.[^\s<>(),;"]+/;
@@ -83,9 +84,15 @@ export function AddToCalendar({
 
   function load() {
     if (calendars || loadError) return;
-    orpc.calendarEvents
-      .calendars({ ...scope, calendarSlug: ALL_CALENDARS_SLUG })
-      .then(({ calendars: list }) =>
+    Promise.all([
+      orpc.calendarEvents.calendars({ ...scope, calendarSlug: ALL_CALENDARS_SLUG }),
+      orpc.workspaceCalendars.list({ workspaceSlug: scope.workspaceSlug }),
+    ])
+      .then(([{ calendars: list }, { calendars: accounts }]) => {
+        const accountName = (accountId: string, email: string) => {
+          const account = accounts.find((a) => a.calendarId === accountId);
+          return account ? calendarName(account, accounts) : email;
+        };
         setCalendars(
           list
             .filter((c) => c.visible && !c.readOnly)
@@ -94,10 +101,10 @@ export function AddToCalendar({
               accountId: c.accountId,
               calendarId: c.id,
               name: c.name,
-              accountEmail: c.accountEmail,
+              accountName: accountName(c.accountId, c.accountEmail),
             })),
-        ),
-      )
+        );
+      })
       .catch(() => setLoadError(true));
   }
 
@@ -153,7 +160,7 @@ export function AddToCalendar({
             <DropdownMenuItem key={`${c.accountId}::${c.calendarId}`} onClick={() => add(c)}>
               <div className="min-w-0">
                 <div className="truncate text-[13px]">{c.name}</div>
-                <div className="truncate text-[11px] text-faint">{c.accountEmail}</div>
+                <div className="truncate text-[11px] text-faint">{c.accountName}</div>
               </div>
             </DropdownMenuItem>
           ))

@@ -1,5 +1,6 @@
 import { PEOPLE } from "@metis/e2e/lib/cast";
 import { env } from "@metis/e2e/lib/env";
+import { RETRY_LABEL } from "@metis/e2e/lib/llm-scenarios";
 import type { Page } from "@playwright/test";
 
 import { expect, type Rpc, RpcError, test, uniqueName } from "../fixtures";
@@ -594,8 +595,8 @@ export default function mailSpecs() {
     expect(await findIn(rpc, account, "sent", subject)).toBeUndefined();
   });
 
-  test("create and delete a custom label in the sidebar", async ({ page, account }, testInfo) => {
-    const name = uniqueName(testInfo);
+  test("create and delete a custom label in the sidebar", async ({ page, account }) => {
+    const name = RETRY_LABEL;
     await goToFolder(page, account);
     const sidebar = folders(page);
     await sidebar.getByRole("button", { name: "Add custom label" }).click();

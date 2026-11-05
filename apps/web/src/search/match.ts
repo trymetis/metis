@@ -1,5 +1,7 @@
 import { highlight, test } from "liqe";
 
+import { parseSize } from "@/lib/size";
+
 import {
   andAll,
   type Comparison,
@@ -14,7 +16,7 @@ import {
   tagQuoted,
   tagText,
 } from "./ast";
-import { instantDay, parseSearchDate, parseSize } from "./dates";
+import { instantDay, parseSearchDate } from "./dates";
 import { searchField } from "./fields";
 
 export type SearchDocValue = string | number | boolean | null | undefined | SearchDocValue[];

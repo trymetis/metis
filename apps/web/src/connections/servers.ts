@@ -99,6 +99,7 @@ export function resolveServerCredentials(
       forcePathStyle: entry.forcePathStyle,
       allowInsecureTls: entry.allowInsecureTls,
       transfer: entry.transfer,
+      partSize: entry.partSize,
       prefix: stored.prefix,
     };
   }

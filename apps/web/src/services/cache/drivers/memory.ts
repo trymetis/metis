@@ -3,6 +3,7 @@ import type { CacheDriver } from "../types";
 
 interface Entry {
   value: string;
+  fields?: Map<string, string>;
   expiresAt: number | null;
 }
 
@@ -76,6 +77,26 @@ export function createMemoryDriver(): CacheDriver {
       const next = Number(existing.value) + 1;
       existing.value = String(next);
       return next;
+    },
+    async hget(key, field) {
+      return read(key)?.fields?.get(field) ?? null;
+    },
+    async hmget(key, fields) {
+      const stored = read(key)?.fields;
+      return fields.map((field) => stored?.get(field) ?? null);
+    },
+    async hsetExpiring(key, field, value, ttlSec) {
+      const existing = read(key);
+      if (existing?.fields) {
+        existing.fields.set(field, value);
+        existing.expiresAt ??= Date.now() + ttlSec * 1000;
+        return;
+      }
+      STORE.set(key, {
+        value: "",
+        fields: new Map([[field, value]]),
+        expiresAt: Date.now() + ttlSec * 1000,
+      });
     },
   };
 }

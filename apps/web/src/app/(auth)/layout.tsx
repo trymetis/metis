@@ -1,13 +1,9 @@
-import { SourceLink } from "@/components/source-link";
-import { sourceInfo } from "@/source-info";
+import { SourceFooterLayout } from "@/components/source-footer-layout";
 
 export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
-    <div className="relative min-h-dvh [&>*:first-child]:pb-16">
+    <SourceFooterLayout className="theme-neutral bg-background text-foreground">
       {children}
-      <footer className="absolute inset-x-0 bottom-0 flex justify-center px-4 pb-4">
-        <SourceLink source={sourceInfo()} />
-      </footer>
-    </div>
+    </SourceFooterLayout>
   );
 }

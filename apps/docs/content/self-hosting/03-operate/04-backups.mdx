@@ -9,17 +9,19 @@ The updater keeps one copy of the database from before your last upgrade, so tha
 
 Most mail, events and files are not stored by Metis Suite at all. They stay with the provider or server each user connected, such as Gmail, Outlook or your IMAP server. Your instance keeps the accounts, the connections and their credentials, the settings, and what people create in the app.
 
+Your instance also keeps a copy of the body of each message someone opened, until nobody has opened it for the number of days set on the **Mail cache** card (30 by default). It keeps the subjects, senders, AI labels, summaries and phishing check results of those messages too. See [Mail cache](/self-hosting/reference/dashboard-settings#mail-cache).
+
 ## What lives where
 
 With the Compose stack installed in `/opt/metis-suite`:
 
-| What                                        | Where                                  | Why it matters                                                                                                                       |
-| ------------------------------------------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| The settings file, with every secret        | `/opt/metis-suite/.env`                | Holds the encryption key, the app secret, the database credentials and the release pins.                                             |
-| The app database and the AI memory database | The `metis_sqld` Docker volume         | Accounts, workspaces, connections, settings and their history, workflows, scheduled mail, the audit log, and the assistant's memory. |
-| HTTPS certificates                          | The `metis_caddy_data` Docker volume   | Caddy gets a new certificate if this is lost, so it is optional.                                                                     |
-| Updater state                               | `/opt/metis-suite/.updater-state.json` | The last upgrade or undo, the release you can undo back to, and when its snapshot was taken.                                         |
-| Upgrade snapshot                            | `/opt/metis-suite/.updater-snapshot/`  | The copy of both databases from before your last upgrade, used only by **Undo last upgrade**.                                        |
+| What                                        | Where                                  | Why it matters                                                                                                                                                               |
+| ------------------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The settings file, with every secret        | `/opt/metis-suite/.env`                | Holds the encryption key, the app secret, the database credentials and the release pins.                                                                                     |
+| The app database and the AI memory database | The `metis_sqld` Docker volume         | Accounts, workspaces, connections, settings and their history, workflows, scheduled mail, the audit log, stored copies of opened message bodies, and the assistant's memory. |
+| HTTPS certificates                          | The `metis_caddy_data` Docker volume   | Caddy gets a new certificate if this is lost, so it is optional.                                                                                                             |
+| Updater state                               | `/opt/metis-suite/.updater-state.json` | The last upgrade or undo, the release you can undo back to, and when its snapshot was taken.                                                                                 |
+| Upgrade snapshot                            | `/opt/metis-suite/.updater-snapshot/`  | The copy of both databases from before your last upgrade, used only by **Undo last upgrade**.                                                                                |
 
 If your databases are on Turso, they live there instead of in the `metis_sqld` volume. The updater then takes no snapshot, so back them up before every upgrade.
 

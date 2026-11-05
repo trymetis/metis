@@ -190,11 +190,18 @@ export type StoredConnectionCredentials =
   | ({ provider: "ftp" } & StoredFileServerCredentials)
   | ({ provider: "sftp" } & StoredFileServerCredentials);
 
+export interface MailEndpoint {
+  host: string;
+  port: number;
+  secure: boolean;
+  plain: boolean;
+}
+
 export interface ImapCredentials {
   serverId: string;
   server: string;
-  imap: { host: string; port: number; secure: boolean };
-  smtp: { host: string; port: number; secure: boolean };
+  imap: MailEndpoint;
+  smtp: MailEndpoint;
   user: string;
   pass: string;
   smtpAuth: { user: string; pass: string } | null;
@@ -238,6 +245,7 @@ export interface S3Credentials {
   forcePathStyle: boolean;
   allowInsecureTls: boolean;
   transfer: "direct" | "relay";
+  partSize: string;
   prefix: string | null;
 }
 
@@ -292,7 +300,7 @@ export type GatewayConnectionCredentials = Extract<
 >;
 
 export type ConnectionAuth =
-  | { kind: "oauth"; accessToken: string }
+  | { kind: "oauth"; accessToken: string; email: string }
   | {
       kind: "credentials";
       credentials: ConnectionCredentials;

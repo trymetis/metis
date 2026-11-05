@@ -1,7 +1,7 @@
 import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/site";
 
 import { COMPETITORS } from "./compare";
-import { ENTRY_PLAN } from "./pricing";
+import { ENTRY_PLAN, usd } from "./pricing";
 
 export type PageInfo = {
   label: string;
@@ -19,7 +19,7 @@ const FIXED: Record<string, PageInfo> = {
     absolute: true,
     og: "Every account, one suite.",
     description: SITE_DESCRIPTION,
-    updated: "2026-10-21",
+    updated: "2026-11-03",
   },
   "/mail": {
     label: "Mail",
@@ -51,7 +51,7 @@ const FIXED: Record<string, PageInfo> = {
     og: "One agent across all of it.",
     description:
       "One AI agent across your mail, calendars and drives. It searches, drafts and schedules in one chat, and waits for approval before it sends or deletes.",
-    updated: "2026-10-21",
+    updated: "2026-11-03",
   },
   "/workflows": {
     label: "Workflows",
@@ -83,14 +83,14 @@ const FIXED: Record<string, PageInfo> = {
     og: "Your server, the whole suite.",
     description:
       "Run Metis Suite on your own Linux server with Docker Compose and one install script. Free under AGPL-3.0, with every tool and your own AI model.",
-    updated: "2026-10-21",
+    updated: "2026-11-03",
   },
   "/pricing": {
     label: "Pricing",
-    title: `Pricing: Free to Self-Host, Cloud from $${ENTRY_PLAN.cost.yearly / 12}/mo`,
+    title: `Pricing: Free to Self-Host, Cloud from ${usd(ENTRY_PLAN.cost.yearly / 12)}/mo`,
     og: "Free on yours. Fair on ours.",
-    description: `Self-host Metis Suite free under AGPL-3.0, or let us run your own instance on Metis Cloud from $${ENTRY_PLAN.cost.yearly / 12} a month billed yearly. Bring your own AI key.`,
-    updated: "2026-10-21",
+    description: `Self-host Metis Suite free under AGPL-3.0, or let us run your own instance on Metis Cloud from ${usd(ENTRY_PLAN.cost.yearly / 12)} a month billed yearly, with monthly AI included.`,
+    updated: "2026-11-03",
   },
   "/apps": {
     label: "Apps",
@@ -105,7 +105,7 @@ const FIXED: Record<string, PageInfo> = {
     title: "Compare Email Clients: Metis Suite vs Alternatives",
     og: "How Metis compares.",
     description: `How Metis Suite compares with ${COMPETITORS.map((c) => c.name).join(", ")}: licensing, self-hosting, AI, MCP and price.`,
-    updated: "2026-10-21",
+    updated: "2026-11-03",
   },
   "/about": {
     label: "About",
@@ -120,14 +120,14 @@ const FIXED: Record<string, PageInfo> = {
     title: "Privacy Policy",
     description:
       "How Metis Suite collects, uses, stores and protects your data, including Google user data, with two-factor authentication required on every account.",
-    updated: "2026-10-20",
+    updated: "2026-11-03",
   },
   "/terms-of-service": {
     label: "Terms of Service",
     title: "Terms of Service",
     description:
       "The terms that govern your use of Metis Suite, the suite for mail, calendars and drives operated by AstraQ Cyber Defence.",
-    updated: "2026-10-20",
+    updated: "2026-11-03",
   },
 };
 

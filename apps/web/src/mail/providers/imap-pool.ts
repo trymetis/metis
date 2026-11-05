@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 
 import { ImapFlow } from "imapflow";
 
-import type { ImapCredentials } from "@/connections/types";
+import type { ImapCredentials, MailEndpoint } from "@/connections/types";
 import { keysOf } from "@/lib/guards";
 import type { MailFolder } from "@/types/mail";
 
@@ -31,6 +31,7 @@ function poolKey(credentials: ImapCredentials): string {
     credentials.imap.host,
     credentials.imap.port,
     credentials.imap.secure,
+    credentials.imap.plain,
     credentials.user,
     credentials.pass,
     credentials.allowInsecureTls,
@@ -38,16 +39,32 @@ function poolKey(credentials: ImapCredentials): string {
   return crypto.createHash("sha256").update(material).digest("hex");
 }
 
-export function imapSettingsKey(server: {
-  imap: { host: string; port: number; secure: boolean };
-  allowInsecureTls: boolean;
-}): string {
+export function imapSettingsKey(server: { imap: MailEndpoint; allowInsecureTls: boolean }): string {
   return JSON.stringify([
     server.imap.host,
     server.imap.port,
     server.imap.secure,
+    server.imap.plain,
     server.allowInsecureTls,
   ]);
+}
+
+export function requiresStartTls(endpoint: MailEndpoint): boolean {
+  return !endpoint.secure && !endpoint.plain;
+}
+
+function imapClient(credentials: ImapCredentials): ImapFlow {
+  return new ImapFlow({
+    host: credentials.imap.host,
+    port: credentials.imap.port,
+    secure: credentials.imap.secure,
+    doSTARTTLS: requiresStartTls(credentials.imap) || undefined,
+    auth: { user: credentials.user, pass: credentials.pass },
+    logger: false,
+    tls: { rejectUnauthorized: !credentials.allowInsecureTls },
+    connectionTimeout: CONNECT_TIMEOUT_MS,
+    greetingTimeout: CONNECT_TIMEOUT_MS,
+  });
 }
 
 export function retireImapServers(current: Map<string, string>): void {
@@ -127,16 +144,7 @@ function drop(key: string, entry: Entry) {
 }
 
 async function openEntry(key: string, credentials: ImapCredentials): Promise<Entry> {
-  const client = new ImapFlow({
-    host: credentials.imap.host,
-    port: credentials.imap.port,
-    secure: credentials.imap.secure,
-    auth: { user: credentials.user, pass: credentials.pass },
-    logger: false,
-    tls: { rejectUnauthorized: !credentials.allowInsecureTls },
-    connectionTimeout: CONNECT_TIMEOUT_MS,
-    greetingTimeout: CONNECT_TIMEOUT_MS,
-  });
+  const client = imapClient(credentials);
 
   const entry: Entry = {
     client,
@@ -274,16 +282,7 @@ export async function withImapPath<T>(
 }
 
 export async function verifyImap(credentials: ImapCredentials): Promise<void> {
-  const client = new ImapFlow({
-    host: credentials.imap.host,
-    port: credentials.imap.port,
-    secure: credentials.imap.secure,
-    auth: { user: credentials.user, pass: credentials.pass },
-    logger: false,
-    tls: { rejectUnauthorized: !credentials.allowInsecureTls },
-    connectionTimeout: CONNECT_TIMEOUT_MS,
-    greetingTimeout: CONNECT_TIMEOUT_MS,
-  });
+  const client = imapClient(credentials);
   try {
     await client.connect();
     await client.list();

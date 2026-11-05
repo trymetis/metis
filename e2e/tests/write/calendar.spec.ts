@@ -67,10 +67,10 @@ export default function calendarSpecs() {
     const dialog = page.getByRole("dialog", { name: "New event" });
     await dialog.getByRole("textbox", { name: "Event title" }).fill(title);
     await expect(dialog.getByRole("combobox", { name: "Starts at" })).toContainText("1:00 PM");
-    await dialog.getByRole("combobox").filter({ hasText: "ana@demo.trymetis.email" }).click();
+    await dialog.getByRole("combobox").filter({ hasText: "Fernhill Calendar" }).click();
     await page
       .getByRole("listbox")
-      .getByRole("option", { name: "Work · ana@demo.trymetis.email", exact: true })
+      .getByRole("option", { name: "Work · Fernhill Calendar", exact: true })
       .click();
     await expect(
       dialog.getByRole("textbox", { name: "Event title" }),
@@ -84,9 +84,9 @@ export default function calendarSpecs() {
     await created.click();
     await eventPopover(page, title).getByRole("button", { name: "Edit event" }).click();
     const edit = page.getByRole("dialog", { name: "Edit event" });
-    await expect(
-      edit.getByRole("combobox").filter({ hasText: "ana@demo.trymetis.email" }),
-    ).toContainText("Work · ana@demo.trymetis.email");
+    await expect(edit.getByRole("combobox").filter({ hasText: "Fernhill Calendar" })).toContainText(
+      "Work · Fernhill Calendar",
+    );
     await edit.getByRole("textbox", { name: "Event title" }).fill(renamed);
     await edit.getByRole("button", { name: "Save", exact: true }).click();
     await expect(edit).toBeHidden();

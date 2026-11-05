@@ -24,7 +24,7 @@ const OPEN = [
 
 export function Footer() {
   return (
-    <footer className="relative z-10 bg-obsidian text-bone">
+    <footer data-night className="relative z-10 bg-obsidian text-bone">
       <div className="px-[var(--gx)] pb-20 pt-28 md:pt-36">
         <div className="mx-auto max-w-[1200px]">
           <h2

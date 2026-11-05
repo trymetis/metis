@@ -4,6 +4,7 @@ export const INBOX_PAGE_SIZE = 100;
 export const CLASSIFY_BATCH_SIZE = 25;
 export const VIEWER_TIME_ZONE = "UTC";
 export const GATED_SUBJECTS = ["jsonld-50-blocks", "jsonld-hostile-urls"] as const;
+export const RETRY_LABEL = "Quarterly review";
 
 export const MAIL_CHAT = {
   folder: "inbox",

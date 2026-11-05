@@ -21,22 +21,23 @@ import { MiniMonth } from "./mini-month";
 
 function groupByAccount(
   calendars: SessionCalendar[],
-): { email: string; calendars: SessionCalendar[] }[] {
+): { accountId: string; email: string; calendars: SessionCalendar[] }[] {
   const groups = new Map<string, SessionCalendar[]>();
   for (const calendar of calendars) {
-    const list = groups.get(calendar.accountEmail) ?? [];
+    const list = groups.get(calendar.accountId) ?? [];
     list.push(calendar);
-    groups.set(calendar.accountEmail, list);
+    groups.set(calendar.accountId, list);
   }
-  return [...groups.entries()].map(([email, list]) => ({
-    email,
+  return [...groups.entries()].map(([accountId, list]) => ({
+    accountId,
+    email: list[0]?.accountEmail ?? "",
     calendars: list,
   }));
 }
 
 export function CalendarSidebar() {
   const scope = useWorkspaceScope();
-  const { calendars, hidden, toggleCalendar, date, setDate, setDraft } = useCalendar();
+  const { calendars, accountName, hidden, toggleCalendar, date, setDate, setDraft } = useCalendar();
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const attachedQuery = useQuery(rpc.workspaceCalendars.list.queryOptions({ input: scope }));
   const attached: WorkspaceCalendar[] | null =
@@ -73,24 +74,24 @@ export function CalendarSidebar() {
 
       <div className="flex flex-col gap-4">
         {groups.map((group) => {
-          const isCollapsed = grouped && collapsed.has(group.email);
+          const isCollapsed = grouped && collapsed.has(group.accountId);
           return (
-            <section key={group.email}>
+            <section key={group.accountId}>
               {grouped && (
                 <button
                   type="button"
                   onClick={() =>
                     setCollapsed((prev) => {
                       const next = new Set(prev);
-                      if (next.has(group.email)) next.delete(group.email);
-                      else next.add(group.email);
+                      if (next.has(group.accountId)) next.delete(group.accountId);
+                      else next.add(group.accountId);
                       return next;
                     })
                   }
                   className="flex w-full items-center justify-between gap-2 rounded-md px-1.5 py-1 text-left transition-colors hover:bg-hover"
                 >
-                  <span className="truncate font-mono text-[11px] text-muted-foreground">
-                    {group.email}
+                  <span className="truncate text-[11px] text-muted-foreground">
+                    {accountName(group.accountId, group.email)}
                   </span>
                   <ChevronDown
                     className={cn(

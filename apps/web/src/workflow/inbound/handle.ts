@@ -1,8 +1,8 @@
 import "server-only";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
-import { BlockList, isIP } from "node:net";
 
 import { getInstanceConfig } from "@/config/runtime";
+import { forwardedClient, inIpList, ipList } from "@/services/client-ip";
 import { rateLimit } from "@/services/rate-limit";
 
 import { errorCode } from "../diagnostics";
@@ -19,40 +19,6 @@ const digest = (value: string) => createHash("sha256").update(value, "utf8").dig
 
 function same(a: string, b: string): boolean {
   return timingSafeEqual(digest(a), digest(b));
-}
-
-function blockListOf(entries: string[]): BlockList {
-  const list = new BlockList();
-  for (const entry of entries) {
-    const [address = "", prefix] = entry.trim().split("/");
-    const family = isIP(address);
-    if (!family) continue;
-    const type = family === 4 ? "ipv4" : "ipv6";
-    if (prefix === undefined) list.addAddress(address, type);
-    else list.addSubnet(address, Number(prefix), type);
-  }
-  return list;
-}
-
-function matches(list: BlockList, address: string): boolean {
-  const family = isIP(address);
-  if (!family) return false;
-  return list.check(address, family === 4 ? "ipv4" : "ipv6");
-}
-
-export function clientAddress(request: Request): string | null {
-  const chain = (request.headers.get("x-forwarded-for") ?? "")
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-  const trusted = blockListOf(getInstanceConfig().workflowRunner.trustedProxies);
-  for (let i = chain.length - 1; i >= 0; i -= 1) {
-    const hop = chain[i];
-    if (!hop) continue;
-    if (i > 0 && matches(trusted, hop)) continue;
-    return hop;
-  }
-  return request.headers.get("x-real-ip");
 }
 
 function reject(status: number, error: string): Response {
@@ -119,8 +85,11 @@ async function handleWebhook(request: Request, endpoint: EndpointRow): Promise<R
 
   const ips = parseStrings(param("ips"));
   if (ips.length > 0) {
-    const address = clientAddress(request);
-    if (!address || !matches(blockListOf(ips), address))
+    const address = forwardedClient(
+      request.headers,
+      getInstanceConfig().workflowRunner.trustedProxies,
+    );
+    if (!address || !inIpList(ipList(ips), address))
       return reject(403, "Not allowed from this address");
   }
   for (const rule of parseHeaderRules(param("headers"))) {

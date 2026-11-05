@@ -64,6 +64,7 @@ export interface WorkspaceScope {
     accountId: string;
     linkId: string;
     email: string;
+    name: string;
     slug: string;
     aiEnabled: boolean;
   }[];

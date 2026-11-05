@@ -177,13 +177,13 @@ https://mail.example.com/api/connections/zoho/callback
 
 1. Open **Dashboard**, **System**, then the provider under **Providers**.
 2. Enter the **Client ID** and **Client secret**. For Zoho, also pick the **Region**.
-3. Click **Save changes** and enter your authenticator code.
+3. Click **Save changes** and enter your authenticator code. The client is checked before it is saved. If the check fails, fix the fields and save again, or click **Save anyway**. See [Save anyway](/self-hosting/configure/how-configuration-works#save-anyway).
 4. In the **Health** card, click **Run check**. It confirms the provider accepts your client ID and secret.
 
 You can also set the starting values before the first start, with `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, `MICROSOFT_CLIENT_ID` and `MICROSOFT_CLIENT_SECRET`, or `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET` and `ZOHO_REGION`. After the first start, change them in the dashboard.
 
 :::warning[Removing a provider hides its accounts]
-If you clear a provider's client, every account connected through it is quarantined: it disappears from every workspace. The accounts come back when you configure the provider again. Users can also delete them from their account settings.
+If you clear a provider's client, every account connected through it is quarantined: it disappears from every workspace. The accounts come back when you configure the provider again. Users can also delete them from their account settings. If a reset to the environment would clear a provider that accounts use, the reset's dialog lists the provider, and you must tick **Reset anyway and quarantine these connections** first.
 :::
 
 :::note

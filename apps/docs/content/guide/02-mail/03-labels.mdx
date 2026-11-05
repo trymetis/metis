@@ -28,7 +28,7 @@ A message that was sent from the **Scheduled** folder also gets a **Scheduled** 
 
 A label can come from three places:
 
-1. **AI labels.** When AI is on for the mailbox, Metis Suite reads new messages in your list and labels them for you. If it is not sure about a message, it leaves the message without a label and does not try again.
+1. **AI labels.** When AI is on for the mailbox, Metis Suite reads new messages in your list and labels them for you. If it is not sure about a message, it leaves the message without a label. Depending on how your server is set up, it may not try that message again for up to 7 days. Adding or deleting a custom label in the mailbox ends that wait, so those messages are tried again the next time you open the mailbox.
 2. **Gmail categories.** For Gmail mailboxes, Gmail's own categories become labels: Promotions becomes **Promotional**, Updates becomes **Updates**, Social becomes **Social**, and Forums becomes **Newsletter**.
 3. **You.** A label you pick replaces the AI label, and the AI never changes it back.
 
@@ -100,6 +100,7 @@ Things to know about custom labels:
 - If you create a label while in **All inboxes**, it is added to every mailbox.
 - If a label with the same name already exists, no new label is added.
 - Custom labels appear in the **Change label** and **Label** menus under **Custom**.
+- Adding or deleting a custom label lets AI labels try again on messages they were not sure about before.
 
 ## Delete a custom label
 

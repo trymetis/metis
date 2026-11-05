@@ -5,6 +5,8 @@ import { db } from "@/db";
 import { mailboxLabel } from "@/db/schema";
 import type { CustomLabelColor } from "@/types/mail";
 
+import { forgetUnsure } from "./classify-unsure";
+
 export interface StoredCustomLabel {
   id: string;
   key: string;
@@ -78,6 +80,7 @@ export async function createCustomLabel(opts: {
 
   const first = inserted[0];
   if (!first) return { error: "Label already exists", reason: "conflict" };
+  await forgetUnsure(opts.mailboxIds);
   return { id: first.id, key, name, color };
 }
 
@@ -95,6 +98,7 @@ export async function deleteCustomLabel(opts: {
   await db
     .delete(mailboxLabel)
     .where(and(eq(mailboxLabel.key, row.key), inArray(mailboxLabel.mailboxId, opts.mailboxIds)));
+  await forgetUnsure(opts.mailboxIds);
 
   return { key: row.key };
 }

@@ -167,6 +167,7 @@ export const STEP_ICONS: Record<StepKey, LucideIcon> = {
   "drive.delete": Trash2,
   "system.cimdPrune": Wrench,
   "system.auditPrune": Wrench,
+  "system.mailCachePrune": Wrench,
   "system.workflowPrune": FolderSync,
 };
 

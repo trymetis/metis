@@ -16,6 +16,7 @@ import type {
   LocalSearchHit,
   MailSearchHitDto,
 } from "@/server/schema";
+import type { DriveSourceError } from "@/types/drive";
 
 const DEBOUNCE_MS = 300;
 
@@ -70,6 +71,17 @@ function uniqueById<T extends { id: string }>(items: T[]): T[] {
     seen.add(item.id);
     return true;
   });
+}
+
+function driveErrorLines(errors: DriveSourceError[]): string[] {
+  const seen = new Set<string>();
+  return errors
+    .filter((e) => {
+      if (seen.has(e.driveId)) return false;
+      seen.add(e.driveId);
+      return true;
+    })
+    .map((e) => `${e.email}: ${e.message}`);
 }
 
 export function useSearch(workspaceSlug: string, query: string, enabled: boolean): SearchResults {
@@ -136,7 +148,7 @@ export function useSearch(workspaceSlug: string, query: string, enabled: boolean
     eventQuery,
     eventQuery.data?.events,
     false,
-    eventQuery.data?.calendarErrors?.map((e) => `${e.accountEmail}: ${e.error}`),
+    eventQuery.data?.calendarErrors?.map((e) => `${e.accountName ?? e.accountEmail}: ${e.error}`),
   );
   const filePages = fileQuery.data?.pages;
   const file = slot(
@@ -144,7 +156,7 @@ export function useSearch(workspaceSlug: string, query: string, enabled: boolean
     fileQuery,
     filePages?.flatMap((page) => page.entries),
     fileQuery.hasNextPage,
-    filePages?.[0]?.driveErrors?.map((e) => `${e.email}: ${e.message}`),
+    filePages && driveErrorLines(filePages.flatMap((page) => page.driveErrors ?? [])),
   );
   const local = slot(wantsLocal, localQuery, localQuery.data?.hits, false, localQuery.data?.errors);
 

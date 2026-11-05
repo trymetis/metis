@@ -11,7 +11,7 @@ export default function TermsPage() {
     <LegalLayout
       path="/terms-of-service"
       title="Terms of Service"
-      lastUpdated="October 20, 2026"
+      lastUpdated="November 3, 2026"
       intro={`These Terms of Service are a binding agreement between you and ${ORG_NAME} governing your use of ${SITE_NAME}. By creating an account or using the Service you accept these Terms and our Privacy Policy. If you do not agree, do not use the Service.`}
     >
       <h2>1. Agreement</h2>
@@ -117,13 +117,16 @@ export default function TermsPage() {
       <p>
         The Service depends on third parties, including your mail, calendar, and drive providers
         (Google, Microsoft, Zoho, and the servers you connect), our infrastructure, backup, and
-        console hosts, our payment provider, transactional email delivery, and the AI model
-        providers your instance owner configures. {SITE_NAME} does not provide AI models; use of an
-        AI provider is governed by the owner&apos;s agreement with it. Their availability and terms
-        are outside our control, and your use of a connected provider remains governed by your
-        agreement with that provider. Use of Google user data is described in our{" "}
-        <Link href="/privacy-policy">Privacy Policy</Link> and adheres to the Google API Services
-        User Data Policy, including its Limited Use requirements.
+        console hosts, our payment provider, transactional email delivery, OpenRouter for the AI
+        included with Metis Cloud plans, and the AI model providers your instance owner configures.
+        The included AI is a monthly credit for each instance, routed only to model endpoints with a
+        zero data retention policy; it resets on the billing day, cannot be topped up, and stops
+        when it is used up until then. Use of a provider the owner configures is governed by the
+        owner&apos;s agreement with it. Their availability and terms are outside our control, and
+        your use of a connected provider remains governed by your agreement with that provider. Use
+        of Google user data is described in our <Link href="/privacy-policy">Privacy Policy</Link>{" "}
+        and adheres to the Google API Services User Data Policy, including its Limited Use
+        requirements.
       </p>
 
       <h2>8. Your content and our rights</h2>

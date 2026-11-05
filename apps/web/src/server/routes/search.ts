@@ -2,7 +2,7 @@ import "server-only";
 import { ORPCError } from "@orpc/server";
 
 import type { WorkspaceUserSession } from "@/auth/session";
-import { listCalendarsAcross } from "@/calendar/aggregate";
+import { accountNameIn, listCalendarsAcross } from "@/calendar/aggregate";
 import { searchEvents } from "@/calendar/search";
 import { workspaceCalendarAccounts } from "@/calendar/session";
 import { listWorkspaceCalendars, listWorkspaceDrives, listWorkspaceMailboxes } from "@/connections";
@@ -186,7 +186,18 @@ export const searchRouter = {
       if (query === false) return { events: [], diagnostics };
       const accounts = await workspaceCalendarAccounts(appUser.workspaceId);
       const result = await searchEvents(accounts, query, { timeZone });
-      return { ...result, diagnostics };
+      return {
+        ...result,
+        events: result.events.map((event) => ({
+          ...event,
+          accountName: accountNameIn(accounts, event.accountId, event.accountEmail ?? ""),
+        })),
+        calendarErrors: result.calendarErrors?.map((error) => ({
+          ...error,
+          accountName: accountNameIn(accounts, error.accountId, error.accountEmail),
+        })),
+        diagnostics,
+      };
     }),
 
   files: workspaceSession(searchInputSchema)

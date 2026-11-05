@@ -34,6 +34,31 @@ The redirect URIs for Google, Microsoft and Zoho are built from your app's addre
 
 Open the **Instance** page under **System** in the owner dashboard. The **App** card shows the **Public URL**, and **Secure cookies** reads **Yes** once the address starts with `https://`.
 
+## Behind Cloudflare or another CDN
+
+A CDN (content delivery network) is a service, such as Cloudflare, that sits in front of your server and passes requests on to it. Behind a CDN, requests reach Caddy from the CDN's servers, not from your visitors.
+
+The app uses each visitor's address for rate limits, sign-in limits and the IP addresses in the audit log. If you do nothing, every visitor who comes through one CDN server gets that server's address. They share one rate limit, and the audit log shows the same address for all of them.
+
+If you use Cloudflare, you can fix this. List Cloudflare's address ranges:
+
+1. Copy the IPv4 and IPv6 ranges that Cloudflare lists at [cloudflare.com/ips](https://www.cloudflare.com/ips/).
+2. In the owner dashboard, open **System**, then **Instance**.
+3. On the **Proxies** card, enter the ranges in **Trusted proxies**, separated by commas. You can enter up to 50.
+4. Click **Save changes** and enter a code from your authenticator app.
+
+Caddy puts only the address of the Cloudflare server into `X-Forwarded-For`. Once that address is on your list, the app takes the visitor's address from the `cf-connecting-ip` header that Cloudflare adds.
+
+Another CDN in front of Caddy cannot be fixed this way. Caddy replaces the `X-Forwarded-For` header that the CDN sends with the CDN server's address, and the app reads no other CDN's header. Listing that CDN's ranges changes nothing. Visitors still share the CDN server's address for rate limits and in the audit log.
+
+With Cloudflare, if your workflows use webhooks with **Only from these IPs**, list the same ranges in **Trusted proxies** on the **Workflow runner** page too. That list is separate. See [Webhooks that only accept some addresses](/self-hosting/configure/background-work#webhooks-that-only-accept-some-addresses).
+
+List only Cloudflare's published ranges. A list that is too wide, such as `0.0.0.0/0`, lets a caller choose their own address. See [Proxies](/self-hosting/reference/dashboard-settings#proxies) for the full rules.
+
+:::note
+Without a CDN, Caddy alone needs nothing in this list.
+:::
+
 ## If something goes wrong
 
 | Message                                       | What to do                                                |

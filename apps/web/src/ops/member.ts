@@ -8,7 +8,13 @@ import {
   workspaceRoleSchema,
 } from "@/server/schema";
 
-import { entrySummaryOutput, listDrives, listDrivesOutput, searchAcross } from "./drive";
+import {
+  entrySummaryOutput,
+  listDrives,
+  listDrivesOutput,
+  searchAcross,
+  searchAcrossOutput,
+} from "./drive";
 import { orFailure, type Output } from "./output";
 import type { WorkspaceCtx, WorkspaceMember } from "./scope";
 
@@ -48,6 +54,7 @@ export const findMemberFilesOutput = z.union([
     query: z.string(),
     count: z.number(),
     entries: z.array(entrySummaryOutput),
+    errors: searchAcrossOutput.shape.errors,
   }),
 ]);
 
@@ -173,6 +180,7 @@ export async function findMemberFiles(
     query: args.query,
     count: Math.min(found.count, args.limit),
     entries: found.entries.slice(0, args.limit),
+    errors: found.errors,
   };
 }
 

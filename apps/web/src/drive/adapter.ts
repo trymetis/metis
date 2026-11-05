@@ -49,6 +49,7 @@ export interface DriveAdapter {
   delete(fileId: string): Promise<void>;
   quota(): Promise<DriveQuota | null>;
   changes?(folderId: string | null, cursor: string | null): Promise<DriveChangeSignal | null>;
+  topAncestor?(fileId: string): string;
 }
 
 const DRIVE_ADAPTERS: Record<

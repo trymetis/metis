@@ -3,6 +3,7 @@ import { Agent } from "@mastra/core/agent";
 
 import { getLlm } from "@/services/llm";
 
+import { chatStopWhen, finalAnswerStep } from "../step-budget";
 import { calendarTools } from "../tools/calendar-tools";
 
 const CALENDAR_INSTRUCTIONS = `You are Metis Calendar AI. Your scope is the calendar view the user has open: the accounts and calendars listCalendars returns. Your tools are calendar tools.
@@ -44,4 +45,6 @@ export const calendarAgent = new Agent({
   instructions: CALENDAR_INSTRUCTIONS,
   model: () => getLlm().chat,
   tools: calendarTools,
+  inputProcessors: [finalAnswerStep],
+  defaultOptions: { stopWhen: chatStopWhen },
 });

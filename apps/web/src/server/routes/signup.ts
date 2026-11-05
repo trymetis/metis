@@ -4,7 +4,8 @@ import { ORPCError } from "@orpc/server";
 import { verifySetupCode } from "@/auth/setup-code";
 import { firstUserSignup, inviteSignup, previewSignupInvite } from "@/auth/signup";
 import { config } from "@/config";
-import { getClientIp, rateLimit } from "@/services/rate-limit";
+import { clientIp } from "@/services/client-ip";
+import { rateLimit } from "@/services/rate-limit";
 
 import { base } from "../middlewares/base";
 import {
@@ -17,7 +18,7 @@ import {
 } from "../schema";
 
 async function limit(headers: Headers, scope: string, limitPerHour: number): Promise<void> {
-  const result = await rateLimit(getClientIp(headers), {
+  const result = await rateLimit(clientIp(headers) ?? "unknown", {
     scope,
     limit: limitPerHour,
     windowSec: 60 * 60,

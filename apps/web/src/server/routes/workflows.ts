@@ -111,7 +111,7 @@ export const workflowsRouter = {
             id: c.accountId,
             slug: c.slug,
             email: c.email,
-            name: c.email,
+            name: c.name,
             aiEnabled: c.aiEnabled,
           })),
           drives: scope.drives.map((d) => ({

@@ -13,7 +13,7 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [mail.md](mail
 | Phishing backend token                   | `src/auth/backend-token.ts` → `mintBackendToken`                                                                                                                                                                        |
 | Phishing entry points                    | tool body `src/ops/phishing.ts` → `analyzePhishing` · procedure `ai.analyzePhishing` in `src/server/routes/ai.ts`                                                                                                       |
 | Labels: entry and path choice            | `src/mail/classify.ts` → `classifyMessages` (picks the decision or LLM path) · procedure `mail.labels.classify` in `src/server/routes/mail/labels.ts` (adds the rate limit)                                             |
-| Labels: decision path and storage        | `src/mail/labels.ts` → `classifyByDecision`, `setUserLabel`, `DECISION_LABEL_MIN`, `UNSURE_TTL_SEC` · table `mailLabel`                                                                                                 |
+| Labels: decision path and storage        | `src/mail/labels.ts` → `classifyByDecision`, `setUserLabel`, `DECISION_LABEL_MIN` · `src/mail/classify-unsure.ts` → `unsureMessages`, `markUnsure`, `forgetUnsure`, `UNSURE_TTL_SEC` · table `mailLabel`                |
 | Labels: LLM path                         | prompt `src/mail/classify-prompt.ts` → `classifyPrompt` · agent `src/mastra/agents/classifier.ts` → `classifierAgent`                                                                                                   |
 | Label vocabulary                         | `src/mail/label-meta.ts` → `LABEL_DESCRIPTIONS`                                                                                                                                                                         |
 | Decision options                         | `src/services/decision/decide.ts` → `neutralCriteria`                                                                                                                                                                   |
@@ -44,7 +44,8 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [mail.md](mail
   - A user label upserts over the AI one and is never overwritten.
 - **The decision classifier writes only confident labels.**
   - The top label at p ≥ `DECISION_LABEL_MIN` is written, with p as its confidence.
-  - Below that, or on a refusal, nothing is written and a `classify-unsure:<mailboxId>:<messageId>` cache key (`UNSURE_TTL_SEC`) stops it being asked again; items with that key are filtered out before any call.
+  - Below that, or on a refusal, nothing is written and the message is flagged in its mailbox's `classify-unsure:` cache hash (`markUnsure`, `UNSURE_TTL_SEC` from the hash's first flag), which stops it being asked again; flagged items are filtered out before any call, read in one `hmget` per mailbox.
+  - Creating or deleting a custom label drops the mailbox's unsure hash (`forgetUnsure` in `createCustomLabel` / `deleteCustomLabel`), because the new set of labels may fit a message the old one did not.
 - **A failed decision call leaves only its own message unlabeled**, asked again on the next render, with no LLM fallback; the other calls still write their labels, unsure keys and usage.
 - **The LLM prompt and the decision options render the label names and descriptions from one table**, `LABEL_DESCRIPTIONS`.
 

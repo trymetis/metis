@@ -7,11 +7,18 @@ import { Redis } from "ioredis";
 import { z } from "zod";
 
 import { config, type InstanceConfig } from "@/config";
+import { rowToInstanceConfig } from "@/config/row";
 import { getInstanceConfig } from "@/config/runtime";
 import type { InstanceSection, LlmConfig } from "@/config/schema";
 import { hashSection } from "@/config/sections";
+import { readConfigRow } from "@/config/store";
 import type { ConnectionProvider } from "@/connections/types";
-import { checkDecisionModel, runServerCheck, serverChecks } from "@/connections/verify-servers";
+import {
+  checkDecisionModel,
+  runServerCheck,
+  type ServerCheck,
+  serverChecks,
+} from "@/connections/verify-servers";
 import { db } from "@/db";
 import type {
   DashboardSystemCheck,
@@ -22,6 +29,7 @@ import type {
 import { buildCacheDriver, getCache } from "@/services/cache";
 import { createSmtpTransport } from "@/services/mailer/drivers/smtp";
 
+import { latestPreflightRun } from "./preflight";
 import { dashboardRunner } from "./stats";
 
 const modelListSchema = z.object({
@@ -356,28 +364,65 @@ const DRIVER_CHECKS: Record<SystemDriver, (cfg: InstanceConfig) => Promise<Check
   database: checkDatabase,
 };
 
+interface LastDeploy {
+  warnings: string[];
+  checked: Set<string>;
+}
+
+interface Baseline {
+  stored: InstanceConfig;
+  lastDeploy: LastDeploy;
+}
+
+function checkKey(check: ServerCheck): string {
+  return hashSection([check.provider, check.server, check.part, check.probe]);
+}
+
+function unchangedResult(check: ServerCheck, lastDeploy: LastDeploy): CheckResult {
+  const prefix = `${check.label}: `;
+  const reported = lastDeploy.checked.has(checkKey(check))
+    ? lastDeploy.warnings.find((line) => line.startsWith(prefix))
+    : undefined;
+  return {
+    server: check.server,
+    label: check.part,
+    status: reported ? "warning" : "skipped",
+    message: reported
+      ? `Unchanged. The last deploy check reported: ${reported.slice(prefix.length)}`
+      : "Unchanged, so not checked again.",
+    latencyMs: null,
+  };
+}
+
 async function checkProvider(
   provider: ConnectionProvider,
   cfg: InstanceConfig,
+  baseline?: Baseline,
 ): Promise<CheckResult[]> {
-  const checks = serverChecks(cfg).filter((check) => check.provider === provider);
+  const ofProvider = (check: ServerCheck) => check.provider === provider;
+  const checks = serverChecks(cfg).filter(ofProvider);
   if (checks.length === 0) {
     return [skipped("Configuration", "This provider is not configured.")];
   }
+  const unchanged = new Set(
+    baseline ? serverChecks(baseline.stored).filter(ofProvider).map(checkKey) : [],
+  );
   return Promise.all(
     checks.map((check) =>
-      timed(
-        check.part,
-        async () => {
-          const outcome = await runServerCheck(check);
-          if (outcome.ok) return { status: "ok" };
-          return {
-            status: "failed",
-            message: `${outcome.misconfigured ? "Misconfigured" : "Unreachable"}: ${outcome.message}`,
-          };
-        },
-        check.server,
-      ),
+      baseline && unchanged.has(checkKey(check))
+        ? Promise.resolve(unchangedResult(check, baseline.lastDeploy))
+        : timed(
+            check.part,
+            async () => {
+              const outcome = await runServerCheck(check);
+              if (outcome.ok) return { status: "ok" };
+              return {
+                status: "failed",
+                message: `${outcome.misconfigured ? "Misconfigured" : "Unreachable"}: ${outcome.message}`,
+              };
+            },
+            check.server,
+          ),
     ),
   );
 }
@@ -407,19 +452,43 @@ const SECTION_CHECKS: Partial<
   workflowRunner: checkRunnerTransport,
 };
 
+async function readLastDeploy(): Promise<LastDeploy> {
+  const { run } = await latestPreflightRun();
+  const row = run ? await readConfigRow(run.configVersion) : null;
+  if (!run || !row) return { warnings: [], checked: new Set() };
+  return {
+    warnings: run.warnings
+      .filter((warning) => warning.kind === "server")
+      .map((warning) => warning.message),
+    checked: new Set(serverChecks(rowToInstanceConfig(row)).map(checkKey)),
+  };
+}
+
 export async function verifySections(
   sections: InstanceSection[],
   cfg: InstanceConfig,
+  stored: InstanceConfig,
 ): Promise<DashboardSystemCheck | null> {
+  const providerSections = sections.some((section) => SECTION_PROVIDERS[section]);
+  const baseline = providerSections ? { stored, lastDeploy: await readLastDeploy() } : undefined;
   const runs = sections.flatMap((section) => {
     const provider = SECTION_PROVIDERS[section];
-    if (provider) return [checkProvider(provider, cfg)];
+    if (provider) return [checkProvider(provider, cfg, baseline)];
     const check = SECTION_CHECKS[section];
     return check ? [check(cfg)] : [];
   });
   if (runs.length === 0) return null;
   const results = (await Promise.all(runs)).flat();
   return { checkedAt: new Date().toISOString(), results };
+}
+
+export function checkWarnings(check: DashboardSystemCheck | null): string[] {
+  return (check?.results ?? [])
+    .filter((result) => result.status === "warning")
+    .map(
+      (result) =>
+        `${result.server ? `${result.server} · ` : ""}${result.label}: ${result.message ?? ""}`,
+    );
 }
 
 export function checkFailed(check: DashboardSystemCheck | null): boolean {

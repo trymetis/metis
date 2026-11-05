@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { ConnectionAuth, DriveProvider } from "@/connections";
 import { BadRequestError } from "@/lib/errors/bad-request";
 import { NotVisibleError } from "@/lib/errors/not-visible";
+import { ProviderError } from "@/lib/errors/provider-error";
 import { sanitizeError } from "@/lib/errors/sanitize-error";
 import { type TagToken, tagKey, tagText } from "@/search/ast";
 import { bindTags } from "@/search/pushdown";
@@ -116,7 +117,7 @@ export interface DriveSurface {
   delete(fileId: string): Promise<void>;
 }
 
-function sourceError(account: ResolvedDrive, err: unknown): DriveSourceError {
+export function sourceError(account: ResolvedDrive, err: unknown): DriveSourceError {
   return {
     driveId: account.driveId,
     driveSlug: account.driveSlug,
@@ -130,10 +131,15 @@ interface DriveScope {
   client(): Promise<DriveAdapter>;
   tag(entry: DriveEntry): TaggedDriveEntry;
   assertVisible(fileId: string | null): Promise<void>;
-  visibleOnly(entries: DriveEntry[]): Promise<DriveEntry[]>;
+  visibleOnly(entries: DriveEntry[]): Promise<VisibleEntries>;
 }
 
-function createScope(account: ResolvedDrive, composite: boolean): DriveScope {
+interface VisibleEntries {
+  entries: DriveEntry[];
+  error: DriveSourceError | null;
+}
+
+function createScope(account: ResolvedDrive, composite: boolean, strict = false): DriveScope {
   let adapter: DriveAdapter | null = null;
   const ancestors = new Map<string, string>();
 
@@ -142,10 +148,12 @@ function createScope(account: ResolvedDrive, composite: boolean): DriveScope {
     return adapter;
   }
 
-  async function topAncestor(fileId: string): Promise<string> {
+  async function topAncestor(fileId: string, parentId?: string | null): Promise<string> {
     const drive = await client();
-    const chain: string[] = [];
-    let current = fileId;
+    if (drive.topAncestor) return drive.topAncestor(fileId);
+    if (parentId === null) return fileId;
+    const chain: string[] = parentId === undefined ? [] : [fileId];
+    let current = parentId ?? fileId;
 
     for (let depth = 0; depth < MAX_DEPTH; depth += 1) {
       const known = ancestors.get(current);
@@ -195,18 +203,26 @@ function createScope(account: ResolvedDrive, composite: boolean): DriveScope {
     },
 
     async visibleOnly(entries) {
-      if (account.visibleRootIds.length === 0) return entries;
+      if (account.visibleRootIds.length === 0) return { entries, error: null };
 
+      const failures: unknown[] = [];
       const checked = await Promise.all(
         entries.map(async (entry) => {
           try {
-            return isRootVisible(account, await topAncestor(entry.id)) ? entry : null;
-          } catch {
+            return isRootVisible(account, await topAncestor(entry.id, entry.parentId))
+              ? entry
+              : null;
+          } catch (err) {
+            if (!(err instanceof ProviderError && err.status === 404)) failures.push(err);
             return null;
           }
         }),
       );
-      return checked.filter((entry) => entry !== null);
+      if (strict && failures.length > 0) throw failures[0];
+      return {
+        entries: checked.filter((entry) => entry !== null),
+        error: failures.length > 0 ? sourceError(account, failures[0]) : null,
+      };
     },
   };
 }
@@ -238,23 +254,26 @@ function singleSurface(scope: DriveScope): Omit<DriveSurface, "isAggregate" | "d
       const listing = await adapter.search(query, cursor);
       const visible = await scope.visibleOnly(listing.entries);
       return {
-        entries: visible.map((entry) => scope.tag(entry)),
+        entries: visible.entries.map((entry) => scope.tag(entry)),
         cursor: listing.cursor,
+        driveErrors: visible.error ? [visible.error] : undefined,
       };
     },
 
     async searchAst(search) {
       if (search.query === false) return { entries: [], cursor: null };
       const adapter = await scope.client();
+      const errors: DriveSourceError[] = [];
       const listing = await adapter.searchAst({
         query: search.query,
         timeZone: search.timeZone,
         cursor: search.cursor,
         accept: async (residual, entries) => {
           const visible = await scope.visibleOnly(entries);
+          if (visible.error && errors.length === 0) errors.push(visible.error);
           return search.accept(
             residual,
-            visible.map((entry) => scope.tag(entry)),
+            visible.entries.map((entry) => scope.tag(entry)),
           );
         },
       });
@@ -262,6 +281,7 @@ function singleSurface(scope: DriveScope): Omit<DriveSurface, "isAggregate" | "d
         // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- a provider returns the entries accept() produced, which this scope tagged; DriveAdapter.searchAst is typed on plain DriveEntry
         entries: listing.entries as TaggedDriveEntry[],
         cursor: listing.cursor,
+        driveErrors: errors.length > 0 ? errors : undefined,
       };
     },
 
@@ -316,8 +336,11 @@ function singleSurface(scope: DriveScope): Omit<DriveSurface, "isAggregate" | "d
   };
 }
 
-export function driveSurfaceFor(account: ResolvedDrive): DriveSurface {
-  const scope = createScope(account, false);
+export function driveSurfaceFor(
+  account: ResolvedDrive,
+  options: { strictVisibility?: boolean } = {},
+): DriveSurface {
+  const scope = createScope(account, false, options.strictVisibility);
   return { isAggregate: false, drives: [account], ...singleSurface(scope) };
 }
 
@@ -408,6 +431,7 @@ export function aggregateDriveSurface(drives: ResolvedDrive[]): DriveSurface {
             const { inner } = surfaceFor(account.driveId);
             const page = await inner.search(query, token ?? undefined);
             entries.push(...page.entries);
+            if (page.driveErrors) errors.push(...page.driveErrors);
             next[account.driveId] = page.cursor;
           } catch (err) {
             next[account.driveId] = null;
@@ -447,6 +471,7 @@ export function aggregateDriveSurface(drives: ResolvedDrive[]): DriveSurface {
               cursor: token ?? undefined,
             });
             entries.push(...page.entries);
+            if (page.driveErrors) errors.push(...page.driveErrors);
             next[account.driveId] = page.cursor;
           } catch (err) {
             next[account.driveId] = null;

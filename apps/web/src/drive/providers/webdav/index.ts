@@ -4,7 +4,9 @@ import { Agent } from "undici";
 import type { WebdavCredentials } from "@/connections/types";
 import type { DriveAdapter } from "@/drive/adapter";
 import { mimeFromName } from "@/drive/mime";
+import { topOfPath } from "@/drive/path-ids";
 import { type RelayScope, relayDownloadTarget, relayUploadSession } from "@/drive/relay";
+import { afterSearchChange, cachedFolderListing } from "@/drive/search-cache";
 import { textDriveSearch } from "@/drive/text-search";
 import { bind } from "@/lib/bind";
 import { ProviderError } from "@/lib/errors/provider-error";
@@ -24,6 +26,7 @@ export function webdavDrive(
 ): DriveAdapter {
   return bind<DriveAdapter, WebdavCredentials>(
     {
+      topAncestor,
       listFolder,
       search,
       searchAst: (c, query) =>
@@ -32,13 +35,16 @@ export function webdavDrive(
         }),
       getEntry,
       getDownloadTarget: (c, fileId) => getDownloadTarget(c, fileId, scope),
-      createUploadSession: (c, upload) => createUploadSession(c, upload, scope),
+      createUploadSession: (c, upload) =>
+        afterSearchChange(c.serverId, createUploadSession(c, upload, scope)),
       readStream,
-      writeStream,
-      createFolder,
-      rename,
-      move,
-      delete: deleteEntry,
+      writeStream: (c, upload, body, signal) =>
+        afterSearchChange(c.serverId, writeStream(c, upload, body, signal)),
+      createFolder: (c, parentId, name) =>
+        afterSearchChange(c.serverId, createFolder(c, parentId, name)),
+      rename: (c, fileId, name) => afterSearchChange(c.serverId, rename(c, fileId, name)),
+      move: (c, fileId, parentId) => afterSearchChange(c.serverId, move(c, fileId, parentId)),
+      delete: (c, fileId) => afterSearchChange(c.serverId, deleteEntry(c, fileId)),
       quota,
     },
     credentials,
@@ -131,6 +137,10 @@ function decodePath(pathname: string): string {
 function nameOf(id: string): string {
   const trimmed = id.endsWith("/") ? id.slice(0, -1) : id;
   return trimmed.slice(trimmed.lastIndexOf("/") + 1);
+}
+
+function topAncestor(_credentials: WebdavCredentials, fileId: string): string {
+  return topOfPath(checkId(fileId));
 }
 
 function parentOf(id: string): string | null {
@@ -265,7 +275,9 @@ async function search(credentials: WebdavCredentials, query: string): Promise<Dr
     visited += 1;
 
     // oxlint-disable-next-line eslint/no-await-in-loop -- bounded breadth-first crawl that stops at the folder or result cap
-    const listing = await listFolder(credentials, next.id);
+    const listing = await cachedFolderListing(credentials, next.id, () =>
+      listFolder(credentials, next.id),
+    );
     for (const entry of listing.entries) {
       if (entry.name.toLowerCase().includes(needle)) results.push(entry);
       if (entry.kind === "folder" && next.depth + 1 < SEARCH_MAX_DEPTH) {

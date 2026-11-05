@@ -20,6 +20,19 @@ If nothing matches, you see "Nothing matched that search". When there are many r
 
 In [All drives](/guide/drive/all-drives), the same box searches every drive in the workspace at once.
 
+## When some results may be missing
+
+Sometimes Metis cannot search all of a drive. Then a notice appears above the file list:
+
+"Couldn't search all of Team Drive, so some results may be missing."
+
+The notice names each drive that could not be fully searched (here, a drive called Team Drive). Results that Metis could check still appear, and so do results from the other drives. To search again, click **Try again** in the notice.
+
+This can happen in two cases:
+
+- On a drive with a [folder restriction](/guide/drive/folder-restrictions), Metis checks that each result is in a folder this workspace can see. If the drive does not answer during that check, for example because it is busy or does not respond in time, those results are left out.
+- In [All drives](/guide/drive/all-drives), one drive's search fails completely.
+
 ## What search can find
 
 - Search never shows folders or files that a [folder restriction](/guide/drive/folder-restrictions) hides from this workspace.
@@ -33,6 +46,8 @@ In [All drives](/guide/drive/all-drives), the same box searches every drive in t
 | WebDAV, FTP, FTPS and SFTP | Looks through the folders one by one, up to a limit. A file buried very deep in many folders may not be found. |
 
 If search does not find a file on a WebDAV, FTP, FTPS or SFTP drive, browse to it through its folders instead.
+
+On S3, WebDAV, FTP, FTPS and SFTP drives, search can be up to 30 seconds behind the drive. For example, a file added, renamed or deleted outside Metis may take that long to show in search. Opening its folder always shows what is there now.
 
 ## Search with filters
 

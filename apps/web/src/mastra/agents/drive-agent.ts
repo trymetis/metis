@@ -3,6 +3,7 @@ import { Agent } from "@mastra/core/agent";
 
 import { getLlm } from "@/services/llm";
 
+import { chatStopWhen, finalAnswerStep } from "../step-budget";
 import { driveTools } from "../tools/drive-tools";
 
 const DRIVE_INSTRUCTIONS = `You are Metis Drive AI. Your scope is the drive view the user has open: the drives listDrives returns and the folders inside them. Your tools are file tools.
@@ -41,4 +42,6 @@ export const driveAgent = new Agent({
   instructions: DRIVE_INSTRUCTIONS,
   model: () => getLlm().chat,
   tools: driveTools,
+  inputProcessors: [finalAnswerStep],
+  defaultOptions: { stopWhen: chatStopWhen },
 });

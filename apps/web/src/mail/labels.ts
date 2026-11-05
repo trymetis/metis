@@ -5,7 +5,6 @@ import { recordAiUsage } from "@/ai/usage";
 import { db } from "@/db";
 import { mailboxLabel, mailLabel } from "@/db/schema";
 import { BUILT_IN_LABELS, type ClassifyItemInput } from "@/server/schema";
-import { getCache } from "@/services/cache";
 import {
   decideOne,
   decisionClassifierBatch,
@@ -18,6 +17,7 @@ import type { Email, MessagesResponse } from "@/types/mail";
 import { labelsApplied } from "@/workflow/hooks";
 
 import { compositeId } from "./aggregate";
+import { markUnsure, unsureMessages } from "./classify-unsure";
 import { type CustomLabel, LABEL_DESCRIPTIONS, resolveLabelName } from "./label-meta";
 import { type ListingScope, readListedEmail } from "./listed";
 import { type MailScope, type MailSession, scopeMessage } from "./session";
@@ -227,13 +227,6 @@ export async function setLabelOnMessages(params: {
 
 const DECISION_LABEL_MIN = 0.5;
 const DECISION_MAX_OPTIONS = 255;
-const UNSURE_TTL_SEC = 7 * 24 * 60 * 60;
-
-function unsureKey(mail: MailSession, id: string): string {
-  const target = scopeMessage(mail, id);
-  return `classify-unsure:${target.mailboxId}:${target.messageId}`;
-}
-
 export async function classifyByDecision(
   mail: MailSession,
   items: ClassifyItemInput[],
@@ -255,10 +248,12 @@ export async function classifyByDecision(
   }
   const { criteria, keyOf } = neutralCriteria<string>(options);
 
-  const unsure = await Promise.all(
-    items.map(async (item) => (await getCache().get(unsureKey(mail, item.id))) !== null),
-  );
-  const pending = items.filter((_, index) => !unsure[index]);
+  const targets = items.map((item) => scopeMessage(mail, item.id));
+  const unsure = await unsureMessages(targets);
+  const pending = items.filter((_, index) => {
+    const target = targets[index];
+    return !target || !unsure.has(`${target.mailboxId}:${target.messageId}`);
+  });
 
   async function decide(item: ClassifyItemInput) {
     try {
@@ -330,9 +325,7 @@ export async function classifyByDecision(
     });
   }
 
-  await Promise.all(
-    undecided.map((id) => getCache().set(unsureKey(mail, id), "1", UNSURE_TTL_SEC)),
-  );
+  await markUnsure(undecided.map((id) => scopeMessage(mail, id)));
   return decided;
 }
 

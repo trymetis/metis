@@ -2,6 +2,7 @@ import "server-only";
 import { pruneAuditEvents } from "@/audit/prune";
 import { getInstanceConfig } from "@/config/runtime";
 import { isOneOf } from "@/lib/guards";
+import { pruneCachedBodies } from "@/mail/cache";
 import { pruneAbandonedCimdClients } from "@/mcp/prune-cimd-clients";
 import {
   createEventValue,
@@ -474,6 +475,10 @@ export const RESOURCE_RUNNERS = {
   "drive.delete": remove,
   "system.cimdPrune": maintenance((ctx) => pruneAbandonedCimdClients(ctx.now), "client(s)"),
   "system.auditPrune": maintenance((ctx) => pruneAuditEvents(ctx.now), "audit event(s)"),
+  "system.mailCachePrune": maintenance(
+    (ctx) => pruneCachedBodies(ctx.now, getInstanceConfig().mailCache.retentionDays),
+    "message bod(ies)",
+  ),
   "system.workflowPrune": maintenance(async (ctx) => {
     const runner = getInstanceConfig().workflowRunner;
     const pruned = await pruneWorkflowData({

@@ -33,6 +33,8 @@ function unstoredSections(row: InstanceConfigRow): InstanceSection[] {
   return [
     ...(row.decisionDriver === null ? (["decision"] as const) : []),
     ...(row.imageProxyEnabled === null ? (["imageProxy"] as const) : []),
+    ...(row.trustedProxies === null ? (["proxies"] as const) : []),
+    ...(row.mailCacheDays === null ? (["mailCache"] as const) : []),
   ];
 }
 

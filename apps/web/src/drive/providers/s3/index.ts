@@ -10,18 +10,22 @@ import {
 } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { z } from "zod";
 
 import type { S3Credentials } from "@/connections/types";
 import type { DriveAdapter } from "@/drive/adapter";
+import { topOfPath } from "@/drive/path-ids";
 import {
   contentDisposition,
   type RelayScope,
   relayDownloadTarget,
   relayUploadSession,
 } from "@/drive/relay";
+import { afterSearchChange, cachedSearchListing } from "@/drive/search-cache";
 import { textDriveSearch } from "@/drive/text-search";
 import { bind } from "@/lib/bind";
 import { ProviderError } from "@/lib/errors/provider-error";
+import { parseSize } from "@/lib/size";
 import type {
   DriveDownloadTarget,
   DriveEntry,
@@ -37,6 +41,7 @@ import { corsPreflight, objectUrl, s3Client, s3Send } from "./client";
 export function s3Drive(credentials: S3Credentials, scope: RelayScope | undefined): DriveAdapter {
   return bind<DriveAdapter, S3Credentials>(
     {
+      topAncestor,
       listFolder,
       search,
       searchAst: (c, query) =>
@@ -45,13 +50,16 @@ export function s3Drive(credentials: S3Credentials, scope: RelayScope | undefine
         }),
       getEntry,
       getDownloadTarget: (c, fileId) => getDownloadTarget(c, fileId, scope),
-      createUploadSession: (c, upload) => createUploadSession(c, upload, scope),
+      createUploadSession: (c, upload) =>
+        afterSearchChange(searchScope(c), createUploadSession(c, upload, scope)),
       readStream,
-      writeStream,
-      createFolder,
-      rename,
-      move,
-      delete: deleteEntry,
+      writeStream: (c, upload, body, signal) =>
+        afterSearchChange(searchScope(c), writeStream(c, upload, body, signal)),
+      createFolder: (c, parentId, name) =>
+        afterSearchChange(searchScope(c), createFolder(c, parentId, name)),
+      rename: (c, fileId, name) => afterSearchChange(searchScope(c), rename(c, fileId, name)),
+      move: (c, fileId, parentId) => afterSearchChange(searchScope(c), move(c, fileId, parentId)),
+      delete: (c, fileId) => afterSearchChange(searchScope(c), deleteEntry(c, fileId)),
       quota: () => quota(),
     },
     credentials,
@@ -64,7 +72,6 @@ const SEARCH_MAX_PAGES = 20;
 const DELETE_BATCH = 1000;
 const DOWNLOAD_EXPIRY_SEC = 300;
 const UPLOAD_EXPIRY_SEC = 3600;
-const PART_SIZE = 8 * 1024 * 1024;
 
 function rootPrefix(credentials: S3Credentials): string {
   return credentials.prefix ? `${credentials.prefix}/` : "";
@@ -105,6 +112,10 @@ function checkName(name: string): string {
 function nameOf(key: string): string {
   const trimmed = key.endsWith("/") ? key.slice(0, -1) : key;
   return trimmed.slice(trimmed.lastIndexOf("/") + 1);
+}
+
+function topAncestor(credentials: S3Credentials, fileId: string): string {
+  return topOfPath(resolveKey(credentials, fileId), rootPrefix(credentials));
 }
 
 function parentOf(key: string): string | null {
@@ -175,6 +186,45 @@ function list(
   );
 }
 
+const listingPageSchema = z.object({
+  objects: z.array(
+    z.object({
+      key: z.string(),
+      size: z.number().nullable(),
+      modified: z.string().nullable(),
+    }),
+  ),
+  next: z.string().nullable(),
+});
+
+type ListingPage = z.infer<typeof listingPageSchema>;
+
+function searchScope(credentials: S3Credentials): string {
+  return `s3:${credentials.serverId}:${credentials.bucket}`;
+}
+
+async function searchPage(
+  credentials: S3Credentials,
+  root: string,
+  cursor: string | undefined,
+): Promise<ListingPage> {
+  const page = await list(credentials, root, { delimiter: false, cursor });
+  return {
+    objects: (page.Contents ?? []).flatMap((object) =>
+      object.Key
+        ? [
+            {
+              key: object.Key,
+              size: object.Size ?? null,
+              modified: object.LastModified?.toISOString() ?? null,
+            },
+          ]
+        : [],
+    ),
+    next: nextCursor(page),
+  };
+}
+
 function nextCursor(page: ListObjectsV2CommandOutput): string | null {
   if (!page.IsTruncated) return null;
   const candidates = [
@@ -226,24 +276,30 @@ async function search(
   let next: string | null = cursor ?? null;
   let previous: string | null = next;
   for (let scanned = 0; scanned < SEARCH_MAX_PAGES; scanned++) {
+    const start = next ?? undefined;
     // oxlint-disable-next-line eslint/no-await-in-loop -- each page needs the previous page's continuation token
-    const page = await list(credentials, root, {
-      delimiter: false,
-      cursor: next ?? undefined,
-    });
-    for (const object of page.Contents ?? []) {
-      if (!object.Key) continue;
-      for (const prefix of folderPrefixes(root, object.Key)) {
+    const page = await cachedSearchListing(
+      searchScope(credentials),
+      [root, start ?? null],
+      listingPageSchema,
+      () => searchPage(credentials, root, start),
+    );
+    for (const object of page.objects) {
+      for (const prefix of folderPrefixes(root, object.key)) {
         if (previous?.startsWith(prefix)) continue;
         if (nameOf(prefix).toLowerCase().includes(needle)) {
           entries.push(folderEntry(prefix));
         }
       }
-      const entry = fileEntry(object);
+      const entry = fileEntry({
+        Key: object.key,
+        Size: object.size ?? undefined,
+        LastModified: object.modified ? new Date(object.modified) : undefined,
+      });
       if (entry?.name.toLowerCase().includes(needle)) entries.push(entry);
-      previous = object.Key;
+      previous = object.key;
     }
-    next = nextCursor(page);
+    next = page.next;
     if (!next || entries.length >= SEARCH_PAGE_RESULTS) break;
   }
   return { entries, cursor: next };
@@ -319,7 +375,6 @@ async function readStream(
   }
 
   const key = resolveKey(credentials, fileId);
-  const entry = await getEntry(credentials, key);
   const object = await s3Send(() =>
     s3Client(credentials.serverId).send(
       new GetObjectCommand({ Bucket: credentials.bucket, Key: key }),
@@ -330,9 +385,9 @@ async function readStream(
     throw new ProviderError("s3", 502, "empty body", "S3");
   }
   return {
-    name: entry.name,
-    size: entry.size,
-    mimeType: entry.mimeType,
+    name: nameOf(key),
+    size: object.ContentLength ?? null,
+    mimeType: object.ContentType ?? null,
     body: object.Body.transformToWebStream(),
     release: () => {},
   };
@@ -372,16 +427,29 @@ async function writeStream(
     throw new Error("This drive uploads straight to the bucket");
   }
 
+  const partSize = parseSize(credentials.partSize);
+  if (partSize === null) throw new Error("This drive's part size is not a valid size");
+
   const key = `${resolvePrefix(credentials, upload.parentId)}${checkName(upload.name)}`;
+  const contentType = upload.mime || "application/octet-stream";
+  let size = 0;
+  const counted = body.pipeThrough(
+    new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, controller) {
+        size += chunk.byteLength;
+        controller.enqueue(chunk);
+      },
+    }),
+  );
   const transfer = new Upload({
     client: s3Client(credentials.serverId),
     params: {
       Bucket: credentials.bucket,
       Key: key,
-      Body: body,
-      ContentType: upload.mime || "application/octet-stream",
+      Body: counted,
+      ContentType: contentType,
     },
-    partSize: PART_SIZE,
+    partSize,
     queueSize: 1,
     leavePartsOnError: false,
   });
@@ -395,7 +463,17 @@ async function writeStream(
   } finally {
     signal.removeEventListener("abort", abort);
   }
-  return getEntry(credentials, key);
+  return {
+    id: key,
+    name: nameOf(key),
+    kind: "file",
+    mimeType: contentType,
+    size,
+    modifiedAt: new Date().toISOString(),
+    parentId: parentOf(key),
+    webUrl: null,
+    native: false,
+  };
 }
 
 async function createFolder(

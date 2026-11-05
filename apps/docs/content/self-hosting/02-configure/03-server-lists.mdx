@@ -19,10 +19,34 @@ Besides Google, Microsoft and Zoho, users can connect to servers that you list. 
 
 1. Open **Dashboard**, **System**, then the provider under **Providers**.
 2. Click **Add server** and fill in the fields. New entries are marked "new".
-3. Click **Save changes** and enter your authenticator code. The server is checked before it is saved.
+3. Click **Save changes** and enter your authenticator code. The new server is checked before it is saved.
 4. In the **Health** card, click **Run check**. It runs the same checks as a deploy, against every entry, without signing in as any user.
 
 Each entry shows how many connections use it. To remove one, click its trash icon.
+
+### What a save checks
+
+A save contacts only the entries you added and the entries whose connection settings you changed. Renaming an entry counts as a change. The other entries are not contacted. They show "Unchanged, so not checked again." If the last deploy found a problem with one, it shows "Unchanged. The last deploy check reported: " followed by that problem. This stops once you change the entry's connection settings and save. These results never stop a save, so a save that only removes entries is never refused. See [What a save checks](/self-hosting/configure/how-configuration-works#what-a-save-checks).
+
+These fields are the connection settings for each provider:
+
+| Provider               | Connection settings                                 |
+| ---------------------- | --------------------------------------------------- |
+| IMAP                   | See below.                                          |
+| CalDAV                 | **CalDAV URL**, **Accept invalid TLS certificates** |
+| WebDAV                 | **WebDAV URL**, **Accept invalid TLS certificates** |
+| Cloudflare Email       | **Worker endpoint**                                 |
+| Resend                 | **Gateway endpoint**                                |
+| S3, FTP and FTPS, SFTP | Every field                                         |
+
+An IMAP entry has two checks, one for IMAP and one for SMTP. Each one runs again only when its own side changes:
+
+- **IMAP:** **IMAP host**, **IMAP port**, **IMAP implicit TLS**, **Allow unencrypted IMAP**.
+- **SMTP:** **SMTP host**, **SMTP port**, **SMTP implicit TLS**, **Allow unencrypted SMTP**.
+
+Changing **Accept invalid TLS certificates** runs both checks again.
+
+If the check of an entry fails, nothing is saved. You can fix the entry and save again, or click **Save anyway** on the **Check failed** card. See [Save anyway](/self-hosting/configure/how-configuration-works#save-anyway).
 
 <img
   src="/images/self-hosting/provider-imap.webp"
@@ -37,12 +61,12 @@ Each entry shows how many connections use it. To remove one, click its trash ico
 
 Rules for every entry:
 
-- Each entry needs a **Name** of 1 to 64 characters, different from the other entries. Users see this name.
+- Each entry needs a **Name** of 1 to 64 characters, different from the other entries. Users see this name. For a CalDAV server, it is the name users see for their calendar account. After you save a rename, accounts already connected through the entry show the new name.
 - Host fields take a hostname such as `imap.example.com`, never a URL.
 - Renaming an entry keeps its connections.
 
 :::warning[Removing a server hides its accounts]
-When you remove an entry, every account connected through it is quarantined: it disappears from every workspace. To bring them back, restore the earlier configuration version under **System**, **History**. Adding the server again as a new entry does not bring them back. Users can also delete them from their account settings.
+When you remove an entry, every account connected through it is quarantined: it disappears from every workspace. To bring them back, restore the earlier configuration version under **System**, **History**. Adding the server again as a new entry does not bring them back. Users can also delete them from their account settings. If a reset to the environment would remove an entry that accounts use, the reset's dialog lists the entry, and you must tick **Reset anyway and quarantine these connections** first.
 :::
 
 ## Fields for each provider
@@ -53,9 +77,19 @@ When you remove an entry, every account connected through it is quarantined: it 
 | ----------------------------------- | ---------- |
 | **IMAP host**, **IMAP port**        | port `993` |
 | **IMAP implicit TLS**               | on         |
+| **Allow unencrypted IMAP**          | off        |
 | **SMTP host**, **SMTP port**        | port `465` |
 | **SMTP implicit TLS**               | on         |
+| **Allow unencrypted SMTP**          | off        |
 | **Accept invalid TLS certificates** | off        |
+
+Implicit TLS means the connection uses TLS from its first byte. When you turn off **IMAP implicit TLS** or **SMTP implicit TLS**, that side must upgrade the connection with STARTTLS. If the server does not offer STARTTLS, the connection fails instead of sending the password and mail unencrypted. This also holds when someone on the network hides the server's STARTTLS offer.
+
+Turn on **Allow unencrypted IMAP** or **Allow unencrypted SMTP** only for a local server that has no TLS. With the switch on, the connection still upgrades when the server offers STARTTLS. Otherwise it connects without TLS. If a switch and the matching implicit TLS switch are both on when you click **Save changes**, nothing is saved, and the error ends with "Allow unencrypted applies only when implicit TLS is off".
+
+:::note
+For IMAP entries, the check on save and **Run check** do not tell you when a server offers no STARTTLS. The entry saves, and the connection fails only when a user connects or uses the mailbox.
+:::
 
 ### CalDAV
 
@@ -74,9 +108,14 @@ When you remove an entry, every account connected through it is quarantined: it 
 | **Path-style addressing**                | on                                                                                                                                                              |
 | **Accept invalid TLS certificates**      | off                                                                                                                                                             |
 | **Transfers**                            | `direct` (the default) or `relay`. See below.                                                                                                                   |
+| **Part size**                            | `32 MB`, shown only with `relay`, from 5 MB to 5 GB.                                                                                                            |
 | **Checksums**                            | `required` (the default) or `supported`. Choose `supported` for AWS S3 or Cloudflare R2. Leave it at `required` for MinIO and most other S3-compatible servers. |
 
 With `direct` transfers, files go straight between the browser and the bucket, so the browser must be able to reach the endpoint and the bucket needs a CORS rule. Choose `relay` when browsers cannot reach the endpoint, the certificate is self-signed, or the bucket cannot have a CORS rule. Relayed files pass through your server. See [Drive transfers](/self-hosting/configure/drive-transfers).
+
+With `relay`, uploads go to the bucket in parts of the size in **Part size**. A file no larger than one part goes up in a single request. Larger parts mean fewer requests for each file. Each running upload holds about one part in your server's memory.
+
+Enter a number and a unit: B, KB, MB, GB or TB, such as `64 MB` or `1.5 GB`. 1 MB is 1024 KB. If you leave the field empty, it uses `32 MB`. A value without a unit, such as `32`, is refused. The value is checked only when **Transfers** is `relay`. When you click **Save changes** with a value that has no unit or an unknown unit, nothing is saved, and the error includes "Enter a size with its unit, such as 32 MB". A value outside the range gives an error that includes "The part size must be between 5 MB and 5 GB". **Run check** does not check the part size.
 
 #### CORS rule for direct transfers
 

@@ -24,6 +24,7 @@ import {
   listenCalendarHandoffs,
   takeCalendarHandoff,
 } from "@/calendar/pending-open";
+import { calendarName } from "@/connections/calendar-name";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useStoredItem, writeStoredItem } from "@/hooks/use-stored-item";
 import { useWorkspacePath, useWorkspaceScope } from "@/hooks/use-workspace-path";
@@ -49,6 +50,7 @@ interface CalendarContextValue {
 
   events: CalendarEvent[];
   calendars: SessionCalendar[];
+  accountName: (accountId: string | undefined, email?: string) => string;
   errors: CalendarSourceErrorDto[];
   loading: boolean;
 
@@ -110,6 +112,15 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     rpc.calendarEvents.calendars.queryOptions({ input: { ...scope, calendarSlug: slug } }),
   );
   const calendars: SessionCalendar[] = calendarsQuery.data?.calendars ?? NO_CALENDARS;
+  const attachedQuery = useQuery(rpc.workspaceCalendars.list.queryOptions({ input: scope }));
+  const attached = attachedQuery.data?.calendars;
+  const accountName = useCallback(
+    (accountId: string | undefined, email?: string) => {
+      const account = accountId ? attached?.find((c) => c.calendarId === accountId) : undefined;
+      return account ? calendarName(account, attached ?? []) : (email ?? "");
+    },
+    [attached],
+  );
   const hiddenStorageKey = hiddenKey(scope.workspaceSlug, slug);
   const storedHidden = useStoredItem(hiddenStorageKey);
   const hidden = useMemo(() => parseHidden(storedHidden), [storedHidden]);
@@ -216,6 +227,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       timeZone,
       events: visible,
       calendars,
+      accountName,
       errors,
       loading,
       hidden,
@@ -236,6 +248,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
       timeZone,
       visible,
       calendars,
+      accountName,
       errors,
       loading,
       hidden,

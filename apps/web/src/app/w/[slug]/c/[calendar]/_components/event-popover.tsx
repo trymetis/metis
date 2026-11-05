@@ -49,7 +49,7 @@ const RESPONSES: { key: AttendeeResponse; label: string }[] = [
 
 export function EventPopover() {
   const scope = useWorkspaceScope();
-  const { selected, setSelected, setEditing, refresh, calendars } = useCalendar();
+  const { selected, setSelected, setEditing, refresh, calendars, accountName } = useCalendar();
   const colorFor = useEventColor();
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -273,7 +273,9 @@ export function EventPopover() {
 
               <Row icon={CalendarDays}>
                 <span className="truncate text-[13px] text-muted-foreground">
-                  {source?.name ?? event.calendarName ?? event.accountEmail}
+                  {source?.name ??
+                    event.calendarName ??
+                    accountName(event.accountId, event.accountEmail)}
                 </span>
               </Row>
             </div>

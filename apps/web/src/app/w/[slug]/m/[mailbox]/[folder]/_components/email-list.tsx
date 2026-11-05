@@ -21,6 +21,7 @@ import {
 } from "@metis/ui/components/dropdown-menu";
 import { ScrollArea } from "@metis/ui/components/scroll-area";
 import { cn } from "@metis/ui/lib/utils";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Bot,
   Check,
@@ -34,7 +35,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { MobileAsideTrigger } from "@/components/mobile-aside";
 import { usePlatformPolicy } from "@/components/platform-policy-context";
@@ -102,6 +103,8 @@ const TABS: { id: FilterTab; label: string }[] = [
 
 const PRIMARY_EXCLUDED_LABELS = new Set(["promotional", "social", "newsletter", "transactions"]);
 
+const ROW_ESTIMATE = 76;
+const ROW_OVERSCAN = 30;
 export function EmailList({ folder, view }: EmailListProps) {
   const scope = useMailboxScope();
   const {
@@ -155,6 +158,8 @@ export function EmailList({ folder, view }: EmailListProps) {
   }>({ scope: null, attempted: new Set() });
 
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const [scrollRoot, setScrollRoot] = useState<HTMLDivElement | null>(null);
+  const scrollRootRef = useCallback((node: HTMLDivElement | null) => setScrollRoot(node), []);
 
   useEffect(() => {
     if (readLaterMode) return;
@@ -256,6 +261,27 @@ export function EmailList({ folder, view }: EmailListProps) {
     }
     return groupByThread(filtered);
   }, [emails, activeTab, labels, urlLabel, folder, mutedThreadIds, readLaterMode, selectedEmail]);
+
+  // oxlint-disable-next-line react/incompatible-library -- TanStack Virtual is used as documented; the React Compiler is not enabled
+  const virtualizer = useVirtualizer({
+    count: visibleThreads.length,
+    getScrollElement: () =>
+      scrollRoot?.querySelector<HTMLElement>('[data-slot="scroll-area-viewport"]') ?? null,
+    estimateSize: () => ROW_ESTIMATE,
+    overscan: ROW_OVERSCAN,
+    getItemKey: (index) => visibleThreads[index]?.threadId ?? index,
+  });
+
+  const selectedId = selectedEmail?.id ?? null;
+  const selectedIndex = selectedId
+    ? visibleThreads.findIndex((group) => group.latest.id === selectedId)
+    : -1;
+  const scrolledTo = useRef<string | null>(null);
+  useEffect(() => {
+    if (selectedIndex < 0 || scrolledTo.current === selectedId) return;
+    scrolledTo.current = selectedId;
+    virtualizer.scrollToIndex(selectedIndex, { align: "auto" });
+  }, [selectedId, selectedIndex, virtualizer]);
 
   const visibleEmails = useMemo(() => visibleThreads.map((g) => g.latest), [visibleThreads]);
 
@@ -520,7 +546,7 @@ export function EmailList({ folder, view }: EmailListProps) {
         </div>
       )}
 
-      <ScrollArea className="flex-1 min-h-0">
+      <ScrollArea ref={scrollRootRef} className="flex-1 min-h-0">
         {isLoading && emails.length === 0 ? (
           <div className="flex flex-col gap-2 p-3">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -567,26 +593,37 @@ export function EmailList({ folder, view }: EmailListProps) {
           </div>
         ) : (
           <div>
-            {visibleThreads.map((group) => {
-              const labelKey = labels[group.latest.id]?.label;
-              const labelInfo = labelKey ? resolveChipStyle(labelKey, customLabels) : undefined;
-              return (
-                <EmailRow
-                  key={group.threadId}
-                  email={group.latest}
-                  threadCount={group.count}
-                  labelInfo={labelInfo}
-                  isSelected={selectedEmail?.id === group.latest.id}
-                  isChecked={selectedIds.has(group.latest.id)}
-                  onSelect={handleSelect}
-                  onStar={toggleStar}
-                  onCheck={(e) => {
-                    e.stopPropagation();
-                    toggleSelected(group.latest.id);
-                  }}
-                />
-              );
-            })}
+            <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
+              {virtualizer.getVirtualItems().map((item) => {
+                const group = visibleThreads[item.index];
+                if (!group) return null;
+                const labelKey = labels[group.latest.id]?.label;
+                const labelInfo = labelKey ? resolveChipStyle(labelKey, customLabels) : undefined;
+                return (
+                  <div
+                    key={item.key}
+                    data-index={item.index}
+                    ref={virtualizer.measureElement}
+                    className="absolute top-0 left-0 w-full"
+                    style={{ transform: `translateY(${item.start}px)` }}
+                  >
+                    <EmailRow
+                      email={group.latest}
+                      threadCount={group.count}
+                      labelInfo={labelInfo}
+                      isSelected={selectedEmail?.id === group.latest.id}
+                      isChecked={selectedIds.has(group.latest.id)}
+                      onSelect={handleSelect}
+                      onStar={toggleStar}
+                      onCheck={(e) => {
+                        e.stopPropagation();
+                        toggleSelected(group.latest.id);
+                      }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
             <div ref={loadMoreRef} className="flex justify-center py-4">
               {hasMore && (
                 <div className="flex items-center gap-2 text-xs text-faint">

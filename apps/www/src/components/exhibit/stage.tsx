@@ -15,7 +15,7 @@ import { PadlockModel } from "./models/padlock";
 import { PatchboardModel } from "./models/patchboard";
 import { ServerModel } from "./models/server";
 import { TypewriterModel } from "./models/typewriter";
-import { overlay } from "./overlay";
+import { LABEL_HEIGHT, overlay } from "./overlay";
 import type { ModelKey, Pose } from "./types";
 
 const MODELS: Record<ModelKey, () => React.JSX.Element> = {
@@ -60,32 +60,50 @@ function stackTraceError(trace: unknown, message: string): Error | null {
 
 const D2R = Math.PI / 180;
 
-const box = new THREE.Box3();
 const part = new THREE.Box3();
+const UP = new THREE.Vector3(0, 1, 0);
+const fwd = new THREE.Vector3();
+const right = new THREE.Vector3();
+const up = new THREE.Vector3();
+const off = new THREE.Vector3();
+const FIT_X = 0.86;
+const BAND_GAP = 0.04;
+const MIN_BAND = 0.2;
+const LABELLED = new Set<ModelKey>(["patchboard", "server", "geartrain"]);
+const corner = new THREE.Vector3();
 
-function visibleRadius(root: THREE.Object3D, t: THREE.Vector3) {
-  box.makeEmpty();
+function visibleBox(root: THREE.Object3D, out: THREE.Box3) {
+  out.makeEmpty();
   root.updateMatrixWorld(true);
   root.traverseVisible((m) => {
     if (!(m instanceof THREE.Mesh)) return;
     if (!m.geometry.boundingBox) m.geometry.computeBoundingBox();
     if (!m.geometry.boundingBox) return;
     part.copy(m.geometry.boundingBox).applyMatrix4(m.matrixWorld);
-    box.union(part);
+    out.union(part);
   });
-  if (box.isEmpty()) return 0;
-  return Math.max(
-    Math.abs(box.min.x - t.x),
-    Math.abs(box.max.x - t.x),
-    Math.abs(box.min.z - t.z) * 0.7,
-    Math.abs(box.max.z - t.z) * 0.7,
-  );
 }
 
-function Rig({ poses, model }: { poses: Pose[]; model: React.RefObject<THREE.Group | null> }) {
+function cornerOf(b: THREE.Box3, k: number, out: THREE.Vector3) {
+  return out.set(k & 1 ? b.max.x : b.min.x, k & 2 ? b.max.y : b.min.y, k & 4 ? b.max.z : b.min.z);
+}
+
+function cornerOffset(b: THREE.Box3, k: number, t: THREE.Vector3) {
+  return cornerOf(b, k, off).sub(t);
+}
+
+function Rig({
+  poses,
+  model,
+  labelled,
+}: {
+  poses: Pose[];
+  model: React.RefObject<THREE.Group | null>;
+  labelled: boolean;
+}) {
   const { camera, size } = useThree();
   const target = useRef(new THREE.Vector3());
-  const fit = useRef({ r: 0, d: 0, n: 0 });
+  const fit = useRef({ box: new THREE.Box3(), d: 0, shift: 0, lift: 0, n: 0 });
   useFrame((_, dt) => {
     const ps = Math.min(poses.length - 1, Math.max(0, live.ps));
     const i = Math.min(poses.length - 2, Math.floor(ps));
@@ -99,19 +117,60 @@ function Rig({ poses, model }: { poses: Pose[]; model: React.RefObject<THREE.Gro
     let dist = (a.dist + (b.dist - a.dist) * f) * (narrow ? 1.25 : 1);
     target.current.set(
       a.target[0] + (b.target[0] - a.target[0]) * f,
-      a.target[1] + (b.target[1] - a.target[1]) * f - (narrow ? dist * 0.04 : 0),
+      a.target[1] + (b.target[1] - a.target[1]) * f,
       a.target[2] + (b.target[2] - a.target[2]) * f,
     );
+    const fitted = fit.current;
     if (narrow && model.current) {
-      if (fit.current.n++ % 6 === 0) fit.current.r = visibleRadius(model.current, target.current);
+      if (fitted.n++ % 6 === 0) visibleBox(model.current, fitted.box);
+    }
+    if (narrow && !fitted.box.isEmpty()) {
       const fov = camera instanceof THREE.PerspectiveCamera ? camera.fov : 28;
-      const half = Math.tan((fov * D2R) / 2) * (size.width / size.height);
-      const need = fit.current.r / (half * 0.7) + fit.current.r * 1.1;
-      fit.current.d =
-        fit.current.d === 0
-          ? need
-          : fit.current.d + (need - fit.current.d) * (1 - Math.exp(-dt * 3));
-      dist = Math.max(dist, fit.current.d);
+      const tanV = Math.tan((fov * D2R) / 2);
+      const room = labelled ? ((LABEL_HEIGHT + 16) / size.height) * 2 : 0;
+      const top = 1 - 2 * live.top - BAND_GAP - room;
+      const bottom = 1 - 2 * live.bottom + BAND_GAP;
+      const mid = (top + bottom) / 2;
+      const kx = tanV * (size.width / size.height) * FIT_X;
+      const ky = tanV * Math.max(MIN_BAND, (top - bottom) / 2);
+      fwd
+        .set(Math.cos(pitch) * Math.sin(yaw), Math.sin(pitch), Math.cos(pitch) * Math.cos(yaw))
+        .negate();
+      right.crossVectors(fwd, UP).normalize();
+      up.crossVectors(right, fwd);
+      let left = Infinity;
+      let rightmost = -Infinity;
+      let low = Infinity;
+      let high = -Infinity;
+      for (let k = 0; k < 8; k++) {
+        const o = cornerOffset(fitted.box, k, target.current);
+        const x = o.dot(right);
+        const y = o.dot(up);
+        left = Math.min(left, x);
+        rightmost = Math.max(rightmost, x);
+        low = Math.min(low, y);
+        high = Math.max(high, y);
+      }
+      const ease = 1 - Math.exp(-dt * 3);
+      const first = fitted.d === 0;
+      const shift = (left + rightmost) / 2;
+      const lift = (low + high) / 2;
+      fitted.shift = first ? shift : fitted.shift + (shift - fitted.shift) * ease;
+      fitted.lift = first ? lift : fitted.lift + (lift - fitted.lift) * ease;
+      target.current.addScaledVector(right, fitted.shift).addScaledVector(up, fitted.lift);
+      let need = 0;
+      for (let k = 0; k < 8; k++) {
+        const o = cornerOffset(fitted.box, k, target.current);
+        const depth = o.dot(fwd);
+        need = Math.max(
+          need,
+          Math.abs(o.dot(right)) / kx - depth,
+          Math.abs(o.dot(up)) / ky - depth,
+        );
+      }
+      fitted.d = first ? need : fitted.d + (need - fitted.d) * ease;
+      dist = fitted.d;
+      target.current.addScaledVector(up, -mid * tanV * dist);
     }
     camera.position.set(
       target.current.x + dist * Math.cos(pitch) * Math.sin(yaw),
@@ -119,6 +178,17 @@ function Rig({ poses, model }: { poses: Pose[]; model: React.RefObject<THREE.Gro
       target.current.z + dist * Math.cos(pitch) * Math.cos(yaw),
     );
     camera.lookAt(target.current);
+    if (narrow && !fitted.box.isEmpty()) {
+      camera.updateMatrixWorld();
+      let highest = 1;
+      for (let k = 0; k < 8; k++) {
+        cornerOf(fitted.box, k, corner).project(camera);
+        highest = Math.min(highest, -corner.y * 0.5 + 0.5);
+      }
+      live.modelTop = highest;
+    } else {
+      live.modelTop = 1;
+    }
   });
   return null;
 }
@@ -151,7 +221,7 @@ export default function Stage({ model, poses }: { model: ModelKey; poses: Pose[]
           gl.toneMappingExposure = 1.05;
         }}
       >
-        <Rig poses={poses} model={group} />
+        <Rig poses={poses} model={group} labelled={LABELLED.has(model)} />
         <ambientLight intensity={0.15} />
         <directionalLight position={[3.5, 6, 4]} intensity={1.3} color="#fff6e8" />
         <directionalLight position={[-5, 2.5, -2]} intensity={0.35} color="#e8eeff" />

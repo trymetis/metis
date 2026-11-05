@@ -11,7 +11,7 @@ export interface ContactSuggestion {
   name?: string;
 }
 
-const TTL_MS = 10 * 60 * 1000;
+const KEEP_MS = 10 * 60 * 1000;
 const NO_CONTACTS: ContactSuggestion[] = [];
 
 export function useContactSuggestions(enabled: boolean): ContactSuggestion[] {
@@ -20,8 +20,7 @@ export function useContactSuggestions(enabled: boolean): ContactSuggestion[] {
     rpc.mail.messages.contacts.queryOptions({
       input: scope,
       enabled: enabled && Boolean(scope.mailboxSlug),
-      staleTime: TTL_MS,
-      gcTime: TTL_MS,
+      gcTime: KEEP_MS,
     }),
   );
   return query.data?.contacts ?? NO_CONTACTS;

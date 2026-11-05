@@ -3,7 +3,7 @@
 import { Button } from "@metis/ui/components/button";
 import { cn } from "@metis/ui/lib/utils";
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { History, Plus, Trash2 } from "lucide-react";
+import { History, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
@@ -15,6 +15,7 @@ import { orpc, rpc } from "@/lib/orpc";
 import { refreshQuery } from "@/lib/query-client";
 import type {
   DashboardConfigField,
+  DashboardConfigReset,
   DashboardConfigState,
   DashboardConfigValue,
   DashboardSystemCheck,
@@ -24,6 +25,7 @@ import { CONFIG_SECTIONS, type ConfigSection } from "@/types/instance-config";
 
 import { ConfigFieldRows, fieldDirty, type Secrets, type Values } from "./config-fields";
 import { GuardedLink } from "./guarded-link";
+import { ResetSectionDialog } from "./reset-section-dialog";
 import { CheckResults, Loading } from "./system-client";
 import { SAVE_BAR_SLOT_ID, SYSTEM_HISTORY_HREF } from "./system-nav";
 import { Section } from "./system-ui";
@@ -42,6 +44,8 @@ interface SectionDraft {
   fields: DashboardConfigField[];
   values: Values;
   secrets: Secrets;
+  blank: Values;
+  matchesEnvironment: boolean;
   entries: EntryDraft[];
 }
 
@@ -101,6 +105,8 @@ async function loadDrafts(sections: ConfigSection[]) {
       fields: form.fields,
       values: form.values,
       secrets: form.secrets,
+      blank: form.blank,
+      matchesEnvironment: form.matchesEnvironment,
       entries: form.entries.map((entry) => ({
         key: entry.id,
         id: entry.id,
@@ -210,8 +216,16 @@ export function ConfigForm({
     setDrafts(query.data.drafts);
   }
   const [confirming, setConfirming] = useState(false);
+  const [forcing, setForcing] = useState(false);
   const [check, setCheck] = useState<DashboardSystemCheck | null>(null);
+  const [checkedReset, setCheckedReset] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetting, setResetting] = useState<{
+    section: ConfigSection;
+    label: string;
+    view: DashboardConfigReset;
+  } | null>(null);
+  const [opening, setOpening] = useState<ConfigSection | null>(null);
   const hydrated = useHydrated();
   const slot = hydrated ? document.getElementById(SAVE_BAR_SLOT_ID) : null;
   const added = useRef(0);
@@ -263,10 +277,51 @@ export function ConfigForm({
     setCheck(null);
   }
 
-  async function save(code: string) {
+  async function openReset(draft: SectionDraft) {
+    setCheck(null);
+    setOpening(draft.section);
+    try {
+      const view = await orpc.dashboard.system.reset({
+        section: draft.section,
+        expectedVersion: version,
+      });
+      setResetting({ section: draft.section, label: draft.label, view });
+    } catch (err) {
+      toast.error(errorMessage(err, "Could not load the environment values"));
+    } finally {
+      setOpening(null);
+    }
+  }
+
+  async function confirmReset(code: string, force: boolean) {
+    if (!resetting) return;
+    const result = await orpc.dashboard.system.reset({
+      section: resetting.section,
+      expectedVersion: version,
+      code,
+      force,
+    });
+    for (const warning of result.warnings) toast.warning(warning);
+    if (result.updated) {
+      toast.success(`${resetting.label} reset to environment as version ${result.version}`);
+      await load();
+      onSaved();
+      return;
+    }
+    if (result.check) {
+      setCheck(result.check);
+      setCheckedReset(true);
+      return;
+    }
+    toast.message("Nothing changed");
+    await load();
+  }
+
+  async function save(code: string, force = false) {
     if (!drafts || !initial) return;
     setError(null);
     setCheck(null);
+    setCheckedReset(false);
     const changed = drafts.filter((draft, index) => countChanges(draft, initial[index]) > 0);
     try {
       const result = await orpc.dashboard.system.update({
@@ -282,6 +337,7 @@ export function ConfigForm({
             : null,
         })),
         code,
+        force,
       });
       for (const warning of result.warnings) toast.warning(warning);
       if (result.saved) {
@@ -331,9 +387,20 @@ export function ConfigForm({
       {check && (
         <Section
           title="Check failed"
-          description="Nothing was saved. Fix the fields below and save again."
+          description={
+            checkedReset
+              ? "Nothing was reset. The environment values failed this check."
+              : "Nothing was saved. Fix the fields below and save again, or save anyway."
+          }
         >
           <CheckResults check={check} />
+          {!checkedReset && (
+            <div className="mt-3 flex justify-end">
+              <Button variant="outline" size="sm" onClick={() => setForcing(true)}>
+                Save anyway
+              </Button>
+            </div>
+          )}
         </Section>
       )}
 
@@ -420,7 +487,10 @@ export function ConfigForm({
                     const key = `new-${added.current}`;
                     update(draft.section, (current) => ({
                       ...current,
-                      entries: [...current.entries, { key, id: null, values: {}, secrets: {} }],
+                      entries: [
+                        ...current.entries,
+                        { key, id: null, values: current.blank, secrets: {} },
+                      ],
                     }));
                   }}
                 >
@@ -444,6 +514,18 @@ export function ConfigForm({
               />
             )}
             {card.children}
+            <div className="mt-3 flex justify-end">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={dirty || draft.matchesEnvironment || opening !== null}
+                onClick={() => openReset(draft)}
+              >
+                <RotateCcw strokeWidth={1.75} />
+                Reset to environment
+              </Button>
+            </div>
           </Section>
         );
       })}
@@ -466,7 +548,25 @@ export function ConfigForm({
         body="Enter your authenticator code to change the instance configuration."
         confirmLabel="Save"
         onOpenChange={setConfirming}
-        onConfirm={save}
+        onConfirm={(code) => save(code)}
+      />
+
+      <TotpConfirmDialog
+        open={forcing}
+        title="Save anyway"
+        body="The check above failed. Saving anyway stores these changes as they are, so whatever failed the check may not work until it is fixed."
+        confirmLabel="Save anyway"
+        onOpenChange={setForcing}
+        onConfirm={(code) => save(code, true)}
+      />
+
+      <ResetSectionDialog
+        label={resetting?.label ?? ""}
+        view={resetting?.view ?? null}
+        onOpenChange={(open) => {
+          if (!open) setResetting(null);
+        }}
+        onConfirm={confirmReset}
       />
     </>
   );

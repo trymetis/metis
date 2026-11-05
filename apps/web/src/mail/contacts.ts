@@ -1,4 +1,7 @@
 import "server-only";
+import { z } from "zod";
+
+import { getCache } from "@/services/cache";
 import { enforceRateLimit } from "@/services/rate-limit";
 import type { Recipient } from "@/types/mail";
 
@@ -9,19 +12,62 @@ export interface ContactSuggestion {
   name?: string;
 }
 
-const CONTACTS_TTL_MS = 10 * 60 * 1000;
-const CONTACTS_CACHE = new Map<string, { at: number; contacts: ContactSuggestion[] }>();
+const CONTACTS_TTL_SEC = 10 * 60;
+
+const contactsSchema = z.array(z.object({ email: z.string(), name: z.string().optional() }));
+
+function contactsKey(mailboxId: string): string {
+  return `contacts:${mailboxId}`;
+}
+
+function cacheFailed(err: unknown): void {
+  console.warn(`[mail/contacts] cache: ${err instanceof Error ? err.message : String(err)}`);
+}
+
+async function cachedContacts(
+  mailboxIds: string[],
+  field: string,
+): Promise<ContactSuggestion[] | null> {
+  try {
+    const stored = await Promise.all(
+      mailboxIds.map((id) => getCache().hget(contactsKey(id), field)),
+    );
+    const [first] = stored;
+    if (!first || stored.some((value) => value !== first)) return null;
+    const parsed = contactsSchema.safeParse(JSON.parse(first));
+    return parsed.success ? parsed.data : null;
+  } catch (err) {
+    cacheFailed(err);
+    return null;
+  }
+}
+
+async function storeContacts(
+  mailboxIds: string[],
+  field: string,
+  contacts: ContactSuggestion[],
+): Promise<void> {
+  const value = JSON.stringify(contacts);
+  await Promise.all(
+    mailboxIds.map((id) =>
+      getCache().hsetExpiring(contactsKey(id), field, value, CONTACTS_TTL_SEC),
+    ),
+  ).catch(cacheFailed);
+}
+
+export async function forgetContacts(mailboxId: string): Promise<void> {
+  await getCache().del(contactsKey(mailboxId)).catch(cacheFailed);
+}
 
 export async function suggestContacts(opts: {
   userId: string;
   mailboxIds: string[];
   adapter: MailAdapter;
 }): Promise<ContactSuggestion[]> {
-  const cacheKey = opts.mailboxIds.toSorted().join(",");
-  const cached = CONTACTS_CACHE.get(cacheKey);
-  if (cached && Date.now() - cached.at < CONTACTS_TTL_MS) {
-    return cached.contacts;
-  }
+  const mailboxIds = opts.mailboxIds.toSorted();
+  const field = mailboxIds.join(",");
+  const cached = await cachedContacts(mailboxIds, field);
+  if (cached) return cached;
 
   await enforceRateLimit(
     opts.userId,
@@ -66,6 +112,6 @@ export async function suggestContacts(opts: {
     .slice(0, 200)
     .map(({ email, name }) => ({ email, name }));
 
-  CONTACTS_CACHE.set(cacheKey, { at: Date.now(), contacts });
+  if (sent && inbox) await storeContacts(mailboxIds, field, contacts);
   return contacts;
 }

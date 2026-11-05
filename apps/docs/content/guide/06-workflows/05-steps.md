@@ -52,6 +52,8 @@ Good to know:
 | **Find free time**                              | "Finds the open slots of a given length in a calendar between two times."          | **Calendar**, **From**, **Until**, **Length (minutes)** (5 to 1440, 30 to start with), **Day starts** (09:00), **Day ends** (17:00), **Time zone**                    |
 | **Add an invitation file** (sends or creates)   | "Creates the event in an .ics attachment or file in a calendar."                   | **Invitation** ("An attachment or a drive file holding an .ics invitation."), **Calendar**, **In calendar**                                                           |
 
+The cards of **List events**, **Get an event**, **Create an event**, **Find free time** and **Add an invitation file** show the [account's name](/guide/calendar/views-and-navigation#how-calendar-accounts-are-named). If you cannot see that calendar account, the card says "A calendar you can't see". If no account is picked yet, it says "Pick a calendar".
+
 **Find free time** passes on whether it found a slot (`found`), the first slot (`first`) and every slot (`slots`).
 
 ## Drive
@@ -71,6 +73,8 @@ Good to know:
 | **Rename a file**                                 | "Gives a file a new name."                                                                  | **File**, **New name**                                                                                                        |
 | **Copy a file** (sends or creates)                | "Copies a file into a folder, of this drive or another. A copy is never repeated."          | **File**, **To drive**, **To folder**, **Name** ("Leave empty to keep the name.")                                             |
 | **Delete a file**                                 | "Deletes a file or folder."                                                                 | **File**                                                                                                                      |
+
+On a drive with a [folder restriction](/guide/drive/folder-restrictions), **Search files** fails with the reason the drive gave if it cannot check that every result is in a folder the workspace can see. It never passes on a partial list. The run is retried like any other failure (see [Automatic retries](/guide/workflows/run-and-check-history#automatic-retries)). If the step's **When this step fails** setting is **Route the item to an Error output** or **Pass the item on unchanged**, that setting applies instead, and the run is not retried.
 
 ## Logic
 

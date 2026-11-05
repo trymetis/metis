@@ -1,13 +1,18 @@
 import "server-only";
 import { z } from "zod";
 
-import { type DriveSurface, driveSurfaceFor, type ResolvedDrive } from "@/drive/aggregate";
+import {
+  type DriveSurface,
+  driveSurfaceFor,
+  type ResolvedDrive,
+  sourceError,
+} from "@/drive/aggregate";
 import { listDrivePins, pinDriveFolder, unpinDriveFolder } from "@/drive/pins";
 import { driveQuotas } from "@/drive/quota";
 import { looksTextual, TEXT_LIMIT } from "@/lib/file-utils";
 import { truncate } from "@/lib/utils";
 import { driveEntrySchema, driveProviderSchema, driveSourceErrorSchema } from "@/server/schema";
-import type { TaggedDriveEntry } from "@/types/drive";
+import type { DriveSourceError, TaggedDriveEntry } from "@/types/drive";
 
 import { failureOutput, orFailure, type Output } from "./output";
 
@@ -46,6 +51,7 @@ export const searchFilesOutput = listFolderOutput.omit({ atRoot: true });
 export const searchAcrossOutput = z.object({
   count: z.number(),
   entries: z.array(entrySummaryOutput),
+  errors: z.array(driveSourceErrorSchema).optional(),
 });
 
 export const getFileOutput = entrySummaryOutput.extend({
@@ -195,18 +201,21 @@ export async function searchAcross(
   drives: ResolvedDrive[],
   query: string,
 ): Promise<Output<typeof searchAcrossOutput>> {
+  const errors: DriveSourceError[] = [];
   const groups = await Promise.all(
     drives.map(async (drive) => {
       try {
         const listing = await driveSurfaceFor(drive).search(query);
+        if (listing.driveErrors) errors.push(...listing.driveErrors);
         return listing.entries.map(entrySummary);
-      } catch {
+      } catch (err) {
+        errors.push(sourceError(drive, err));
         return [];
       }
     }),
   );
   const entries = groups.flat();
-  return { count: entries.length, entries };
+  return { count: entries.length, entries, errors: errors.length > 0 ? errors : undefined };
 }
 
 export async function getFile(

@@ -4,7 +4,6 @@ import { sanitizeError } from "@/lib/errors/sanitize-error";
 
 import { emitAppEvent } from "./app-events";
 import { resolvePrincipal } from "./authorization";
-import { ensureSystemWorkflows } from "./builtins/system";
 import { errorCode, formatTickFailure, tickFailure } from "./diagnostics";
 import { discoverTrigger } from "./discovery";
 import { executeRun } from "./executor";
@@ -248,8 +247,6 @@ export async function runWorkflowTick(opts: TickOptions = {}): Promise<TickSumma
   let failure: TickFailure | undefined;
 
   try {
-    await ensureSystemWorkflows();
-
     const token = await claimDiscovery({
       now,
       cadenceSec,

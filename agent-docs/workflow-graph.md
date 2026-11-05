@@ -101,7 +101,8 @@ See also [AGENTS.md](../AGENTS.md), [workflow-runtime.md](workflow-runtime.md), 
 
 - **One listener, `/api/inbound/<endpoint>`, serves webhooks and provider push.** `workflow_endpoint` holds each endpoint's kind (`webhook`, `graph`, `google-channel`), sealed secret, provider subscription id and expiry; `src/proxy.ts` exempts the route from sessions.
 - **A webhook checks, in order, the allowed IPs, the required headers, then the secret header or the HMAC signature**, compares in constant time, caps the body at 256 KB, rate-limits per endpoint and fires its trigger with `{ body, headers, receivedAt }`.
-- **The client address is the last `X-Forwarded-For` hop that is not a trusted proxy** (`clientAddress`, `trustedProxies` in the instance config); without trusted proxies only the nearest hop counts, else `X-Real-IP`.
+- **The webhook's client address is the last `X-Forwarded-For` hop that is not one of the runner's trusted proxies** (`handleWebhook` calls `forwardedClient` from `src/services/client-ip.ts` with `workflowRunner.trustedProxies`), the same walk as [auth.md](auth.md)'s client IP over the runner's own list.
+  - Without trusted proxies only the nearest hop counts; with no `X-Forwarded-For` there is no address and an IP-restricted webhook refuses.
 - **Push only wakes a trigger; the feed still reads the changes.** A Graph notification or a Google channel ping sets the trigger due now (`wakeTrigger`), so a forged or replayed push costs at most one early scan.
 - **Push is opt-in.** `renewEndpoints` subscribes armed Microsoft feed triggers and Google Calendar and Drive triggers only while a public URL is configured; everything else polls ([configuration.md](configuration.md)). Only a trigger that reached a provider counts against the per-tick renewal budget.
 - **A renewal re-points the subscription at the current public URL.** A Graph renewal PATCHes `notificationUrl` with the expiry and creates a new subscription when Microsoft answers 404; a Google channel is re-created at each renewal. A changed public URL takes effect at the next renewal, up to `RENEW_BEFORE_MS` before expiry.
@@ -141,7 +142,8 @@ See also [AGENTS.md](../AGENTS.md), [workflow-runtime.md](workflow-runtime.md), 
 ### Principal and built-ins
 
 - **Background access carries its own principal.** `authorization.ts` re-checks membership, resource visibility, connection health and AI policy before every side effect, so a detached resource or a departed member blocks the run with a visible reason.
-- **Built-ins are ordinary workflows with the graphs below**, and `ensureSystemWorkflows` upserts the system ones one at a time, because the `local` driver fails two overlapping writes in one process ([database.md](database.md)).
+- **Built-ins are ordinary workflows with the graphs below**, and preflight's `ensureSystemWorkflows` upserts the system ones once per deployment, one at a time, because the `local` driver fails two overlapping writes in one process ([database.md](database.md)).
+  - A graph that changed in a release is revised on the next deploy; a database migrated without preflight (`bun run db:migrate` alone) has no system workflows until `bun run preflight` runs.
 - **Before-send runs the executor in `policy` mode on every enabled `trigger.mail.beforeSend` graph**: such a graph holds only steps marked `beforeSend` (logic and `mail.addBcc`), touches no provider and schedules nothing; the Bcc addresses it emits are added to the draft.
 
 ## How it works
@@ -158,7 +160,7 @@ See also [AGENTS.md](../AGENTS.md), [workflow-runtime.md](workflow-runtime.md), 
 - **The built-in graphs.**
   - Send later: `trigger.once → mail.sendScheduled → Filter(item.id != "") → Label "scheduled"`, sending the workflow's draft blob.
   - Snooze: `trigger.manual(message, folder, wakeAt) → Archive → Wait until → Move to Inbox`, built per the folder the message was snoozed from (`snoozeGraph`): Trash for a trashed message, no return step for an archived one; rescheduling moves the open time wait (`rescheduleWait`).
-  - `system:cimd-prune` hourly ([mcp.md](mcp.md)), `system:audit-prune` daily ([audit.md](audit.md)) and `system:workflow-prune` daily ([workflow-runs.md](workflow-runs.md)), each a schedule around one system step.
+  - `system:cimd-prune` hourly ([mcp.md](mcp.md)), `system:audit-prune` daily ([audit.md](audit.md)), `system:mail-cache-prune` daily ([mail.md](mail.md)) and `system:workflow-prune` daily ([workflow-runs.md](workflow-runs.md)), each a schedule around one system step.
 - **Upgrade.** `0001_workflow_engine` converts every graph of the old shape (kinds, predicates, mailbox sources) into steps and CEL, and every run into history ([workflow-runs.md](workflow-runs.md)), except the built-in work still owed:
   - A pending or running scheduled send stays live: a running one is queued again, and its step runs are re-keyed to the converted graph's item key (`trigger`), so a send already `dispatching` settles `unknown` instead of going out twice.
   - A snooze whose wake is armed, or whose wake already fired into a pending or running run, becomes a waiting run of the converted graph, due at that wake; the old run is kept as cancelled history.

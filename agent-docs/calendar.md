@@ -24,6 +24,12 @@ The calendar resource, per-workspace visibility, `CalendarAdapter` and its Googl
 - **A calendar resource is an account; individual calendars are its folders.**
   - No provider offers per-calendar consent: Google's scopes are account-wide, Graph's `Calendars.ReadWrite` grants all, Zoho likewise.
   - So `calendar` is one row per connection ([connections.md](connections.md)), and Personal / Work / Holidays are enumerated live, never stored.
+- **A calendar account is shown by its name, never its email alone** (`src/connections/calendar-name.ts` → `calendarName`, the same shape as `driveName` in [drive.md](drive.md)): a CalDAV account by its server's name, Google, Outlook and Zoho as the provider label and the email, for example "Google Calendar · ana@example.com".
+  - A CalDAV connection's email is the Metis user's own address, so every CalDAV account on one login would read alike.
+  - The page title, search rows, previews, error lines and the Detach confirmation, `/c/all` sidebar groups (one per account, keyed by `accountId`), the event dialog's picker, the schedule view, the popover fallback, the error banner, workflow card labels, the AI `@` references and mail's Add to calendar menu use it.
+  - The calendar UI reads it through `useCalendar().accountName`; server code with `ResolvedCalendar`s uses `resolvedCalendarName` / `accountNameIn` (`src/calendar/aggregate.ts`); event search adds `accountName` to each hit and error.
+  - `calendarName` lives in `src/connections/calendar-name.ts`, a neutral module, so mail's Add to calendar menu can use it.
+  - The switcher and the settings and Connections lists keep the account email with the provider and server line, as drives and mail do; the `calendar:` filter and its suggestions keep slug and email, because those are the values the filter matches.
 - **Calendar visibility is an app-level restriction, never isolation.** `calendar_workspace.visible_calendar_ids` (`null` = all, including calendars added later) is a product guarantee: the token can still read everything.
 - **Every read and write of an attached calendar goes through `src/calendar/aggregate.ts`**, so a hidden calendar is invisible to the UI, the agents and MCP alike. The one direct adapter call is `listProviderCalendars`, which lists a connection's calendars for the attach and visibility pickers.
   - `assertWritable` and `resolveCalendarAccount` throw `NotVisibleError` for a hidden calendar or an unknown account, which oRPC answers with `NOT_FOUND` ([orpc.md](orpc.md)).

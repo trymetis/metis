@@ -28,6 +28,10 @@ Actions in search follow the same rules as everywhere else. For example, only th
 - On **CalDAV** calendars, the first word of your search matches only the title and description.
 - On **Zoho** calendars, the first word of your search matches the title, description and location.
 
+## Calendars
+
+- **Calendars inside an account** that you add, rename or delete at your provider can take up to a minute to change in search. Adding or removing a calendar account, or changing which calendars the workspace shows, appears in search at once.
+
 ## Mail
 
 - **Mailboxes connected over IMAP** show **Load more** only when you name one folder with `mail-folder:`, such as `mail-folder:inbox`. Without a folder, they return one set of the newest matches from Inbox, Archive and Sent, with no **Load more**. With `mail-folder:starred`, they also return one set of the newest matches, with no **Load more**.
@@ -35,10 +39,15 @@ Actions in search follow the same rules as everywhere else. For example, only th
 - **Outlook and Zoho mailboxes** filter by folder reliably only when `mail-folder:` stands on its own in the search, and not inside `OR`, `NOT` or parentheses.
 - **Read later** and **muted** results show the subject and sender as they were when you marked them.
 
+## Contacts
+
+- **Contacts** come from your recent sent and received mail. Someone you just emailed usually shows at once. Other new people, such as someone who just emailed you, can take up to 10 minutes to show.
+
 ## Files
 
 - **S3, WebDAV, FTP, FTPS, SFTP and OneDrive drives** need at least one word in the search, such as part of a file name. A search with only filters, such as `type:file kind:pdf`, finds nothing on them.
 - **Google Drive** also finds files with only `kind:` or date filters.
+- **S3, WebDAV, FTP, FTPS and SFTP drives** can be up to 30 seconds behind in search, for example for a file added, renamed or deleted outside Metis. Opening the folder always shows what is there now.
 - `drive-folder:` matches the name of the folder a file is in, not a path such as `Projects/2026`.
 
 ## Subscriptions

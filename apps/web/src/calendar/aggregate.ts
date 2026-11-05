@@ -1,4 +1,5 @@
 import type { CalendarProvider, ConnectionAuth, ProviderCalendar } from "@/connections";
+import { calendarName, type NamedCalendar } from "@/connections/calendar-name";
 import { BadRequestError } from "@/lib/errors/bad-request";
 import { NotVisibleError } from "@/lib/errors/not-visible";
 import { sanitizeError } from "@/lib/errors/sanitize-error";
@@ -18,6 +19,7 @@ export interface ResolvedCalendar {
   accountSlug: string;
   accountEmail: string;
   provider: CalendarProvider;
+  server: string | null;
   visibleCalendarIds: string[];
   policy: { ai: boolean };
   auth: () => Promise<ConnectionAuth>;
@@ -29,6 +31,26 @@ export interface TaggedCalendar extends ProviderCalendar {
   accountEmail: string;
   provider: CalendarProvider;
   visible: boolean;
+}
+
+function namedCalendar(account: ResolvedCalendar): NamedCalendar {
+  return { provider: account.provider, email: account.accountEmail, server: account.server };
+}
+
+export function resolvedCalendarName(
+  account: ResolvedCalendar,
+  all: readonly ResolvedCalendar[],
+): string {
+  return calendarName(namedCalendar(account), all.map(namedCalendar));
+}
+
+export function accountNameIn(
+  all: readonly ResolvedCalendar[],
+  accountId: string | undefined,
+  email: string,
+): string {
+  const account = accountId ? all.find((c) => c.accountId === accountId) : undefined;
+  return account ? resolvedCalendarName(account, all) : email;
 }
 
 export async function adapterForCalendar(account: ResolvedCalendar): Promise<CalendarAdapter> {

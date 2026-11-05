@@ -33,6 +33,10 @@ See also [AGENTS.md](../AGENTS.md), [connections.md](connections.md), [configura
   - IMAP/SMTP: `rejectUnauthorized: false` (`imap-pool.ts`, `imap.ts`).
   - CalDAV: an `undici` `Agent` passed as tsdav's `fetchOptions.dispatcher` (`caldav.ts` → `insecureAgent`).
   - S3, WebDAV and FTP: see [drive-providers.md](drive-providers.md).
+- **An IMAP entry's IMAP or SMTP side without implicit TLS (`secure: false`) must upgrade with STARTTLS, unless that side sets `plain: true`.**
+  - IMAP gets imapflow's `doSTARTTLS: true` and SMTP nodemailer's `requireTLS` (`src/mail/providers/imap-pool.ts` → `requiresStartTls`), so a server that never offers STARTTLS, or an attacker stripping it from the cleartext capability list, fails the connection instead of sending the login unencrypted.
+  - `plain` keeps the opportunistic upgrade, for a local server without TLS; the schema refuses it together with `secure: true`.
+  - The dashboard save probe only reads the greeting, so an entry whose server offers no STARTTLS saves and fails at connect.
 - **The row stores a reference, never the server details.** `connection.credentials` holds `{provider, serverId, server, …}` plus only what the user chose; `createCredential` writes the resolved entry's id and name, whatever the client sent.
   - It is sealed with `encryptedText` and is the one encrypted JSON document, parsed at the store boundary by `credential-schema.ts` and absent from `CONNECTION_COLUMNS` ([connections.md](connections.md)).
   - The entry id is kept in plain text in `connection.server` and the name in `connection.server_name` (both null for OAuth), so counts and labels never decrypt credentials.

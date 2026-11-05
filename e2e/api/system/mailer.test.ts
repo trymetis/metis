@@ -84,6 +84,7 @@ test(
         user: env.imap.user,
         pass: env.imap.pass,
         secure: false,
+        plain: true,
       });
       allOk(await checkDriver(rpc, "mail"));
       const smtpUrl = await invite(rpc, workspace.slug, address("smtp"));

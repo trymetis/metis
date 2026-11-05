@@ -1,7 +1,7 @@
 import "server-only";
 import { ORPCError } from "@orpc/server";
 
-import { config } from "@/config";
+import { config, instanceSeed } from "@/config";
 import { formatConfigError } from "@/config/format-error";
 import { type InstanceConfigRow, instanceConfigToRow, rowToInstanceConfig } from "@/config/row";
 import { getConfigVersion, getInstanceConfig, loadInstanceConfig } from "@/config/runtime";
@@ -21,11 +21,13 @@ import {
   readConfigRow,
   readCurrentConfigRow,
 } from "@/config/store";
-import { reconcileQuarantine } from "@/connections/quarantine";
+import { quarantineImpact, reconcileQuarantine } from "@/connections/quarantine";
+import { getDriver } from "@/connections/registry";
 import type {
   DashboardConfigDiff,
   DashboardConfigForm,
   DashboardConfigHistory,
+  DashboardConfigReset,
   DashboardConfigSave,
   DashboardConfigSectionState,
   DashboardConfigState,
@@ -33,8 +35,15 @@ import type {
 } from "@/server/schema";
 import { CONFIG_SECTION_LABELS } from "@/types/instance-config";
 
-import { diffSection, sectionForm, sectionFromForm } from "./config-forms";
-import { checkFailed, verifySections } from "./system-checks";
+import {
+  changedSecrets,
+  diffSection,
+  isListSection,
+  sectionFields,
+  sectionForm,
+  sectionFromForm,
+} from "./config-forms";
+import { checkFailed, checkWarnings, verifySections } from "./system-checks";
 
 const CONNECTION_SECTIONS = new Set<InstanceSection>([
   "google",
@@ -66,10 +75,12 @@ export function configWarnings(): string[] {
 }
 
 export function configForm(section: InstanceSection): DashboardConfigForm {
+  const instance = getInstanceConfig();
   return {
     state: sectionState(section),
     version: getConfigVersion(),
-    ...sectionForm(section, getInstanceConfig()),
+    ...sectionForm(section, instance),
+    matchesEnvironment: hashSection(instance[section]) === hashSection(instanceSeed[section]),
   };
 }
 
@@ -78,6 +89,13 @@ function conflict(currentVersion: number | null): ORPCError<"CONFLICT", unknown>
     message: `The configuration changed since you opened it${currentVersion ? ` (it is now version ${currentVersion})` : ""}. Reload and try again.`,
     data: { currentVersion },
   });
+}
+
+async function peekRow(expectedVersion: number): Promise<InstanceConfigRow | null> {
+  const row = await readCurrentConfigRow();
+  const version = row?.version ?? 0;
+  if (version !== expectedVersion) throw conflict(row ? version : null);
+  return row;
 }
 
 async function currentRow(expectedVersion: number): Promise<InstanceConfigRow> {
@@ -104,7 +122,7 @@ async function store(args: {
   row: InstanceConfigRow;
   candidate: InstanceConfig;
   changed: InstanceSection[];
-  kind: "edit" | "revert";
+  kind: "edit" | "revert" | "reset";
   revertedFromVersion?: number;
   userId: string;
 }): Promise<number> {
@@ -164,8 +182,8 @@ export async function saveConfigSections(
   }
   refuseInvalid(candidate);
 
-  const check = await verifySections(changed, candidate);
-  if (checkFailed(check)) {
+  const check = await verifySections(changed, candidate, stored);
+  if (checkFailed(check) && !input.force) {
     return { saved: false, version: row.version, check, warnings };
   }
 
@@ -176,11 +194,11 @@ export async function saveConfigSections(
     kind: "edit",
     userId,
   });
-  return { saved: true, version, check, warnings };
+  return { saved: true, version, check, warnings: [...warnings, ...checkWarnings(check)] };
 }
 
 export async function revertConfig(
-  input: { version: number; expectedVersion: number },
+  input: { version: number; expectedVersion: number; force: boolean },
   userId: string,
 ): Promise<DashboardConfigSave> {
   const row = await currentRow(input.expectedVersion);
@@ -200,8 +218,8 @@ export async function revertConfig(
   }
   refuseInvalid(restored);
 
-  const check = await verifySections(changed, restored);
-  if (checkFailed(check)) {
+  const check = await verifySections(changed, restored, stored);
+  if (checkFailed(check) && !input.force) {
     return { saved: false, version: row.version, check, warnings };
   }
 
@@ -213,7 +231,78 @@ export async function revertConfig(
     revertedFromVersion: target.version,
     userId,
   });
-  return { saved: true, version, check, warnings };
+  return { saved: true, version, check, warnings: [...warnings, ...checkWarnings(check)] };
+}
+
+function sectionValues(section: InstanceSection, instance: InstanceConfig) {
+  const { values, secrets, entries } = sectionForm(section, instance);
+  return { values, secrets, entries };
+}
+
+async function inUseBy(candidate: InstanceConfig): Promise<DashboardConfigReset["inUse"]> {
+  const impact = await quarantineImpact(candidate);
+  return impact.map((entry) => ({ ...entry, label: getDriver(entry.provider).label }));
+}
+
+function inUseMessage(section: InstanceSection, inUse: DashboardConfigReset["inUse"]): string {
+  const total = inUse.reduce((sum, entry) => sum + entry.connections, 0);
+  const names = inUse
+    .map((entry) => (entry.server ? `${entry.label} · ${entry.server}` : entry.label))
+    .join(", ");
+  return `Resetting ${CONFIG_SECTION_LABELS[section]} would quarantine ${total} ${total === 1 ? "connection" : "connections"} (${names}). Reset anyway to go ahead.`;
+}
+
+export async function resetConfigSection(
+  input: {
+    section: InstanceSection;
+    expectedVersion: number;
+    apply: boolean;
+    force: boolean;
+  },
+  userId: string,
+): Promise<DashboardConfigReset> {
+  const { section } = input;
+  const row = input.apply
+    ? await currentRow(input.expectedVersion)
+    : await peekRow(input.expectedVersion);
+  const stored = row ? rowToInstanceConfig(row) : instanceSeed;
+  const storedVersion = row?.version ?? 0;
+  const candidate: InstanceConfig = { ...stored, [section]: instanceSeed[section] };
+  const differs = hashSection(stored[section]) !== hashSection(candidate[section]);
+  const inUse = differs ? await inUseBy(candidate) : [];
+  const warnings = instanceConfigWarnings(candidate);
+  const view = (current: InstanceConfig, impact: DashboardConfigReset["inUse"]) => ({
+    warnings,
+    list: isListSection(section),
+    fields: sectionFields(section),
+    current: sectionValues(section, current),
+    environment: sectionValues(section, candidate),
+    changedSecrets: changedSecrets(section, current, candidate),
+    inUse: impact,
+  });
+
+  if (!row || !input.apply || !differs) {
+    return { updated: false, version: storedVersion, check: null, ...view(stored, inUse) };
+  }
+  refuseInvalid(candidate);
+  if (inUse.length > 0 && !input.force) {
+    throw new ORPCError("PRECONDITION_FAILED", { message: inUseMessage(section, inUse) });
+  }
+
+  const check = await verifySections([section], candidate, stored);
+  if (checkFailed(check)) {
+    return { updated: false, version: storedVersion, check, ...view(stored, inUse) };
+  }
+
+  const version = await store({ row, candidate, changed: [section], kind: "reset", userId });
+  const saved = view(candidate, []);
+  return {
+    updated: true,
+    version,
+    check,
+    ...saved,
+    warnings: [...saved.warnings, ...checkWarnings(check)],
+  };
 }
 
 export async function configHistory(): Promise<DashboardConfigHistory> {

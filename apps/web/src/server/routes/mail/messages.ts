@@ -2,7 +2,12 @@ import "server-only";
 import { ORPCError } from "@orpc/server";
 
 import { adapterForMailbox } from "@/mail/aggregate";
-import { cacheMessage, deleteCachedMessage, getCachedMessage } from "@/mail/cache";
+import {
+  cacheMessage,
+  deleteCachedMessage,
+  getCachedMessage,
+  touchCachedMessage,
+} from "@/mail/cache";
 import { suggestContacts } from "@/mail/contacts";
 import { seedProviderLabels } from "@/mail/labels";
 import { readRawMessage } from "@/mail/raw";
@@ -112,6 +117,9 @@ export const messagesRouter = {
         if (cacheable) {
           const cached = await getCachedMessage(scoped);
           if (cached?.bodyHtml || cached?.bodyText) {
+            await touchCachedMessage(scoped).catch((err: unknown) => {
+              console.error("[mail/messages] body cache touch failed:", err);
+            });
             return {
               bodyHtml: cached.bodyHtml ?? undefined,
               bodyText: cached.bodyText ?? undefined,

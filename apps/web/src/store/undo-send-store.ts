@@ -1,7 +1,8 @@
 import { create } from "zustand";
 
 import { dismissUndoSendToast, showUndoSendToast } from "@/components/undo-send-toast";
-import { orpc } from "@/lib/orpc";
+import { orpc, rpc } from "@/lib/orpc";
+import { refreshQueries } from "@/lib/query-client";
 import type { MailboxScope } from "@/server/schema";
 import type { UndoSendStatus } from "@/types/mail";
 
@@ -135,6 +136,7 @@ export const useUndoSendStore = create<UndoSendState>((set, get) => {
         });
         render({ ...current, status: "sent" });
         clearAfter(current.id, 3000);
+        void refreshQueries(rpc.mail.messages.contacts.key());
       } catch (e) {
         render({
           ...current,

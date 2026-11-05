@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-import { and, desc, eq, or } from "drizzle-orm";
+import { and, desc, eq, isNotNull, lt, or } from "drizzle-orm";
 
 import { db } from "@/db";
 import { mailMessage, mailThreadSummary } from "@/db/schema";
@@ -53,6 +53,10 @@ export async function getCachedMessage(scoped: ScopedMessage): Promise<CachedMes
     .where(rowKey(scoped))
     .limit(1);
   return row ?? null;
+}
+
+export async function touchCachedMessage(scoped: ScopedMessage): Promise<void> {
+  await db.update(mailMessage).set({ syncedAt: new Date() }).where(rowKey(scoped));
 }
 
 export async function getCachedSubjects(keys: { mailboxId: string; providerMessageId: string }[]) {
@@ -291,4 +295,21 @@ export async function saveThreadSummary(args: {
         updatedAt: now,
       },
     });
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+export async function pruneCachedBodies(now: Date, retentionDays: number): Promise<number> {
+  const cutoff = new Date(now.getTime() - retentionDays * DAY_MS);
+  const cleared = await db
+    .update(mailMessage)
+    .set({ bodyHtml: null, bodyText: null })
+    .where(
+      and(
+        lt(mailMessage.syncedAt, cutoff),
+        or(isNotNull(mailMessage.bodyHtml), isNotNull(mailMessage.bodyText)),
+      ),
+    )
+    .returning({ id: mailMessage.id });
+  return cleared.length;
 }

@@ -77,7 +77,7 @@ See also [AGENTS.md](../AGENTS.md), [workspaces.md](workspaces.md), [servers.md]
 - **Adding a resource to an existing account.** `?expectConnection=<id>` carries the expected account in the state; when the user picks a different account at the provider, the callback connects it as a separate account and says so.
 - **Credential connect** is `connections.createCredential` ([servers.md](servers.md)).
 - **`reconcileQuarantine`** stamps `quarantined_at` on connections whose provider is unconfigured or whose server reference no longer resolves, and clears it when the entry returns.
-- **Token refresh.** `resolveConnectionAuth(row)` returns `{kind: "oauth", accessToken}`, refreshing through `getFreshAccessToken` when near expiry, or `{kind: "credentials", credentials, email}` for credential providers.
+- **Token refresh.** `resolveConnectionAuth(row)` returns `{kind: "oauth", accessToken, email}`, refreshing through `getFreshAccessToken` when near expiry, or `{kind: "credentials", credentials, email}` for credential providers.
 - **Revoke.** `revokeConnection` deletes the row, then calls the driver's `revoke`: a POST to `oauth2.googleapis.com/revoke` for Google, every Zoho DC, nothing for Microsoft.
 
 ## Deliberate limits
