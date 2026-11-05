@@ -1,0 +1,174 @@
+---
+import PageLayout from "blume/components/layout/PageLayout.astro";
+import data from "blume:data";
+
+import { loadReleases, PLATFORMS } from "./_changelog/releases";
+
+const { config } = data;
+const product = config.logo?.text || config.title;
+const releases = loadReleases();
+const description = `Every ${product} release, newest first: the app, the desktop app and the mobile app.`;
+const counts = Object.fromEntries(
+  PLATFORMS.map((platform) => [
+    platform.id,
+    releases.filter((release) => release.platform === platform.id).length,
+  ]),
+);
+
+const tabs = [
+  { id: "all", label: "All", count: releases.length },
+  ...PLATFORMS.map((platform) => ({
+    id: platform.id,
+    label: platform.label,
+    count: counts[platform.id],
+  })),
+];
+
+const tab =
+  "-mb-px inline-flex h-12 items-center gap-1.5 border-b-2 border-transparent text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent aria-selected:border-accent aria-selected:text-foreground";
+---
+
+<PageLayout
+  site={{ title: config.title, description: config.description }}
+  logo={config.logo}
+  banner={config.banner}
+  analytics={config.analytics}
+  navigation={data.navigation}
+  favicon={config.favicon}
+  fontCssVars={data.fontCssVars}
+  themeMode={config.theme.mode}
+  searchEnabled={config.search.enabled}
+  siteUrl={config.site}
+  ogEnabled={config.og.enabled}
+  lastModified={releases[0]?.date}
+  page={{ title: `Changelog - ${config.title}`, description, route: "/changelog" }}
+>
+  <div data-changelog class="mx-auto max-w-5xl px-6 pb-24">
+    <header class="pt-16 pb-8">
+      <p class="text-sm font-medium text-accent">Release notes</p>
+      <h1 class="mt-2 text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+        Changelog
+      </h1>
+      <p class="mt-4 max-w-2xl text-lg text-muted-foreground">{description}</p>
+    </header>
+
+    <div class="sticky top-16 z-30 -mx-6 flex items-center gap-6 border-b border-border bg-background/90 px-6 backdrop-blur">
+      <div class="flex gap-6" role="tablist" aria-label="Platform">
+        {tabs.map((item, index) => (
+          <button
+            type="button"
+            role="tab"
+            id={`changelog-tab-${item.id}`}
+            class={tab}
+            data-filter={item.id}
+            aria-controls="changelog-releases"
+            aria-selected={index === 0 ? "true" : "false"}
+            tabindex={index === 0 ? 0 : -1}
+          >
+            {item.label} <span class="opacity-60">{item.count}</span>
+          </button>
+        ))}
+      </div>
+      <p
+        class="ms-auto hidden shrink-0 text-sm text-muted-foreground sm:block"
+        data-count
+        aria-live="polite"
+      >
+        {releases.length} releases
+      </p>
+    </div>
+
+    <ol id="changelog-releases" role="tabpanel" aria-labelledby="changelog-tab-all" class="mt-4">
+      {releases.map((release) => (
+        <li
+          id={release.id}
+          data-platform={release.platform}
+          class="grid scroll-mt-32 gap-4 border-b border-border py-10 last:border-b-0 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-10"
+        >
+          <div class="self-start md:sticky md:top-32">
+            <h2 class="flex items-center gap-2 text-2xl font-semibold tracking-tight text-foreground">
+              <a href={`#${release.id}`} class="text-foreground no-underline hover:text-accent">
+                {release.version}
+              </a>
+              <span class="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                {release.label}
+              </span>
+            </h2>
+            <p class="mt-1 text-sm text-muted-foreground">
+              <time datetime={release.date}>{release.displayDate}</time>
+            </p>
+          </div>
+          <div
+            class="min-w-0 text-sm leading-6 text-muted-foreground [&_a]:font-medium [&_a]:text-foreground [&_a]:underline [&_code]:rounded [&_code]:bg-muted [&_code]:px-1 [&_code]:text-[0.85em] [&_h3]:mt-8 [&_h3]:mb-3 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-foreground [&_li]:my-2 [&_li]:ps-1 [&_p]:my-3 [&_strong]:font-semibold [&_strong]:text-foreground [&_ul]:list-disc [&_ul]:ps-5 [&>:first-child]:mt-0"
+            set:html={release.html}
+          />
+        </li>
+      ))}
+    </ol>
+
+    <p class="py-16 text-center text-muted-foreground" data-empty hidden>
+      No releases for this platform yet.
+    </p>
+  </div>
+</PageLayout>
+
+<script>
+  function init() {
+    const root = document.querySelector<HTMLElement>("[data-changelog]");
+    if (!root || root.dataset.ready) return;
+    root.dataset.ready = "true";
+
+    const tabs = [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    const panel = root.querySelector<HTMLElement>('[role="tabpanel"]');
+    const releases = [...root.querySelectorAll<HTMLElement>("[data-platform]")];
+    const count = root.querySelector<HTMLElement>("[data-count]");
+    const empty = root.querySelector<HTMLElement>("[data-empty]");
+
+    const select = (current: HTMLButtonElement) => {
+      const filter = current.dataset.filter ?? "all";
+      for (const tab of tabs) {
+        const on = tab === current;
+        tab.setAttribute("aria-selected", String(on));
+        tab.tabIndex = on ? 0 : -1;
+      }
+      panel?.setAttribute("aria-labelledby", current.id);
+      let shown = 0;
+      for (const release of releases) {
+        const visible = filter === "all" || release.dataset.platform === filter;
+        release.hidden = !visible;
+        if (visible) shown += 1;
+      }
+      if (count) count.textContent = `${shown} ${shown === 1 ? "release" : "releases"}`;
+      if (empty) empty.hidden = shown > 0;
+
+      const url = new URL(window.location.href);
+      if (filter === "all") url.searchParams.delete("platform");
+      else url.searchParams.set("platform", filter);
+      window.history.replaceState(window.history.state, "", url);
+    };
+
+    const fromUrl = new URL(window.location.href).searchParams.get("platform");
+    const initial = tabs.find((tab) => tab.dataset.filter === fromUrl);
+    if (initial) select(initial);
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener("click", () => select(tab));
+      tab.addEventListener("keydown", (event) => {
+        const moves: Record<string, number> = {
+          ArrowRight: (index + 1) % tabs.length,
+          ArrowLeft: (index - 1 + tabs.length) % tabs.length,
+          Home: 0,
+          End: tabs.length - 1,
+        };
+        const next = moves[event.key];
+        if (next === undefined) return;
+        event.preventDefault();
+        tabs[next].focus();
+        select(tabs[next]);
+      });
+    });
+  }
+
+  init();
+  document.addEventListener("astro:page-load", init);
+</script>

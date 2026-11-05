@@ -22,7 +22,7 @@ export function RunIt() {
             <h3 className="display mt-5 text-[40px]">Metis Cloud</h3>
             <p className="mt-3 text-[15.5px] leading-relaxed text-ink-2">
               Your own instance of Metis, run by us, on your domain or a metis-suite.app subdomain,
-              with your own AI key.
+              with AI included every month, or your own AI key.
             </p>
             <div className="mt-auto flex flex-wrap items-center gap-3 pt-8">
               <Button href={CONSOLE_URL} kind="external">

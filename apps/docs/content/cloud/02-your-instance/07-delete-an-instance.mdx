@@ -1,0 +1,45 @@
+---
+title: Delete an instance
+description: Delete a Cloud instance with its data and backups, and free its address.
+---
+
+Deleting an instance removes it, its data, its backups and its exports for good. Its address becomes free for a new instance. You can delete any instance, including one you have not paid for.
+
+:::warning[This cannot be undone]
+Nothing can be restored after you delete an instance. If you want to keep anything, download an export first. See [Export your data](/cloud/your-instance/export-your-data).
+:::
+
+## What happens to the subscription
+
+If the instance still has a paid subscription, deleting it cancels the subscription at once, without a refund for the rest of the period. The card says so: "Its subscription is cancelled at once, without a refund for the rest of the period. To let it run until the period ends instead, cancel from the Billing tab."
+
+To keep using the instance until the end of the period you paid for, cancel the subscription instead. See [Cancel a subscription](/cloud/billing/cancel-a-subscription).
+
+If the instance has no active subscription, the card says "It has no active subscription."
+
+## Delete the instance
+
+<Steps>
+  <Step title="Open Settings">
+    Open your instance in the console and click [**Settings**](https://console.trymetis.email/instances/~/settings) in the sidebar. Below the **Automatic updates** card, the card **Delete this instance** says "Removes the instance, its data and its backups for good, and frees the address."
+  </Step>
+
+<Step title="Start the deletion">
+  Click **Delete instance**. A dialog asks "Delete acme?" (with your instance's name) and says "This
+  cannot be undone. Everything in the instance and its backups is deleted."
+</Step>
+
+  <Step title="Confirm">
+    Type the instance's name, such as `acme`, in the box. It must match exactly. Then click **Delete instance** in the dialog. You see "Deleting acme."
+  </Step>
+</Steps>
+
+If you see "The instance could not be deleted. Try again in a few minutes.", nothing was deleted. Try again later.
+
+## After you delete it
+
+The status changes to **Deleting**, and the [**Overview**](https://console.trymetis.email/instances/~) says "Deleting this instance". When the work is done, the status is **Deleted**, and the instance no longer appears on the [**Instances**](https://console.trymetis.email/instances) page.
+
+The address is free again once the deletion is done. Until then, a new instance with the same address gets "That name is already taken."
+
+To delete your Metis Cloud account, you must delete every instance first. See [Profile and delete your account](/cloud/account/profile-and-delete-your-account).

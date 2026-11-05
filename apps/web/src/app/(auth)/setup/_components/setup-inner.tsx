@@ -118,7 +118,7 @@ export function SetupInner({
               type="text"
               value={setupCode}
               onChange={(e) => setSetupCode(e.target.value)}
-              placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX"
+              placeholder="Paste your setup code"
               autoComplete="off"
               spellCheck={false}
               autoFocus

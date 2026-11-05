@@ -1,0 +1,63 @@
+---
+title: Export your data
+description: Prepare and download an export of your Cloud instance, with both of its databases and its keys.
+---
+
+An export is a copy of your instance that you download. The console describes it as "A self-host bundle with both databases and the environment file with its keys." It holds your instance's data, the assistant's memory and the instance's keys.
+
+Metis Cloud also backs up every running instance each night, but you cannot download those backups. An export is your own copy.
+
+You can prepare an export while the instance is **Running** or **Suspended**. Otherwise, the card says "Exports are available while the instance is running or stopped."
+
+:::warning[Keep the file safe]
+An export is as sensitive as the instance itself, because it holds all of its data and keys. Store it somewhere safe, and do not share it.
+:::
+
+## Before you start
+
+You need two-factor authentication on your Metis Cloud account. Without it, the [**Exports**](https://console.trymetis.email/instances/~/exports) tab says "Two-factor authentication is required for exports", and **Prepare export** and **Download** do not work. Click [**Settings**](https://console.trymetis.email/settings) in that message to turn it on. See [Two-factor authentication](/cloud/account/two-factor-authentication).
+
+## Prepare and download an export
+
+<Steps>
+  <Step title="Open Exports">
+    Open your instance in the console and click [**Exports**](https://console.trymetis.email/instances/~/exports) in the sidebar.
+  </Step>
+
+<Step title="Prepare the export">
+  Click **Prepare export**. A new row appears with the status **Preparing**. The page refreshes on
+  its own until the export is ready.
+</Step>
+
+  <Step title="Download it">
+    When the status is **Ready**, click **Download**. Your browser downloads the file.
+
+    Each click makes a new download link that works for ten minutes. If a download does not start, click **Download** again.
+
+  </Step>
+</Steps>
+
+## The list of exports
+
+The **Exports** card lists your 5 most recent exports, with the time each was **Requested**, its **Status** and the **File**.
+
+| Status        | What it means                                                       |
+| ------------- | ------------------------------------------------------------------- |
+| **Preparing** | The export is being made.                                           |
+| **Ready**     | You can download it.                                                |
+| **Failed**    | The export did not work. A reason can follow. Prepare a new export. |
+
+## If something goes wrong
+
+| Message                                                             | What to do                                                  |
+| ------------------------------------------------------------------- | ----------------------------------------------------------- |
+| "An export is already being prepared."                              | Wait until the current export is ready.                     |
+| "The export could not be started. Try again in a few minutes."      | Wait a few minutes, then click **Prepare export** again.    |
+| "An export is available once the instance is running or suspended." | Wait until the instance is running, or until it is stopped. |
+| "This export is not ready."                                         | Wait until the status is **Ready**.                         |
+
+## When the instance is stopped or deleted
+
+When an instance is stopped, its status is **Suspended**, and its data is kept until the date on the [**Overview**](https://console.trymetis.email/instances/~). You can still prepare and download exports until then. See [Overview](/cloud/your-instance/overview#a-stopped-instance).
+
+When you delete an instance, its exports are deleted with it.

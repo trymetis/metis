@@ -1,0 +1,69 @@
+---
+title: Finish setup
+description: Wait for your instance to be set up, then create its owner account with the setup code from the console.
+---
+
+After you pay, Metis Cloud sets up your instance. Then you finish setup yourself: you create the first account on the instance, which makes you its owner. You need the setup code that the console shows you.
+
+You also need an authenticator app on your phone, such as Google Authenticator, 1Password or Authy. Every account on the instance needs two-factor authentication, including yours.
+
+<Steps>
+  <Step title="Wait for the setup">
+    Open your instance in the console. While it is being set up, its status is **Setting up**, and the [**Overview**](https://console.trymetis.email/instances/~) tab shows "Setting up your instance" with "This usually takes a few minutes. The page refreshes on its own."
+
+    If it takes much longer, click **Retry** to send the setup step again. If you see "This instance was just retried. Try again in a couple of minutes.", wait and try again.
+
+    You may also see a short line under the message, such as "We are making room for your instance. Setup continues on its own." or "Something went wrong on our side. We have been told and keep trying; you can also press Retry."
+
+  </Step>
+
+  <Step title="Copy the setup code">
+    When the instance is ready, its status is **Running**, and the [**Overview**](https://console.trymetis.email/instances/~) shows the card **Finish setup**: "Do this once, as the owner. This page notices when you are done."
+
+    The card has three steps. The third, **Enter the setup code**, shows your code, for example `K7QM-2HXP-9RTA`. Click the copy button next to it (**Copy setup code**). You see "Setup code copied."
+
+  </Step>
+
+  <Step title="Open the setup page">
+    Click the link in the first step of the card, for example `acme.metis-suite.app/setup`. It opens your instance's setup page in a new tab.
+
+    The page **Set up Metis Suite** says "Create the first account on this instance."
+
+  </Step>
+
+  <Step title="Create the owner account">
+    Fill in the form:
+
+    - **Setup code**: paste the code you copied from the console. It must match exactly.
+    - **Name**: your name.
+    - **Email address**: already filled in with the email of your Metis Cloud account, such as `ana@example.com`. You cannot change it. No other address is accepted.
+    - **Password**: at least 8 characters. This is the password for your instance. It is separate from your Metis Cloud password.
+
+    Click **Create account**.
+
+    If you see "That setup code isn't valid", copy the code from the console again and paste it. If you see "This instance has already been set up", the owner account already exists. Sign in instead.
+
+  </Step>
+
+<Step title="Set up two-factor authentication">
+  The instance signs you in and takes you to two-factor setup. From here on, everything works as on
+  any instance. Follow [Sign in for the first time](/guide/get-started/sign-in-for-the-first-time),
+  starting at **Confirm your password**.
+</Step>
+
+  <Step title="Check the console">
+    Go back to the console. Once setup is done, the [**Overview**](https://console.trymetis.email/instances/~) replaces the setup code with the card **Your instance is ready** on its own while the console tab is in front. It says to sign in with your email and invite your team from the instance. If the page still shows the setup code, reload it.
+
+    The **Setup** row of the **Details** card then shows **Done** and the date.
+
+  </Step>
+</Steps>
+
+## After setup
+
+Open your instance with **Open instance** at the top right of the instance page, or go to its address, such as `acme.metis-suite.app`.
+
+- **Connect your mail.** See [Connect your first mailbox](/guide/get-started/connect-your-first-mailbox).
+- **Open the owner dashboard.** As the owner, you manage the instance there. Click your initials at the bottom of the left rail and choose **Dashboard**. See [Owner dashboard](/self-hosting/operate/owner-dashboard).
+- **Invite your team.** See [Invite people](/guide/account/invite-people) and [Members and roles](/guide/workspaces/members-and-roles#invite-people). Until you set up your own mail service, invitations appear on the console's [**Mail**](https://console.trymetis.email/instances/~/mail) tab. See [Instance mail](/cloud/your-instance/instance-mail).
+- **Learn what is different on Cloud.** See [How Cloud differs](/cloud/your-instance/how-cloud-differs).

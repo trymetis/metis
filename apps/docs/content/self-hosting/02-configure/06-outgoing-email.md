@@ -5,18 +5,19 @@ description: Set how your instance sends its own email, such as sign-in links, s
 
 Your instance sends some email of its own: sign-in links, [sign-in alerts](/guide/account/sign-in-alerts), email verification, password resets and invitations. This is separate from your users' mail, which always goes through their own mailboxes.
 
-On a new instance, this email is not delivered. It is written to the server log instead, so you can test without a mail service. To deliver it, use Resend or an SMTP server.
+On a new self-hosted instance, this email is not delivered. It is written to the server log instead, so you can test without a mail service. On a new Metis Cloud instance, it goes to the instance's [**Mail**](https://console.trymetis.email/instances/~/mail) tab in the Metis Cloud console instead (see [Instance mail](/cloud/your-instance/instance-mail)). To deliver it, use Resend or an SMTP server.
 
 ## Choose a driver
 
 Open **Dashboard**, **System**, **Mail** under **Drivers**.
 
-| Driver          | What happens                                                                                                                            | Badge on the System page |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `log` (default) | Each email is written to the app's log instead of being sent.                                                                           | **Console only**         |
-| `resend`        | Sent through [Resend](https://resend.com) with your API key.                                                                            | **Delivering**           |
-| `smtp`          | Sent through your SMTP server.                                                                                                          | **Delivering**           |
-| `noop`          | Nothing is sent or logged. Magic link sign-in, email verification, password reset, workspace invites and sign-in alerts are turned off. | **Not delivered**        |
+| Driver          | What happens                                                                                                                                                                                                                                                                | Badge on the System page |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| `log` (default) | Each email is written to the app's log instead of being sent.                                                                                                                                                                                                               | **Console only**         |
+| `resend`        | Sent through [Resend](https://resend.com) with your API key.                                                                                                                                                                                                                | **Delivering**           |
+| `smtp`          | Sent through your SMTP server.                                                                                                                                                                                                                                              | **Delivering**           |
+| `console`       | Only for Metis Cloud instances. Each email goes to the instance's [**Mail**](https://console.trymetis.email/instances/~/mail) tab in the Metis Cloud console. A self-hosted instance cannot use it. This driver has nothing to do with the **Console only** badge of `log`. | **Delivering**           |
+| `noop`          | Nothing is sent or logged. Magic link sign-in, email verification, password reset, workspace invites and sign-in alerts are turned off.                                                                                                                                     | **Not delivered**        |
 
 With `log` or `noop`, your users get no sign-in alerts. They can still turn the **Sign-in alerts** switch on or off in their settings, and the app does not warn them that no alert will arrive.
 
@@ -38,11 +39,14 @@ sudo docker compose --project-directory /opt/metis-suite logs -f app
 | **SMTP host**, **SMTP port**, **SMTP user**, **SMTP password** | `smtp`              | Use these instead of the URL.                                                                                                                                                                                                                                                                          |
 | **Implicit TLS**                                               | `smtp`              | Turn on for a server that uses TLS from the start of the connection, usually on port 465.                                                                                                                                                                                                              |
 | **Allow unencrypted**                                          | `smtp`              | Off by default. With **Implicit TLS** off, the connection must upgrade with STARTTLS, or it fails. Turn this on only for a local server that has no TLS. With an **SMTP URL**, the URL decides implicit TLS: `smtp://` counts as off and `smtps://` as on, whatever the **Implicit TLS** switch shows. |
+| **Console endpoint**, **Console token**                        | `console`           | Only for Metis Cloud instances, which start with both set. A self-hosted instance cannot use them.                                                                                                                                                                                                     |
 
 <img src="/images/self-hosting/driver-mail-smtp.webp" alt="The Mail driver page with smtp chosen, showing the sender and SMTP fields" class="dark:hidden" />
 <img src="/images/self-hosting/driver-mail-smtp-dark.webp" alt="The Mail driver page with smtp chosen, showing the sender and SMTP fields" class="hidden dark:block" />
 
-Click **Save changes** and enter your authenticator code. Then click **Run check** in the **Health** card. It signs in to the SMTP server or checks the Resend API key. It sends nothing.
+Like other hosting providers, Metis Cloud blocks outgoing SMTP ports 25 and 465 to protect its servers' IP reputation and prevent spam. Use port 587 with **Implicit TLS** off (STARTTLS). Resend is not affected.
+
+Click **Save changes** and enter your authenticator code. Then click **Run check** in the **Health** card. It signs in to the SMTP server or checks the Resend API key. It sends nothing. With `console`, there is nothing to check.
 
 If **Implicit TLS** and **Allow unencrypted** are both off and your SMTP server does not offer STARTTLS, the check fails. The check also runs when you click **Save changes**, so the change is not saved. If you want to store it anyway, click **Save anyway** on the **Check failed** card. Outgoing email then fails until the SMTP server offers STARTTLS, or until you turn on **Implicit TLS** or **Allow unencrypted**. See [Save anyway](/self-hosting/configure/how-configuration-works#save-anyway).
 

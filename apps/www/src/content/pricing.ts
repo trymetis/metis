@@ -39,6 +39,8 @@ export const PLANS: Plan[] = [
       "AI included every month, for the AI model and the decision model",
       "Or your own AI key: OpenAI, Anthropic or any compatible endpoint",
       "Your domain, or a metis-suite.app subdomain",
+      "Shared mailboxes, calendars and drives",
+      "Workspaces with their own branding",
     ],
     cta: { label: "Get started", href: CONSOLE_URL },
   },

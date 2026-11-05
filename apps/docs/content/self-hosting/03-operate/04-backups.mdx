@@ -5,6 +5,8 @@ description: Where your instance keeps its data and secrets, so you know what to
 
 Metis Suite has no built-in backup or restore. Back up the data below with the tools you already use for Docker volumes and files on your server.
 
+On Metis Cloud, the Cloud service (not Metis Suite itself) backs up every running instance each night, keeps the two most recent backups and deletes them with the instance. The console has no button to restore them, so for a copy of your own, download an [export](/cloud/your-instance/export-your-data).
+
 The updater keeps one copy of the database from before your last upgrade, so that you can undo it. That copy is not a backup. See [The upgrade snapshot is not a backup](#the-upgrade-snapshot-is-not-a-backup).
 
 Most mail, events and files are not stored by Metis Suite at all. They stay with the provider or server each user connected, such as Gmail, Outlook or your IMAP server. Your instance keeps the accounts, the connections and their credentials, the settings, and what people create in the app.

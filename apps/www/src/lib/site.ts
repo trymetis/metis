@@ -24,6 +24,8 @@ export const CONSOLE_URL = "https://console.trymetis.email";
 
 export const DOCS_URL = "https://docs.trymetis.email";
 
+export const CHANGELOG_URL = `${DOCS_URL}/changelog`;
+
 export const CONTACT_EMAIL = "contact@astraqcyberdefence.com";
 
 export const ORG_X_HANDLE = "@astraqcd";

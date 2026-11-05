@@ -2,7 +2,8 @@ import { defineConfig } from "blume";
 
 export default defineConfig({
   title: "Metis Suite Docs",
-  description: "Guides for people who use Metis Suite and for the admins who run it.",
+  description:
+    "Guides for people who use Metis Suite, for Metis Cloud customers and for the admins who self-host it.",
   logo: { image: "/logo.svg", text: "Metis Suite" },
   content: {
     root: "content",
@@ -22,6 +23,8 @@ export default defineConfig({
     tabs: [
       { label: "User Guide", path: "/guide", icon: "mail" },
       { label: "Self-Hosting Guide", path: "/self-hosting", icon: "server" },
+      { label: "Metis Cloud", path: "/cloud", icon: "cloud" },
+      { label: "Changelog", path: "/changelog", icon: "history" },
     ],
   },
 });

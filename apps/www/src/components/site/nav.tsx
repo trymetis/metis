@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { NAV_LINKS, TOOLS } from "@/content/nav";
-import { CONSOLE_URL, DOCS_URL, GITHUB_URL } from "@/lib/site";
+import { CHANGELOG_URL, CONSOLE_URL, DOCS_URL, GITHUB_URL } from "@/lib/site";
 
 import { GithubMark } from "../ui/github-mark";
 import { GithubStars } from "../ui/github-stars";
@@ -176,6 +176,16 @@ export function Nav() {
               Docs
             </a>
           </li>
+          <li>
+            <a
+              href={CHANGELOG_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`relative inline-flex h-9 items-center rounded-full px-3.5 text-[14px] transition-colors ${linkTone(false, night)}`}
+            >
+              Changelog
+            </a>
+          </li>
         </ul>
 
         <div className="flex items-center gap-2">
@@ -247,6 +257,16 @@ export function Nav() {
               className="display block border-b border-line py-4 text-[34px]"
             >
               Docs
+            </a>
+          </li>
+          <li>
+            <a
+              href={CHANGELOG_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="display block border-b border-line py-4 text-[34px]"
+            >
+              Changelog
             </a>
           </li>
           <li>

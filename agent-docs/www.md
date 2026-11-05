@@ -66,4 +66,5 @@ How `apps/www` (the marketing site at www.trymetis.email) gets its page metadata
 ## Deliberate limits
 
 - **Provider details and release history live on the docs site (`apps/docs`)**; www links there.
+  - The docs changelog is `src/lib/site.ts` → `CHANGELOG_URL`, linked from the header, the mobile menu, the footer's Open source column and `llms.txt`.
 - **The camera poses on each page are tuned by eye**, not derived from the model bounds.

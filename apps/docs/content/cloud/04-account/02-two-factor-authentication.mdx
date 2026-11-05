@@ -1,0 +1,81 @@
+---
+title: Two-factor authentication
+description: Turn on two-factor authentication for your Metis Cloud account, save backup codes, sign in with a code, and turn it off.
+---
+
+Two-factor authentication adds a second step when you sign in with your email and password. You type a six-digit code from an authenticator app on your phone, such as Google Authenticator, 1Password or Authy.
+
+On your Metis Cloud account it is optional, but you need it to prepare and download exports. An export holds your instance's keys.
+
+This page is about your console account. Two-factor authentication inside your instance is separate. See [Two-factor authentication](/guide/account/two-factor-authentication) in the User Guide.
+
+You manage it in the **Two-factor authentication** card under [**Settings**](https://console.trymetis.email/settings). Open the account menu (your name at the top right) and click [**Settings**](https://console.trymetis.email/settings). The card shows the badge **On** or **Off**.
+
+## Turn it on
+
+<Steps>
+  <Step title="Start">
+    In the **Two-factor authentication** card, click **Turn on**.
+
+    If your account has a password, the dialog **Turn on two-factor authentication** asks you to confirm it. Type your **Password** and click **Continue**. If you signed up with Google or GitHub and have no password, this step is skipped.
+
+  </Step>
+  <Step title="Scan the QR code">
+    The dialog **Scan with your authenticator app** shows a QR code. Scan it with your authenticator app. If you cannot scan it, type the key shown under "Or enter this key by hand:" into the app instead. The app lists the entry as Metis Cloud.
+  </Step>
+  <Step title="Enter a code">
+    Type the six-digit code the app shows into **Code** and click **Verify**.
+
+    If the code does not match, wait for the next code and try again.
+
+    You see "Two-factor authentication is on."
+
+  </Step>
+  <Step title="Save your backup codes">
+    The dialog **Save your backup codes** opens. Each code signs you in once if you lose your authenticator. The codes are shown only now.
+
+    Click **Copy** or **Download** (a text file named `metis-cloud-backup-codes.txt`) and keep them somewhere safe. Then click **Done**.
+
+  </Step>
+</Steps>
+
+Two-factor authentication is on only after a code verifies. If you click **Cancel** at the scan step, it stays **Off**.
+
+## Sign in with a code
+
+After you sign in with your email and password, the page asks you to "Enter the code from your authenticator app."
+
+1. Type the six-digit code into **Authenticator code**.
+2. Tick **Trust this device for 30 days** if you do not want to be asked on this device for 30 days.
+3. Click **Continue**.
+
+If you do not have your phone, click **Use a backup code** and type one of your backup codes into **Backup code**. To go back, click **Use the authenticator app**. Click **Back to sign in** to return to the email and password form.
+
+If the code is wrong, a message shows under the form. Try the next code.
+
+:::note
+Signing in with **Google** or **GitHub** does not ask for a code. Those sign-ins rely on the provider's own sign-in.
+:::
+
+## Make new backup codes
+
+Make new codes if you used most of yours, or if someone else may have seen them.
+
+1. In the **Two-factor authentication** card, click **New backup codes**.
+2. If your account has a password, the dialog **Make new backup codes** asks for it. Type it and click **Continue**.
+3. Save the new codes from the **Save your backup codes** dialog, then click **Done**.
+
+Old backup codes no longer work.
+
+## Turn it off
+
+1. In the **Two-factor authentication** card, click **Turn off**.
+2. If your account has a password, the dialog **Turn off two-factor authentication** asks for it. Type it and click **Continue**. If your account has no password, two-factor authentication turns off at once.
+
+You see "Two-factor authentication is off." You can no longer prepare or download exports until you turn it on again.
+
+## Exports need two-factor authentication
+
+Without two-factor authentication, an instance's [**Exports**](https://console.trymetis.email/instances/~/exports) tab shows **Two-factor authentication is required for exports**, and **Prepare export** and **Download** are disabled. Click [**Settings**](https://console.trymetis.email/settings) in that message to turn it on.
+
+It does not matter how you signed in. What counts is that two-factor authentication is on for your account. See [Export your data](/cloud/your-instance/export-your-data).

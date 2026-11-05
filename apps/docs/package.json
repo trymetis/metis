@@ -11,7 +11,8 @@
     "screenshots": "node scripts/screenshots.ts"
   },
   "dependencies": {
-    "blume": "^2.2.6"
+    "blume": "^2.2.6",
+    "marked": "catalog:"
   },
   "devDependencies": {
     "@astrojs/compiler-rs": "^0.5.2",

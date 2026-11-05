@@ -2,7 +2,14 @@ import { ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 
 import { NAV_LINKS, TOOLS } from "@/content/nav";
-import { CONTACT_EMAIL, DOCS_URL, GITHUB_URL, LICENSE_URL, ORG_NAME } from "@/lib/site";
+import {
+  CHANGELOG_URL,
+  CONTACT_EMAIL,
+  DOCS_URL,
+  GITHUB_URL,
+  LICENSE_URL,
+  ORG_NAME,
+} from "@/lib/site";
 
 import { MetisMark } from "../ui/metis-mark";
 import { StartActions } from "./start-actions";
@@ -13,6 +20,7 @@ const YEAR = new Date().getFullYear();
 
 const OPEN = [
   { href: DOCS_URL, label: "Documentation" },
+  { href: CHANGELOG_URL, label: "Changelog" },
   { href: GITHUB_URL, label: "Source code" },
   { href: LICENSE_URL, label: "AGPL-3.0 license" },
   { href: `${GITHUB_URL}/blob/main/CONTRIBUTING.md`, label: "Contributing" },

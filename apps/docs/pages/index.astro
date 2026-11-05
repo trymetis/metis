@@ -87,6 +87,29 @@ const selfHosting = [
     href: "/self-hosting/mail-gateways/what-is-a-gateway-mailbox",
   },
 ];
+
+const cloud = [
+  {
+    title: "Get started",
+    blurb: "Create an account, pick an address and a plan, and finish setup.",
+    href: "/cloud/get-started/create-an-instance",
+  },
+  {
+    title: "Your instance",
+    blurb: "Its status, instance mail, the included AI and exports.",
+    href: "/cloud/your-instance/overview",
+  },
+  {
+    title: "Billing",
+    blurb: "Plans, billing periods, cards, invoices and missed payments.",
+    href: "/cloud/billing/plans-and-prices",
+  },
+  {
+    title: "Account",
+    blurb: "Sign-in, passwords and two-factor authentication.",
+    href: "/cloud/account/sign-in-and-passwords",
+  },
+];
 ---
 
 <PageLayout
@@ -174,7 +197,7 @@ const selfHosting = [
     </div>
   </section>
 
-  <section class="mx-auto grid max-w-6xl gap-10 px-6 py-12 pb-24 lg:grid-cols-2">
+  <section class="mx-auto grid max-w-6xl gap-10 px-6 py-12 lg:grid-cols-2">
     <div>
       <h2 class="mb-2 text-2xl font-semibold tracking-tight text-foreground">Start here</h2>
       <p class="mb-6 text-muted-foreground">New to {product}? These three pages get you set up.</p>
@@ -212,6 +235,24 @@ const selfHosting = [
           </a>
         ))}
       </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-6 pb-24">
+    <h2 class="mb-2 text-2xl font-semibold tracking-tight text-foreground">Use Metis Cloud</h2>
+    <p class="mb-6 text-muted-foreground">
+      Metis Cloud hosts an instance of {product} for you. These guides cover its console.
+    </p>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {cloud.map((item) => (
+        <a
+          href={item.href}
+          class="flex flex-col gap-1 rounded-xl border border-border p-4 no-underline transition-colors hover:border-accent"
+        >
+          <span class="font-medium text-foreground">{item.title}</span>
+          <span class="text-sm text-muted-foreground">{item.blurb}</span>
+        </a>
+      ))}
     </div>
   </section>
 </PageLayout>

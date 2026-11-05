@@ -16,6 +16,8 @@ Releases install forward only. The dashboard offers only releases that are newer
 
 The **Updates** page exists only when the updater is connected, which the Compose stack does for you. On hosts that build from source, the page does not appear: update by deploying the new version there.
 
+On a Metis Cloud instance, the **Updates** page works the same way, and a snapshot is always taken, so **Undo last upgrade** is offered after an upgrade. Unless the owner turns automatic updates off in the console, Metis Cloud also installs each new release on its own, in the hour the owner picks there. The server steps on this page (the snapshot folder, disk space, the `docker` commands, the bootstrap script and pinning releases) do not apply there, and steps that mention the server, the stack or the updater service are handled by Metis Cloud. See [Updates on Metis Cloud](/cloud/your-instance/updates).
+
 ## Snapshots need the bundled database
 
 The updater can take a snapshot only when your instance uses the bundled database server. The bootstrap script sets this up unless you choose Turso.

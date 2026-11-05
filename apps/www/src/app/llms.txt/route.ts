@@ -34,6 +34,7 @@ const DOCS: [string, string][] = [
   ["/self-hosting/configure/sign-in-providers", "Set up Google, Microsoft and Zoho sign-in"],
   ["/self-hosting/configure/server-lists", "Define IMAP, CalDAV, S3, WebDAV, FTP and SFTP servers"],
   ["/self-hosting/configure/ai-models", "Bring your own AI model"],
+  ["/changelog", "Changelog: every server, desktop and mobile release"],
 ];
 
 export function GET() {

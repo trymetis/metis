@@ -1,0 +1,78 @@
+---
+title: Create an instance
+description: Pick an address, a plan and a billing period, then pay to start the setup of your Metis Suite instance.
+---
+
+An instance is your own Metis Suite at its own address. You create it in the console, pay through Dodo Payments, and Metis Cloud sets it up for you.
+
+:::note[Choose carefully]
+You cannot change the address or the plan of an instance later. To move to the other plan, you create a new instance.
+:::
+
+<Steps>
+  <Step title="Open New instance">
+    On the [**Instances**](https://console.trymetis.email/instances) page, click **New instance**. When you have no instances yet, the button is in the middle of the page.
+
+    The [**New instance**](https://console.trymetis.email/new) page says "Pick an address and a plan. Setup starts on its own once you have paid."
+
+  </Step>
+
+  <Step title="Pick an address">
+    In **Address**, type the first part of your instance's address, for example `acme`. The end, `.metis-suite.app`, is fixed. Your instance will be at `acme.metis-suite.app`.
+
+    An address has 3 to 40 lowercase letters, digits or hyphens. It cannot start or end with a hyphen. Capitals become lowercase as you type, and spaces become hyphens.
+
+    As you type, the console checks whether the address is free. When it is, you see "acme.metis-suite.app is available." When it is not, you see why:
+
+    | Message | What it means |
+    | --- | --- |
+    | "That name is already taken." | Another instance uses this address. |
+    | "That name is reserved." | The address is kept for the service. This includes common names such as `www`, `mail`, `admin` and `support`, and any name that contains `metis`. |
+    | "A name cannot have hyphens in the third and fourth positions." | Names such as `ab--shop` are not allowed. |
+
+    A taken address becomes free again when its instance is deleted, or when an unpaid instance is released.
+
+  </Step>
+
+  <Step title="Pick a plan">
+    Under **Plan**, choose **Personal** or **Team**. **Personal** is "For one person's mail, with included AI each month." **Team** has "About 3x Personal's memory and CPU, the same AI, and priority support."
+
+    See [Plans and prices](/cloud/billing/plans-and-prices) for what each plan costs.
+
+  </Step>
+
+<Step title="Pick a billing period">
+  Under **Billing**, choose **Monthly** or **Yearly**. You can switch the billing period later, on
+  the instance's [**Billing**](https://console.trymetis.email/instances/~/billing) tab. See [Switch
+  your billing period](/cloud/billing/switch-billing-period).
+</Step>
+
+  <Step title="Check the summary and pay">
+    The **Summary** card on the right shows your **Address**, **Plan**, **Billing** and the **Total**. It says "You pay on the next page, through Dodo Payments."
+
+    Click **Continue to payment**. The button works only once the address shows as available.
+
+    You go to the Dodo Payments checkout page. You enter your card details only on that page.
+
+  </Step>
+
+  <Step title="Wait for setup">
+    After you pay, Dodo Payments sends you back to your new instance's [**Overview**](https://console.trymetis.email/instances/~) tab. Setup starts on its own, and usually takes a few minutes.
+
+    When the setup is done, the Overview shows your setup code. Continue with [Finish setup](/cloud/get-started/finish-setup).
+
+  </Step>
+</Steps>
+
+## If the payment could not be started
+
+If you see "Payment could not be started. Try again in a few minutes." after you click **Continue to payment** on the [**New instance**](https://console.trymetis.email/new) page, nothing is reserved. Your address stays free. Wait a few minutes and click **Continue to payment** again.
+
+## Unpaid instances
+
+An instance you have not paid for has the status **Awaiting payment**. Its [**Overview**](https://console.trymetis.email/instances/~) shows **Waiting for payment**: "This address is reserved for you. Unpaid instances are released after 24 hours."
+
+- To pay, click **Continue to payment**.
+- If **Continue to payment** shows "Payment could not be started. Try again in a few minutes.", the instance stays and its address is still reserved for you. Try again in a few minutes.
+- If you do not pay, the instance is removed after 24 hours. It disappears from [**Instances**](https://console.trymetis.email/instances), and its address is free again.
+- You cannot change the billing period of an unpaid instance. To pick another period, let it be released and create a new instance.
