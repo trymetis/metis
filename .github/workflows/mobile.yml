@@ -81,6 +81,65 @@ jobs:
           path: out/*
           if-no-files-found: error
 
+      - name: Build the release bundle with the Play upload key
+        working-directory: apps/mobile/android
+        env:
+          PLAY_UPLOAD_KEYSTORE_BASE64: ${{ secrets.PLAY_UPLOAD_KEYSTORE_BASE64 }}
+          ORG_GRADLE_PROJECT_METIS_UPLOAD_STORE_PASSWORD: ${{ secrets.PLAY_UPLOAD_KEYSTORE_PASSWORD }}
+          ORG_GRADLE_PROJECT_METIS_UPLOAD_KEY_ALIAS: ${{ secrets.PLAY_UPLOAD_KEY_ALIAS }}
+          ORG_GRADLE_PROJECT_METIS_UPLOAD_KEY_PASSWORD: ${{ secrets.PLAY_UPLOAD_KEY_PASSWORD }}
+        run: |
+          export ORG_GRADLE_PROJECT_METIS_UPLOAD_STORE_FILE="$RUNNER_TEMP/upload.jks"
+          echo "$PLAY_UPLOAD_KEYSTORE_BASE64" | base64 -d > "$ORG_GRADLE_PROJECT_METIS_UPLOAD_STORE_FILE"
+          ./gradlew bundleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a,x86_64
+          bundle=app/build/outputs/bundle/release/app-release.aab
+          jarsigner -verify "$bundle" | grep -qx 'jar verified.'
+          signers=$(keytool -printcert -jarfile "$bundle" | awk '/SHA256:/ {print $2}')
+          upload=$(keytool -list -v -keystore "$ORG_GRADLE_PROJECT_METIS_UPLOAD_STORE_FILE" \
+            -alias "$ORG_GRADLE_PROJECT_METIS_UPLOAD_KEY_ALIAS" \
+            -storepass:env ORG_GRADLE_PROJECT_METIS_UPLOAD_STORE_PASSWORD | awk '/SHA256:/ {print $2}')
+          rm "$ORG_GRADLE_PROJECT_METIS_UPLOAD_STORE_FILE"
+          if [[ -z "$upload" || "$signers" != "$upload" ]]; then
+            echo "::error::the bundle's signer is not only the Play upload key"
+            exit 1
+          fi
+          mkdir "$GITHUB_WORKSPACE/play"
+          cp "$bundle" "$GITHUB_WORKSPACE/play/metis-suite.aab"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: play-bundle
+          path: play/metis-suite.aab
+          if-no-files-found: error
+
+  play:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: play-bundle
+          path: ${{ runner.temp }}/play
+
+      - id: auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.PLAY_WIF_PROVIDER }}
+          service_account: ${{ vars.PLAY_SERVICE_ACCOUNT }}
+
+      - uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1.1.5
+        with:
+          serviceAccountJson: ${{ steps.auth.outputs.credentials_file_path }}
+          packageName: email.trymetis.suite
+          releaseFiles: ${{ runner.temp }}/play/metis-suite.aab
+          tracks: ${{ vars.PLAY_TRACK || 'internal' }}
+          status: ${{ vars.PLAY_RELEASE_STATUS || 'draft' }}
+
   publish:
     needs: [release, build]
     if: github.event_name == 'release'

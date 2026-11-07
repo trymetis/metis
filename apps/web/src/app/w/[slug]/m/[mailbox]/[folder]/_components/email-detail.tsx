@@ -255,7 +255,7 @@ export function EmailDetail() {
     }
   }
 
-  const phishingDetectionEnabled = useScopePolicy().phishingDetection;
+  const { phishingDetection: phishingDetectionEnabled, ai: aiEnabled } = useScopePolicy();
   const saveContact = useSaveContact();
   const contactAddresses = useMemo(
     () =>
@@ -305,7 +305,7 @@ export function EmailDetail() {
     result: summary,
     loading: summaryLoading,
     error: summaryError,
-  } = useThreadSummary(selectedEmail, true); // FIXME(ai): add support for thread summaries disabling
+  } = useThreadSummary(selectedEmail, aiEnabled);
   const attachments = useAttachments(selectedEmail?.id);
   const {
     messages: threadMessages,
@@ -313,7 +313,10 @@ export function EmailDetail() {
     setExpanded: setExpandedThread,
   } = useThread(selectedEmail?.id, selectedEmail?.threadId);
   const threadBodies = useThreadBodies(selectedEmail?.id, expandedThread);
-  const { replies: smartReplies, loading: smartRepliesLoading } = useSmartReplies(selectedEmail);
+  const { replies: smartReplies, loading: smartRepliesLoading } = useSmartReplies(
+    selectedEmail,
+    aiEnabled,
+  );
   const {
     methods: unsubMethods,
     status: unsubStatus,

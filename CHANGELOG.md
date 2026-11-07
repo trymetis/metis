@@ -6,11 +6,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Whi
 
 ## Unreleased
 
+## 0.3.0 - 2026-11-07
+
 ### Upgrade notes
 
 - Contains a database migration that adds the address book tables and lets workflows reference an address book.
 - To offer contacts from Google, Microsoft or Zoho, add the contacts scope to your OAuth app: `https://www.googleapis.com/auth/contacts` (and enable the People API) for Google, `Contacts.ReadWrite` for Microsoft, `ZohoContacts.contactapi.ALL` for Zoho. Accounts already connected ask for it when someone adds their address book.
-- CardDAV servers are a new server list (Dashboard → System → CardDAV, `METIS_CARDDAV_SERVERS`).
+- CardDAV servers are a new server list (Dashboard → System → CardDAV, `METIS_CARDDAV_SERVERS`). Like the other server lists, `bootstrap.sh` writes `METIS_CARDDAV_SERVERS` into `.env` when it is set in the shell you run it from; on an existing install, add it to `.env` yourself or use the dashboard.
 - Contains a database migration that records when an MCP client's authorizations were last revoked and who saved each workflow revision.
 - Workspace invites now work only for the account they were sent to, and the address in `METIS_OWNER_EMAIL` can no longer be invited or delete its own account. To hand over ownership, change `METIS_OWNER_EMAIL` first.
 
@@ -27,6 +29,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Whi
 - Revoking an MCP client's authorizations now stops its access tokens on the next request instead of up to an hour later.
 - Workflows: creating, editing, turning on or off and deleting a workflow is recorded in the workspace's Activity, noting when it runs as someone else or can add a Bcc. Run details and the Revisions sheet show who saved each revision, and the send toast lists any Bcc a workflow added to your message.
 - Mail: email CSS is now parsed rather than pattern-matched, so escaped or commented-out image references are blocked or proxied like any other, and broken CSS a parser can't read is dropped.
+
+### Fixed
+
+- A mailbox, calendar, drive or address book added with a server login now shows up in the lists right away, without reloading the page.
+- With AI turned off for a mailbox, opening an email no longer shows "Couldn't summarize this thread."; the summary and the smart replies are left out instead.
 
 ### Security
 

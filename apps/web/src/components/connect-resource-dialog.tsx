@@ -10,17 +10,27 @@ import {
   DialogTrigger,
 } from "@metis/ui/components/dialog";
 import { cn } from "@metis/ui/lib/utils";
+import type { QueryKey } from "@tanstack/react-query";
 import { ArrowLeft, Loader2, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { type ReactElement, useEffect, useState } from "react";
 
 import type { ConnectionResource, CredentialProvider, ProvidersFor } from "@/connections/types";
 import { isCredentialProvider } from "@/connections/types";
+import { rpc } from "@/lib/orpc";
+import { refreshQueries } from "@/lib/query-client";
 
 import { AccountIdentity } from "./account-identity";
 import { useConnectServers } from "./connect-servers-context";
 import { CredentialConnectForm } from "./credential-connect-form";
 import { resourceProviderMeta, serversForResource } from "./provider-meta";
+
+const RESOURCE_QUERIES: Record<ConnectionResource, () => QueryKey[]> = {
+  mailbox: () => [rpc.workspaceMailboxes.key(), rpc.mailboxes.key()],
+  calendar: () => [rpc.workspaceCalendars.key(), rpc.calendars.key()],
+  drive: () => [rpc.workspaceDrives.key(), rpc.drives.key()],
+  addressbook: () => [rpc.workspaceAddressBooks.key(), rpc.addressBooks.key()],
+};
 
 export interface AttachableResource<R extends ConnectionResource> {
   id: string;
@@ -141,6 +151,9 @@ export function ConnectResourceDialog<R extends ConnectionResource>({
   function connected() {
     setOpen(false);
     router.refresh();
+    void Promise.all(
+      [...RESOURCE_QUERIES[resource](), rpc.connections.key()].map((key) => refreshQueries(key)),
+    );
   }
 
   async function attach(id: string) {

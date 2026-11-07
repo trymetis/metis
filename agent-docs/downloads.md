@@ -1,6 +1,6 @@
 # App downloads
 
-Where the desktop and Android apps are published, and the exact URL of every file: `https://downloads.trymetis.email`, a public Cloudflare R2 bucket.
+Where the desktop and Android apps are published, and the exact URL of every file: `https://downloads.trymetis.email`, a public Cloudflare R2 bucket, plus Google Play for the Android app.
 Paths are from the repository root.
 See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [mobile.md](mobile.md), [deployment.md](deployment.md), [self-host.md](self-host.md), [www.md](www.md).
 
@@ -11,6 +11,9 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [mobile.md](mobile
 | Desktop packaging (product name, app id, protocol; targets for local builds) | `apps/desktop/package.json` → `build`                                                           |
 | Building, signing and uploading the desktop files (published targets)        | `.github/workflows/desktop.yml` → jobs `release`, `build`, `publish`                            |
 | Building, signing and uploading the APK                                      | `.github/workflows/mobile.yml` → jobs `release`, `build`, `publish`                             |
+| Building, signing and uploading the Play bundle                              | `.github/workflows/mobile.yml` → jobs `build`, `play`                                           |
+| Android `versionCode`                                                        | `apps/mobile/plugins/with-version-code.js`                                                      |
+| Signing the Play bundle in Gradle                                            | `apps/mobile/plugins/with-release-signing.js`                                                   |
 | Checking the tag against the app version                                     | `.github/scripts/release-version.sh`                                                            |
 | Writing one release into the bucket                                          | `.github/scripts/r2-upload.sh`                                                                  |
 | Android app id and version                                                   | `apps/mobile/app.json` → `expo.android.package`, `expo.version`                                 |
@@ -77,6 +80,16 @@ So the Apple silicon build is `https://downloads.trymetis.email/desktop/latest/m
   - Unset or any other value builds unsigned: macOS keeps the ad-hoc identity `mac.identity: "-"` from `apps/desktop/package.json`, and Gatekeeper and SmartScreen block the first launch until the user allows it.
   - The switch is an explicit flag rather than the certificate secret's presence, so a deleted or misnamed secret fails the release instead of shipping it unsigned.
 - **The APK is always signed, with a release key that stays the same across versions**, so Android installs a new APK over the old one and keeps its data. A different key forces an uninstall, so the first release's key is permanent.
+- **Android's `versionCode` is derived from `expo.version` as major × 1,000,000 + minor × 1,000 + patch** (`with-version-code.js`), so the R2 APK and the Play bundle of one version share it.
+  - Minor and patch stop at 999; prebuild fails past them, and past Play's ceiling of 2,100,000,000.
+  - Google Play rejects a `versionCode` it already has, so a run for a version already uploaded fails at `play`.
+- **Every `mobile.yml` run uploads the bundle to Google Play** (job `play`), to the track in the repository variable `PLAY_TRACK` (default `internal`) with the status in `PLAY_RELEASE_STATUS` (default `draft`).
+  - It signs in to Google with Workload Identity Federation, no stored key: `google-github-actions/auth` trades the run's GitHub OIDC token for credentials of the service account in `PLAY_SERVICE_ACCOUNT`, through the provider in `PLAY_WIF_PROVIDER`.
+  - Only `trymetis/metis` may impersonate that account, so a fork's run fails at sign-in.
+- **Gradle signs the bundle with the Play upload key; `apksigner` signs the APK with the release key.**
+  - `with-release-signing.js` adds a release signing config to the generated `android/app/build.gradle`, read from the Gradle properties `METIS_UPLOAD_STORE_FILE`, `METIS_UPLOAD_STORE_PASSWORD`, `METIS_UPLOAD_KEY_ALIAS` and `METIS_UPLOAD_KEY_PASSWORD`.
+  - CI passes them to the bundle step alone, as `ORG_GRADLE_PROJECT_*` variables from the `PLAY_UPLOAD_*` secrets. Without them a release build keeps the template's debug key, which the APK step replaces.
+  - The plugin fails prebuild when the template's signing blocks change shape, and the bundle step fails unless the bundle's only signer is the upload key.
 - **The bucket has its own write keys (`DOWNLOADS_R2_ACCESS_KEY_ID`, `DOWNLOADS_R2_SECRET_ACCESS_KEY`, `DOWNLOADS_R2_BUCKET`)**, separate from the server's scripts bucket ([self-host.md](self-host.md)); only `R2_ACCOUNT_ID` is shared.
 
 ## How it works

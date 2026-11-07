@@ -64,7 +64,9 @@
           }
         }
       ],
-      "./plugins/with-loopback-cleartext.js"
+      "./plugins/with-loopback-cleartext.js",
+      "./plugins/with-version-code.js",
+      "./plugins/with-release-signing.js"
     ],
     "experiments": {
       "typedRoutes": true
