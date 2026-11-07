@@ -1,7 +1,15 @@
 "use client";
 
 import { cn } from "@metis/ui/lib/utils";
-import { CalendarDays, HardDrive, History, Inbox, SlidersHorizontal } from "lucide-react";
+import {
+  BookUser,
+  CalendarDays,
+  HardDrive,
+  History,
+  Inbox,
+  SlidersHorizontal,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -23,6 +31,11 @@ export function SettingsSidebar() {
       icon: SlidersHorizontal,
     },
     {
+      href: workspaceSettingsPath(slug, "members"),
+      label: "Members",
+      icon: Users,
+    },
+    {
       href: workspaceSettingsPath(slug, "mailboxes"),
       label: "Mailboxes",
       icon: Inbox,
@@ -36,6 +49,11 @@ export function SettingsSidebar() {
       href: workspaceSettingsPath(slug, "drives"),
       label: "Drives",
       icon: HardDrive,
+    },
+    {
+      href: workspaceSettingsPath(slug, "contacts"),
+      label: "Contacts",
+      icon: BookUser,
     },
     ...(canSeeActivity
       ? [

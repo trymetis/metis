@@ -6,7 +6,12 @@ import sharp from "sharp";
 import { appActor, recordAuditEvent } from "@/audit";
 import { verify2FA } from "@/auth/server";
 import { config } from "@/config";
-import { listWorkspaceCalendars, listWorkspaceDrives, listWorkspaceMailboxes } from "@/connections";
+import {
+  listWorkspaceAddressBooks,
+  listWorkspaceCalendars,
+  listWorkspaceDrives,
+  listWorkspaceMailboxes,
+} from "@/connections";
 import { db } from "@/db";
 import { workspace } from "@/db/schema";
 import { deleteAssistantThreads } from "@/mastra/memory";
@@ -68,10 +73,11 @@ export const workspacesRouter = {
     const mine = await listMyWorkspaces(context.appUser.userId);
     const enriched = await Promise.all(
       mine.map(async (w) => {
-        const [boxes, calendars, drives] = await Promise.all([
+        const [boxes, calendars, drives, addressBooks] = await Promise.all([
           listWorkspaceMailboxes(w.id),
           listWorkspaceCalendars(w.id),
           listWorkspaceDrives(w.id),
+          listWorkspaceAddressBooks(w.id),
         ]);
         return {
           ...w,
@@ -81,6 +87,8 @@ export const workspacesRouter = {
           firstCalendarSlug: calendars[0]?.slug ?? null,
           driveCount: drives.length,
           firstDriveSlug: drives[0]?.slug ?? null,
+          addressBookCount: addressBooks.length,
+          firstAddressBookSlug: addressBooks[0]?.slug ?? null,
         };
       }),
     );

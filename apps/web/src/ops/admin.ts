@@ -86,7 +86,7 @@ export async function removeMember(
     removed: true,
     memberId: member.userId,
     email: member.email,
-    note: "Their mailboxes, calendars and drives were detached from this workspace.",
+    note: "Their mailboxes, calendars, drives and address books were detached from this workspace.",
   };
 }
 

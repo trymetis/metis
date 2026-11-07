@@ -51,6 +51,7 @@ const CONNECTION_SECTIONS = new Set<InstanceSection>([
   "zoho",
   "imapServers",
   "caldavServers",
+  "carddavServers",
   "cloudflareServers",
   "resendServers",
   "s3Servers",

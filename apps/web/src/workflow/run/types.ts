@@ -1,5 +1,6 @@
 import "server-only";
 import type { ResolvedCalendar } from "@/calendar/aggregate";
+import type { ResolvedAddressBook } from "@/contacts/aggregate";
 import type { ResolvedDrive } from "@/drive/aggregate";
 import type { MailHandle } from "@/ops/values";
 import type { DraftPayload } from "@/types/mail";
@@ -48,6 +49,7 @@ export interface StepCtx {
   mailbox(mailboxId: string): Promise<MailHandle & { linkId: string | null }>;
   calendar(accountId: string): Promise<ResolvedCalendar>;
   drive(driveId: string): Promise<ResolvedDrive>;
+  addressBook(addressBookId: string): Promise<ResolvedAddressBook>;
   requireAi(resources: { kind: ResourceKind; id: string }[]): Promise<void>;
   putBlob(name: string, mimeType: string, data: Buffer): Promise<BlobRef>;
   getBlob(id: string): Promise<{ name: string; mimeType: string; data: Buffer }>;

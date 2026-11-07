@@ -3,6 +3,7 @@ import {
   Archive,
   ArchiveRestore,
   BellOff,
+  BookUser,
   Bot,
   BrainCircuit,
   CalendarCheck,
@@ -18,9 +19,9 @@ import {
   FileDown,
   FilePen,
   FilePlus,
+  Files,
   FileSearch,
   FileText,
-  Files,
   Filter,
   FolderInput,
   FolderPlus,
@@ -30,9 +31,9 @@ import {
   GitMerge,
   Hourglass,
   Inbox,
+  IterationCcw,
   ListChecks,
   ListTree,
-  type LucideIcon,
   MailCheck,
   MailOpen,
   MailPlus,
@@ -41,11 +42,10 @@ import {
   MessageCircleQuestion,
   MessagesSquare,
   OctagonX,
-  PenLine,
   Pencil,
+  PenLine,
   PhoneCall,
   Play,
-  IterationCcw,
   Repeat,
   Reply,
   Rows3,
@@ -64,15 +64,20 @@ import {
   TextQuote,
   Timer,
   Trash2,
+  TriangleAlert,
+  type LucideIcon,
   Undo2,
   UserCheck,
+  UserPen,
   UserPlus,
+  UserRound,
   UserRoundPlus,
+  UserSearch,
+  UserX,
   Variable,
   Webhook,
   Workflow,
   Wrench,
-  TriangleAlert,
 } from "lucide-react";
 
 import type { StepCategory, StepKey } from "@/workflow/steps";
@@ -165,6 +170,12 @@ export const STEP_ICONS: Record<StepKey, LucideIcon> = {
   "drive.rename": Pencil,
   "drive.copy": Copy,
   "drive.delete": Trash2,
+  "contacts.list": BookUser,
+  "contacts.search": UserSearch,
+  "contacts.get": UserRound,
+  "contacts.create": UserPlus,
+  "contacts.update": UserPen,
+  "contacts.delete": UserX,
   "system.cimdPrune": Wrench,
   "system.auditPrune": Wrench,
   "system.mailCachePrune": Wrench,
@@ -176,6 +187,7 @@ export const CATEGORY_BADGE: Record<StepCategory, string> = {
   mail: "bg-(--label-custom-blue-mark) text-white",
   calendar: "bg-(--label-custom-orange-mark) text-white",
   drive: "bg-(--label-custom-amber-mark) text-white",
+  contacts: "bg-(--label-custom-green-mark) text-white",
   logic: "bg-(--label-custom-purple-mark) text-white",
   flow: "bg-(--label-custom-navy-mark) text-white",
   ai: "bg-(--label-custom-teal-mark) text-white",
@@ -187,18 +199,20 @@ export const CATEGORY_COLOR: Record<StepCategory, string> = {
   mail: "var(--label-custom-blue-mark)",
   calendar: "var(--label-custom-orange-mark)",
   drive: "var(--label-custom-amber-mark)",
+  contacts: "var(--label-custom-green-mark)",
   logic: "var(--label-custom-purple-mark)",
   flow: "var(--label-custom-navy-mark)",
   ai: "var(--label-custom-teal-mark)",
   system: "var(--label-custom-gray-mark)",
 };
 
-export type PortTone = "mail" | "calendar" | "drive" | "value" | "any";
+export type PortTone = "mail" | "calendar" | "drive" | "contacts" | "value" | "any";
 
 export const PORT_HANDLE: Record<PortTone, string> = {
   mail: "!bg-(--label-custom-blue-mark)",
   calendar: "!bg-(--label-custom-orange-mark)",
   drive: "!bg-(--label-custom-amber-mark)",
+  contacts: "!bg-(--label-custom-green-mark)",
   value: "!bg-primary",
   any: "!bg-muted-foreground",
 };
@@ -219,6 +233,8 @@ export function portTone(type: ValueType | null): PortTone {
     case "folder":
     case "blob":
       return "drive";
+    case "contact":
+      return "contacts";
     case "json":
       return "any";
     default:

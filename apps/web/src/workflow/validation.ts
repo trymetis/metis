@@ -55,10 +55,18 @@ export interface ValidateOptions {
   workflows?: readonly { id: string; callable: boolean }[];
 }
 
+const RESOURCE_NOUN: Record<ResourceKind, string> = {
+  mailbox: "mailbox",
+  calendar: "calendar",
+  drive: "drive",
+  addressbook: "address book",
+};
+
 const RESOURCE_PARAM: Record<string, ResourceKind> = {
   mailbox: "mailbox",
   calendar: "calendar",
   drive: "drive",
+  addressbook: "addressbook",
 };
 
 export function nodeResources(node: GraphNode): { kind: ResourceKind; id: string }[] {
@@ -459,7 +467,7 @@ export function validateGraph(graph: WorkflowGraph, opts: ValidateOptions): Grap
         if (!opts.allowedResources[resource.kind].includes(resource.id)) {
           errors.push({
             nodeId: node.id,
-            message: `That ${resource.kind} is not in this workspace`,
+            message: `That ${RESOURCE_NOUN[resource.kind]} is not in this workspace`,
           });
         }
       }
@@ -474,7 +482,7 @@ export function validateGraph(graph: WorkflowGraph, opts: ValidateOptions): Grap
       if (feeding.some((resource) => !opts.aiResources?.[resource.kind].includes(resource.id))) {
         errors.push({
           nodeId: node.id,
-          message: "Turn AI on for every mailbox, calendar and drive this step reads",
+          message: "Turn AI on for every mailbox, calendar, drive and address book this step reads",
         });
       }
     }

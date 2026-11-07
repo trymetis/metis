@@ -7,6 +7,7 @@ export const STEP_CATEGORIES = [
   "mail",
   "calendar",
   "drive",
+  "contacts",
   "logic",
   "flow",
   "ai",
@@ -19,13 +20,14 @@ export const CATEGORY_LABELS: Record<StepCategory, string> = {
   mail: "Mail",
   calendar: "Calendar",
   drive: "Drive",
+  contacts: "Contacts",
   logic: "Logic",
   flow: "Waits and flow",
   ai: "AI",
   system: "Maintenance",
 };
 
-export const RESOURCE_KINDS = ["mailbox", "calendar", "drive"] as const;
+export const RESOURCE_KINDS = ["mailbox", "calendar", "drive", "addressbook"] as const;
 export type ResourceKind = (typeof RESOURCE_KINDS)[number];
 
 export type Effect = "read" | "write" | "dispatch";
@@ -41,6 +43,7 @@ export type ParamKind =
   | "mailbox"
   | "calendar"
   | "drive"
+  | "addressbook"
   | "mailFolder"
   | "driveFolder"
   | "label"
@@ -107,6 +110,7 @@ export interface CardContext {
   mailboxEmail(mailboxId: string): string | null;
   calendarName(accountId: string): string | null;
   driveName(driveId: string): string | null;
+  addressBookName(addressBookId: string): string | null;
   labelName(key: string): string;
   workflowName(workflowId: string): string | null;
   memberName(userId: string): string | null;
@@ -125,16 +129,8 @@ export interface CheckContext {
   node: GraphNode;
   scope: Scope;
   input: ValueType | null;
-  allowedResources?: {
-    mailbox: readonly string[];
-    calendar: readonly string[];
-    drive: readonly string[];
-  };
-  aiResources?: {
-    mailbox: readonly string[];
-    calendar: readonly string[];
-    drive: readonly string[];
-  };
+  allowedResources?: Record<ResourceKind, readonly string[]>;
+  aiResources?: Record<ResourceKind, readonly string[]>;
   allowDecisionSteps?: boolean;
   workflows?: readonly { id: string; callable: boolean }[];
   incoming(nodeId: string): string[];

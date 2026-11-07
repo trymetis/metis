@@ -2,12 +2,7 @@ import "server-only";
 import { createTool } from "@mastra/core/tools";
 
 import { requireMailbox, withToolErrors } from "@/mastra/toolkit/resolve";
-import {
-  attachmentTarget,
-  contactSearchFields,
-  messageTarget,
-  summarizeThreadFields,
-} from "@/mastra/toolkit/schema";
+import { attachmentTarget, messageTarget, summarizeThreadFields } from "@/mastra/toolkit/schema";
 import * as mail from "@/ops/mail";
 
 import { mcpScopeFromCall } from "../context";
@@ -38,20 +33,6 @@ export const getAttachmentText = createTool({
       const r = requireMailbox(ctx, mailboxId);
       if ("error" in r) return r;
       return mail.getAttachmentText(r.mailbox, id, attachmentId);
-    }),
-});
-
-export const searchContacts = createTool({
-  id: "searchContacts",
-  description:
-    "Look up people this mailbox writes to and hears from, most frequent first, by part of a name or address. Use it to find an address before drafting.",
-  inputSchema: inWorkspace(contactSearchFields),
-  execute: async ({ workspaceId, mailboxId, query, limit }, { requestContext }) =>
-    withToolErrors(async () => {
-      const ctx = await mcpScopeFromCall(requestContext, workspaceId);
-      const r = requireMailbox(ctx, mailboxId);
-      if ("error" in r) return r;
-      return mail.searchContacts(ctx.userId, r.mailbox, { query, limit });
     }),
 });
 

@@ -76,8 +76,8 @@ Everything is installed in `/opt/metis-suite`. Your settings go in `/opt/metis-s
 
     :::warning[Losing this key means reconnecting everything]
     Without the encryption key, the stored passwords and tokens cannot be
-    read. Every user would have to reconnect every mailbox, calendar and
-    drive. Keep a copy somewhere other than the server.
+    read. Every user would have to reconnect every mailbox, calendar,
+    drive and address book. Keep a copy somewhere other than the server.
     :::
 
   </Step>
@@ -130,7 +130,7 @@ Export any of these before you run the script:
 | `COMPOSE_URL`                                                   | A full URL to download the Compose file from instead.                                                                                           | The Compose file of the release the script installs |
 | `APP_IMAGE`, `PREFLIGHT_IMAGE`, `WORKER_IMAGE`, `UPDATER_IMAGE` | Use these exact images instead of a release.                                                                                                    |                                                     |
 
-Provider, AI, mail, background work, sign-up and legal variables can be exported too. The script copies each one you export into `.env`, and the instance uses it as the starting value for that setting. After the first start, you change those settings in the owner dashboard. See [How configuration works](/self-hosting/configure/how-configuration-works).
+Provider, AI, mail, background work, sign-up and legal variables can be exported too. Provider variables include every server list, such as `METIS_CALDAV_SERVERS` and `METIS_CARDDAV_SERVERS`. The script copies each one you export into `.env`, and the instance uses it as the starting value for that setting. After the first start, you change those settings in the owner dashboard. See [How configuration works](/self-hosting/configure/how-configuration-works).
 
 ## Use Turso instead of the bundled database
 

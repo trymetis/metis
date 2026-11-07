@@ -30,6 +30,7 @@ import {
 import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
 import { DrivePreview } from "@/components/drive-preview/drive-preview";
 import { downloadDriveFile } from "@/components/drive-preview/use-drive-preview";
+import { MemberPreview } from "@/components/members/member-preview";
 import { useWorkspaceSlug } from "@/hooks/use-workspace-path";
 import { orpc } from "@/lib/orpc";
 import { assistantPath } from "@/workspace/path";
@@ -133,9 +134,9 @@ export function AssistantChat({
                       Ask across your whole workspace
                     </h2>
                     <p className="mx-auto max-w-md text-muted-foreground text-sm">
-                      Read, search, summarize and act across every connected mailbox, calendar and
-                      drive in your workspace. Sends, deletes and other changes pause for your
-                      approval.
+                      Read, search, summarize and act across every connected mailbox, calendar,
+                      drive and address book in your workspace. Sends, deletes and other changes
+                      pause for your approval.
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center justify-center gap-2">
@@ -211,7 +212,16 @@ export function AssistantChat({
             </div>
           </div>
         </div>
-        {preview && (
+        {preview?.kind === "member" && (
+          <MemberPreview
+            key={preview.userId}
+            workspaceSlug={workspaceSlug}
+            userId={preview.userId}
+            label={preview.label}
+            onClose={closePreview}
+          />
+        )}
+        {preview?.kind === "file" && (
           <DrivePreview
             key={`${preview.entry.driveId}:${preview.entry.id}`}
             entry={preview.entry}

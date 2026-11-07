@@ -36,6 +36,14 @@ import {
   respondToEvent,
   updateEvent,
 } from "./tools/calendar";
+import {
+  createContact,
+  deleteContact,
+  getContact,
+  listAddressBooks,
+  searchContacts,
+  updateContact,
+} from "./tools/contacts";
 import { createDraft, deleteDraft, updateDraft } from "./tools/drafts";
 import {
   createFolder,
@@ -100,13 +108,7 @@ import {
   setLabel,
   setLabels,
 } from "./tools/labels";
-import {
-  getAttachmentText,
-  getRawEmail,
-  listAttachments,
-  searchContacts,
-  summarizeThread,
-} from "./tools/mail";
+import { getAttachmentText, getRawEmail, listAttachments, summarizeThread } from "./tools/mail";
 import {
   findMemberEvents,
   findMemberFiles,
@@ -232,6 +234,11 @@ const MCP_TOOLS = {
   deleteLabel,
   setLabels,
   searchContacts,
+  listAddressBooks,
+  getContact,
+  createContact,
+  updateContact,
+  deleteContact,
   deleteDraft,
   getRawEmail,
   summarizeThread,

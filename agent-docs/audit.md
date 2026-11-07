@@ -26,7 +26,7 @@ See also [AGENTS.md](../AGENTS.md), [workspaces.md](workspaces.md) (the data exp
 - **The log records security-relevant changes, never reads or mail content.**
   - Account: two-factor disabled, sign-in alerts turned off ([auth.md](auth.md)), account deleted.
   - MCP: a client added by hand, a CIMD client approved at consent, a disabled client re-enabled, a sensitive tool switched on (`sensitiveToolsTurnedOn` in `src/mcp/tools.ts`).
-  - Resources: a grant revoked (`connection.deleted`), a mailbox, calendar or drive deleted or detached from a workspace, for all three kinds alike.
+  - Resources: a grant revoked (`connection.deleted`), a mailbox, calendar, drive or address book deleted or detached from a workspace, for all four kinds alike.
   - Workspaces: role changes, ownership transfers, member removals, workspace invites sent and revoked, workspace deletion.
   - Sign-up invites sent and revoked.
   - Instance: an upgrade undone from Dashboard → Updates (`instance.upgrade_undone`), which discards every write since that upgrade ([updater.md](updater.md)).

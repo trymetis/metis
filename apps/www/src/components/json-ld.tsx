@@ -39,7 +39,7 @@ const organization: Organization = {
   name: ORG_NAME,
   legalName: ORG_LEGAL_NAME,
   alternateName: "AstraQ",
-  description: `${ORG_NAME} builds ${SITE_NAME}, an open-source email, calendar and drive client with an AI agent, workflows and MCP.`,
+  description: `${ORG_NAME} builds ${SITE_NAME}, an open-source email, calendar, drive and contacts client with an AI agent, workflows and MCP.`,
   url: SITE_URL,
   logo: {
     "@type": "ImageObject",
@@ -134,7 +134,8 @@ const softwareApplication: SoftwareApplication = {
     "Mail from Gmail, Outlook, Zoho Mail and IMAP in one list",
     "Google Calendar, Outlook, Zoho Calendar and CalDAV in one week view",
     "Google Drive, OneDrive, S3, WebDAV, FTP and SFTP in one explorer",
-    "One AI agent across mail, calendar and drive that asks before it acts",
+    "Google, Microsoft, Zoho and CardDAV contacts in one address book view",
+    "One AI agent across mail, calendar, drive and contacts that asks before it acts",
     "Visual workflows with schedules and run history",
     "An MCP server with the agent's tools for Claude, Cursor and other clients",
     "One search across mail, events, files and people",

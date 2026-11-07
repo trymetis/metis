@@ -35,11 +35,11 @@ export const PLANS: Plan[] = [
     ...paid(15, 150),
     note: "Your own instance of the suite, run by us.",
     features: [
-      "Mail, Calendar, Drive, Agent, Workflows and MCP",
+      "Mail, Calendar, Drive, Contacts, Agent, Workflows and MCP",
       "AI included every month, for the AI model and the decision model",
       "Or your own AI key: OpenAI, Anthropic or any compatible endpoint",
       "Your domain, or a metis-suite.app subdomain",
-      "Shared mailboxes, calendars and drives",
+      "Shared mailboxes, calendars, drives and address books",
       "Workspaces with their own branding",
     ],
     cta: { label: "Get started", href: CONSOLE_URL },
@@ -53,7 +53,7 @@ export const PLANS: Plan[] = [
     features: [
       "Everything in Personal, with the same monthly AI",
       "About 3x the server resources of Personal",
-      "Shared mailboxes, calendars and drives",
+      "Shared mailboxes, calendars, drives and address books",
       "Workspaces with their own branding",
       "Priority support",
     ],

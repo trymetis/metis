@@ -5,6 +5,7 @@ import { AI_USAGE_FEATURES } from "@/ai/usage-features";
 import { isTwoFactorCodeComplete } from "@/auth/two-factor-code";
 import { connectionCredentialsSchema } from "@/connections/credential-schema";
 import {
+  ADDRESS_BOOK_PROVIDERS,
   CALENDAR_PROVIDERS,
   CONNECTION_PROVIDERS,
   CONNECTION_RESOURCES,
@@ -66,6 +67,7 @@ export const connectionProviderSchema = z.enum(CONNECTION_PROVIDERS);
 export const mailProviderSchema = z.enum(MAIL_PROVIDERS);
 export const calendarProviderSchema = z.enum(CALENDAR_PROVIDERS);
 export const driveProviderSchema = z.enum(DRIVE_PROVIDERS);
+export const addressBookProviderSchema = z.enum(ADDRESS_BOOK_PROVIDERS);
 const connectServerNameSchema = z.string().nullable();
 export const mailFolderSchema = z.enum(MAIL_FOLDERS);
 
@@ -91,10 +93,15 @@ export const driveScopeSchema = workspaceScopeSchema.extend({
   driveSlug: z.string().min(1),
 });
 
+export const addressBookScopeSchema = workspaceScopeSchema.extend({
+  addressBookSlug: z.string().min(1),
+});
+
 export type WorkspaceScope = z.infer<typeof workspaceScopeSchema>;
 export type MailboxScope = z.infer<typeof mailboxScopeSchema>;
 export type CalendarScope = z.infer<typeof calendarScopeSchema>;
 export type DriveScope = z.infer<typeof driveScopeSchema>;
+export type AddressBookScope = z.infer<typeof addressBookScopeSchema>;
 
 export const attachmentSchema = z.object({
   id: z.string(),
@@ -472,6 +479,11 @@ export const dataExportSchema = z.object({
           visibleRootIds: z.array(z.string()),
         }),
       ),
+      addressBooks: z.array(
+        exportedResourceLinkSchema.extend({
+          visibleBookIds: z.array(z.string()),
+        }),
+      ),
     }),
   ),
   labels: z.array(
@@ -507,6 +519,7 @@ export const dataExportSchema = z.object({
       mailboxes: z.record(z.string(), z.string()),
       calendars: z.record(z.string(), z.string()),
       drives: z.record(z.string(), z.string()),
+      addressBooks: z.record(z.string(), z.string()),
       graph: z.custom<WorkflowGraph>(),
     }),
   ),
@@ -801,6 +814,231 @@ export const setCalendarVisibilityInputSchema = workspaceScopeSchema.extend({
 export const setCalendarVisibilityOutputSchema = z.object({
   linkId: z.string(),
   visibleCalendarIds: z.array(z.string()),
+});
+
+export const providerBookSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+  primary: z.boolean(),
+  readOnly: z.boolean(),
+});
+export const listProviderBooksOutputSchema = z.object({
+  books: z.array(providerBookSchema),
+});
+
+export const userAddressBookSchema = z.object({
+  addressBookId: z.string(),
+  provider: addressBookProviderSchema,
+  email: z.string(),
+  server: connectServerNameSchema,
+  image: z.string().nullable(),
+  workspaces: z.array(
+    z.object({
+      linkId: z.string(),
+      name: z.string(),
+      workspaceSlug: z.string(),
+      addressBookSlug: z.string(),
+      aiEnabled: z.boolean(),
+      policy: z.object({ ai: z.boolean() }),
+    }),
+  ),
+});
+export const listUserAddressBooksOutputSchema = z.object({
+  addressBooks: z.array(userAddressBookSchema),
+});
+
+export const setAddressBookPolicyInputSchema = z.object({
+  linkId: z.string().min(1),
+  aiEnabled: z.boolean(),
+  code: totpCodeSchema.optional(),
+});
+export const setAllAddressBookPolicyInputSchema = z.object({
+  addressBookId: z.string().min(1),
+  aiEnabled: z.boolean(),
+  code: totpCodeSchema.optional(),
+});
+export const addressBookIdInputSchema = z.object({
+  addressBookId: z.string().min(1),
+});
+export const detachAddressBookInputSchema = z.object({
+  linkId: z.string().min(1),
+});
+
+export const workspaceAddressBookSchema = z.object({
+  addressBookId: z.string(),
+  linkId: z.string(),
+  provider: addressBookProviderSchema,
+  email: z.string(),
+  server: connectServerNameSchema,
+  slug: z.string(),
+  image: z.string().nullable(),
+  ownedByMe: z.boolean(),
+  visibleBookIds: z.array(z.string()),
+  aiEnabled: z.boolean(),
+  policy: z.object({ ai: z.boolean() }),
+});
+export const listWorkspaceAddressBooksOutputSchema = z.object({
+  addressBooks: z.array(workspaceAddressBookSchema),
+  viewerRole: workspaceRoleSchema.nullable(),
+});
+
+export const attachableAddressBookSchema = z.object({
+  addressBookId: z.string(),
+  provider: addressBookProviderSchema,
+  email: z.string(),
+  server: connectServerNameSchema,
+  image: z.string().nullable(),
+});
+export const listAttachableAddressBooksOutputSchema = z.object({
+  addressBooks: z.array(attachableAddressBookSchema),
+});
+
+export const attachAddressBookInputSchema = workspaceScopeSchema.extend({
+  addressBookId: z.string().min(1),
+});
+export const attachAddressBookOutputSchema = z.object({
+  linkId: z.string(),
+  slug: z.string(),
+});
+export const workspaceAddressBookLinkInputSchema = workspaceScopeSchema.extend({
+  linkId: z.string().min(1),
+});
+export const setAddressBookVisibilityInputSchema = workspaceScopeSchema.extend({
+  linkId: z.string().min(1),
+  visibleBookIds: z.array(z.string()),
+});
+export const setAddressBookVisibilityOutputSchema = z.object({
+  linkId: z.string(),
+  visibleBookIds: z.array(z.string()),
+});
+
+export const contactValueSchema = z.object({
+  value: z.string(),
+  label: z.string().optional(),
+  primary: z.boolean().optional(),
+});
+export const contactAddressSchema = z.object({
+  street: z.string().optional(),
+  city: z.string().optional(),
+  region: z.string().optional(),
+  postalCode: z.string().optional(),
+  country: z.string().optional(),
+  label: z.string().optional(),
+});
+export const contactNameSchema = z.object({
+  display: z.string(),
+  given: z.string().optional(),
+  middle: z.string().optional(),
+  family: z.string().optional(),
+  prefix: z.string().optional(),
+  suffix: z.string().optional(),
+});
+export const contactFieldsSchema = z.object({
+  name: contactNameSchema,
+  nickname: z.string().optional(),
+  emails: z.array(contactValueSchema),
+  phones: z.array(contactValueSchema),
+  addresses: z.array(contactAddressSchema),
+  organization: z.string().optional(),
+  department: z.string().optional(),
+  title: z.string().optional(),
+  birthday: z.string().optional(),
+  urls: z.array(contactValueSchema),
+  notes: z.string().optional(),
+  groupIds: z.array(z.string()),
+});
+export const contactSchema = contactFieldsSchema.extend({
+  id: z.string(),
+  bookId: z.string(),
+  bookName: z.string().optional(),
+  etag: z.string().optional(),
+  photoUrl: z.string().optional(),
+  updatedAt: z.string().optional(),
+  accountId: z.string().optional(),
+  accountSlug: z.string().optional(),
+  accountEmail: z.string().optional(),
+  accountName: z.string().optional(),
+});
+export const contactDraftSchema = contactFieldsSchema.extend({
+  name: contactNameSchema.extend({ display: z.string().trim().max(500) }),
+  emails: z.array(contactValueSchema).max(20),
+  phones: z.array(contactValueSchema).max(20),
+  addresses: z.array(contactAddressSchema).max(10),
+  urls: z.array(contactValueSchema).max(20),
+  notes: z.string().max(10_000).optional(),
+  groupIds: z.array(z.string()).max(50),
+});
+export const contactGroupSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  bookId: z.string(),
+  accountId: z.string().optional(),
+});
+
+export const addressBookSourceErrorSchema = z.object({
+  accountId: z.string(),
+  accountEmail: z.string(),
+  accountName: z.string().optional(),
+  error: z.string(),
+});
+
+export const sessionBookSchema = providerBookSchema.extend({
+  accountId: z.string(),
+  accountSlug: z.string(),
+  accountEmail: z.string(),
+  provider: addressBookProviderSchema,
+  visible: z.boolean(),
+});
+export const listSessionBooksOutputSchema = z.object({
+  books: z.array(sessionBookSchema),
+  groups: z.array(contactGroupSchema),
+  errors: z.array(addressBookSourceErrorSchema).optional(),
+});
+
+export const listContactsInputSchema = addressBookScopeSchema.extend({
+  accountId: z.string().optional(),
+  bookIds: z.array(z.string()).optional(),
+  groupId: z.string().optional(),
+  query: z.string().max(200).optional(),
+  max: z.number().int().min(1).max(5000).optional(),
+});
+export const listContactsOutputSchema = z.object({
+  contacts: z.array(contactSchema),
+  errors: z.array(addressBookSourceErrorSchema).optional(),
+});
+export const contactRefInputSchema = addressBookScopeSchema.extend({
+  accountId: z.string().optional(),
+  bookId: z.string().min(1),
+  contactId: z.string().min(1),
+});
+export const createContactInputSchema = addressBookScopeSchema.extend({
+  accountId: z.string().optional(),
+  bookId: z.string().min(1),
+  contact: contactDraftSchema,
+});
+export const createContactOutputSchema = z.object({
+  id: z.string(),
+  bookId: z.string(),
+  accountId: z.string(),
+  addressBookSlug: z.string(),
+});
+export const updateContactInputSchema = contactRefInputSchema.extend({
+  contact: contactDraftSchema,
+});
+export const lookupContactsInputSchema = workspaceScopeSchema.extend({
+  emails: z.array(z.string().trim().toLowerCase().max(320)).min(1).max(200),
+});
+export const contactMatchSchema = z.object({
+  email: z.string(),
+  name: z.string(),
+  addressBookSlug: z.string(),
+  accountId: z.string(),
+  bookId: z.string(),
+  contactId: z.string(),
+});
+export const lookupContactsOutputSchema = z.object({
+  matches: z.array(contactMatchSchema),
 });
 
 export const attendeeResponseSchema = z.enum(ATTENDEE_RESPONSES);
@@ -1197,6 +1435,8 @@ export const listWorkspacesOutputSchema = z.object({
       firstCalendarSlug: z.string().nullable(),
       driveCount: z.number(),
       firstDriveSlug: z.string().nullable(),
+      addressBookCount: z.number(),
+      firstAddressBookSlug: z.string().nullable(),
     }),
   ),
 });
@@ -1327,6 +1567,7 @@ export const dashboardStatsOutputSchema = z.object({
   mailboxes: z.number(),
   calendars: z.number(),
   drives: z.number(),
+  addressBooks: z.number(),
 });
 
 export const dashboardUsageRangeSchema = z.enum(["7d", "30d", "90d"]);
@@ -1406,6 +1647,7 @@ export const dashboardProviderCountSchema = z.object({
   mailboxes: z.number(),
   calendars: z.number(),
   drives: z.number(),
+  addressBooks: z.number(),
 });
 
 export const dashboardQuarantinedConnectionSchema = z.object({
@@ -1447,6 +1689,7 @@ export const dashboardWorkspaceRowSchema = z.object({
   mailboxes: z.number(),
   calendars: z.number(),
   drives: z.number(),
+  addressBooks: z.number(),
   createdAt: z.string(),
 });
 
@@ -2101,6 +2344,11 @@ export const calendarChatInputSchema = calendarScopeSchema.extend({
   trigger: chatTriggerSchema.optional(),
 });
 
+export const contactsChatInputSchema = addressBookScopeSchema.extend({
+  messages: z.array(z.any()).default([]),
+  trigger: chatTriggerSchema.optional(),
+});
+
 export const driveChatInputSchema = driveScopeSchema.extend({
   messages: z.array(z.any()).default([]),
   trigger: chatTriggerSchema.optional(),
@@ -2443,6 +2691,7 @@ export const workflowDirectorySchema = z.object({
   mailboxes: z.array(workflowDirectoryEntrySchema),
   calendars: z.array(workflowDirectoryEntrySchema),
   drives: z.array(workflowDirectoryEntrySchema),
+  addressBooks: z.array(workflowDirectoryEntrySchema),
   members: z.array(z.object({ userId: z.string(), name: z.string(), email: z.string() })),
 });
 
@@ -3150,6 +3399,17 @@ export const localSearchHitSchema = z.discriminatedUnion("kind", [
     ...localHitBase,
     email: z.string(),
     name: z.string().optional(),
+    phone: z.string().optional(),
+    organization: z.string().optional(),
+    bookName: z.string().optional(),
+    saved: z
+      .object({
+        addressBookSlug: z.string(),
+        accountId: z.string(),
+        bookId: z.string(),
+        contactId: z.string(),
+      })
+      .optional(),
   }),
   z.object({
     kind: z.literal("workflow"),
@@ -3198,6 +3458,18 @@ export const localSearchHitSchema = z.discriminatedUnion("kind", [
     provider: driveProviderSchema,
     server: z.string().nullable(),
     ai: z.boolean(),
+  }),
+  z.object({
+    kind: z.literal("addressbook"),
+    ...localHitBase,
+    addressBookId: z.string(),
+    linkId: z.string(),
+    slug: z.string(),
+    email: z.string(),
+    provider: addressBookProviderSchema,
+    server: z.string().nullable(),
+    ai: z.boolean(),
+    bookId: z.string().nullable(),
   }),
   z.object({
     kind: z.literal("mail-folder"),
@@ -3376,6 +3648,17 @@ export type ListEventsOutput = z.infer<typeof listEventsOutputSchema>;
 export type CalendarEventDto = z.infer<typeof calendarEventSchema>;
 export type CalendarSourceErrorDto = z.infer<typeof calendarSourceErrorSchema>;
 export type ProviderCalendarDto = z.infer<typeof providerCalendarSchema>;
+export type ProviderBook = z.infer<typeof providerBookSchema>;
+export type UserAddressBook = z.infer<typeof userAddressBookSchema>;
+export type WorkspaceAddressBook = z.infer<typeof workspaceAddressBookSchema>;
+export type ListWorkspaceAddressBooksOutput = z.infer<typeof listWorkspaceAddressBooksOutputSchema>;
+export type AttachableAddressBook = z.infer<typeof attachableAddressBookSchema>;
+export type SessionBook = z.infer<typeof sessionBookSchema>;
+export type ContactDto = z.infer<typeof contactSchema>;
+export type ContactDraft = z.infer<typeof contactDraftSchema>;
+export type ContactGroupDto = z.infer<typeof contactGroupSchema>;
+export type AddressBookSourceErrorDto = z.infer<typeof addressBookSourceErrorSchema>;
+export type ContactMatch = z.infer<typeof contactMatchSchema>;
 export type WorkspaceSummary = z.infer<typeof workspaceSummarySchema>;
 export type WorkspaceMember = z.infer<typeof memberSchema>;
 export type PendingInvite = z.infer<typeof pendingInviteSchema>;

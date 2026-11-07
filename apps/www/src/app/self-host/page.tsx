@@ -23,7 +23,7 @@ export default function SelfHostPage() {
       <PageJsonLd path="/self-host" />
       <Exhibit
         model="server"
-        headline="Self-host Metis Suite, the open-source email, calendar and drive client, with Docker Compose"
+        headline="Self-host Metis Suite, the open-source email, calendar, drive and contacts client, with Docker Compose"
         poses={POSES}
         actions={
           <>

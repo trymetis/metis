@@ -10,7 +10,7 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [mcp.md](
 | Agent registry + storage                  | `src/mastra/index.ts` → `mastra` · `src/mastra/storage.ts` → `storage` (`@mastra/libsql` on `MASTRA_DATABASE_URL`)                                                                                                                                                                                       |
 | The agents                                | `src/mastra/agents/`                                                                                                                                                                                                                                                                                     |
 | Chat routes                               | `src/app/api/ai/*/route.ts` (parse, session, rate limit) → `src/mastra/chat-streams.ts` → `stream*Chat` (`handleChatStream`, usage) · new assistant threads `src/mastra/memory.ts` → `createAssistantThread`                                                                                             |
-| Every tool body                           | `src/ops/`, one file per domain; `account.ts` and `instance.ts` hold the MCP-only bodies; `ops/values.ts` holds the typed mail, calendar and drive values workflow steps share; `ops/output.ts` → `Output`, `orFailure`                                                                                  |
+| Every tool body                           | `src/ops/`, one file per domain; `account.ts` and `instance.ts` hold the MCP-only bodies; `ops/values.ts` holds the typed mail, calendar, drive and contact values workflow steps share; `ops/output.ts` → `Output`, `orFailure`                                                                         |
 | Tool roster and shared args               | `src/mastra/toolkit/keys.ts` → `TOOL_KEYS`, `MCP_ONLY_TOOL_KEYS`, `READ_TOOL_KEYS`, `WRITE_TOOL_KEYS`, `isReadTool` · `src/mastra/toolkit/schema.ts` → `folderEnum` · `src/mastra/toolkit/resolve.ts` → `withToolErrors`, `ToolRefusal`                                                                  |
 | Agent tool surfaces                       | `src/mastra/tools/`: one roster per page agent (`mailboxTools()` per request) · `workspace-tools.ts` → `workspaceResidentTools`, `workspaceSearchableTools`, `RESIDENT_TOOL_KEYS`, built from the `workspace-*-tools.ts` files                                                                           |
 | MCP tool surface                          | `src/mastra/mcp/tools/` · `src/mastra/mcp/server.ts` · manifest `src/mcp/tools.ts` ([mcp.md](mcp.md))                                                                                                                                                                                                    |
@@ -31,7 +31,7 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [mcp.md](
 
 - **AI is one concept behind one switch.** Decision models count as AI exactly as the LLM does.
   - The workspace and per-resource AI switches gate every AI call, LLM and decision alike, through one check (`workspaceAllowsAi` plus the resource's `aiEnabled`, [workspaces.md](workspaces.md)).
-  - Mailboxes, calendars and drives use the same check.
+  - Mailboxes, calendars, drives and address books use the same check.
 - **Everything that depends on a database-backed setting is resolved per request** ([configuration.md](configuration.md)).
   - Every agent's `model` is a function (`() => getLlm().chat`, Mastra's `DynamicArgument`), and so are the mailbox agent's `tools` and both chat agents' phishing line in `instructions`.
   - The workspace agent picks one of four prebuilt `ToolSearchProcessor`s per request (`workspaceToolSearch()`): with and without `analyzePhishing`, each with and without the decision steps; filtering one would change the search index and with it the recorded prompts.
@@ -67,12 +67,12 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [mcp.md](
 - **`MCP_ONLY_TOOL_KEYS` stay out of the workspace agent**, so it can neither see nor search them: workspace navigation, account tools and owner tools.
 - **The map key is the model-facing tool name** (not `createTool({ id })`), so one roster forces one vocabulary.
 - **Every tool key is a read or a write, never both, and the build checks it.** `READ_TOOL_KEYS` and `WRITE_TOOL_KEYS` partition `ToolKey`; `TOOL_PARTITION_IS_COMPLETE` refuses `true` while a key is missing or on both sides. A new tool is a write until it is listed as a read.
-- **Never rename a tool key.** MCP names are on the wire to external clients and are the JSON keys inside `mcp_client.capabilities.tools`, so a rename strands stored prefs.
+- **Never rename a tool key.** `searchContacts` kept its key when it moved from mail history to saved contacts (`src/ops/contacts.ts`): it takes no `mailboxId` and searches the visible books of AI-enabled address books. MCP names are on the wire to external clients and are the JSON keys inside `mcp_client.capabilities.tools`, so a rename strands stored prefs.
 - **The AI's own guards are human-only, and no tool lists hidden resources.** AI switches, calendar visibility, drive roots, sharing, detaching, joining a workspace, MCP client settings, member roles, workspace invites and anything behind TOTP have no tool.
 
 ### Agents and scope
 
-- **The workspace agent is scoped across every connected mailbox, calendar and drive in the workspace, and carries the whole tool roster**; its gate, shell and prompt say so too.
+- **The workspace agent is scoped across every connected mailbox, calendar, drive and address book in the workspace, and carries the whole tool roster**; its gate, shell and prompt say so too.
   - `analyzePhishing` drops out when `phishingDetectionEnabled()` is false and `previewDecision` when `decisionEnabled("workflowNode")` is false, on the workspace agent and on MCP alike.
 - **The workspace agent's tool list stays byte-identical for identical turns.** `ToolSearchProcessor` appends loaded tools in an order that varies between runs, so `sortedTools` runs after it and sorts by name; prompt caching and the e2e replay depend on it.
 - **Assistant threads are personal.** `resourceId` is the user id and `metadata.workspaceId` the workspace; `ownsThread` checks both in every `assistant.*` procedure and in the chat route before it streams.
@@ -102,7 +102,7 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [mcp.md](
 ### Approval
 
 - **Approval gates every write that cannot be quietly undone.** The `requireApproval` flags in `src/mastra/tools/` are the list.
-  - Workspace-agent writes that send, retry a send, cancel, delete, unsubscribe or change the workspace take it, as does every workflow, calendar and drive write.
+  - Workspace-agent writes that send, retry a send, cancel, delete, unsubscribe or change the workspace take it, as does every workflow, calendar, drive and contact write.
   - Reversible personal writes run without it: snooze, mute, read later, labels, `archiveEmail`.
 - **Every approval-gated tool takes a `summary` and has its own label and approval text in `agent-tool-call.tsx`.**
 
@@ -123,6 +123,7 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [mcp.md](
 - **The chat agents.**
   - `mailboxAgent`: stateless chat at `/api/ai/chat`, scoped to the active mailbox. Each turn carries a `MailTurnEnvelope` (the open folder and the emails in view) and the label directory (`mailboxLabelDirectory`). It keeps its own narrow roster and `MailboxCtx`, which is structurally an `AgentMailbox`, so toolkit bodies take it directly.
   - `calendarAgent`: stateless chat at `/api/ai/calendar-chat`. `CalendarCtx` carries only the calendar session's accounts; writes go through `assertWritable`, so a hidden calendar is unreachable.
+  - `contactsAgent`: stateless chat at `/api/ai/contacts-chat`. `ContactsCtx` carries only the address-book session's accounts with AI on; reads and writes go through `src/contacts/aggregate.ts`, so a hidden book is unreachable. Each turn carries a `ContactsTurnEnvelope` with the attached contacts.
   - `driveAgent`: stateless chat at `/api/ai/drive-chat`. `DriveCtx` carries only the drive session's drives and its roster (`drive-tools.ts`) uses the workspace agent's toolkit bodies; `DriveCtx.surface` is the page's surface ([drive.md](drive.md)).
   - `workspaceAgent`: persistent chat at `/api/ai/workspace-chat` with `@mastra/memory`, rendered at `/w/[slug]/assistant`.
 - **The other agents** return JSON in a requested schema: `drafterAgent` (reply drafts in `src/server/routes/ai.ts`, smart replies in `src/mail/smart-replies.ts`), `summarizerAgent` and `classifierAgent` ([mail-ai.md](mail-ai.md)).
@@ -132,16 +133,16 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [mcp.md](
   - Each chat route validates the posted messages with `parseUIMessages` (`src/ai/messages.ts`, the AI SDK's `safeValidateUIMessages`) and answers 400 when they do not validate; stored threads read back through it too.
 - **Resident vs searchable tools.** Only `RESIDENT_TOOL_KEYS` are always loaded; the rest load through `workspaceToolSearch` (Mastra's `ToolSearchProcessor`). The workspace agent's instructions name only the resident tools and the capability areas.
 - **Cross-drive search.** `searchFiles` without a `driveId` searches every drive (`searchAcross`), like `searchMail`.
-- **The workspace scope is one builder for two callers.** `resolveWorkspaceScope(session, actor)` checks `workspaceAllowsAi`, loads mailboxes, calendars and drives (all `aiEnabled`-filtered) and a lazy members loader, and returns the `WorkspaceCtx` both the assistant and MCP run on.
+- **The workspace scope is one builder for two callers.** `resolveWorkspaceScope(session, actor)` checks `workspaceAllowsAi`, loads mailboxes, calendars, drives and address books (all `aiEnabled`-filtered) and a lazy members loader, and returns the `WorkspaceCtx` both the assistant and MCP run on.
   - `actor` is `{kind:"session", headers}`, `{kind:"mcp", clientId}` or `{kind:"workflow", runId}`: the only difference, and the only reason an operation may know which surface called it.
 - **Inline references.** The assistant's composer is a TipTap editor whose atom nodes `renderText` to `<@type:id>`, so `editor.getText()` is the wire format.
-  - Multi-part ids are packed `a|b|c`; `<@file:driveId|fileId>` resolves through that one drive's surface, so root visibility applies.
+  - Multi-part ids are packed `a|b|c`; `<@file:driveId|fileId>` resolves through that one drive's surface, so root visibility applies, and `<@addressbook:addressBookId|bookId>` and `<@contact:addressBookId|bookId|contactId>` resolve only in a visible book.
   - `referenceLegend` turns the tokens into a system block naming exact tool arguments; an unresolvable id is listed UNRESOLVED and degrades to literal text in the transcript.
-  - Chips also open things in the UI: a `<@member:id>` chip opens the member's profile, and the search dialog's "Ask the assistant" prefills a new chat with a chip ([search.md](search.md)).
+  - Chips also open things in the UI: a `<@member:id>` chip opens a view-only member panel beside the assistant chat (`MemberPreview`), a `<@contact:…>` chip opens the contact in the Contacts section, an `<@addressbook:…>` chip opens nothing, and the search dialog's "Ask the assistant" prefills a new chat with a chip ([search.md](search.md)).
 - **Approval flow.** A gated tool emits `approval-requested` with `approval.id = "${runId}::${toolCallId}"`. The client's `sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses` resubmits once every approval is answered, and `handleChatStream` resumes the run through `agent.resumeStream`.
 
 ## Deliberate limits
 
 - **No `uploadFile` or `shareFile` tool**: an upload tool would push bytes through the server, and a public-link primitive is a one-call exfiltration of a whole drive.
 - **No tool for credentials or sessions, for resolving an unconfirmed send ([workflow-runs.md](workflow-runs.md)), for smart replies (the model writes its own replies), or for the workspace logo (an image upload).**
-- **The mailbox, calendar and drive agents are stateless**: the client sends the conversation each turn.
+- **The mailbox, calendar, drive and contacts agents are stateless**: the client sends the conversation each turn.

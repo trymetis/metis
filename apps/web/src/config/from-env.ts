@@ -55,6 +55,7 @@ export function connectionsConfigFromEnv(e: Env): Record<string, unknown> {
     zohoRegion: e.ZOHO_REGION,
     imapServers: e.METIS_IMAP_SERVERS,
     caldavServers: e.METIS_CALDAV_SERVERS,
+    carddavServers: e.METIS_CARDDAV_SERVERS,
     cloudflareServers: e.METIS_CLOUDFLARE_SERVERS,
     resendServers: e.METIS_RESEND_SERVERS,
     s3Servers: e.METIS_S3_SERVERS,

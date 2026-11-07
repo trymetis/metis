@@ -74,7 +74,7 @@ function Spinner() {
 const WITHHELD = [
   "Your password, or any way to sign in as you",
   "Workspaces you hide from it, and any workspace with AI turned off",
-  "Mailboxes, calendars and drives that have AI turned off",
+  "Mailboxes, calendars, drives and address books that have AI turned off",
   "Permission to change your AI settings or this app's own access",
 ];
 
@@ -226,7 +226,7 @@ export function ConsentInner() {
             {name}
           </h1>
           <p className="mt-1 text-[13px] text-faint">
-            wants access to your mail, calendars and drives
+            wants access to your mail, calendars, drives and contacts
           </p>
 
           {preset && <p className="mt-3 text-[12px] text-faint">{preset.label}</p>}
@@ -278,7 +278,7 @@ export function ConsentInner() {
                     <p className="text-[13px] leading-tight text-foreground">
                       {reachable.length === 0
                         ? "Reach no workspace yet — none is turned on for it"
-                        : `Reach mailboxes, calendars and drives with AI turned on in ${reachable.length} ${reachable.length === 1 ? "workspace" : "workspaces"}`}
+                        : `Reach mailboxes, calendars, drives and address books with AI turned on in ${reachable.length} ${reachable.length === 1 ? "workspace" : "workspaces"}`}
                     </p>
                     {reachable.length > 0 && (
                       <p className="mt-0.5 text-[12px] text-faint">

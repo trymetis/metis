@@ -205,3 +205,29 @@ test("only admins read workspace activity and only the owner reads the instance 
     );
   }
 });
+
+test("an address book detach is recorded and found by searching for address book", async () => {
+  const { rpc } = await ana();
+  const created = await rpc<{ slug: string }>("workspaces.create", { name: uniqueName() });
+  const ws = { workspaceSlug: created.slug };
+  try {
+    const { addressBooks } = await rpc<{
+      addressBooks: { addressBookId: string; provider: string }[];
+    }>("workspaceAddressBooks.attachable", ws);
+    const book = addressBooks.find((b) => b.provider === "carddav");
+    expect(book).toBeDefined();
+    await rpc("workspaceAddressBooks.attach", { ...ws, addressBookId: book?.addressBookId });
+    const listed = await rpc<{ addressBooks: { linkId: string }[] }>(
+      "workspaceAddressBooks.list",
+      ws,
+    );
+    await rpc("workspaceAddressBooks.detach", { ...ws, linkId: listed.addressBooks[0]?.linkId });
+
+    const found = await rpc<AuditPage>("audit.workspace", { ...ws, q: "address book detached" });
+    expect(found.events).toContainEqual(
+      expect.objectContaining({ action: "resource.detached", resourceKind: "addressbook" }),
+    );
+  } finally {
+    await rpc("workspaces.delete", { ...ws, code: await harness.totp() });
+  }
+});

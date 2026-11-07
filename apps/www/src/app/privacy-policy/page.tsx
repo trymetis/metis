@@ -9,14 +9,14 @@ export default function PrivacyPage() {
     <LegalLayout
       path="/privacy-policy"
       title="Privacy Policy"
-      lastUpdated="November 3, 2026"
-      intro={`${SITE_NAME} lets you connect accounts you already have (mail, calendars and drives from Google, Microsoft and Zoho, and IMAP, CalDAV, S3, WebDAV, FTP and SFTP servers) and work with them in one suite, with optional AI features. This policy explains what data we collect, how we use it, who we share it with, and the choices you have. It applies to ${SITE_NAME} as we run it on Metis Cloud: the web application, the desktop and Android apps, the MCP server, and their associated APIs. ${SITE_NAME} is also open-source software that anyone can run on their own server; on a self-hosted instance, the person or organization running it decides how your data is handled and is responsible for it, and this policy does not apply.`}
+      lastUpdated="November 6, 2026"
+      intro={`${SITE_NAME} lets you connect accounts you already have (mail, calendars, drives and contacts from Google, Microsoft and Zoho, and IMAP, CalDAV, CardDAV, S3, WebDAV, FTP and SFTP servers) and work with them in one suite, with optional AI features. This policy explains what data we collect, how we use it, who we share it with, and the choices you have. It applies to ${SITE_NAME} as we run it on Metis Cloud: the web application, the desktop and Android apps, the MCP server, and their associated APIs. ${SITE_NAME} is also open-source software that anyone can run on their own server; on a self-hosted instance, the person or organization running it decides how your data is handled and is responsible for it, and this policy does not apply.`}
     >
       <h2>1. Who we are</h2>
       <p>
-        {SITE_NAME} (the &quot;Service&quot;) is a suite for mail, calendars and drives operated by{" "}
-        <strong>{ORG_NAME}</strong> (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;), {ORG_ADDRESS}
-        . You can reach us at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+        {SITE_NAME} (the &quot;Service&quot;) is a suite for mail, calendars, drives and contacts
+        operated by <strong>{ORG_NAME}</strong> (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;),{" "}
+        {ORG_ADDRESS}. You can reach us at <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
       </p>
 
       <h2>2. Information we collect</h2>
@@ -48,7 +48,7 @@ export default function PrivacyPage() {
         <li>
           OAuth access and refresh tokens for each account you connect (Google, Microsoft, or Zoho),
           together with the account email address and provider, and the login details for each IMAP,
-          CalDAV, S3, WebDAV, FTP or SFTP server you connect.
+          CalDAV, CardDAV, S3, WebDAV, FTP or SFTP server you connect.
         </li>
         <li>
           Email data fetched from your provider on your behalf: message headers, bodies,
@@ -61,6 +61,10 @@ export default function PrivacyPage() {
         <li>
           Drive data fetched on your behalf: file and folder listings, and file contents when you
           preview, download, or upload a file or save an attachment to a drive.
+        </li>
+        <li>
+          Contacts data fetched on your behalf: address books, contact groups, and the contacts in
+          the address books you show in a workspace.
         </li>
         <li>
           Records you create in the Service: workflows and their run history, custom labels,
@@ -99,7 +103,8 @@ export default function PrivacyPage() {
       <h2>3. Google user data</h2>
       <p>
         When you connect a Google account, {SITE_NAME} requests the scopes for the parts you connect
-        (mail, calendar, drive, or any combination) from the following Google OAuth scopes:
+        (mail, calendar, drive, contacts, or any combination) from the following Google OAuth
+        scopes:
       </p>
       <ul>
         <li>
@@ -127,6 +132,11 @@ export default function PrivacyPage() {
           <strong>drive</strong> — to browse, search, and preview your files, upload files and save
           email attachments where you choose, create folders, and rename, move, or delete files when
           you (or an action you explicitly approved) do so.
+        </li>
+        <li>
+          <strong>contacts</strong> — to list your contacts and contact groups, look up the senders
+          and recipients you see in mail, and create, edit, or delete contacts when you (or an
+          action you explicitly approved) do so.
         </li>
       </ul>
       <p>
@@ -192,6 +202,9 @@ export default function PrivacyPage() {
         <li>
           <strong>Files.ReadWrite</strong> — to browse, preview, and manage your OneDrive files.
         </li>
+        <li>
+          <strong>Contacts.ReadWrite</strong> — to show and manage your Outlook contacts.
+        </li>
       </ul>
       <p>
         Microsoft offers no way for an app to give back its access. When you disconnect a Microsoft
@@ -205,29 +218,31 @@ export default function PrivacyPage() {
         <strong>ZohoMail.messages.ALL</strong>, <strong>ZohoMail.folders.ALL</strong>, and{" "}
         <strong>ZohoMail.accounts.READ</strong> for mail, and{" "}
         <strong>ZohoCalendar.calendar.ALL</strong> and <strong>ZohoCalendar.event.ALL</strong> for
-        calendars. When you disconnect a Zoho account, we ask Zoho to revoke the grant.
+        calendars, and <strong>ZohoContacts.contactapi.ALL</strong> for contacts. When you
+        disconnect a Zoho account, we ask Zoho to revoke the grant.
       </p>
 
       <h2>5. How we use your data</h2>
       <ul>
         <li>
-          <strong>Core mail, calendar, and drive features</strong> — displaying your folders,
-          messages, and threads; sending, replying, and forwarding; drafts; attachments; labels;
-          archive, trash, star, and read-state changes; snooze and scheduled send; showing,
-          creating, and editing events; browsing, previewing, and managing files; search across
-          mail, events, and files; and the workflows you configure.
+          <strong>Core mail, calendar, drive, and contacts features</strong> — displaying your
+          folders, messages, and threads; sending, replying, and forwarding; drafts; attachments;
+          labels; archive, trash, star, and read-state changes; snooze and scheduled send; showing,
+          creating, and editing events; browsing, previewing, and managing files; showing, creating,
+          editing, and deleting contacts, and saving people from your mail; recipient suggestions;
+          search across mail, events, files, and contacts; and the workflows you configure.
         </li>
         <li>
           <strong>AI features you turn on</strong> — automatic message classification into labels,
           smart reply suggestions, thread summaries, workflow questions, and the AI agent, which can
-          read and act on your mail, calendars, and drives only within the tools and approvals you
-          grant it in the chat interface. Sending, deleting, and calendar, drive, or workflow
-          changes require your explicit in-chat approval.
+          read and act on your mail, calendars, drives, and contacts only within the tools and
+          approvals you grant it in the chat interface. Sending, deleting, and calendar, drive,
+          contact, or workflow changes require your explicit in-chat approval.
         </li>
         <li>
           <strong>Service operation</strong> — authentication, two-factor verification, workspace
-          management and sharing of mailboxes, calendars, and drives, rate limiting, abuse
-          prevention, and debugging.
+          management and sharing of mailboxes, calendars, drives, and address books, rate limiting,
+          abuse prevention, and debugging.
         </li>
         <li>
           <strong>Transactional email</strong> — sign-in links, verification emails, password
@@ -243,8 +258,8 @@ export default function PrivacyPage() {
       <ul>
         <li>
           <strong>To provide the Service you signed up for</strong> (performance of a contract):
-          your account, connected accounts, core mail, calendar, and drive features, workflows,
-          transactional email, and billing.
+          your account, connected accounts, core mail, calendar, drive, and contacts features,
+          workflows, transactional email, and billing.
         </li>
         <li>
           <strong>Your consent</strong>: the AI features, phishing detection, and MCP clients you
@@ -276,6 +291,11 @@ export default function PrivacyPage() {
           bodies of messages you open or that the features you use require (for example thread
           summaries and smart replies), along with their analysis results, keyed to your account. We
           do not maintain a full copy of your mailbox.
+        </li>
+        <li>
+          <strong>Contacts cache</strong> — the list of address books a workspace shows, and the
+          names and email addresses of the contacts in them, are cached for about a minute so mail
+          and search can show who is already saved. We do not keep a copy of your address books.
         </li>
         <li>
           <strong>Derived records</strong> — labels assigned to messages, thread summaries,
@@ -329,8 +349,8 @@ export default function PrivacyPage() {
       <ul>
         <li>
           <strong>Your providers</strong> (Google, Microsoft, Zoho, and the servers you connect) —
-          every mail, calendar, and drive action you take is executed against your provider&apos;s
-          API or server.
+          every mail, calendar, drive, and contacts action you take is executed against your
+          provider&apos;s API or server.
         </li>
         <li>
           <strong>Infrastructure hosting</strong> (Hetzner) — dedicated servers in Helsinki,
@@ -368,11 +388,12 @@ export default function PrivacyPage() {
         <li>
           <strong>AI model providers your instance owner chooses</strong> — the owner can use their
           own provider&apos;s key instead of the included AI. When an AI feature you turned on runs,
-          the messages, events, or files it requires are sent to that provider, under the
+          the messages, events, files, or contacts it requires are sent to that provider, under the
           owner&apos;s agreement with it, solely to generate that response.
         </li>
         <li>
-          AI features never send your whole mailbox, calendar, or drive, whichever model they use.
+          AI features never send your whole mailbox, calendar, drive, or address book, whichever
+          model they use.
         </li>
         <li>
           <strong>Phishing detection</strong> (operated by {ORG_NAME}) — when phishing detection is
@@ -383,15 +404,15 @@ export default function PrivacyPage() {
       </ul>
       <p>
         If you connect an MCP client, the external AI client you authorize via OAuth can access your
-        mail, calendars, and drives in the workspaces and through the tools you permit. Tools that
-        send, delete, or change things, such as sending or deleting email and creating or running
-        workflows, stay off until you turn them on for that client. Once a tool is on, the client
-        uses it without asking you each time, because MCP has no step for approving a single action.
-        You control these grants and can pause or revoke them at any time in settings.
+        mail, calendars, drives, and contacts in the workspaces and through the tools you permit.
+        Tools that send, delete, or change things, such as sending or deleting email and creating or
+        running workflows, stay off until you turn them on for that client. Once a tool is on, the
+        client uses it without asking you each time, because MCP has no step for approving a single
+        action. You control these grants and can pause or revoke them at any time in settings.
       </p>
       <p>
-        If you are a member of a workspace, mailboxes, calendars, and drives shared with that
-        workspace are visible to its other members.
+        If you are a member of a workspace, mailboxes, calendars, drives, and address books shared
+        with that workspace are visible to its other members.
       </p>
       <p>
         We may disclose data where required by law, court order, or a governmental authority with

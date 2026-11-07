@@ -11,7 +11,7 @@ export default function TermsPage() {
     <LegalLayout
       path="/terms-of-service"
       title="Terms of Service"
-      lastUpdated="November 3, 2026"
+      lastUpdated="November 6, 2026"
       intro={`These Terms of Service are a binding agreement between you and ${ORG_NAME} governing your use of ${SITE_NAME}. By creating an account or using the Service you accept these Terms and our Privacy Policy. If you do not agree, do not use the Service.`}
     >
       <h2>1. Agreement</h2>
@@ -26,13 +26,14 @@ export default function TermsPage() {
 
       <h2>2. The Service</h2>
       <p>
-        {SITE_NAME} is a suite for mail, calendars and drives that connects to accounts you already
-        have — Gmail, Microsoft 365 and Outlook, Zoho, and IMAP, CalDAV, S3, WebDAV, FTP and SFTP
-        servers — through each provider&apos;s official APIs and standard protocols. It adds
-        features such as one list for every inbox, one week view for every calendar, one explorer
-        for every drive, workspace search, workflows, snooze and scheduled send, AI-assisted
-        classification, summaries, reply suggestions, an AI agent, and an MCP server. Your mail,
-        events, and files remain hosted by your providers, subject to your agreements with them.
+        {SITE_NAME} is a suite for mail, calendars, drives and contacts that connects to accounts
+        you already have — Gmail, Microsoft 365 and Outlook, Zoho, and IMAP, CalDAV, CardDAV, S3,
+        WebDAV, FTP and SFTP servers — through each provider&apos;s official APIs and standard
+        protocols. It adds features such as one list for every inbox, one week view for every
+        calendar, one explorer for every drive, address books with saving contacts from mail,
+        workspace search, workflows, snooze and scheduled send, AI-assisted classification,
+        summaries, reply suggestions, an AI agent, and an MCP server. Your mail, events, files, and
+        contacts remain hosted by your providers, subject to your agreements with them.
       </p>
 
       <h2>3. Eligibility and accounts</h2>
@@ -56,8 +57,9 @@ export default function TermsPage() {
       <ul>
         <li>
           By connecting an account or server you authorize the Service to access its mail,
-          calendars, or drives on your behalf under the permissions you grant, solely to provide the
-          features you use. You may disconnect it at any time, which revokes our access.
+          calendars, drives, or address books on your behalf under the permissions you grant, solely
+          to provide the features you use. You may disconnect it at any time, which revokes our
+          access.
         </li>
         <li>
           You represent that you are authorized to connect each account and server you connect (for
@@ -65,9 +67,9 @@ export default function TermsPage() {
           organization&apos;s policies).
         </li>
         <li>
-          If you share a mailbox, calendar, or drive with a workspace, other members of that
-          workspace will be able to access it through the Service. You are responsible for that
-          decision.
+          If you share a mailbox, calendar, drive, or address book with a workspace, other members
+          of that workspace will be able to access it through the Service. You are responsible for
+          that decision.
         </li>
       </ul>
 
@@ -106,27 +108,27 @@ export default function TermsPage() {
           incomplete, or outdated. Review AI output before relying on it or sending it.
         </li>
         <li>
-          Actions the AI agent takes on your mail, calendars, and drives happen only through the
-          tools shown in the chat, and sending, deleting, and calendar, drive, or workflow changes
-          require your explicit approval. You are responsible for actions you approve, and for what
-          the MCP clients you authorize do with the tools you allow them.
+          Actions the AI agent takes on your mail, calendars, drives, and contacts happen only
+          through the tools shown in the chat, and sending, deleting, and calendar, drive, contact,
+          or workflow changes require your explicit approval. You are responsible for actions you
+          approve, and for what the MCP clients you authorize do with the tools you allow them.
         </li>
       </ul>
 
       <h2>7. Third-party services</h2>
       <p>
-        The Service depends on third parties, including your mail, calendar, and drive providers
-        (Google, Microsoft, Zoho, and the servers you connect), our infrastructure, backup, and
-        console hosts, our payment provider, transactional email delivery, OpenRouter for the AI
-        included with Metis Cloud plans, and the AI model providers your instance owner configures.
-        The included AI is a monthly credit for each instance, routed only to model endpoints with a
-        zero data retention policy; it resets on the billing day, cannot be topped up, and stops
-        when it is used up until then. Use of a provider the owner configures is governed by the
-        owner&apos;s agreement with it. Their availability and terms are outside our control, and
-        your use of a connected provider remains governed by your agreement with that provider. Use
-        of Google user data is described in our <Link href="/privacy-policy">Privacy Policy</Link>{" "}
-        and adheres to the Google API Services User Data Policy, including its Limited Use
-        requirements.
+        The Service depends on third parties, including your mail, calendar, drive, and contacts
+        providers (Google, Microsoft, Zoho, and the servers you connect), our infrastructure,
+        backup, and console hosts, our payment provider, transactional email delivery, OpenRouter
+        for the AI included with Metis Cloud plans, and the AI model providers your instance owner
+        configures. The included AI is a monthly credit for each instance, routed only to model
+        endpoints with a zero data retention policy; it resets on the billing day, cannot be topped
+        up, and stops when it is used up until then. Use of a provider the owner configures is
+        governed by the owner&apos;s agreement with it. Their availability and terms are outside our
+        control, and your use of a connected provider remains governed by your agreement with that
+        provider. Use of Google user data is described in our{" "}
+        <Link href="/privacy-policy">Privacy Policy</Link> and adheres to the Google API Services
+        User Data Policy, including its Limited Use requirements.
       </p>
 
       <h2>8. Your content and our rights</h2>

@@ -22,10 +22,16 @@ export interface GraphResources {
   mailbox: GraphResource[];
   calendar: GraphResource[];
   drive: GraphResource[];
+  addressbook: GraphResource[];
   timezone?: string;
 }
 
-export const NO_RESOURCES: GraphResources = { mailbox: [], calendar: [], drive: [] };
+export const NO_RESOURCES: GraphResources = {
+  mailbox: [],
+  calendar: [],
+  drive: [],
+  addressbook: [],
+};
 
 export const CARD_WIDTH = 256;
 const COLUMN_GAP = 96;
@@ -108,6 +114,7 @@ const RESOURCE_PARAMS: Record<string, ResourceKind> = {
   mailbox: "mailbox",
   calendar: "calendar",
   drive: "drive",
+  addressbook: "addressbook",
 };
 
 export function newNode(

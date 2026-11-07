@@ -26,6 +26,8 @@ export interface WorkspaceItem {
   firstCalendarSlug: string | null;
   driveCount: number;
   firstDriveSlug: string | null;
+  addressBookCount: number;
+  firstAddressBookSlug: string | null;
 }
 
 const TTL_MS = 60_000;

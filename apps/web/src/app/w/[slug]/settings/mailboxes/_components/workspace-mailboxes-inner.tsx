@@ -135,6 +135,8 @@ export function WorkspaceMailboxesInner() {
     try {
       await orpc.workspaceMailboxes.detach({ ...scope, linkId: target.linkId });
       await refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not remove the mailbox");
     } finally {
       setBusy(null);
     }
@@ -157,7 +159,7 @@ export function WorkspaceMailboxesInner() {
         title={isOnboarding ? "Nothing in this workspace yet" : "Mailboxes"}
         description={
           isOnboarding
-            ? "Add a mailbox here, or a calendar or drive from the settings menu. If you already use another workspace, switch to it instead."
+            ? "Add a mailbox here, or a calendar, drive or address book from the settings menu. If you already use another workspace, switch to it instead."
             : `Sign in once with your email, add any ${providerNames(configuredProviders, "mail")} mailbox, and switch between them without re-authenticating.`
         }
       />

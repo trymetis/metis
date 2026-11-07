@@ -76,6 +76,14 @@ export interface WorkspaceScope {
     slug: string;
     aiEnabled: boolean;
   }[];
+  addressBooks: {
+    addressBookId: string;
+    linkId: string;
+    email: string;
+    name: string;
+    slug: string;
+    aiEnabled: boolean;
+  }[];
 }
 
 export interface WorkflowEndpointView {
@@ -97,6 +105,7 @@ export interface WorkflowSummary {
   mailboxIds: string[];
   calendarIds: string[];
   driveIds: string[];
+  addressBookIds: string[];
   callable: boolean;
   sources: WorkflowSourceState[];
   endpoints: WorkflowEndpointView[];
@@ -231,7 +240,8 @@ async function sourceStates(
         resource:
           literal(node.params, "mailbox") ??
           literal(node.params, "calendar") ??
-          literal(node.params, "drive"),
+          literal(node.params, "drive") ??
+          literal(node.params, "addressbook"),
         paused: !definition.enabled || !row?.armed,
         baselined: [...cursors.values()].some((cursor) => cursor.baselined),
         lastScanAt: row?.lastRunAt?.toISOString() ?? null,
@@ -272,6 +282,7 @@ async function toSummary(
     mailboxIds: resourceIds(graph, "mailbox"),
     calendarIds: resourceIds(graph, "calendar"),
     driveIds: resourceIds(graph, "drive"),
+    addressBookIds: resourceIds(graph, "addressbook"),
     callable: graph.nodes.some((node) => node.step === "trigger.call"),
     sources: await sourceStates(definition, graph, triggers, endpoints),
     endpoints: endpoints
@@ -304,6 +315,7 @@ function links(scope: WorkspaceScope): ResourceLinks {
     mailbox: Object.fromEntries(scope.mailboxes.map((m) => [m.mailboxId, m.linkId])),
     calendar: Object.fromEntries(scope.calendars.map((c) => [c.accountId, c.linkId])),
     drive: Object.fromEntries(scope.drives.map((d) => [d.driveId, d.linkId])),
+    addressbook: Object.fromEntries(scope.addressBooks.map((a) => [a.addressBookId, a.linkId])),
   };
 }
 
@@ -339,11 +351,13 @@ export async function checkGraph(
         mailbox: scope.mailboxes.map((m) => m.mailboxId),
         calendar: scope.calendars.map((c) => c.accountId),
         drive: scope.drives.map((d) => d.driveId),
+        addressbook: scope.addressBooks.map((a) => a.addressBookId),
       },
       aiResources: {
         mailbox: scope.mailboxes.filter((m) => m.aiEnabled).map((m) => m.mailboxId),
         calendar: scope.calendars.filter((c) => c.aiEnabled).map((c) => c.accountId),
         drive: scope.drives.filter((d) => d.aiEnabled).map((d) => d.driveId),
+        addressbook: scope.addressBooks.filter((a) => a.aiEnabled).map((a) => a.addressBookId),
       },
       allowDecisionSteps: decisionEnabled("workflowNode"),
       workflows: await callableWorkflows(scope),
@@ -356,6 +370,7 @@ function accessible(scope: WorkspaceScope): Record<ResourceKind, Set<string>> {
     mailbox: new Set(scope.mailboxes.map((m) => m.mailboxId)),
     calendar: new Set(scope.calendars.map((c) => c.accountId)),
     drive: new Set(scope.drives.map((d) => d.driveId)),
+    addressbook: new Set(scope.addressBooks.map((a) => a.addressBookId)),
   };
 }
 
@@ -537,6 +552,8 @@ function resourcesOf(value: unknown, depth = 0): { kind: ResourceKind; id: strin
     found.push({ kind: "mailbox", id: own.mailboxId });
   if (typeof own.driveId === "string" && own.driveId)
     found.push({ kind: "drive", id: own.driveId });
+  if (typeof own.addressBookId === "string" && own.addressBookId)
+    found.push({ kind: "addressbook", id: own.addressBookId });
   if (typeof own.accountId === "string" && own.accountId && typeof own.calendarId === "string") {
     found.push({ kind: "calendar", id: own.accountId });
   }
@@ -549,6 +566,7 @@ function visibleAddresses(scope: WorkspaceScope): Set<string> {
       ...scope.mailboxes.map((m) => m.email),
       ...scope.calendars.map((c) => c.email),
       ...scope.drives.map((d) => d.email),
+      ...scope.addressBooks.map((a) => a.email),
     ].map((email) => email.toLowerCase()),
   );
 }

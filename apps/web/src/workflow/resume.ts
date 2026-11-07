@@ -1,12 +1,7 @@
 import "server-only";
 import { getInstanceConfig } from "@/config/runtime";
 
-import {
-  authorizeCalendar,
-  authorizeDrive,
-  authorizeMailboxAccess,
-  resolvePrincipal,
-} from "./authorization";
+import { authorizeConnected, authorizeMailboxAccess, resolvePrincipal } from "./authorization";
 import type { RunStatus } from "./schema";
 import { isResumableStatus, loadRunScope, type ResumeRefusal, resumeRun } from "./store";
 import { firstError, graphResources, validateGraph } from "./validation";
@@ -81,9 +76,11 @@ export async function resumeCheckedRun(runId: string): Promise<RunResume | null>
               principal: principal.value,
               mailboxId: resource.id,
             })
-          : resource.kind === "calendar"
-            ? authorizeCalendar({ principal: principal.value, accountId: resource.id })
-            : authorizeDrive({ principal: principal.value, driveId: resource.id }),
+          : authorizeConnected({
+              principal: principal.value,
+              kind: resource.kind,
+              id: resource.id,
+            }),
       ),
     );
     for (const access of checks) {

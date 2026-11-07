@@ -32,6 +32,7 @@ const envSchema = z
 
     METIS_IMAP_SERVERS: serverName,
     METIS_CALDAV_SERVERS: caldavServer,
+    METIS_CARDDAV_SERVERS: caldavServer,
     METIS_S3_SERVERS: serverNames,
     METIS_WEBDAV_SERVERS: serverName,
     METIS_FTP_SERVERS: serverNames,
@@ -117,6 +118,8 @@ const envSchema = z
       imap: e.METIS_IMAP_SERVERS,
       caldav: e.METIS_CALDAV_SERVERS.name,
       caldavOrigin: new URL(e.METIS_CALDAV_SERVERS.url).origin,
+      carddav: e.METIS_CARDDAV_SERVERS.name,
+      carddavOrigin: new URL(e.METIS_CARDDAV_SERVERS.url).origin,
       s3: e.METIS_S3_SERVERS,
       webdav: e.METIS_WEBDAV_SERVERS,
       ftp: e.METIS_FTP_SERVERS,

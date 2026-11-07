@@ -1,6 +1,7 @@
 import { test } from "../fixtures";
 import accountSpecs from "./accounts.spec";
 import calendarSpecs from "./calendar.spec";
+import contactSpecs from "./contacts.spec";
 import dashboardSpecs from "./dashboard.spec";
 import decisionSpecs from "./decision.spec";
 import driveSpecs from "./drives.spec";
@@ -19,6 +20,7 @@ test.describe("mcp-conformance", mcpConformanceSpecs);
 test.describe("mcp", mcpSpecs);
 test.describe("drives", driveSpecs);
 test.describe("calendar", calendarSpecs);
+test.describe("contacts", contactSpecs);
 test.describe("mail", mailSpecs);
 test.describe("accounts", accountSpecs);
 test.describe("members", memberSpecs);

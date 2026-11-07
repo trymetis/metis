@@ -372,12 +372,24 @@ export function serverChecks(cfg: InstanceConfig = getInstanceConfig()): ServerC
     });
   }
 
-  for (const server of cfg.caldavServers) {
+  const davServers = [
+    ...cfg.caldavServers.map((server) => ({
+      provider: "caldav" as const,
+      label: "CalDAV",
+      server,
+    })),
+    ...cfg.carddavServers.map((server) => ({
+      provider: "carddav" as const,
+      label: "CardDAV",
+      server,
+    })),
+  ];
+  for (const { provider, label, server } of davServers) {
     checks.push({
-      provider: "caldav",
+      provider,
       server: server.name,
-      part: "CalDAV endpoint",
-      label: `caldav "${server.name}" (${server.url})`,
+      part: `${label} endpoint`,
+      label: `${provider} "${server.name}" (${server.url})`,
       probe: { url: server.url, allowInsecureTls: server.allowInsecureTls },
       run: async () => {
         const res = await probeHttp(server.url, server.allowInsecureTls);
@@ -387,7 +399,7 @@ export function serverChecks(cfg: InstanceConfig = getInstanceConfig()): ServerC
         throw new ServerConfigError(
           `expected 401/403 or a DAV-capable response, got ${res.status}${
             res.ok ? " with no DAV header" : ""
-          } — is that the CalDAV URL?`,
+          } — is that the ${label} URL?`,
         );
       },
     });

@@ -44,6 +44,7 @@ interface AssistantShellProps {
   mailboxes: string[];
   calendars: string[];
   drives: string[];
+  addressBooks: string[];
   children: ReactNode;
 }
 
@@ -52,7 +53,13 @@ function countLabel(n: number, one: string, many: string): string | null {
   return `${n} ${n === 1 ? one : many}`;
 }
 
-export function AssistantShell({ mailboxes, calendars, drives, children }: AssistantShellProps) {
+export function AssistantShell({
+  mailboxes,
+  calendars,
+  drives,
+  addressBooks,
+  children,
+}: AssistantShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const workspaceSlug = useWorkspaceSlug();
@@ -120,12 +127,13 @@ export function AssistantShell({ mailboxes, calendars, drives, children }: Assis
     countLabel(mailboxes.length, "mailbox", "mailboxes"),
     countLabel(calendars.length, "calendar", "calendars"),
     countLabel(drives.length, "drive", "drives"),
+    countLabel(addressBooks.length, "address book", "address books"),
   ].filter(Boolean);
-  const accounts = [...new Set([...mailboxes, ...calendars, ...drives])];
+  const accounts = [...new Set([...mailboxes, ...calendars, ...drives, ...addressBooks])];
   const scope =
     counts.length > 0
       ? `Operating across ${counts.join(", ")} · ${accounts.join(" · ")}`
-      : "AI is off for every mailbox, calendar and drive here";
+      : "AI is off for every mailbox, calendar, drive and address book here";
 
   const rail = (
     <aside className="flex h-full w-full flex-col overflow-hidden border-border border-r bg-panel">

@@ -58,6 +58,7 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [mail.md](mail
 - **Every `url` / `*Url` a card returns, at any depth, is dropped unless it appears in the conversation's own links** (`allowedLinks`).
 - **Card actions reuse existing procedures and reading-pane handlers** through `SummaryActionsProvider`.
 - **"Add to calendar" carries the Meeting card's attendees**, passing the email addresses in `attendees` to `calendarEvents.create`.
+- **The Contact card saves to an address book or downloads a `.vcf`.** Save contact opens the address-book picker with the card's fields, or Open contact when `contacts.lookup` finds one of its emails; Download keeps the `.vcf`; the card schema is unchanged ([contacts.md](contacts.md)).
 - **Summary output is capped (`maxOutputTokens`)**, because without a cap an OpenAI-compatible endpoint such as OpenRouter reserves the model's full maximum against the account's credit.
 - **Bump `SUMMARY_FORMAT` when the card format changes**; it is the suffix of the cached `model` (`#cards-v<n>`), so old rows rebuild.
 - **A summary is built only from a complete conversation.** `loadConversation` lets a failed `getHeaders` fail the build, because the prompt's `Mailing headers:` block is what the summarizer and the gate read as the automated-mail signal.

@@ -4,7 +4,7 @@
 
 ## 1. The project
 
-- **Metis Suite (`trymetis/metis`, AGPL-3.0-or-later) is a mail, calendar and drive client over provider APIs, with an AI agent and phishing detection.** Product copy is written for open source and self-hosting: "bring your own model" means the operator's own model.
+- **Metis Suite (`trymetis/metis`, AGPL-3.0-or-later) is a mail, calendar, drive and contacts client over provider APIs, with an AI agent and phishing detection.** Product copy is written for open source and self-hosting: "bring your own model" means the operator's own model.
 - **Self-hosted and Metis Cloud run the same released app.** The only Cloud-specific code here is the `console` mail driver ([configuration.md](agent-docs/configuration.md)).
 - **Workspaces:** `apps/web` (the product), `apps/desktop` and `apps/mobile` (shells onto a user's instance), `apps/www` (marketing site), `apps/docs` (customer docs, rules in `apps/docs/AGENTS.md`), `apps/gateway-{cloudflare,resend}`, `packages/*`, `e2e/`.
   - `apps/updater` is a Go module outside the bun workspaces; `proto/` is its protocol.
@@ -34,7 +34,7 @@
 
 ## 3. Dependencies
 
-- **Google: the scoped `@googleapis/{gmail,calendar,drive}` clients only.** The monolithic `googleapis` OOMs `tsc`. Never depend on `google-auth-library`; build the client with `new auth.OAuth2()` from the scoped package.
+- **Google: the scoped `@googleapis/{gmail,calendar,drive,people}` clients only.** The monolithic `googleapis` OOMs `tsc`. Never depend on `google-auth-library`; build the client with `new auth.OAuth2()` from the scoped package.
 - **Microsoft Graph: `@microsoft/microsoft-graph-client` + `@microsoft/microsoft-graph-types`**, never the Kiota `@microsoft/msgraph-sdk-*` packages.
 - **S3: AWS SDK commands only**; never hand-roll the S3 protocol, including the drive relay's SigV4 URLs ([drive.md](agent-docs/drive.md)).
 - **MCP OAuth: `@better-auth/mcp` only.** It is `@better-auth/oauth-provider` preconfigured, so registering both is forbidden.
@@ -49,17 +49,17 @@
 - **Import `cn` from `@metis/ui/lib/utils`**, except in `apps/mobile`, which uses its own `lib/utils.ts`.
 - **No informational or doc comments in code.** Reasons and invariants go in the domain's doc.
 - **Every log line starts with its module's bracketed tag** (`[orpc]`, `[workflow]`).
-- **Every workspace-, mailbox-, calendar- or drive-scoped procedure takes its scope as explicit input** (`workspaceScopeSchema` … `driveScopeSchema` in `src/server/schema.ts`, extended with `.extend`). Clients read it from the URL (`useWorkspaceScope()`, `useMailboxScope()`); there is no cookie fallback ([orpc.md](agent-docs/orpc.md)).
+- **Every workspace-, mailbox-, calendar-, drive- or address-book-scoped procedure takes its scope as explicit input** (`workspaceScopeSchema` … `addressBookScopeSchema` in `src/server/schema.ts`, extended with `.extend`). Clients read it from the URL (`useWorkspaceScope()`, `useMailboxScope()`); there is no cookie fallback ([orpc.md](agent-docs/orpc.md)).
 - **Shared Zod types live in `src/server/schema.ts`.**
 - **`apps/desktop` keeps the unscoped name `metis-suite-desktop`**: it is also the userData folder and the `.deb` name.
 
 ## 5. Cross-domain rules
 
-- **The grant is the entity: a mailbox, a calendar and a drive hang off one `connection` row** ([connections.md](agent-docs/connections.md)). **A workspace only borrows a resource** ([workspaces.md](agent-docs/workspaces.md)).
-- **Mail, calendar and drive are peers.** None imports another; shared code, and code that moves data between them, lives in neutral modules. Anything that handles one resource kind (menus, gates, counts, policy, copy) handles all three.
+- **The grant is the entity: a mailbox, a calendar, a drive and an address book hang off one `connection` row** ([connections.md](agent-docs/connections.md)). **A workspace only borrows a resource** ([workspaces.md](agent-docs/workspaces.md)).
+- **Mail, calendar, drive and contacts are peers.** None imports another; shared code, and code that moves data between them, lives in neutral modules. Anything that handles one resource kind (menus, gates, counts, policy, copy) handles all four.
 - **Rows are keyed by the narrowest true scope with a real FK; never add a per-user toggle over per-mailbox data** ([workspaces.md](agent-docs/workspaces.md)).
-- **Composite ids (the `all` mailbox, `/d/all`) never reach our DB** ([mail.md](agent-docs/mail.md), [drive.md](agent-docs/drive.md)).
-- **Calendar and drive visibility restrictions are app-level product guarantees, never isolation.**
+- **Composite ids (the `all` mailbox, `/d/all`, `/p/all` and the packed contact refs in its URLs) never reach our DB** ([mail.md](agent-docs/mail.md), [drive.md](agent-docs/drive.md), [contacts.md](agent-docs/contacts.md)).
+- **Calendar, drive and address-book visibility restrictions are app-level product guarantees, never isolation.**
 - **Tokens and credentials are sealed with `encryptedText`; anything not sealed `v1` is rejected** ([connections.md](agent-docs/connections.md)).
 - **The operator defines servers; users bring only their own login.** The server only connects to hosts a server entry names ([servers.md](agent-docs/servers.md)).
 - **Two config objects, never merged: the boot config `config` and the instance config `getInstanceConfig()`.** A setting that may change at runtime is read through the snapshot per use, never captured at module load ([configuration.md](agent-docs/configuration.md)).
@@ -90,6 +90,7 @@
 | [mail-ai.md](agent-docs/mail-ai.md)                   | phishing detection, labels, thread-summary cards                                                                    |
 | [mail-rendering.md](agent-docs/mail-rendering.md)     | the sandboxed email frame and its CSP, remote-content blocking, tracker stripping, link cleaning, the image proxy   |
 | [calendar.md](agent-docs/calendar.md)                 | calendars, visibility, `CalendarAdapter`, CalDAV                                                                    |
+| [contacts.md](agent-docs/contacts.md)                 | address books, book visibility, `ContactsAdapter`, CardDAV, saving from mail, the saved-contact index               |
 | [drive.md](agent-docs/drive.md)                       | drive model, direct vs relay transfers, `DriveSurface`, root visibility, icons                                      |
 | [drive-providers.md](agent-docs/drive-providers.md)   | S3, WebDAV, FTP/FTPS, SFTP                                                                                          |
 | [drive-preview.md](agent-docs/drive-preview.md)       | browser-only file preview and its cache                                                                             |

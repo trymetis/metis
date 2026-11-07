@@ -232,3 +232,49 @@ test("saved searches round-trip and a deleted one is gone", async () => {
     RpcError,
   );
 });
+
+test("contact search matches phone, organization and job title, and finds a contact with no email", async () => {
+  const { rpc, account } = await ana();
+  const titles = async (q: string) => (await local(rpc, account, q)).hits.map((h) => h.title);
+
+  const byOrg = await titles("type:contact organization:aozora");
+  expect(byOrg).toContain("Kenji Watanabe");
+  expect(byOrg).not.toContain("Raj Mehta");
+  expect(await titles('type:contact phone:"+351"')).toContain("Raj Mehta");
+  expect(await titles('type:contact title:"Brand director"')).toContain("Kenji Watanabe");
+
+  const desk = (await local(rpc, account, "type:contact harbour")).hits.find(
+    (h) => h.title === "Harbour Hall front desk",
+  );
+  expect(desk).toMatchObject({ kind: "contact", email: "", phone: "+44 20 7946 0321" });
+  expect(desk?.saved).toBeDefined();
+});
+
+test("address books and their books are results, and addressbook: and book: scope contacts", async () => {
+  const { rpc, account } = await ana();
+  const { addressBooks } = await rpc<{ addressBooks: { slug: string }[] }>(
+    "workspaceAddressBooks.list",
+    { workspaceSlug: account.workspaceSlug },
+  );
+  const slug = addressBooks[0]?.slug;
+  expect(slug).toBeDefined();
+
+  const results = await local(rpc, account, "type:addressbook");
+  const kinds = results.hits.filter((h) => h.kind === "addressbook");
+  expect(kinds.some((h) => h.bookId === null && h.slug === slug)).toBe(true);
+  expect(kinds.some((h) => h.title === "Studio contacts" && h.bookId !== null)).toBe(true);
+
+  const scoped = await local(rpc, account, `type:contact addressbook:${slug} kenji`);
+  expect(scoped.hits.map((h) => h.title)).toContain("Kenji Watanabe");
+  const elsewhere = await local(rpc, account, "type:contact addressbook:no-such-book kenji");
+  expect(elsewhere.hits).toEqual([]);
+  const inBook = await local(rpc, account, 'type:contact book:"Studio contacts" kenji');
+  expect(inBook.hits.map((h) => h.title)).toContain("Kenji Watanabe");
+
+  const suggested = await rpc<{ values: { value: string }[] }>("search.suggest", {
+    workspaceSlug: account.workspaceSlug,
+    key: "addressbook",
+    prefix: "",
+  });
+  expect(suggested.values.map((v) => v.value)).toContain(slug);
+});

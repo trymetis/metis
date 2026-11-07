@@ -1,6 +1,31 @@
-export { listAccountCalendars, listAccountDrives, listAccountMailboxes } from "./account-resources";
 export {
+  listAccountAddressBooks,
+  listAccountCalendars,
+  listAccountDrives,
+  listAccountMailboxes,
+} from "./account-resources";
+export {
+  type AddressBook,
+  type AddressBookWorkspace,
+  attachAddressBook,
+  deleteAddressBook,
+  detachAddressBook,
+  getAddressBook,
+  getAddressBookLink,
+  getWorkspaceAddressBookByLinkId,
+  getWorkspaceAddressBookBySlug,
+  listAddressBookWorkspaces,
+  listUnattachedAddressBooks,
+  listUserAddressBooks,
+  listWorkspaceAddressBooks,
+  setAddressBookVisibility,
+  upsertAddressBook,
+  type WorkspaceAddressBookRow,
+} from "./address-book-store";
+export {
+  addConnectionResource,
   type AttachResult,
+  attachOwnedAddressBook,
   attachOwnedCalendar,
   attachOwnedDrive,
   attachOwnedMailbox,
@@ -28,6 +53,7 @@ export {
   type ConnectionAuthRow,
   getConnection,
   grantedResources,
+  linkedConnectionResources,
   listUserConnections,
   listUserConnectionsByProvider,
   listWorkspaceConnectionsOf,
@@ -77,6 +103,8 @@ export {
 export { getCredentialDriver, getDriver, getOAuthDriver, isConnectionProvider } from "./registry";
 export { connectServers, isProviderConfigured, resolveServerCredentials } from "./servers";
 export {
+  ADDRESS_BOOK_PROVIDERS,
+  type AddressBookProvider,
   type CaldavCredentials,
   type CalendarProvider,
   CONNECTION_RESOURCES,
@@ -86,8 +114,10 @@ export {
   type ConnectionResource,
   type ConnectServer,
   caldavCredentials,
+  carddavCredentials,
   credentialResourceFor,
   type DriveProvider,
+  isAddressBookProvider,
   isCalendarProvider,
   isConnectionResource,
   isDriveProvider,

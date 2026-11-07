@@ -6,7 +6,7 @@ import { RepoCard } from "../ui/repo-card";
 const FACTS = [
   ["Two-factor", "Required for every account before it reaches any mail."],
   ["Encrypted", "Account tokens and server logins are encrypted at rest."],
-  ["AI off", "Every mailbox, calendar and drive starts with AI turned off."],
+  ["AI off", "Every mailbox, calendar, drive and address book starts with AI turned off."],
   ["Private", "The instance owner sees usage and health, never your mail."],
   ["No tracking", "Remote images, tracking pixels and tracking links blocked."],
 ];

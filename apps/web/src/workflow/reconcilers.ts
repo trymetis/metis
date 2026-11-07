@@ -1,9 +1,20 @@
 import "server-only";
 import { isOneOf } from "@/lib/guards";
-import { findFolderPath, getEventValue, listEventValues, listFileValues } from "@/ops/values";
+import {
+  findFolderPath,
+  getEventValue,
+  listContactValues,
+  listEventValues,
+  listFileValues,
+} from "@/ops/values";
 import { WRITABLE_ATTENDEE_RESPONSES } from "@/types/calendar";
 
-import { authorizeCalendar, authorizeDrive, type BackgroundPrincipal } from "./authorization";
+import {
+  authorizeAddressBook,
+  authorizeCalendar,
+  authorizeDrive,
+  type BackgroundPrincipal,
+} from "./authorization";
 import type { StepReceipt } from "./runtime";
 
 export interface DispatchCandidate {
@@ -145,6 +156,41 @@ const uploadedFile: Reconciler = {
   },
 };
 
+const createdContact: Reconciler = {
+  async find(ctx) {
+    const name = field(ctx.expected, "name");
+    const email = field(ctx.expected, "email").toLowerCase();
+    if (!name && !email) throw new Error("The name and email of this contact were not recorded");
+    const access = await authorizeAddressBook({
+      principal: ctx.principal,
+      addressBookId: field(ctx.expected, "addressBookId"),
+    });
+    if (!access.ok) throw new Error(access.reason);
+    const account = access.value;
+    const bookId = field(ctx.expected, "bookId") || undefined;
+    const found = await listContactValues(account, { bookId, query: email || name, limit: 50 });
+    return found
+      .filter(
+        (contact) =>
+          (!name || contact.name === name) &&
+          (!email || contact.emails.some((e) => e.toLowerCase() === email)),
+      )
+      .map((contact) => ({
+        id: contact.id,
+        title: contact.name || contact.email,
+        subtitle: contact.email || account.accountEmail,
+        at: null,
+        value: contact,
+        receipt: {
+          operation: "create-contact",
+          providerMessageId: contact.id,
+          resourceId: account.accountId,
+        },
+        detail: `confirmed in the address book as ${contact.name || contact.email}`,
+      }));
+  },
+};
+
 export const RECONCILERS: Record<string, Reconciler> = {
   "calendar.create": createdEvent,
   "calendar.respond": respondedEvent,
@@ -152,4 +198,5 @@ export const RECONCILERS: Record<string, Reconciler> = {
   "drive.copy": uploadedFile,
   "mail.saveAttachment": uploadedFile,
   "mail.saveEml": uploadedFile,
+  "contacts.create": createdContact,
 };

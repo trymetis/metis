@@ -3,21 +3,27 @@ import { setTimeout as sleep } from "node:timers/promises";
 import {
   APPROVAL_CHAT,
   CALENDAR_CHAT,
+  CONTACTS_CHAT,
   DRIVE_CHAT,
   MAIL_CHAT,
+  REFERENCE_CHAT,
   VIEWER_TIME_ZONE,
   WORKSPACE_CHATS,
 } from "@metis/e2e/lib/llm-scenarios";
 import { isToolUIPart, readUIMessageStream, type UIMessage } from "ai";
 
+import { suggestReferences, workspaceReferenceScope } from "../../../../src/ai/reference-directory";
+import { serializeReference, WORKSPACE_REFERENCE_TYPES } from "../../../../src/ai/references";
 import { TURN_PART_TYPE, toAgentEmail } from "../../../../src/ai/turn";
 import { viewRange } from "../../../../src/calendar/layout";
 import { getCalendarSession } from "../../../../src/calendar/session";
+import { getAddressBookSession } from "../../../../src/contacts/session";
 import { driveName } from "../../../../src/drive/name";
 import { getDriveSession } from "../../../../src/drive/session";
 import {
   type ChatStream,
   streamCalendarChat,
+  streamContactsChat,
   streamDriveChat,
   streamMailboxChat,
   streamWorkspaceChat,
@@ -184,6 +190,40 @@ async function driveChat(session: RecordSession, kind: string): Promise<void> {
   );
 }
 
+async function contactsChat(session: RecordSession): Promise<void> {
+  const { headers, enrollment } = session;
+  const book = await getAddressBookSession(headers, enrollment.workspaceSlug, "all");
+  if (!book) throw new Error("no address book enrolled");
+  await converse(
+    "chat:contacts",
+    CONTACTS_CHAT.turns,
+    () => ({ kind: "contacts", contacts: [] }),
+    async (messages) =>
+      required(
+        await streamContactsChat(book, headers, {
+          messages,
+          trigger: "submit-message",
+        }),
+        "address book",
+      ),
+  );
+}
+
+async function referenceText(session: RecordSession): Promise<string> {
+  const scope = await workspaceReferenceScope(session.appUser, WORKSPACE_REFERENCE_TYPES);
+  const tokens = await Promise.all(
+    REFERENCE_CHAT.picks.map(async (pick) => {
+      const groups = await suggestReferences(scope, pick.query, 8);
+      const found = groups
+        .flatMap((group) => group.items)
+        .find((item) => item.type === pick.type && item.label === pick.label);
+      if (!found) throw new Error(`no ${pick.type} reference "${pick.label}" for "${pick.query}"`);
+      return serializeReference(found);
+    }),
+  );
+  return `${tokens.join(" ")} ${REFERENCE_CHAT.question}`;
+}
+
 async function waitForTitle(name: string, threadId: string): Promise<void> {
   const deadline = Date.now() + TITLE_TIMEOUT_MS;
   while (Date.now() < deadline) {
@@ -297,6 +337,7 @@ export async function run(ctx: StepContext): Promise<void> {
   if (kind === "mailbox") return mailboxChat(ctx);
   if (kind === "calendar") return calendarChat(ctx.session);
   if (kind === "drive") return driveChat(ctx.session, name);
+  if (kind === "contacts") return contactsChat(ctx.session);
   if (kind === "workspace") {
     if (name === "approval") return approvalChat(ctx.session);
     if (name === "stored") {
@@ -304,6 +345,9 @@ export async function run(ctx: StepContext): Promise<void> {
     }
     if (name === "live") {
       return workspaceChat(ctx.session, name, WORKSPACE_CHATS.live);
+    }
+    if (name === "references") {
+      return workspaceChat(ctx.session, name, [await referenceText(ctx.session)]);
     }
     const chip = WORKSPACE_CHATS.liveChips[Number(name.replace("chip-", "")) - 1];
     if (chip) return workspaceChat(ctx.session, name, chip);

@@ -84,6 +84,23 @@ export const MCP_CALLS = {
   previewLimit: 10,
 } as const;
 
+export const CONTACTS_CHAT = {
+  turns: [
+    "Which of my contacts work at Fernhill Studio?",
+    "Who in my address book has no email address?",
+    "What is Kenji Watanabe's job title?",
+  ],
+} as const;
+
+export const REFERENCE_CHAT = {
+  picks: [
+    { type: "contact", query: "Mehta", label: "Raj Mehta" },
+    { type: "member", query: "Silva", label: "Ana Silva" },
+    { type: "addressbook", query: "Studio", label: "Studio contacts" },
+  ],
+  question: "Who are these two people, and what is in that address book?",
+} as const;
+
 export const WORKSPACE_CHATS = {
   stored: [
     "What needs my attention across my mailboxes this week?",

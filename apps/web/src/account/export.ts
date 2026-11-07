@@ -5,6 +5,8 @@ import { exportUserAuditEvents } from "@/audit";
 import { serverLabel } from "@/connections/connection-store";
 import { db } from "@/db";
 import {
+  addressBook,
+  addressBookWorkspace,
   calendar,
   calendarWorkspace,
   connection,
@@ -30,7 +32,7 @@ import { graphResourceIds } from "@/workflow/validation";
 import { workspaceThemeBrand } from "@/workspace";
 
 const NOTICE =
-  "This file holds what Metis Suite stores for your account: preferences, workspaces, labels, workflows, Workspace Assistant chats and security activity. It is not a mailbox archive. Mail, calendar events and files stay with the provider you connected; export those from the provider.";
+  "This file holds what Metis Suite stores for your account: preferences, workspaces, labels, workflows, Workspace Assistant chats and security activity. It is not a mailbox archive. Mail, calendar events, files and contacts stay with the provider you connected; export those from the provider.";
 
 function iso(value: Date | string | number): string {
   return new Date(value).toISOString();
@@ -105,6 +107,22 @@ async function loadCalendarLinks(userId: string) {
     .innerJoin(connection, eq(connection.id, calendar.connectionId))
     .where(eq(connection.userId, userId))
     .orderBy(asc(calendarWorkspace.createdAt));
+}
+
+async function loadAddressBookLinks(userId: string) {
+  return db
+    .select({
+      ...LINK_COLUMNS,
+      workspaceId: addressBookWorkspace.workspaceId,
+      slug: addressBookWorkspace.slug,
+      aiEnabled: addressBookWorkspace.aiEnabled,
+      visibleBookIds: addressBookWorkspace.visibleBookIds,
+    })
+    .from(addressBookWorkspace)
+    .innerJoin(addressBook, eq(addressBook.id, addressBookWorkspace.addressBookId))
+    .innerJoin(connection, eq(connection.id, addressBook.connectionId))
+    .where(eq(connection.userId, userId))
+    .orderBy(asc(addressBookWorkspace.createdAt));
 }
 
 async function loadDriveLinks(userId: string) {
@@ -183,7 +201,7 @@ async function loadLabels(userId: string): Promise<DataExport["labels"]> {
 
 async function resourceEmails(kind: ResourceKind, ids: string[]): Promise<Map<string, string>> {
   if (ids.length === 0) return new Map();
-  const table = { mailbox, calendar, drive }[kind];
+  const table = { mailbox, calendar, drive, addressbook: addressBook }[kind];
   const rows = await db
     .select({ id: table.id, email: connection.email })
     .from(table)
@@ -251,6 +269,7 @@ async function loadWorkflows(userId: string): Promise<DataExport["workflows"]> {
       mailboxes: named(row.graph, "mailbox"),
       calendars: named(row.graph, "calendar"),
       drives: named(row.graph, "drive"),
+      addressBooks: named(row.graph, "addressbook"),
       graph: row.graph,
     };
   });
@@ -298,6 +317,7 @@ export async function buildDataExport(userId: string): Promise<DataExport> {
     mailboxLinks,
     calendarLinks,
     driveLinks,
+    addressBookLinks,
     labels,
     workflows,
     assistantThreads,
@@ -314,6 +334,7 @@ export async function buildDataExport(userId: string): Promise<DataExport> {
     loadMailboxLinks(userId),
     loadCalendarLinks(userId),
     loadDriveLinks(userId),
+    loadAddressBookLinks(userId),
     loadLabels(userId),
     loadWorkflows(userId),
     loadAssistantThreads(userId),
@@ -324,6 +345,7 @@ export async function buildDataExport(userId: string): Promise<DataExport> {
   const mailboxesBy = groupBy(mailboxLinks, (row) => row.workspaceId);
   const calendarsBy = groupBy(calendarLinks, (row) => row.workspaceId);
   const drivesBy = groupBy(driveLinks, (row) => row.workspaceId);
+  const addressBooksBy = groupBy(addressBookLinks, (row) => row.workspaceId);
 
   return {
     format: "metis-suite-export",
@@ -361,6 +383,7 @@ export async function buildDataExport(userId: string): Promise<DataExport> {
       mailboxes: (mailboxesBy.get(m.id) ?? []).map(({ workspaceId: _, ...link }) => link),
       calendars: (calendarsBy.get(m.id) ?? []).map(({ workspaceId: _, ...link }) => link),
       drives: (drivesBy.get(m.id) ?? []).map(({ workspaceId: _, ...link }) => link),
+      addressBooks: (addressBooksBy.get(m.id) ?? []).map(({ workspaceId: _, ...link }) => link),
     })),
     labels,
     workflows,

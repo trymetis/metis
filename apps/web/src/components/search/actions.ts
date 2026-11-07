@@ -6,6 +6,7 @@ import {
   Archive,
   ArrowRight,
   Ban,
+  BookUser,
   CalendarCheck,
   CalendarPlus,
   CalendarX,
@@ -44,11 +45,14 @@ import { toast } from "sonner";
 import { packReferenceId, type ResolvedReference } from "@/ai/references";
 import { stashCalendarHandoff } from "@/calendar/pending-open";
 import { setPendingDraft } from "@/components/assistant/pending";
+import { matchHref } from "@/components/contacts/use-save-contact";
 import { downloadDriveFile } from "@/components/drive-preview/use-drive-preview";
 import type { MemberAdmin } from "@/components/members/member-admin";
+import { packBookRef } from "@/contacts/refs";
 import { customLabelsQuery } from "@/hooks/use-custom-labels";
 import { orpc, rpc } from "@/lib/orpc";
 import { getQueryClient, refreshQueries } from "@/lib/query-client";
+import { route } from "@/lib/route";
 import { LABEL_OPTIONS } from "@/mail/label-meta";
 import type {
   EventSearchHitDto,
@@ -61,9 +65,9 @@ import {
   ALL_MAILBOXES_SLUG,
   assistantPath,
   calendarPath,
+  contactsPath,
   drivePath,
   mailPath,
-  membersPath,
   workflowEditPath,
   workflowPath,
   workflowRunPath,
@@ -682,10 +686,7 @@ function localActions(ctx: ActionContext, hit: LocalSearchHit): SearchAction[] {
               role: hit.role,
             }
           : null;
-      const actions: SearchAction[] = [
-        ...(userId ? [go(membersPath(ws, userId), "Open profile")] : []),
-        ...personActions(ctx, hit.email, hit.name || hit.email),
-      ];
+      const actions: SearchAction[] = [...personActions(ctx, hit.email, hit.name || hit.email)];
       if (ctx.ai && userId) {
         actions.splice(
           actions.length - 1,
@@ -729,9 +730,27 @@ function localActions(ctx: ActionContext, hit: LocalSearchHit): SearchAction[] {
     }
 
     case "contact": {
-      const list = personActions(ctx, hit.email, hit.name || hit.email);
+      const list = hit.email ? personActions(ctx, hit.email, hit.name || hit.email) : [];
       const search = list.find((a) => a.id.startsWith("filter:"));
-      return search ? [search, ...list.filter((a) => a !== search)] : list;
+      const ordered = [
+        ...(search ? [search, ...list.filter((a) => a !== search)] : list),
+        ...(hit.phone ? [copy(hit.phone, "Copy phone number")] : []),
+      ];
+      if (!hit.saved) return ordered;
+      return [
+        go(
+          route(
+            matchHref(ws, {
+              email: hit.email,
+              name: hit.name ?? hit.email,
+              ...hit.saved,
+            }),
+          ),
+          "Open contact",
+          BookUser,
+        ),
+        ...ordered,
+      ];
     }
 
     case "workflow":
@@ -937,6 +956,67 @@ function localActions(ctx: ActionContext, hit: LocalSearchHit): SearchAction[] {
         filterBy(ctx, qualifier("drive", hit.slug), "Filter by this drive"),
       ];
 
+    case "addressbook":
+      if (hit.bookId) {
+        return [
+          go(
+            contactsPath(
+              ws,
+              hit.slug,
+              packBookRef({ accountId: hit.addressBookId, bookId: hit.bookId }),
+            ),
+            "Show in Contacts",
+          ),
+          filterBy(
+            ctx,
+            `${qualifier("addressbook", hit.slug)} ${qualifier("book", hit.title)}`,
+            "Filter by this book",
+          ),
+        ];
+      }
+      return [
+        go(contactsPath(ws, hit.slug)),
+        go(
+          workspaceSettingsPath(
+            ws,
+            "contacts",
+            `?addressBook=${encodeURIComponent(hit.addressBookId)}`,
+          ),
+          "Workspace settings",
+          Settings,
+        ),
+        ...(isAdmin
+          ? [
+              act(
+                "detach",
+                "Detach from this workspace",
+                Unplug,
+                async () => {
+                  if (
+                    await ctx.prompts.confirm({
+                      title: `Detach ${hit.title}?`,
+                      body: "It stops being part of this workspace. The address book keeps working everywhere else.",
+                      confirm: "Detach",
+                    })
+                  ) {
+                    await attempt(
+                      ctx,
+                      () =>
+                        orpc.workspaceAddressBooks.detach({
+                          workspaceSlug: ws,
+                          linkId: hit.linkId,
+                        }),
+                      "Detached",
+                    );
+                  }
+                },
+                { destructive: true, keepOpen: true },
+              ),
+            ]
+          : []),
+        filterBy(ctx, qualifier("addressbook", hit.slug), "Filter by this address book"),
+      ];
+
     case "mail-folder":
       return [
         go(mailPath(ws, hit.mailboxSlug, hit.folder)),
@@ -1006,7 +1086,7 @@ function localActions(ctx: ActionContext, hit: LocalSearchHit): SearchAction[] {
             if (
               await ctx.prompts.confirm({
                 title: `Delete ${hit.email}?`,
-                body: "This removes the whole account: every mailbox, calendar and drive it backs, in every workspace.",
+                body: "This removes the whole account: every mailbox, calendar, drive and address book it backs, in every workspace.",
                 confirm: "Delete connection",
               })
             ) {

@@ -153,6 +153,8 @@ export function WorkspaceCalendarsInner() {
         linkId: target.linkId,
       });
       await refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not remove the calendar");
     } finally {
       setBusy(null);
     }

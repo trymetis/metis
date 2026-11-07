@@ -4,6 +4,7 @@ export const CONNECTION_PROVIDERS = [
   "zoho",
   "imap",
   "caldav",
+  "carddav",
   "cloudflare",
   "resend",
   "s3",
@@ -16,6 +17,7 @@ export type ConnectionProvider = (typeof CONNECTION_PROVIDERS)[number];
 const CREDENTIAL_PROVIDERS = [
   "imap",
   "caldav",
+  "carddav",
   "cloudflare",
   "resend",
   "s3",
@@ -36,7 +38,7 @@ export function isCredentialProvider(provider: ConnectionProvider): provider is 
   return (CREDENTIAL_PROVIDERS as readonly string[]).includes(provider);
 }
 
-export const CONNECTION_RESOURCES = ["mailbox", "calendar", "drive"] as const;
+export const CONNECTION_RESOURCES = ["mailbox", "calendar", "drive", "addressbook"] as const;
 export type ConnectionResource = (typeof CONNECTION_RESOURCES)[number];
 
 export function isConnectionResource(value: string): value is ConnectionResource {
@@ -44,11 +46,12 @@ export function isConnectionResource(value: string): value is ConnectionResource
 }
 
 export const PROVIDER_RESOURCES = {
-  google: ["mailbox", "calendar", "drive"],
-  microsoft: ["mailbox", "calendar", "drive"],
-  zoho: ["mailbox", "calendar"],
+  google: ["mailbox", "calendar", "drive", "addressbook"],
+  microsoft: ["mailbox", "calendar", "drive", "addressbook"],
+  zoho: ["mailbox", "calendar", "addressbook"],
   imap: ["mailbox"],
   caldav: ["calendar"],
+  carddav: ["addressbook"],
   cloudflare: ["mailbox"],
   resend: ["mailbox"],
   s3: ["drive"],
@@ -64,6 +67,7 @@ export type ProvidersFor<R extends ConnectionResource> = {
 export type MailProvider = ProvidersFor<"mailbox">;
 export type CalendarProvider = ProvidersFor<"calendar">;
 export type DriveProvider = ProvidersFor<"drive">;
+export type AddressBookProvider = ProvidersFor<"addressbook">;
 
 function providersFor<R extends ConnectionResource>(resource: R): readonly ProvidersFor<R>[] {
   return CONNECTION_PROVIDERS.filter((provider): provider is ProvidersFor<R> =>
@@ -74,6 +78,7 @@ function providersFor<R extends ConnectionResource>(resource: R): readonly Provi
 export const MAIL_PROVIDERS = providersFor("mailbox");
 export const CALENDAR_PROVIDERS = providersFor("calendar");
 export const DRIVE_PROVIDERS = providersFor("drive");
+export const ADDRESS_BOOK_PROVIDERS = providersFor("addressbook");
 
 export function providerSupportsResource<R extends ConnectionResource>(
   provider: ConnectionProvider,
@@ -99,6 +104,12 @@ export function isCalendarProvider(provider: ConnectionProvider): provider is Ca
 
 export function isDriveProvider(provider: ConnectionProvider): provider is DriveProvider {
   return providerSupportsResource(provider, "drive");
+}
+
+export function isAddressBookProvider(
+  provider: ConnectionProvider,
+): provider is AddressBookProvider {
+  return providerSupportsResource(provider, "addressbook");
 }
 
 export function credentialResourceFor(provider: CredentialProvider): ConnectionResource {
@@ -183,6 +194,7 @@ export interface StoredFileServerCredentials {
 export type StoredConnectionCredentials =
   | ({ provider: "imap" } & StoredImapCredentials)
   | ({ provider: "caldav" } & StoredCaldavCredentials)
+  | ({ provider: "carddav" } & StoredCaldavCredentials)
   | ({ provider: "cloudflare" } & StoredGatewayCredentials)
   | ({ provider: "resend" } & StoredGatewayCredentials)
   | ({ provider: "s3" } & StoredS3Credentials)
@@ -287,6 +299,7 @@ export interface SftpCredentials {
 export type ConnectionCredentials =
   | ({ provider: "imap" } & ImapCredentials)
   | ({ provider: "caldav" } & CaldavCredentials)
+  | ({ provider: "carddav" } & CaldavCredentials)
   | ({ provider: "cloudflare" } & GatewayCredentials)
   | ({ provider: "resend" } & GatewayCredentials)
   | ({ provider: "s3" } & S3Credentials)
@@ -324,6 +337,13 @@ export function imapCredentials(auth: ConnectionAuth): ImapCredentials {
 export function caldavCredentials(auth: ConnectionAuth): CaldavCredentials {
   if (auth.kind !== "credentials" || auth.credentials.provider !== "caldav") {
     throw new Error("This account has no CalDAV credentials");
+  }
+  return auth.credentials;
+}
+
+export function carddavCredentials(auth: ConnectionAuth): CaldavCredentials {
+  if (auth.kind !== "credentials" || auth.credentials.provider !== "carddav") {
+    throw new Error("This account has no CardDAV credentials");
   }
   return auth.credentials;
 }

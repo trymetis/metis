@@ -20,7 +20,6 @@
   {
     "name": "workspaces/workspace-menu",
     "viewport": { "width": 960, "height": 480 },
-    "clip": { "x": 0, "y": 0, "width": 320, "height": 250 },
     "path": "{workspace}/settings/general",
     "steps": [
       {
@@ -30,12 +29,15 @@
         "click": "role=navigation[name=\"App navigation\"] >> button[aria-label$=\" menu\"]"
       },
       { "waitFor": "role=menuitem[name=/^All workspaces$/]" }
+    ],
+    "element": [
+      "role=navigation[name=\"App navigation\"] >> button[aria-label$=\" menu\"]",
+      "role=menu"
     ]
   },
   {
     "name": "workspaces/account-menu",
     "viewport": { "width": 960, "height": 480 },
-    "clip": { "x": 0, "y": 120, "width": 320, "height": 360 },
     "path": "{workspace}/settings/general",
     "steps": [
       {
@@ -45,6 +47,10 @@
         "click": "role=navigation[name=\"App navigation\"] >> button[aria-haspopup=\"menu\"]:not([aria-label$=\" menu\"])"
       },
       { "waitFor": "role=menuitem[name=/^Connections$/]" }
+    ],
+    "element": [
+      "role=navigation[name=\"App navigation\"] >> button[aria-haspopup=\"menu\"]:not([aria-label$=\" menu\"])",
+      "role=menu"
     ]
   },
   {
@@ -131,45 +137,20 @@
     "name": "workspaces/general-settings",
     "clip": { "x": 0, "y": 0, "width": 1440, "height": 430 },
     "path": "{workspace}/settings/general",
-    "steps": [
-      { "waitFor": "main >> text=/^Members of /" },
-      { "waitFor": "main >> role=link[name=/^Manage members$/]" },
-      {
-        "waitFor": "main >> section:has(h2:text-matches(\"^Members of \")) >> li"
-      }
-    ]
+    "steps": [{ "waitFor": "main >> role=heading[level=1][name=\"General\"]" }]
   },
   {
     "name": "workspaces/members-page",
-    "path": "{workspace}/members",
+    "path": "{workspace}/settings/members",
     "steps": [
-      { "waitFor": "main >> role=list[name=\"Members\"] >> role=link" },
+      { "waitFor": "main >> role=list[name=\"Members\"] >> li" },
       { "waitFor": "main >> role=button[name=/^Invite$/]" }
     ],
     "element": "main"
   },
   {
-    "name": "workspaces/member-profile",
-    "path": "{workspace}/members",
-    "steps": [
-      { "waitFor": "main >> role=list[name=\"Members\"] >> role=link" },
-      { "click": "main >> role=list[name=\"Members\"] >> role=link" },
-      {
-        "waitFor": "main >> role=button[name=\"Search everything with this person\"]"
-      },
-      {
-        "waitFor": "main section:has(> h3:has-text(\"Recent mail with them\")) > :is(ul, p)"
-      },
-      {
-        "waitFor": "main section:has(> h3:has-text(\"Upcoming events with them\")) > :is(ul, p)"
-      },
-      { "wait": 300 }
-    ],
-    "element": "main"
-  },
-  {
     "name": "workspaces/invite-dialog",
-    "path": "{workspace}/members",
+    "path": "{workspace}/settings/members",
     "steps": [
       { "waitFor": "main >> role=button[name=/^Invite$/]" },
       { "click": "main >> role=button[name=/^Invite$/]" },

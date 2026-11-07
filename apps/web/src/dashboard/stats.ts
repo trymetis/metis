@@ -24,6 +24,8 @@ import { CONNECTION_PROVIDERS } from "@/connections/types";
 import { db } from "@/db";
 import {
   aiUsage,
+  addressBook,
+  addressBookWorkspace,
   calendar,
   calendarWorkspace,
   connection,
@@ -82,13 +84,15 @@ function utcDayKey(value: Date): string {
 const dayBucket = sql<string>`strftime('%Y-%m-%d', ${aiUsage.createdAt} / 1000, 'unixepoch')`;
 
 export async function dashboardStats(): Promise<DashboardStats> {
-  const [[users], [workspaces], [mailboxes], [calendars], [drives]] = await Promise.all([
-    db.select({ n: count() }).from(user),
-    db.select({ n: count() }).from(workspace),
-    db.select({ n: count() }).from(mailbox),
-    db.select({ n: count() }).from(calendar),
-    db.select({ n: count() }).from(drive),
-  ]);
+  const [[users], [workspaces], [mailboxes], [calendars], [drives], [addressBooks]] =
+    await Promise.all([
+      db.select({ n: count() }).from(user),
+      db.select({ n: count() }).from(workspace),
+      db.select({ n: count() }).from(mailbox),
+      db.select({ n: count() }).from(calendar),
+      db.select({ n: count() }).from(drive),
+      db.select({ n: count() }).from(addressBook),
+    ]);
 
   return {
     users: users?.n ?? 0,
@@ -96,6 +100,7 @@ export async function dashboardStats(): Promise<DashboardStats> {
     mailboxes: mailboxes?.n ?? 0,
     calendars: calendars?.n ?? 0,
     drives: drives?.n ?? 0,
+    addressBooks: addressBooks?.n ?? 0,
   };
 }
 
@@ -276,50 +281,63 @@ export async function dashboardOverview(): Promise<DashboardOverview> {
 const QUARANTINED_LIST_LIMIT = 20;
 
 export async function dashboardConnections(): Promise<DashboardConnections> {
-  const [totals, byProvider, mailboxesByProvider, calendarsByProvider, drivesByProvider, rows] =
-    await Promise.all([
-      db
-        .select({
-          total: count(),
-          quarantined: count(connection.quarantinedAt),
-        })
-        .from(connection),
-      db
-        .select({ provider: connection.provider, n: count() })
-        .from(connection)
-        .groupBy(connection.provider),
-      db
-        .select({ provider: connection.provider, n: count() })
-        .from(mailbox)
-        .innerJoin(connection, eq(mailbox.connectionId, connection.id))
-        .groupBy(connection.provider),
-      db
-        .select({ provider: connection.provider, n: count() })
-        .from(calendar)
-        .innerJoin(connection, eq(calendar.connectionId, connection.id))
-        .groupBy(connection.provider),
-      db
-        .select({ provider: connection.provider, n: count() })
-        .from(drive)
-        .innerJoin(connection, eq(drive.connectionId, connection.id))
-        .groupBy(connection.provider),
-      db
-        .select({
-          id: connection.id,
-          email: connection.email,
-          provider: connection.provider,
-          quarantinedAt: connection.quarantinedAt,
-        })
-        .from(connection)
-        .where(isNotNull(connection.quarantinedAt))
-        .orderBy(desc(connection.quarantinedAt))
-        .limit(QUARANTINED_LIST_LIMIT),
-    ]);
+  const [
+    totals,
+    byProvider,
+    mailboxesByProvider,
+    calendarsByProvider,
+    drivesByProvider,
+    addressBooksByProvider,
+    rows,
+  ] = await Promise.all([
+    db
+      .select({
+        total: count(),
+        quarantined: count(connection.quarantinedAt),
+      })
+      .from(connection),
+    db
+      .select({ provider: connection.provider, n: count() })
+      .from(connection)
+      .groupBy(connection.provider),
+    db
+      .select({ provider: connection.provider, n: count() })
+      .from(mailbox)
+      .innerJoin(connection, eq(mailbox.connectionId, connection.id))
+      .groupBy(connection.provider),
+    db
+      .select({ provider: connection.provider, n: count() })
+      .from(calendar)
+      .innerJoin(connection, eq(calendar.connectionId, connection.id))
+      .groupBy(connection.provider),
+    db
+      .select({ provider: connection.provider, n: count() })
+      .from(drive)
+      .innerJoin(connection, eq(drive.connectionId, connection.id))
+      .groupBy(connection.provider),
+    db
+      .select({ provider: connection.provider, n: count() })
+      .from(addressBook)
+      .innerJoin(connection, eq(addressBook.connectionId, connection.id))
+      .groupBy(connection.provider),
+    db
+      .select({
+        id: connection.id,
+        email: connection.email,
+        provider: connection.provider,
+        quarantinedAt: connection.quarantinedAt,
+      })
+      .from(connection)
+      .where(isNotNull(connection.quarantinedAt))
+      .orderBy(desc(connection.quarantinedAt))
+      .limit(QUARANTINED_LIST_LIMIT),
+  ]);
 
   const connectionCounts = new Map(byProvider.map((r) => [r.provider, r.n]));
   const mailboxCounts = new Map(mailboxesByProvider.map((r) => [r.provider, r.n]));
   const calendarCounts = new Map(calendarsByProvider.map((r) => [r.provider, r.n]));
   const driveCounts = new Map(drivesByProvider.map((r) => [r.provider, r.n]));
+  const addressBookCounts = new Map(addressBooksByProvider.map((r) => [r.provider, r.n]));
 
   return {
     total: totals[0]?.total ?? 0,
@@ -329,13 +347,15 @@ export async function dashboardConnections(): Promise<DashboardConnections> {
         (connectionCounts.get(provider) ?? 0) > 0 ||
         (mailboxCounts.get(provider) ?? 0) > 0 ||
         (calendarCounts.get(provider) ?? 0) > 0 ||
-        (driveCounts.get(provider) ?? 0) > 0,
+        (driveCounts.get(provider) ?? 0) > 0 ||
+        (addressBookCounts.get(provider) ?? 0) > 0,
     ).map((provider) => ({
       provider,
       connections: connectionCounts.get(provider) ?? 0,
       mailboxes: mailboxCounts.get(provider) ?? 0,
       calendars: calendarCounts.get(provider) ?? 0,
       drives: driveCounts.get(provider) ?? 0,
+      addressBooks: addressBookCounts.get(provider) ?? 0,
     })),
     quarantinedList: rows.map((row) => ({
       id: row.id,
@@ -393,40 +413,46 @@ export async function dashboardPeople(): Promise<DashboardPeople> {
 const WORKSPACE_LIST_LIMIT = 50;
 
 export async function dashboardWorkspaces(): Promise<DashboardWorkspaces> {
-  const [workspaces, members, mailboxLinks, calendarLinks, driveLinks] = await Promise.all([
-    db
-      .select({
-        id: workspace.id,
-        name: workspace.name,
-        slug: workspace.slug,
-        aiPolicy: workspace.aiPolicy,
-        createdAt: workspace.createdAt,
-      })
-      .from(workspace)
-      .orderBy(desc(workspace.createdAt))
-      .limit(WORKSPACE_LIST_LIMIT),
-    db
-      .select({ workspaceId: workspaceMember.workspaceId, n: count() })
-      .from(workspaceMember)
-      .groupBy(workspaceMember.workspaceId),
-    db
-      .select({ workspaceId: mailboxWorkspace.workspaceId, n: count() })
-      .from(mailboxWorkspace)
-      .groupBy(mailboxWorkspace.workspaceId),
-    db
-      .select({ workspaceId: calendarWorkspace.workspaceId, n: count() })
-      .from(calendarWorkspace)
-      .groupBy(calendarWorkspace.workspaceId),
-    db
-      .select({ workspaceId: driveWorkspace.workspaceId, n: count() })
-      .from(driveWorkspace)
-      .groupBy(driveWorkspace.workspaceId),
-  ]);
+  const [workspaces, members, mailboxLinks, calendarLinks, driveLinks, addressBookLinks] =
+    await Promise.all([
+      db
+        .select({
+          id: workspace.id,
+          name: workspace.name,
+          slug: workspace.slug,
+          aiPolicy: workspace.aiPolicy,
+          createdAt: workspace.createdAt,
+        })
+        .from(workspace)
+        .orderBy(desc(workspace.createdAt))
+        .limit(WORKSPACE_LIST_LIMIT),
+      db
+        .select({ workspaceId: workspaceMember.workspaceId, n: count() })
+        .from(workspaceMember)
+        .groupBy(workspaceMember.workspaceId),
+      db
+        .select({ workspaceId: mailboxWorkspace.workspaceId, n: count() })
+        .from(mailboxWorkspace)
+        .groupBy(mailboxWorkspace.workspaceId),
+      db
+        .select({ workspaceId: calendarWorkspace.workspaceId, n: count() })
+        .from(calendarWorkspace)
+        .groupBy(calendarWorkspace.workspaceId),
+      db
+        .select({ workspaceId: driveWorkspace.workspaceId, n: count() })
+        .from(driveWorkspace)
+        .groupBy(driveWorkspace.workspaceId),
+      db
+        .select({ workspaceId: addressBookWorkspace.workspaceId, n: count() })
+        .from(addressBookWorkspace)
+        .groupBy(addressBookWorkspace.workspaceId),
+    ]);
 
   const memberCounts = new Map(members.map((r) => [r.workspaceId, r.n]));
   const mailboxCounts = new Map(mailboxLinks.map((r) => [r.workspaceId, r.n]));
   const calendarCounts = new Map(calendarLinks.map((r) => [r.workspaceId, r.n]));
   const driveCounts = new Map(driveLinks.map((r) => [r.workspaceId, r.n]));
+  const addressBookCounts = new Map(addressBookLinks.map((r) => [r.workspaceId, r.n]));
 
   const shared = members.filter((r) => r.n > 1).length;
 
@@ -443,6 +469,7 @@ export async function dashboardWorkspaces(): Promise<DashboardWorkspaces> {
       mailboxes: mailboxCounts.get(row.id) ?? 0,
       calendars: calendarCounts.get(row.id) ?? 0,
       drives: driveCounts.get(row.id) ?? 0,
+      addressBooks: addressBookCounts.get(row.id) ?? 0,
       createdAt: row.createdAt.toISOString(),
     })),
   };

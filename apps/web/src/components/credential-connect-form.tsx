@@ -36,6 +36,7 @@ const CONNECTED_LABEL: Record<CredentialProvider, string> = {
   cloudflare: "Mailbox connected",
   resend: "Mailbox connected",
   caldav: "Calendar connected",
+  carddav: "Address book connected",
   s3: "Drive connected",
   webdav: "Drive connected",
   ftp: "Drive connected",
@@ -47,6 +48,7 @@ const SUBMIT_LABEL: Record<CredentialProvider, string> = {
   cloudflare: "Connect mailbox",
   resend: "Connect mailbox",
   caldav: "Connect calendar",
+  carddav: "Connect address book",
   s3: "Connect drive",
   webdav: "Connect drive",
   ftp: "Connect drive",
@@ -75,9 +77,9 @@ export function CredentialConnectForm({
               pass: form.pass,
               smtpAuth: form.separateSmtp ? { user: form.smtpUser, pass: form.smtpPass } : null,
             }
-          : provider === "caldav"
+          : provider === "caldav" || provider === "carddav"
             ? {
-                provider: "caldav" as const,
+                provider,
                 server,
                 user: form.user || form.email,
                 pass: form.pass,

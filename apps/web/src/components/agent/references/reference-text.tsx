@@ -12,7 +12,7 @@ import {
 import { ReferenceChip } from "./reference-chip";
 import { useAgentReferences, useResolvedReference } from "./reference-provider";
 
-const OPENABLE_TYPES: ReadonlySet<ReferenceType> = new Set(["file", "member"]);
+const OPENABLE_TYPES: ReadonlySet<ReferenceType> = new Set(["file", "member", "contact"]);
 
 function InlineReference({ raw, ...ref }: AgentReference & { raw: string }) {
   const resolved = useResolvedReference(ref);
@@ -37,8 +37,10 @@ function InlineReference({ raw, ...ref }: AgentReference & { raw: string }) {
       onClick={() => open(resolved)}
       aria-label={
         ref.type === "member"
-          ? `Open the profile of ${resolved.label}`
-          : `Preview ${resolved.label}`
+          ? `Show ${resolved.label}`
+          : ref.type === "contact"
+            ? `Open contact ${resolved.label}`
+            : `Preview ${resolved.label}`
       }
       className="cursor-pointer rounded-md align-baseline outline-none hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring/50"
     >

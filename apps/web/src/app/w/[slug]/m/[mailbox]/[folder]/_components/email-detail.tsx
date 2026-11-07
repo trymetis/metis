@@ -21,9 +21,11 @@ import {
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@metis/ui/components/hover-card";
 import { ScrollArea } from "@metis/ui/components/scroll-area";
 import { cn } from "@metis/ui/lib/utils";
+import { useQuery } from "@tanstack/react-query";
 import { cva } from "class-variance-authority";
 import { escapeText } from "entities";
 import {
+  BookUser,
   AlertTriangle,
   Archive,
   ArchiveRestore,
@@ -64,6 +66,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { viewerTimeZone } from "@/ai/turn";
+import { PersonMenu, SavedBadge } from "@/components/contacts/person-menu";
+import { useSaveContact } from "@/components/contacts/use-save-contact";
 import { type DrivePick, DrivePickerDialog } from "@/components/drive-picker-dialog";
 import { PickTimeDialog } from "@/components/pick-time-dialog";
 import { useScopePolicy } from "@/components/scope-policy-context";
@@ -88,7 +92,7 @@ import { type MailPrivacy, useMailPrivacy, useRenderedEmail } from "@/hooks/use-
 import { useMailboxEmails } from "@/hooks/use-mailbox-emails";
 import { useMailboxScope } from "@/hooks/use-workspace-path";
 import { inOrder } from "@/lib/in-order";
-import { orpc } from "@/lib/orpc";
+import { orpc, rpc } from "@/lib/orpc";
 import { formatBytes, formatRelativeDate } from "@/lib/utils";
 import { customLabelMark, LABEL_OPTIONS } from "@/mail/label-meta";
 import { showLabelUndo } from "@/mail/label-undo";
@@ -102,7 +106,12 @@ import {
 } from "@/mail/mail-cache";
 import { cleanUrl as cleanTrackedUrl, renderEmailHtml } from "@/mail/render/pipeline";
 import type { RemoteImages } from "@/mail/render/types";
-import type { AnalysisResultOutput, ThreadSummaryOutput } from "@/server/schema";
+import type {
+  AnalysisResultOutput,
+  ContactDraft,
+  ContactMatch,
+  ThreadSummaryOutput,
+} from "@/server/schema";
 import { type ComposeInitial, useMailStore } from "@/store/mail-store";
 import type { Attachment } from "@/types/mail";
 import { ALL_DRIVES_SLUG, mailPath } from "@/workspace/path";
@@ -152,9 +161,13 @@ const SNOOZE_PRESETS: { label: string; when: () => Date }[] = [
 function RecipientLine({
   label,
   recipients,
+  matches,
+  onSave,
 }: {
   label: string;
   recipients: { email: string; name?: string }[];
+  matches: Map<string, ContactMatch>;
+  onSave: (draft: ContactDraft) => void;
 }) {
   return (
     <div className="flex gap-2">
@@ -163,9 +176,19 @@ function RecipientLine({
       </span>
       <div className="min-w-0 flex-1 space-y-0.5">
         {recipients.map((r) => (
-          <div key={`${r.email}-${r.name ?? ""}`} className="min-w-0">
-            {r.name && <span className="text-[12px] text-muted-foreground">{r.name} </span>}
-            <span className="break-all font-mono text-[11px] text-faint">{r.email}</span>
+          <div key={`${r.email}-${r.name ?? ""}`} className="flex min-w-0 items-center gap-1">
+            <PersonMenu
+              email={r.email}
+              name={r.name}
+              match={matches.get(r.email.toLowerCase())}
+              onSave={onSave}
+            >
+              {r.name && <span className="text-[12px] text-muted-foreground">{r.name} </span>}
+              <span className="break-all font-mono text-[11px] text-faint">{r.email}</span>
+            </PersonMenu>
+            {matches.has(r.email.toLowerCase()) && (
+              <BookUser aria-label="Saved contact" className="size-3 shrink-0 text-brand-text" />
+            )}
           </div>
         ))}
       </div>
@@ -233,6 +256,34 @@ export function EmailDetail() {
   }
 
   const phishingDetectionEnabled = useScopePolicy().phishingDetection;
+  const saveContact = useSaveContact();
+  const contactAddresses = useMemo(
+    () =>
+      selectedEmail
+        ? [
+            ...new Set(
+              [selectedEmail.from, ...selectedEmail.to, ...(selectedEmail.cc ?? [])]
+                .map((address) => address.trim().toLowerCase())
+                .filter((address) => address.includes("@")),
+            ),
+          ].slice(0, 200)
+        : [],
+    [selectedEmail],
+  );
+  const contactLookup = useQuery({
+    ...rpc.contacts.lookup.queryOptions({
+      input: { workspaceSlug: scope.workspaceSlug, emails: contactAddresses },
+    }),
+    enabled: contactAddresses.length > 0,
+    staleTime: 60_000,
+  });
+  const contactMatches = useMemo(
+    () => new Map((contactLookup.data?.matches ?? []).map((m) => [m.email, m])),
+    [contactLookup.data],
+  );
+  const senderMatch = selectedEmail
+    ? contactMatches.get(selectedEmail.from.toLowerCase())
+    : undefined;
   const { body, bodyHtml } = useEmailBody(selectedEmail);
   const privacy = useMailPrivacy();
   const images: RemoteImages = selectedEmail
@@ -1046,12 +1097,30 @@ export function EmailDetail() {
             </div>
 
             <div className="mb-8 flex items-start gap-3.5 border-b pb-6 border-border-soft">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border text-[15px] bg-surface border-border font-serif text-brand-text">
-                {fromName.charAt(0).toUpperCase()}
-              </div>
+              <PersonMenu
+                email={fromEmail}
+                name={selectedEmail.fromName}
+                match={senderMatch}
+                onSave={saveContact.save}
+                decorative
+                className="relative shrink-0 rounded-full hover:no-underline"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full border text-[15px] bg-surface border-border font-serif text-brand-text">
+                  {fromName.charAt(0).toUpperCase()}
+                </span>
+                {senderMatch && <SavedBadge />}
+              </PersonMenu>
               <div className="min-w-0 flex-1">
-                <div className="text-[14px] font-medium text-foreground">{fromName}</div>
-                <div className="text-[12px] font-mono text-faint">{fromEmail}</div>
+                <PersonMenu
+                  email={fromEmail}
+                  name={selectedEmail.fromName}
+                  match={senderMatch}
+                  onSave={saveContact.save}
+                  className="block max-w-full"
+                >
+                  <span className="block text-[14px] font-medium text-foreground">{fromName}</span>
+                  <span className="block text-[12px] font-mono text-faint">{fromEmail}</span>
+                </PersonMenu>
                 {(toRecipients.length > 0 || ccRecipients.length > 0) && (
                   <div className="mt-0.5 text-[12px] text-faint">
                     <button
@@ -1077,9 +1146,19 @@ export function EmailDetail() {
                     </button>
                     {recipientsExpanded && (
                       <div className="mt-1.5 space-y-1.5 rounded-md border border-border-soft bg-surface px-2.5 py-2">
-                        <RecipientLine label="To" recipients={toRecipients} />
+                        <RecipientLine
+                          label="To"
+                          recipients={toRecipients}
+                          matches={contactMatches}
+                          onSave={saveContact.save}
+                        />
                         {ccRecipients.length > 0 && (
-                          <RecipientLine label="Cc" recipients={ccRecipients} />
+                          <RecipientLine
+                            label="Cc"
+                            recipients={ccRecipients}
+                            matches={contactMatches}
+                            onSave={saveContact.save}
+                          />
                         )}
                       </div>
                     )}
@@ -1495,6 +1574,7 @@ export function EmailDetail() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {saveContact.dialog}
       <DrivePickerDialog
         open={saveTarget !== null}
         onOpenChange={(next) => !next && setSaveTarget(null)}

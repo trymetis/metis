@@ -105,33 +105,43 @@ test("an event result opens the event in the calendar", async ({ page, account }
   await expect(page.getByRole("dialog", { name: /Design review/ })).toBeVisible();
 });
 
-test("a member result opens the member's profile with their mail", async ({ page, account }) => {
+test("a member result previews the member with their mail and has no profile page", async ({
+  page,
+  account,
+}) => {
   await page.goto(mailPath(account));
-  await openSearch(page);
+  const dialog = await openSearch(page);
   await typeQuery(page, `type:member ${account.email}`);
   const row = searchDialog(page)
     .getByRole("group", { name: "Members" })
     .getByRole("option", { name: new RegExp(account.name) });
   await expect(row).toBeVisible();
-  await page.keyboard.press("Enter");
-  await expect(page).toHaveURL(/\/members\//);
-  await expect(page.getByRole("heading", { level: 1, name: account.name })).toBeVisible();
-  await expect(page.getByText("Recent mail with them")).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Search everything with this person" }),
-  ).toBeVisible();
+  const preview = dialog.getByRole("complementary", { name: "Preview" });
+  await expect(preview.getByRole("heading", { name: account.name })).toBeVisible();
+  await expect(preview.getByText(account.email, { exact: true })).toBeVisible();
+  await expect(preview.getByText("Recent mail with them")).toBeVisible();
+  await row.getByRole("button", { name: /^Actions for/ }).click();
+  await expect(dialog.getByText("Open profile", { exact: true })).toHaveCount(0);
 });
 
-test("the members page lists the workspace's members and links to profiles", async ({
+test("Go to members opens Settings → Members, which lists the workspace's members", async ({
   page,
   account,
 }) => {
-  await page.goto(workspacePath(account, "/members"));
+  await page.goto(mailPath(account));
+  await openSearch(page);
+  await typeQuery(page, "Go to members");
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(new RegExp(`/w/${account.workspaceSlug}/settings/members$`));
   await expect(page.getByRole("heading", { level: 1, name: "Members" })).toBeVisible();
   const list = page.getByRole("list", { name: "Members" });
-  await list.getByRole("link", { name: new RegExp(account.email) }).click();
-  await expect(page).toHaveURL(/\/members\/.+/);
-  await expect(page.getByRole("heading", { level: 1, name: account.name })).toBeVisible();
+  await expect(list.getByText(account.email, { exact: false })).toBeVisible();
+  await expect(list.getByRole("link")).toHaveCount(0);
+});
+
+test("the old members page is gone", async ({ page, account }) => {
+  const res = await page.goto(workspacePath(account, "/members"));
+  expect(res?.status()).toBe(404);
 });
 
 test("on a phone search is a full-height sheet without the preview pane", async ({

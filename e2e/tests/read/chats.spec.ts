@@ -1,7 +1,9 @@
 import {
   CALENDAR_CHAT,
+  CONTACTS_CHAT,
   DRIVE_CHAT,
   MAIL_CHAT,
+  REFERENCE_CHAT,
   WORKSPACE_CHATS,
 } from "@metis/e2e/lib/llm-scenarios";
 import type { Page } from "@playwright/test";
@@ -78,6 +80,63 @@ test("the drive chats replay their scripted turns", async ({ page, account }) =>
         kind === DRIVE_CHAT.conversationDrive ? DRIVE_CHAT.turns : DRIVE_CHAT.turns.slice(0, 1),
       );
     });
+  }
+});
+
+test("the contacts chat replays its scripted turns", async ({ page, account }) => {
+  await page.goto(workspacePath(account, "/p/all/all"));
+  await page.getByRole("banner").getByRole("button", { name: "Contacts AI" }).click();
+  await converse(
+    page,
+    page.getByRole("textbox", { name: "Ask about your contacts…" }),
+    "contacts-chat",
+    CONTACTS_CHAT.turns,
+  );
+});
+
+test("contact, member and address-book chips are sent, and open what they name", async ({
+  page,
+  rpc,
+  account,
+}) => {
+  await page.goto(workspacePath(account, "/assistant"));
+  const input = composer(page);
+  await input.click();
+  const picker = page.getByRole("listbox", { name: "Insert a reference" });
+  for (const pick of REFERENCE_CHAT.picks) {
+    await page.keyboard.type(`@${pick.query}`);
+    await picker.getByRole("option", { name: new RegExp(`^${pick.label}`) }).click();
+    await expect(picker).toBeHidden();
+  }
+  await expect(input).toContainText("Raj Mehta");
+  await paceChat("workspace-chat");
+  const response = chatResponse(page, "workspace-chat");
+  await page.keyboard.type(REFERENCE_CHAT.question);
+  await page.keyboard.press("Enter");
+  const res = await response;
+  try {
+    expect(res.status()).toBe(200);
+    await settle(page, res);
+    expect(await failure(page)).toBeNull();
+    const log = conversation(page);
+
+    await log.getByRole("button", { name: "Show Ana Silva", exact: true }).click();
+    const panel = page.getByRole("complementary", { name: "Preview of Ana Silva" });
+    await expect(panel.getByText(account.email, { exact: true }).first()).toBeVisible();
+    await expect(panel.getByText("Recent mail with them")).toBeVisible();
+    await panel.getByRole("button", { name: "Close preview" }).click();
+    await expect(panel).toBeHidden();
+
+    const bookChip = log.locator('[data-reference-chip="addressbook"]');
+    await expect(bookChip).toHaveText("Studio contacts");
+    await expect(log.getByRole("button").filter({ has: bookChip })).toHaveCount(0);
+
+    await log.getByRole("button", { name: "Open contact Raj Mehta", exact: true }).click();
+    await expect(page).toHaveURL(/\/p\/all\/all\/[^/]+$/);
+    await expect(page.getByRole("article", { name: "Raj Mehta" })).toBeVisible();
+  } finally {
+    await page.goBack();
+    await deleteOpenThread(page, rpc, account);
   }
 });
 

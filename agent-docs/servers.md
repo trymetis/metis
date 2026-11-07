@@ -1,21 +1,21 @@
 # Operator-defined servers and credential drivers
 
-How IMAP+SMTP, CalDAV, the two mail gateways, S3, WebDAV, FTP and SFTP are configured by the operator and connected by users with only their own login.
+How IMAP+SMTP, CalDAV, CardDAV, the two mail gateways, S3, WebDAV, FTP and SFTP are configured by the operator and connected by users with only their own login.
 Paths are relative to `apps/web/`.
 See also [AGENTS.md](../AGENTS.md), [connections.md](connections.md), [configuration.md](configuration.md), [mail.md](mail.md), [calendar.md](calendar.md), [gateways.md](gateways.md), [drive-providers.md](drive-providers.md).
 
 ## Code map
 
-| Concern                    | Where                                                                                                                                                                                                                                                                                                        |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Entry schemas and lists    | `src/config/schema.ts` → `imapServersSchema` … `sftpServersSchema` (built by the private `serverListSchema`), `serverEntryId` · seeded from env in `src/config/from-env.ts`, stored in `instance_config.servers` ([configuration.md](configuration.md))                                                      |
-| Editing entries            | `src/dashboard/config-forms.ts` → `LIST_FIELDS`, `sectionFromForm` (the System provider pages, [dashboard.md](dashboard.md))                                                                                                                                                                                 |
-| Stored reference documents | `src/connections/credential-schema.ts` → `connectionCredentialsSchema` · column `connection.credentials` in `src/db/schema.ts`                                                                                                                                                                               |
-| Reference → full details   | `src/connections/servers.ts` → `resolveServerCredentials` · used by `src/connections/connection-store.ts` → `resolveConnectionAuth`, `src/server/routes/connections.ts` → `createCredential` and `src/connections/quarantine.ts` → `reconcileQuarantine`, `backfillServerIds`                                |
-| Long-lived clients         | `src/drive/providers/s3/client.ts` → `s3Client` · `src/drive/providers/ftp/pool.ts` → `retireFtpServers` · `src/drive/providers/sftp/client.ts` → `retireSftpServers` · `src/mail/providers/imap-pool.ts` → `retireImapServers` · driven by `src/config/watch.ts`                                            |
-| Driver kinds               | `src/connections/types.ts` → `ProviderDriver` · `src/connections/registry.ts` → `getCredentialDriver`                                                                                                                                                                                                        |
-| Credential driver factory  | `src/connections/drivers/credential.ts` → `createCredentialDriver`, `credentialAccountId` · per provider `src/connections/drivers/{imap,caldav,s3,webdav,ftp,sftp}.ts` · gateways `src/connections/drivers/gateway.ts` → `createGatewayDriver`, per gateway `src/connections/drivers/{cloudflare,resend}.ts` |
-| Probes                     | `src/connections/verify-servers.ts` → `verifyConnectServers`, `serverChecks`                                                                                                                                                                                                                                 |
+| Concern                    | Where                                                                                                                                                                                                                                                                                                                |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Entry schemas and lists    | `src/config/schema.ts` → `imapServersSchema` … `sftpServersSchema` (built by the private `serverListSchema`), `serverEntryId` · seeded from env in `src/config/from-env.ts`, stored in `instance_config.servers` ([configuration.md](configuration.md))                                                              |
+| Editing entries            | `src/dashboard/config-forms.ts` → `LIST_FIELDS`, `sectionFromForm` (the System provider pages, [dashboard.md](dashboard.md))                                                                                                                                                                                         |
+| Stored reference documents | `src/connections/credential-schema.ts` → `connectionCredentialsSchema` · column `connection.credentials` in `src/db/schema.ts`                                                                                                                                                                                       |
+| Reference → full details   | `src/connections/servers.ts` → `resolveServerCredentials` · used by `src/connections/connection-store.ts` → `resolveConnectionAuth`, `src/server/routes/connections.ts` → `createCredential` and `src/connections/quarantine.ts` → `reconcileQuarantine`, `backfillServerIds`                                        |
+| Long-lived clients         | `src/drive/providers/s3/client.ts` → `s3Client` · `src/drive/providers/ftp/pool.ts` → `retireFtpServers` · `src/drive/providers/sftp/client.ts` → `retireSftpServers` · `src/mail/providers/imap-pool.ts` → `retireImapServers` · driven by `src/config/watch.ts`                                                    |
+| Driver kinds               | `src/connections/types.ts` → `ProviderDriver` · `src/connections/registry.ts` → `getCredentialDriver`                                                                                                                                                                                                                |
+| Credential driver factory  | `src/connections/drivers/credential.ts` → `createCredentialDriver`, `credentialAccountId` · per provider `src/connections/drivers/{imap,caldav,carddav,s3,webdav,ftp,sftp}.ts` · gateways `src/connections/drivers/gateway.ts` → `createGatewayDriver`, per gateway `src/connections/drivers/{cloudflare,resend}.ts` |
+| Probes                     | `src/connections/verify-servers.ts` → `verifyConnectServers`, `serverChecks`                                                                                                                                                                                                                                         |
 
 ## Rules
 
@@ -31,7 +31,7 @@ See also [AGENTS.md](../AGENTS.md), [connections.md](connections.md), [configura
 - **Resolution matches by `serverId` when the stored reference has one, else by name.** Preflight's `backfillServerIds` adds the id to a reference that carries only a name.
 - **`allowInsecureTls` is per entry and off by default, on every server kind that speaks TLS.**
   - IMAP/SMTP: `rejectUnauthorized: false` (`imap-pool.ts`, `imap.ts`).
-  - CalDAV: an `undici` `Agent` passed as tsdav's `fetchOptions.dispatcher` (`caldav.ts` → `insecureAgent`).
+  - CalDAV and CardDAV: an `undici` `Agent` passed as tsdav's `fetchOptions.dispatcher` (`insecureAgent` in `src/calendar/providers/caldav.ts` and `src/contacts/providers/carddav.ts`).
   - S3, WebDAV and FTP: see [drive-providers.md](drive-providers.md).
 - **An IMAP entry's IMAP or SMTP side without implicit TLS (`secure: false`) must upgrade with STARTTLS, unless that side sets `plain: true`.**
   - IMAP gets imapflow's `doSTARTTLS: true` and SMTP nodemailer's `requireTLS` (`src/mail/providers/imap-pool.ts` → `requiresStartTls`), so a server that never offers STARTTLS, or an attacker stripping it from the cleartext capability list, fails the connection instead of sending the login unencrypted.
@@ -45,6 +45,7 @@ See also [AGENTS.md](../AGENTS.md), [connections.md](connections.md), [configura
 - **A reference joins its config entry through `resolveServerCredentials` only.**
   - At runtime through `resolveConnectionAuth`; at connect time through `createCredential`; in `reconcileQuarantine` and `backfillServerIds`.
   - At runtime a missing entry resolves to null, so the connection's calls fail until quarantine marks it.
+- **A credential provider serves exactly one resource** (`credentialResourceFor` is the first entry of `PROVIDER_RESOURCES`), so CalDAV and CardDAV are separate server lists and separate connections even when one server and login serve both.
 - **A credential driver has only `verify(credentials, email)` over an already-resolved entry.** `ProviderDriver` is a union on `kind`, and both connection routes reject the wrong kind.
 
 ## How it works

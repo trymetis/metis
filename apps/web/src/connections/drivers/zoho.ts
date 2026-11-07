@@ -69,11 +69,13 @@ export const zohoDriver = createOAuthDriver({
       mailbox: ["ZohoMail.messages.ALL", "ZohoMail.folders.ALL", "ZohoMail.accounts.READ"],
       calendar: ["ZohoCalendar.calendar.ALL", "ZohoCalendar.event.ALL"],
       drive: [],
+      addressbook: ["ZohoContacts.contactapi.ALL"],
     },
     markers: {
       mailbox: "zohomail.",
       calendar: "zohocalendar.",
       drive: "zohoworkdrive.",
+      addressbook: "zohocontacts.",
     },
     separator: ",",
   },

@@ -10,7 +10,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "What is Metis Suite?",
     answer:
-      "An open-source suite that joins the accounts you already have: mail, calendars and drives from Google, Microsoft, Zoho and your own IMAP, CalDAV and file servers, with an AI agent, workflows and MCP that work across all of them. It does not host your mail: that stays with your provider.",
+      "An open-source suite that joins the accounts you already have: mail, calendars, drives and contacts from Google, Microsoft, Zoho and your own IMAP, CalDAV, CardDAV and file servers, with an AI agent, workflows and MCP that work across all of them. It does not host your mail: that stays with your provider.",
   },
   {
     question: "Does Metis store a copy of my mailbox?",
@@ -20,12 +20,12 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "Which AI model does it use?",
     answer:
-      "On Metis Cloud, every plan includes AI credits each billing month, for the AI model and the decision model, so AI works from the first day. A credit that runs out stops until the next billing day, with no top-ups, and the instance owner can switch to their own key at any time. Self-hosted instances bring their own: a key for OpenAI, Anthropic or any OpenAI-compatible endpoint, which can be a model on your own hardware. AI stays off for every mailbox, calendar and drive until you turn it on, and turning it on asks for your two-factor code.",
+      "On Metis Cloud, every plan includes AI credits each billing month, for the AI model and the decision model, so AI works from the first day. A credit that runs out stops until the next billing day, with no top-ups, and the instance owner can switch to their own key at any time. Self-hosted instances bring their own: a key for OpenAI, Anthropic or any OpenAI-compatible endpoint, which can be a model on your own hardware. AI stays off for every mailbox, calendar, drive and address book until you turn it on, and turning it on asks for your two-factor code.",
   },
   {
     question: "Can the agent send mail or delete things on its own?",
     answer:
-      "No. Sending, deleting, unsubscribing and every calendar, drive and workflow write wait for your approval in the chat. Reversible personal actions such as labels, snooze and read later run directly, the same way an archive does.",
+      "No. Sending, deleting, unsubscribing and every calendar, drive, contact and workflow write wait for your approval in the chat. Reversible personal actions such as labels, snooze and read later run directly, the same way an archive does.",
   },
   {
     question: "What license is Metis under?",

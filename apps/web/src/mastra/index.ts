@@ -3,6 +3,7 @@ import { Mastra } from "@mastra/core/mastra";
 
 import { calendarAgent } from "./agents/calendar-agent";
 import { classifierAgent } from "./agents/classifier";
+import { contactsAgent } from "./agents/contacts-agent";
 import { drafterAgent } from "./agents/drafter";
 import { driveAgent } from "./agents/drive-agent";
 import { mailboxAgent } from "./agents/mailbox-agent";
@@ -16,6 +17,7 @@ export const mastra = new Mastra({
     mailboxAgent,
     calendarAgent,
     driveAgent,
+    contactsAgent,
     workspaceAgent,
     drafterAgent,
     summarizerAgent,

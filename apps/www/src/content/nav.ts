@@ -1,4 +1,13 @@
-import { Bot, CalendarDays, HardDrive, type LucideIcon, Mail, Plug, Workflow } from "lucide-react";
+import {
+  BookUser,
+  Bot,
+  CalendarDays,
+  HardDrive,
+  type LucideIcon,
+  Mail,
+  Plug,
+  Workflow,
+} from "lucide-react";
 import type { Route } from "next";
 
 export type Tool = {
@@ -26,6 +35,12 @@ export const TOOLS: Tool[] = [
     label: "Drive",
     text: "Cloud drives and file servers in one explorer",
     icon: HardDrive,
+  },
+  {
+    href: "/contacts",
+    label: "Contacts",
+    text: "Every address book in one list, saved from mail",
+    icon: BookUser,
   },
   {
     href: "/agent",

@@ -88,6 +88,7 @@ export const SECTION_ENV_VARS: Record<InstanceSection, string[]> = {
   zoho: ["ZOHO_CLIENT_ID", "ZOHO_CLIENT_SECRET", "ZOHO_REGION"],
   imapServers: ["METIS_IMAP_SERVERS"],
   caldavServers: ["METIS_CALDAV_SERVERS"],
+  carddavServers: ["METIS_CARDDAV_SERVERS"],
   cloudflareServers: ["METIS_CLOUDFLARE_SERVERS"],
   resendServers: ["METIS_RESEND_SERVERS"],
   s3Servers: ["METIS_S3_SERVERS"],
@@ -147,6 +148,7 @@ const SECTION_FILE_PATHS: Record<InstanceSection, string[][]> = {
   ],
   imapServers: [["connections", "imapServers"]],
   caldavServers: [["connections", "caldavServers"]],
+  carddavServers: [["connections", "carddavServers"]],
   cloudflareServers: [["connections", "cloudflareServers"]],
   resendServers: [["connections", "resendServers"]],
   s3Servers: [["connections", "s3Servers"]],
@@ -174,6 +176,7 @@ function anyProviderConfigured(instance: InstanceConfig): boolean {
     oauthPairSet(instance.zoho) ||
     instance.imapServers.length > 0 ||
     instance.caldavServers.length > 0 ||
+    instance.carddavServers.length > 0 ||
     instance.cloudflareServers.length > 0 ||
     instance.resendServers.length > 0 ||
     instance.s3Servers.length > 0 ||
@@ -187,7 +190,7 @@ export function instanceConfigWarnings(instance: InstanceConfig): string[] {
   return anyProviderConfigured(instance)
     ? []
     : [
-        "No provider is configured, so no mailbox, calendar or drive can be connected until one is added under Dashboard → System.",
+        "No provider is configured, so no mailbox, calendar, drive or address book can be connected until one is added under Dashboard → System.",
       ];
 }
 

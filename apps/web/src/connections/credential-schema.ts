@@ -26,6 +26,10 @@ const caldavCredentialsSchema = z.object({
   pass: z.string().min(1),
 });
 
+const carddavCredentialsSchema = caldavCredentialsSchema.extend({
+  provider: z.literal("carddav"),
+});
+
 const gatewayTokenSchema = z.string().trim().min(16, "The mailbox token is at least 16 characters");
 
 const cloudflareCredentialsSchema = z.object({
@@ -113,6 +117,7 @@ const sftpCredentialsSchema = z.object({
 export const connectionCredentialsSchema = z.discriminatedUnion("provider", [
   imapCredentialsSchema,
   caldavCredentialsSchema,
+  carddavCredentialsSchema,
   cloudflareCredentialsSchema,
   resendCredentialsSchema,
   s3CredentialsSchema,

@@ -3,7 +3,12 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { expect, type Locator, type Page, type Response } from "@playwright/test";
 import { z } from "zod";
 
-export type ChatEndpoint = "chat" | "calendar-chat" | "drive-chat" | "workspace-chat";
+export type ChatEndpoint =
+  | "chat"
+  | "calendar-chat"
+  | "drive-chat"
+  | "contacts-chat"
+  | "workspace-chat";
 
 const CHAT_LIMIT = 15;
 const CHAT_WINDOW_MS = 60_000;
@@ -12,6 +17,7 @@ const RATE_SCOPE: Record<ChatEndpoint, string> = {
   chat: "ai-chat",
   "calendar-chat": "ai-chat",
   "drive-chat": "ai-chat",
+  "contacts-chat": "ai-chat",
   "workspace-chat": "ai-workspace-chat",
 };
 const PACING = new URL("../test-results/.chat-pacing.json", import.meta.url);

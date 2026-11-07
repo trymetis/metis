@@ -1,17 +1,17 @@
 ---
 title: OAuth providers
-description: Create OAuth clients for Google, Microsoft and Zoho so users can connect Gmail, Outlook, Zoho Mail and their calendars and drives.
+description: Create OAuth clients for Google, Microsoft and Zoho so users can connect Gmail, Outlook, Zoho Mail and their calendars, drives and contacts.
 ---
 
-People sign in to Metis Suite with their email and password, or with a magic link, and then with two-factor authentication. Google, Microsoft and Zoho play no part in that sign-in. This page sets up those providers for one job only: letting users connect their mail, calendars and drives.
+People sign in to Metis Suite with their email and password, or with a magic link, and then with two-factor authentication. Google, Microsoft and Zoho play no part in that sign-in. This page sets up those providers for one job only: letting users connect their mail, calendars, drives and contacts.
 
 Users connect Google, Microsoft and Zoho accounts by signing in to the provider and giving Metis Suite permission. For that, your instance needs its own OAuth client (an app registration) at each provider you want to offer. Only providers you configure appear in the connect dialog.
 
-| Provider  | What users can connect                  |
-| --------- | --------------------------------------- |
-| Google    | Gmail, Google Calendar and Google Drive |
-| Microsoft | Outlook, Outlook Calendar and OneDrive  |
-| Zoho      | Zoho Mail and Zoho Calendar             |
+| Provider  | What users can connect                                   |
+| --------- | -------------------------------------------------------- |
+| Google    | Gmail, Google Calendar, Google Drive and Google Contacts |
+| Microsoft | Outlook, Outlook Calendar, OneDrive and Outlook Contacts |
+| Zoho      | Zoho Mail, Zoho Calendar and Zoho Contacts               |
 
 ## Find your redirect URI
 
@@ -44,10 +44,12 @@ https://mail.example.com/api/connections/zoho/callback
     Then:
 
     1. Enable the [Gmail API](https://console.cloud.google.com/apis/enableflow;apiid=gmail.googleapis.com),
-       the [Google Calendar API](https://console.cloud.google.com/apis/enableflow;apiid=calendar-json.googleapis.com)
-       and the [Google Drive API](https://console.cloud.google.com/apis/enableflow;apiid=drive.googleapis.com).
+       the [Google Calendar API](https://console.cloud.google.com/apis/enableflow;apiid=calendar-json.googleapis.com),
+       the [Google Drive API](https://console.cloud.google.com/apis/enableflow;apiid=drive.googleapis.com)
+       and the [People API](https://console.cloud.google.com/apis/enableflow;apiid=people.googleapis.com).
+       Google Contacts works through the People API.
        With the gcloud CLI, you can run
-       `gcloud services enable gmail.googleapis.com calendar-json.googleapis.com drive.googleapis.com`
+       `gcloud services enable gmail.googleapis.com calendar-json.googleapis.com drive.googleapis.com people.googleapis.com`
        instead.
     2. Open [Google Auth platform](https://console.developers.google.com/auth/overview).
        If it says "Google Auth platform not configured yet", click
@@ -69,7 +71,8 @@ https://mail.example.com/api/connections/zoho/callback
 
     Metis Suite asks users for these permissions, depending on what they
     connect: `openid`, `email` and `profile`; `gmail.modify` and `gmail.send`
-    for mail; `calendar` for calendars; `drive` for drives.
+    for mail; `calendar` for calendars; `drive` for drives;
+    `https://www.googleapis.com/auth/contacts` for contacts.
 
     **Who can connect.** Choose the audience under
     [Audience](https://console.developers.google.com/auth/audience):
@@ -88,6 +91,11 @@ https://mail.example.com/api/connections/zoho/callback
     makes exceptions for personal use by a few people you know, for an
     internal app, and for apps in testing. See Google's guide to
     [restricted scope verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/restricted-scope-verification).
+
+    The `contacts` scope is a sensitive scope. A public app in production
+    needs Google's verification for it too, but no security assessment.
+    See Google's guide to
+    [sensitive scope verification](https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification).
 
     Google's own guides: [configure the consent screen](https://developers.google.com/workspace/guides/configure-oauth-consent),
     [create a client](https://developers.google.com/workspace/guides/create-credentials)
@@ -121,7 +129,8 @@ https://mail.example.com/api/connections/zoho/callback
     Metis Suite asks users for these Microsoft Graph permissions, depending
     on what they connect: `openid`, `email`, `profile`, `User.Read` and
     `offline_access`; `Mail.ReadWrite` and `Mail.Send` for mail;
-    `Calendars.ReadWrite` for calendars; `Files.ReadWrite` for drives.
+    `Calendars.ReadWrite` for calendars; `Files.ReadWrite` for drives;
+    `Contacts.ReadWrite` for contacts.
 
     **Admin consent.** Users give these permissions when they connect,
     unless an admin of their organization has already consented. To
@@ -165,8 +174,9 @@ https://mail.example.com/api/connections/zoho/callback
        tab.
 
     Metis Suite asks users for `AaaServer.profile.READ`; `ZohoMail.messages.ALL`,
-    `ZohoMail.folders.ALL` and `ZohoMail.accounts.READ` for mail; and
-    `ZohoCalendar.calendar.ALL` and `ZohoCalendar.event.ALL` for calendars.
+    `ZohoMail.folders.ALL` and `ZohoMail.accounts.READ` for mail;
+    `ZohoCalendar.calendar.ALL` and `ZohoCalendar.event.ALL` for calendars;
+    and `ZohoContacts.contactapi.ALL` for contacts.
 
     Zoho's own guide: [set up an OAuth client](https://www.zoho.com/accounts/protocol/oauth-setup.html).
 
@@ -189,3 +199,13 @@ If you clear a provider's client, every account connected through it is quaranti
 :::note
 The redirect URI changes when your app's address changes. After you move to a new domain, register the new redirect URI with each provider.
 :::
+
+## Add contacts to a provider you already use
+
+If your OAuth client does not include the contacts permission yet, update it in the provider's console, as listed above:
+
+- **Google:** enable the People API, and add `https://www.googleapis.com/auth/contacts` under **Data Access**.
+- **Microsoft:** add `Contacts.ReadWrite` if you list the permissions under **API permissions** for admin consent.
+- **Zoho:** nothing changes in the API console. Metis Suite asks for `ZohoContacts.contactapi.ALL` when a user connects.
+
+Accounts that are already connected keep working. They ask for the new permission the first time someone adds the account's address book.

@@ -20,7 +20,7 @@ export default function ComparePage() {
             Metis, <em>side by side.</em>
           </>
         }
-        text="Metis Suite is an open-source email, calendar and drive client you can self-host, with an AI agent on the model you choose and a built-in MCP server. Here is how it compares with the clients and AI assistants people weigh it against, with every fact sourced from the vendor's own pages."
+        text="Metis Suite is an open-source email, calendar, drive and contacts client you can self-host, with an AI agent on the model you choose and a built-in MCP server. Here is how it compares with the clients and AI assistants people weigh it against, with every fact sourced from the vendor's own pages."
       >
         <StartActions />
       </PageHead>

@@ -70,6 +70,11 @@ export const TOOL_KEYS = [
   "deleteLabel",
   "setLabels",
   "searchContacts",
+  "listAddressBooks",
+  "getContact",
+  "createContact",
+  "updateContact",
+  "deleteContact",
   "deleteDraft",
   "getRawEmail",
   "summarizeThread",
@@ -119,6 +124,8 @@ export const READ_TOOL_KEYS = [
   "listReadLater",
   "listSubscriptions",
   "searchContacts",
+  "listAddressBooks",
+  "getContact",
   "getRawEmail",
   "summarizeThread",
   "listPins",
@@ -173,6 +180,9 @@ export const WRITE_TOOL_KEYS = [
   "removeMember",
   "revokeInvite",
   "setWorkspaceTheme",
+  "createContact",
+  "updateContact",
+  "deleteContact",
 ] as const satisfies readonly ToolKey[];
 
 export type ReadToolKey = (typeof READ_TOOL_KEYS)[number];

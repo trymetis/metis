@@ -16,6 +16,7 @@ export const SCREEN_IMAGES = [
   "screens/mail-ai",
   "screens/calendar",
   "screens/drive",
+  "screens/contacts",
   "screens/agent",
   "agent/workflow",
   "agent/mcp",

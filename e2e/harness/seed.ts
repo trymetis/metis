@@ -1,5 +1,6 @@
 import { env } from "../lib/env";
 import { seedCalendar, seedStressCalendar } from "../seed/calendar";
+import { seedContacts } from "../seed/contacts";
 import { seedFiles } from "../seed/files";
 import { seedMail } from "../seed/mail";
 import { rejections } from "../seed/report";
@@ -15,6 +16,7 @@ await loadMastraSeedSql();
 await seedMail(env.imap);
 await seedCalendar(env.caldav);
 await seedStressCalendar(env.caldavStress);
+await seedContacts(env.caldav);
 await seedFiles(await s3Sink(env.s3), { bulkConcurrency: 32 });
 await seedFiles(await webdavSink(env.webdav));
 await seedFiles(await ftpSink(env.ftp));

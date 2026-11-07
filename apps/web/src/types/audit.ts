@@ -37,7 +37,7 @@ export const WORKSPACE_AUDIT_ACTIONS = [
 export const AUDIT_VIAS = ["app", "assistant", "mcp"] as const;
 export type AuditVia = (typeof AUDIT_VIAS)[number];
 
-export const AUDIT_RESOURCE_KINDS = ["mailbox", "calendar", "drive"] as const;
+export const AUDIT_RESOURCE_KINDS = ["mailbox", "calendar", "drive", "addressbook"] as const;
 export type AuditResourceKind = (typeof AUDIT_RESOURCE_KINDS)[number];
 
 export type AuditDetail = Record<string, string | number | boolean | null | string[]>;
@@ -64,10 +64,11 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   "instance.upgrade_undone": "Instance upgrade undone",
 };
 
-const AUDIT_RESOURCE_NAMES: Record<AuditResourceKind, string> = {
-  mailbox: "Mailbox",
-  calendar: "Calendar",
-  drive: "Drive",
+export const AUDIT_RESOURCE_NOUNS: Record<AuditResourceKind, string> = {
+  mailbox: "mailbox",
+  calendar: "calendar",
+  drive: "drive",
+  addressbook: "address book",
 };
 
 export function auditEventTitle(
@@ -76,7 +77,8 @@ export function auditEventTitle(
 ): string {
   if (resourceKind) {
     const verb = action === "resource.detached" ? "detached" : "removed";
-    return `${AUDIT_RESOURCE_NAMES[resourceKind]} ${verb}`;
+    const noun = AUDIT_RESOURCE_NOUNS[resourceKind];
+    return `${noun.charAt(0).toUpperCase()}${noun.slice(1)} ${verb}`;
   }
   return AUDIT_ACTION_LABELS[action];
 }

@@ -43,6 +43,7 @@ const RESOURCES: { resource: ConnectionResource; label: string }[] = [
   { resource: "mailbox", label: "Mail" },
   { resource: "calendar", label: "Calendar" },
   { resource: "drive", label: "Drive" },
+  { resource: "addressbook", label: "Contacts" },
 ];
 
 function markFor(resource: ConnectionResource, provider: ConnectionProvider): BrandMark | null {
@@ -173,7 +174,8 @@ export function ConnectionsList() {
           ) : connections.length === 0 ? (
             <div className="rounded-xl border border-border bg-surface p-6 text-center">
               <p className="text-[13px] text-faint">
-                No accounts connected yet. Connect a mailbox, calendar or drive to get started.
+                No accounts connected yet. Connect a mailbox, calendar, drive or address book to get
+                started.
               </p>
             </div>
           ) : (
@@ -235,9 +237,9 @@ export function ConnectionsList() {
             <AlertDialogHeader>
               <AlertDialogTitle>Disconnect {confirmRevoke?.email}?</AlertDialogTitle>
               <AlertDialogDescription>
-                Its mailbox, calendar and drive are removed from every workspace, and Metis Suite
-                loses access to the account. Your messages, events and files stay exactly where they
-                are.
+                Its mailbox, calendar, drive and address book are removed from every workspace, and
+                Metis Suite loses access to the account. Your messages, events, files and contacts
+                stay exactly where they are.
                 {confirmRevoke?.provider === "microsoft" && (
                   <>
                     {" "}

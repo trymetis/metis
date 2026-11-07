@@ -23,7 +23,7 @@ export const listInvites = createTool({
 export const removeMember = createTool({
   id: "removeMember",
   description:
-    "Remove someone from a workspace. Their mailboxes, calendars and drives are detached from it. Workspace owners and admins only.",
+    "Remove someone from a workspace. Their mailboxes, calendars, drives and address books are detached from it. Workspace owners and admins only.",
   inputSchema: inWorkspace(memberTarget),
   execute: async ({ workspaceId, memberId }, { requestContext }) =>
     withToolErrors(async () => {

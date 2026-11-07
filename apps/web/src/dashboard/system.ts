@@ -37,6 +37,7 @@ const PROVIDER_SECTION: Record<ConnectionProvider, InstanceSection> = {
   zoho: "zoho",
   imap: "imapServers",
   caldav: "caldavServers",
+  carddav: "carddavServers",
   cloudflare: "cloudflareServers",
   resend: "resendServers",
   s3: "s3Servers",
@@ -54,6 +55,7 @@ const OAUTH_ENV_PREFIX: Record<OAuthProviderId, string> = {
 const SERVER_LIST_ENV: Record<Exclude<ConnectionProvider, OAuthProviderId>, string> = {
   imap: "METIS_IMAP_SERVERS",
   caldav: "METIS_CALDAV_SERVERS",
+  carddav: "METIS_CARDDAV_SERVERS",
   cloudflare: "METIS_CLOUDFLARE_SERVERS",
   resend: "METIS_RESEND_SERVERS",
   s3: "METIS_S3_SERVERS",
@@ -408,15 +410,20 @@ function providerEntries(
         allowInsecureTls: server.allowInsecureTls,
       }));
     case "caldav":
+    case "carddav":
     case "webdav":
-      return (provider === "caldav" ? servers.caldavServers : servers.webdavServers).map(
-        (server) => ({
-          kind: "dav",
-          ...base(server),
-          url: publicUrl(server.url),
-          allowInsecureTls: server.allowInsecureTls,
-        }),
-      );
+      return (
+        provider === "caldav"
+          ? servers.caldavServers
+          : provider === "carddav"
+            ? servers.carddavServers
+            : servers.webdavServers
+      ).map((server) => ({
+        kind: "dav",
+        ...base(server),
+        url: publicUrl(server.url),
+        allowInsecureTls: server.allowInsecureTls,
+      }));
     case "cloudflare":
     case "resend":
       return (provider === "cloudflare" ? servers.cloudflareServers : servers.resendServers).map(

@@ -36,7 +36,8 @@ See also [AGENTS.md](../AGENTS.md), [workflow-runtime.md](workflow-runtime.md), 
 ### Storage
 
 - **A workflow is a graph with immutable revisions.** Saving writes a new `workflow_revision`; a run carries its `revision_id` and executes that revision to the end.
-- **`workflow_resource` ties a revision to every mailbox, calendar and drive it names through real FKs**, with a CHECK that exactly one of the three is set per row.
+- **`workflow_resource` ties a revision to every mailbox, calendar, drive and address book it names through real FKs**, with a CHECK that exactly one of the four is set per row.
+- **Contact steps (`contacts.*`) take an `addressbook` param and act on `contact` values; there are no contact triggers.** An empty book param on List and Create uses the address book's primary visible book (`primaryBookId` in `src/ops/values.ts`), and Update changes only the fields filled in ([contacts.md](contacts.md)).
 - **Unique keys make every step idempotent.** One event per trigger and event key, one run per event, one step run per run, node and item key; a retried run redoes only the step runs that did not complete.
 - **Every step run, the barrier included, is created by one `INSERT … SELECT … FROM workflow_run WHERE id = ? AND lease_token = ?`** (`beginStepRun`), so a stale lease inserts nothing and the fence and insert take the write lock once.
 - **Large values live in `workflow_blob`, apart from step data.** A scheduled send's draft is a `draft` blob of its workflow; downloaded file contents are `bytes` blobs of their run, referenced from a value as `{ blobId }`.
@@ -75,7 +76,7 @@ See also [AGENTS.md](../AGENTS.md), [workflow-runtime.md](workflow-runtime.md), 
 
 - **A run moves items, not messages.** An item is `{ key, value, trail }`; `trail[nodeId]` holds each step's result, which is what `steps.<id>` reads.
 - **A step that emits several items keys each one**: `<node>:<entry key>` when the runner names the entry (a listed message; Split and Loop use `<item key>/<index>`, so entries of different items never share a key), otherwise `<item>#<n>`, so the step runs below it are keyed per entry and survive a retry.
-- **Merge and Wait for all fold repeats by identity** (`identityOf`: mailbox and message id, calendar and event id, drive and file id), so an action after them runs once even when an item arrives by two paths.
+- **Merge and Wait for all fold repeats by identity** (`identityOf`: mailbox and message id, calendar and event id, drive and file id, address book and contact id), so an action after them runs once even when an item arrives by two paths.
 - **Wait for all releases only when every input reachable from this run's trigger has settled.** An input that found nothing counts as settled; one that failed, blocked, waits or ran out of budget holds the join and everything below it.
 - **A released join never re-evaluates.** The barrier is a step run with item key `barrier` (`BARRIER_ITEM_KEY`) holding each input's state and count, kept when a run settles, and a resumed run trusts a `completed` barrier.
 - **Aggregate waits for every item and passes on one list, or one list per key**, as a single item keyed by the group.

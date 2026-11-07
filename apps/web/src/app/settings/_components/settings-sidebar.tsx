@@ -2,6 +2,7 @@
 
 import { cn } from "@metis/ui/lib/utils";
 import {
+  BookUser,
   CalendarDays,
   EyeOff,
   HardDrive,
@@ -30,6 +31,7 @@ const SETTINGS_NAV = [
   { href: "/settings/mailboxes", label: "Mailboxes", icon: Mail },
   { href: "/settings/calendars", label: "Calendars", icon: CalendarDays },
   { href: "/settings/drives", label: "Drives", icon: HardDrive },
+  { href: "/settings/address-books", label: "Address books", icon: BookUser },
   { href: "/settings/mcp", label: "MCP clients", icon: Plug, ai: true },
   { href: "/settings/invites", label: "Invites", icon: MailPlus },
   { href: "/settings/security", label: "Security", icon: ShieldCheck },

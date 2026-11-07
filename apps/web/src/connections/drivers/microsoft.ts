@@ -55,11 +55,13 @@ export const microsoftDriver = createOAuthDriver({
       mailbox: ["Mail.ReadWrite", "Mail.Send"],
       calendar: ["Calendars.ReadWrite"],
       drive: ["Files.ReadWrite"],
+      addressbook: ["Contacts.ReadWrite"],
     },
     markers: {
       mailbox: "mail.readwrite",
       calendar: "calendars.readwrite",
       drive: "files.readwrite",
+      addressbook: "contacts.readwrite",
     },
   },
   authorizeUrl: `${AUTH_BASE}/authorize`,

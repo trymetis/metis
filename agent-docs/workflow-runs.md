@@ -36,7 +36,7 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [workflow
   - The executor skips every step run already `completed` for its run, node and item key and reclaims only the `failed` and `blocked` ones, so a completed send or change is never repeated.
 - **Resume depends on kept step data.** A run can be resumed only while its step outputs are kept (`stepDataDays`, at least one day for this check); after that `resumeRun` refuses with `expired`.
 - **A run from before the engine upgrade (`upgraded`) is history only** and always refuses with `upgraded`: its step results are in the old format.
-- **`resumeCheckedRun` re-validates before the claim**: the revision must still validate, the principal must resolve, and every mailbox, calendar and drive the graph names must still be reachable by them.
+- **`resumeCheckedRun` re-validates before the claim**: the revision must still validate, the principal must resolve, and every mailbox, calendar, drive and address book the graph names must still be reachable by them.
 - **Every refusal to resume carries an actionable message**; the refusals and their messages are in `resume.ts`.
 - **The resume claim is one conditional `UPDATE` fenced on status, `finished_at` and a null lease**, so the check and the claim are one atomic step and simultaneous requests claim it once.
 - **A step that never started counts as retryable only when a send verified by a person feeds it**; that is how a verified send's follow-up runs.
@@ -51,9 +51,9 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [workflow
 - **An unconfirmed dispatch is resolved by a person, once, and never by running it again.** A dispatch step that ends without a receipt (an error, a timeout, a worker that died mid-call) settles `unknown` ([workflow-graph.md](workflow-graph.md)).
 - **Before a dispatch step runs, the executor stores what it is meant to do in the step run's state (`expected`, from the runner's `expect`)**: a send's recipients and subject, an event's calendar, title and times, a response and its event, a file's drive, folder and name.
   - A scheduled send compares against its draft blob while that still exists.
-- **A dispatch is confirmed only from what the provider shows now.** Sends (`MAIL_SEND_STEPS`) are checked against the Sent folder (below); `RECONCILERS` match a created event by title and start in its calendar, a response by the event's own answer, and a written, copied or saved file by name in its folder, changed within the dispatch window.
+- **A dispatch is confirmed only from what the provider shows now.** Sends (`MAIL_SEND_STEPS`) are checked against the Sent folder (below); `RECONCILERS` match a created event by title and start in its calendar, a response by the event's own answer, a written, copied or saved file by name in its folder, changed within the dispatch window, and a created contact by name and email in its address book.
   - Add an invitation file has no reconciler: what it creates depends on the file, so it can only be closed.
-- **A created event or a written file is confirmed only when no other completed step run holds it as its receipt** (`claimedDispatchIds` lists the candidates, and the resolving `UPDATE` checks again).
+- **A created event, a written file or a created contact is confirmed only when no other completed step run holds it as its receipt** (`claimedDispatchIds` lists the candidates, and the resolving `UPDATE` checks again).
 - **Resolution is single-shot**: one conditional `UPDATE` reads the status and requires `resolved_at IS NULL` and a settled, unleased run (`resolveDispatchStepRun`).
   - A late in-process provider result cannot overwrite a resolved step, because `reconcileStepRun` requires `resolved_at IS NULL` too.
   - A resolved step stays resolved when its run is cancelled.
@@ -79,7 +79,7 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [workflow
 
 ### Visibility
 
-- **A run's detail and listing hide what the caller cannot see, not just what the run touched.** `getWorkspaceRun` and `listWorkspaceRuns` omit a run unless the caller is its principal or can see every mailbox, calendar and drive in its executed revision (`canSee`).
+- **A run's detail and listing hide what the caller cannot see, not just what the run touched.** `getWorkspaceRun` and `listWorkspaceRuns` omit a run unless the caller is its principal or can see every mailbox, calendar, drive and address book in its executed revision (`canSee`).
 
 ## How it works
 
@@ -101,7 +101,7 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [workflow
   - The executor writes the outputs each step run sent items on to `workflow_step_run.output_handles`, which decides the edges history draws as taken and the output labels an item shows.
   - Run detail returns each item's input and output while they are kept, the trigger event, the run's `flow.return` output, and every wait with its approvers and decision.
 - **What an openable run still hides.**
-  - An item whose input or output names a mailbox, calendar or drive the caller cannot see loses its detail, error, input and output, and keeps its status.
+  - An item whose input or output names a mailbox, calendar, drive or address book the caller cannot see loses its detail, error, input and output, and keeps its status.
   - Any address in an error, detail or approval request that is not one of the caller's visible mailboxes, calendars or drives reads `[hidden address]`.
 - **The run-detail graph is the editor's graph, read-only.** It draws the revision's own positions with the shared `NodeCard`; `runOverlay` turns the detail into each step's status and item count and each edge's taken state and count.
 - **The editor shows a run on its own canvas.** The Runs dock lists the workflow's recent runs; selecting one, or pressing Run now, draws that run's `runOverlay` over the current graph and polls while it is live, lists its open waits with approve and deny, and can replay its event in a test run ([workflow-graph.md](workflow-graph.md)).

@@ -49,7 +49,7 @@ export function McpSettings({
     <div>
       <PageHeader
         title="MCP clients"
-        description="Connect an AI client to the mailboxes, calendars and drives in your workspaces. Each one gets its own credentials, its own tool permissions and its own list of workspaces — there is no account-wide switch, so a client that is not listed here has no access. A workspace with AI turned off is out of reach for every client."
+        description="Connect an AI client to the mailboxes, calendars, drives and address books in your workspaces. Each one gets its own credentials, its own tool permissions and its own list of workspaces — there is no account-wide switch, so a client that is not listed here has no access. A workspace with AI turned off is out of reach for every client."
         action={<AddClientDialog onCreated={refresh} />}
       />
 

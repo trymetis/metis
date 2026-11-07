@@ -19,6 +19,7 @@ export type InstanceConfigSettings = Omit<
 interface StoredServers {
   imap: InstanceConfig["imapServers"];
   caldav: InstanceConfig["caldavServers"];
+  carddav: InstanceConfig["carddavServers"];
   cloudflare: InstanceConfig["cloudflareServers"];
   resend: InstanceConfig["resendServers"];
   s3: InstanceConfig["s3Servers"];
@@ -40,6 +41,7 @@ export function instanceConfigToRow(rt: InstanceConfig): InstanceConfigSettings 
   const servers: StoredServers = {
     imap: rt.imapServers,
     caldav: rt.caldavServers,
+    carddav: rt.carddavServers,
     cloudflare: rt.cloudflareServers,
     resend: rt.resendServers,
     s3: rt.s3Servers,
@@ -225,6 +227,7 @@ export function rowToInstanceConfig(row: InstanceConfigSettings): InstanceConfig
     },
     imapServers: servers.imap ?? [],
     caldavServers: servers.caldav ?? [],
+    carddavServers: servers.carddav ?? [],
     cloudflareServers: servers.cloudflare ?? [],
     resendServers: servers.resend ?? [],
     s3Servers: servers.s3 ?? [],

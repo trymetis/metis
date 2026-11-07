@@ -5,15 +5,22 @@ import type { WorkspaceUserSession } from "@/auth/session";
 import { accountNameIn, listCalendarsAcross } from "@/calendar/aggregate";
 import { searchEvents } from "@/calendar/search";
 import { workspaceCalendarAccounts } from "@/calendar/session";
-import { listWorkspaceCalendars, listWorkspaceDrives, listWorkspaceMailboxes } from "@/connections";
+import {
+  listWorkspaceAddressBooks,
+  listWorkspaceCalendars,
+  listWorkspaceDrives,
+  listWorkspaceMailboxes,
+} from "@/connections";
+import { ADDRESS_BOOK_PROVIDER_LABELS, addressBookName } from "@/connections/address-book-name";
+import { workspaceBookList } from "@/contacts/lookup";
 import { DRIVE_PROVIDER_LABELS, driveName } from "@/drive/name";
 import { searchFiles } from "@/drive/search";
 import { workspaceDrives } from "@/drive/session";
-import { suggestContacts } from "@/mail/contacts";
 import { listCustomLabels } from "@/mail/custom-labels";
 import { LABEL_OPTIONS } from "@/mail/label-meta";
 import { searchMail } from "@/mail/search";
 import { mailSessionFor } from "@/mail/session";
+import { suggestPeople } from "@/people";
 import type { ParserAst } from "@/search/ast";
 import { isValidTimeZone } from "@/search/dates";
 import { REMOTE_KINDS, type SearchKind } from "@/search/fields";
@@ -105,6 +112,22 @@ async function suggest(
           detail: DRIVE_PROVIDER_LABELS[d.provider],
         }));
     }
+    case "addressbook": {
+      const books = await listWorkspaceAddressBooks(workspaceId);
+      return books
+        .filter((b) => contains(prefix, b.slug, b.email, b.server))
+        .map((b) => ({
+          value: b.slug,
+          label: addressBookName(b, books),
+          detail: ADDRESS_BOOK_PROVIDER_LABELS[b.provider],
+        }));
+    }
+    case "book": {
+      const { books } = await workspaceBookList(workspaceId);
+      return books
+        .filter((b) => b.visible && contains(prefix, b.name))
+        .map((b) => ({ value: b.name, label: b.name, detail: b.accountEmail }));
+    }
     case "sub-calendar": {
       const accounts = await workspaceCalendarAccounts(workspaceId);
       const { calendars } = await listCalendarsAcross(accounts);
@@ -131,24 +154,19 @@ async function suggest(
     case "attendee":
     case "organizer":
     case "email": {
-      const members = await listWorkspaceMembers(workspaceId);
-      const people = members.map((m) => ({ email: m.email, name: m.name }));
-      const mail = await mailSessionFor(appUser, ALL_MAILBOXES_SLUG);
-      const contacts = mail
-        ? await suggestContacts({
-            userId,
-            mailboxIds: mail.mailboxes.map((m) => m.mailboxId),
-            adapter: mail.adapter,
-          }).catch(() => [])
-        : [];
-      const seen = new Set<string>();
-      return [...people, ...contacts]
-        .filter((p) => {
-          const email = p.email.toLowerCase();
-          if (seen.has(email)) return false;
-          seen.add(email);
-          return contains(prefix, p.email, p.name);
-        })
+      const [members, mail] = await Promise.all([
+        listWorkspaceMembers(workspaceId),
+        mailSessionFor(appUser, ALL_MAILBOXES_SLUG),
+      ]);
+      const people = await suggestPeople({
+        userId,
+        workspaceId,
+        mailboxIds: mail?.mailboxes.map((m) => m.mailboxId) ?? [],
+        adapter: mail?.adapter ?? null,
+        between: members.map((m) => ({ email: m.email, name: m.name })),
+      });
+      return people
+        .filter((p) => contains(prefix, p.email, p.name))
         .map((p) => ({
           value: p.email,
           label: p.name || p.email,

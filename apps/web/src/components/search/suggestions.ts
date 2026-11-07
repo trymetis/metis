@@ -17,6 +17,8 @@ export const REMOTE_SUGGEST_KEYS = new Set([
   "mailbox",
   "calendar",
   "drive",
+  "addressbook",
+  "book",
   "sub-calendar",
   "label",
   "workflow",

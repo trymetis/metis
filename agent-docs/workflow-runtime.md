@@ -90,7 +90,7 @@ See also [AGENTS.md](../AGENTS.md), [workflow-graph.md](workflow-graph.md), [wor
 - **Every tick logs one `[workflow-runner] tick` line** with `driver`, `outcome`, `invocation`, timing and counts (`discovered`, `discoveryErrors`, `claimed`, `completed`, `failed`, `blocked`, `remaining`); `internal` lines add `trigger=start|interval`.
   - `outcome` is `worked` when the tick discovered or claimed anything, `idle` otherwise, and `failed` on an infrastructure error, which names only `stage` (`setup`, `discovery`, `maintenance`, `execution`) and `code`.
   - A failing workflow is not a tick failure: it shows in `failed` / `blocked` and in that workflow's history.
-  - `discoveryErrors` counts feed triggers that could not be checked (owner left, mailbox, calendar or drive no longer visible or attached, provider scan failed); it recurs once per cadence until fixed, and the trigger's inspector shows the error.
+  - `discoveryErrors` counts feed triggers that could not be checked (owner left, mailbox, calendar, drive or address book no longer visible or attached, provider scan failed); it recurs once per cadence until fixed, and the trigger's inspector shows the error.
 - **The cron endpoint answers `200` or `500` (with `failure`) with a JSON summary, `401` for a wrong or missing secret, `404` when the driver is not `cron`.**
   - Rejections log `tick rejected` at most once a minute per reason, with the count since the last line.
   - The scheduler's timeout must exceed the tick budget, and calling more often than the cadence only drains ready work sooner.

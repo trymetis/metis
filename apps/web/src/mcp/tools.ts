@@ -11,7 +11,7 @@ export const MCP_TOOL_MANIFEST = [
   {
     key: "getWorkspace",
     label: "Open workspace",
-    description: "Read one workspace's mailboxes, calendars, drives and members",
+    description: "Read one workspace's mailboxes, calendars, drives, address books and members",
     group: "Workspaces",
   },
   {
@@ -24,7 +24,8 @@ export const MCP_TOOL_MANIFEST = [
   {
     key: "attachResource",
     label: "Attach to workspace",
-    description: "Attach one of your mailboxes, calendars or drives to a workspace, with AI off",
+    description:
+      "Attach one of your mailboxes, calendars, drives or address books to a workspace, with AI off",
     group: "Workspaces",
     sensitive: true,
   },
@@ -32,7 +33,7 @@ export const MCP_TOOL_MANIFEST = [
     key: "listAccountResources",
     label: "List your accounts",
     description:
-      "List your mailboxes, calendars and drives and the reachable workspaces each is attached to",
+      "List your mailboxes, calendars, drives and address books and the reachable workspaces each is attached to",
     group: "Account",
   },
   {
@@ -344,12 +345,6 @@ export const MCP_TOOL_MANIFEST = [
     group: "Messages",
   },
   {
-    key: "searchContacts",
-    label: "Search contacts",
-    description: "Look up people a mailbox writes to and hears from",
-    group: "Messages",
-  },
-  {
     key: "setLabels",
     label: "Set labels",
     description: "Apply one label to several emails",
@@ -594,6 +589,45 @@ export const MCP_TOOL_MANIFEST = [
     label: "Respond to invite",
     description: "Accept, decline, or tentatively accept an invitation",
     group: "Calendar",
+    sensitive: true,
+  },
+  {
+    key: "listAddressBooks",
+    label: "List address books",
+    description: "List the address books and the books this workspace can see",
+    group: "Contacts",
+  },
+  {
+    key: "searchContacts",
+    label: "Search contacts",
+    description: "Search saved contacts by name, email, phone or organization",
+    group: "Contacts",
+  },
+  {
+    key: "getContact",
+    label: "Read contact",
+    description: "Open one saved contact in full",
+    group: "Contacts",
+  },
+  {
+    key: "createContact",
+    label: "Create contact",
+    description: "Save a new contact to an address book",
+    group: "Contacts",
+    sensitive: true,
+  },
+  {
+    key: "updateContact",
+    label: "Edit contact",
+    description: "Change a saved contact",
+    group: "Contacts",
+    sensitive: true,
+  },
+  {
+    key: "deleteContact",
+    label: "Delete contact",
+    description: "Delete a saved contact at the provider",
+    group: "Contacts",
     sensitive: true,
   },
   {

@@ -54,6 +54,7 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [auth.md](auth
 - **Tools come in two tiers, and the tier is the default.** Non-sensitive tools are on by default; tools marked `sensitive: true` in `MCP_TOOL_MANIFEST` stay off until someone turns them on for that client (`isMcpToolEnabled`).
   - `runSystemCheck` is sensitive, because it connects to every checked service when the model calls it.
 - **The consent page and the settings page render the same `McpToolPicker`**: one collapsible section per tier, a checkbox that switches the whole tier (shown or filtered out), and a search box over label, description and group.
+- **`searchContacts` sits in the Contacts group and searches saved contacts** ([contacts.md](contacts.md)); it kept its key when it left mail history, so a client's stored choice for it carries over to saved contacts.
 - **Re-enabling a client takes TOTP (`mcp.setEnabled`).**
 - **Each client has its own settings page at `/settings/mcp/<slug>`; the slug is unique per user.**
   - It comes from the label the way workspace slugs do (`claude-code`, then `claude-code-2`), because a CIMD client ID is a whole URL.

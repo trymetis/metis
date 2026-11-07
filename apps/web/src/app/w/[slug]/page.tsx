@@ -3,9 +3,16 @@ import { redirect } from "next/navigation";
 
 import { getAppUser } from "@/auth/session";
 import { firstCalendarSlug } from "@/calendar/session";
+import { firstAddressBookSlug } from "@/contacts/session";
 import { firstDriveSlug } from "@/drive/session";
 import { firstMailboxSlug } from "@/mail/session";
-import { calendarRootPath, driveRootPath, mailPath, onboardingPath } from "@/workspace/path";
+import {
+  calendarRootPath,
+  contactsRootPath,
+  driveRootPath,
+  mailPath,
+  onboardingPath,
+} from "@/workspace/path";
 
 export default async function WorkspaceIndexPage({ params }: PageProps<"/w/[slug]">) {
   const { slug } = await params;
@@ -22,6 +29,9 @@ export default async function WorkspaceIndexPage({ params }: PageProps<"/w/[slug
   }
   if (await firstDriveSlug(workspaceId)) {
     redirect(driveRootPath(workspaceSlug));
+  }
+  if (await firstAddressBookSlug(workspaceId)) {
+    redirect(contactsRootPath(workspaceSlug));
   }
   redirect(onboardingPath(workspaceSlug));
 }

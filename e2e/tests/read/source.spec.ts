@@ -40,7 +40,7 @@ test("every workspace surface shows the source link in the rail", async ({ page,
     drivePath(account, "s3"),
     workspacePath(account, "/assistant"),
     workspacePath(account, "/workflow"),
-    workspacePath(account, "/members"),
+    workspacePath(account, "/settings/members"),
     workspacePath(account, "/settings/general"),
   ]) {
     await page.goto(path);

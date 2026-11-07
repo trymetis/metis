@@ -69,6 +69,20 @@ export interface DriveTurnEnvelope extends TurnEnvelopeBase {
   files: AgentFile[];
 }
 
+export interface AgentContact {
+  addressBookId: string;
+  bookId: string;
+  contactId: string;
+  name: string;
+  email?: string;
+  bookName?: string;
+}
+
+export interface ContactsTurnEnvelope extends TurnEnvelopeBase {
+  kind: "contacts";
+  contacts: AgentContact[];
+}
+
 export interface WorkspaceTurnEnvelope extends TurnEnvelopeBase {
   kind: "workspace";
 }
@@ -77,6 +91,7 @@ export type TurnEnvelope =
   | MailTurnEnvelope
   | CalendarTurnEnvelope
   | DriveTurnEnvelope
+  | ContactsTurnEnvelope
   | WorkspaceTurnEnvelope;
 
 const agentEmailSchema = z.object({
@@ -138,6 +153,23 @@ export const turnEnvelopeSchema = z.discriminatedUnion("kind", [
     folderId: z.string().optional(),
     folderPath: z.array(z.string()).max(32).optional(),
     files: z.array(agentFileSchema).max(20),
+  }),
+  z.object({
+    kind: z.literal("contacts"),
+    sentAt: z.string(),
+    timeZone: z.string(),
+    contacts: z
+      .array(
+        z.object({
+          addressBookId: z.string(),
+          bookId: z.string(),
+          contactId: z.string(),
+          name: z.string(),
+          email: z.string().optional(),
+          bookName: z.string().optional(),
+        }),
+      )
+      .max(20),
   }),
   z.object({
     kind: z.literal("workspace"),

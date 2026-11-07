@@ -1,4 +1,5 @@
 import { caldavDriver } from "./drivers/caldav";
+import { carddavDriver } from "./drivers/carddav";
 import { cloudflareDriver } from "./drivers/cloudflare";
 import { ftpDriver } from "./drivers/ftp";
 import { imapDriver } from "./drivers/imap";
@@ -19,6 +20,7 @@ const DRIVERS: Record<ConnectionProvider, ProviderDriver> = {
   ...OAUTH_DRIVERS,
   imap: imapDriver,
   caldav: caldavDriver,
+  carddav: carddavDriver,
   cloudflare: cloudflareDriver,
   resend: resendDriver,
   s3: s3Driver,

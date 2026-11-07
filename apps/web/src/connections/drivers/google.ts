@@ -40,11 +40,13 @@ export const googleDriver = createOAuthDriver({
       ],
       calendar: ["https://www.googleapis.com/auth/calendar"],
       drive: ["https://www.googleapis.com/auth/drive"],
+      addressbook: ["https://www.googleapis.com/auth/contacts"],
     },
     markers: {
       mailbox: "/auth/gmail.",
       calendar: "/auth/calendar",
       drive: "/auth/drive",
+      addressbook: "/auth/contacts",
     },
   },
   authorizeUrl: "https://accounts.google.com/o/oauth2/v2/auth",

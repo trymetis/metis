@@ -45,8 +45,8 @@ export function DataExportSection() {
         Assistant chats and security activity.
       </p>
       <p className="mt-2 text-[12px] text-faint">
-        This is not a mailbox archive. Your mail, calendar events and files stay with the provider
-        you connected, so export those from the provider.
+        This is not a mailbox archive. Your mail, calendar events, files and contacts stay with the
+        provider you connected, so export those from the provider.
       </p>
       <Button className="mt-3" variant="outline" disabled={busy} onClick={downloadExport}>
         <Download data-icon="inline-start" />

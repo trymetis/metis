@@ -13,6 +13,10 @@
     "from": "mail/composer"
   },
   {
+    "name": "mail/save-contact",
+    "from": "contacts/save-from-mail"
+  },
+  {
     "name": "mail/shared",
     "from": "workspaces/mailboxes-settings",
     "focus": "main"
@@ -228,6 +232,42 @@
     }
   },
   {
+    "name": "contacts/sources",
+    "from": "contacts/connect-address-book-providers"
+  },
+  {
+    "name": "contacts/all",
+    "from": "contacts/all-contacts"
+  },
+  {
+    "name": "contacts/filter",
+    "from": "contacts/filter"
+  },
+  {
+    "name": "contacts/sidebar",
+    "from": "contacts/sidebar"
+  },
+  {
+    "name": "contacts/card",
+    "from": "contacts/contact-card"
+  },
+  {
+    "name": "contacts/edit",
+    "from": "contacts/new-contact-dialog"
+  },
+  {
+    "name": "contacts/summary",
+    "from": "contacts/summary-contact-card"
+  },
+  {
+    "name": "contacts/visibility",
+    "from": "contacts/workspace-settings"
+  },
+  {
+    "name": "contacts/assistant",
+    "from": "contacts/contacts-ai-panel"
+  },
+  {
     "name": "agent/workspace",
     "from": "assistant/workspace-ai-empty",
     "focus": {
@@ -321,7 +361,7 @@
     "from": "workflows/branch-step",
     "steps": [
       {
-        "click": ".react-flow__controls-fitview"
+        "click": "role=button[name=\"Fit View\"]"
       },
       {
         "wait": 900
@@ -469,6 +509,11 @@
   {
     "name": "screens/drive",
     "from": "assistant/drive-ai-panel",
+    "focus": null
+  },
+  {
+    "name": "screens/contacts",
+    "from": "contacts/contacts-ai-panel",
     "focus": null
   },
   {

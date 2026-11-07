@@ -5,11 +5,9 @@ import { sanitizeError } from "@/lib/errors/sanitize-error";
 import { looksTextual, TEXT_LIMIT } from "@/lib/file-utils";
 import { htmlToText, truncate } from "@/lib/utils";
 import { isParsableAttachment, parseAttachment } from "@/mail/attachment-data";
-import { suggestContacts } from "@/mail/contacts";
 import { readRawMessage } from "@/mail/raw";
 import { summaryCardSchema } from "@/mail/summary-catalog";
 import { summarizeThread as summarizeConversation } from "@/mail/thread-summary";
-import { contactSuggestionSchema } from "@/server/schema";
 import type { DraftPayload, Email, MailFolder } from "@/types/mail";
 
 import type { Output } from "./output";
@@ -140,12 +138,6 @@ export const getAttachmentTextOutput = z.union([
   }),
   z.object({ error: z.string(), filename: z.string().optional(), mimeType: z.string().optional() }),
 ]);
-
-export const searchContactsOutput = z.object({
-  mailbox: z.string(),
-  count: z.number(),
-  contacts: z.array(contactSuggestionSchema),
-});
 
 export const getRawEmailOutput = z.object({
   mailboxId: z.string(),
@@ -417,27 +409,6 @@ export async function getAttachmentText(
     kind: parsed?.label ?? "text",
     truncated: text.length > TEXT_LIMIT,
     text: truncate(text, TEXT_LIMIT),
-  };
-}
-
-export async function searchContacts(
-  userId: string,
-  mailbox: AgentMailbox,
-  args: { query?: string; limit: number },
-): Promise<Output<typeof searchContactsOutput>> {
-  const contacts = await suggestContacts({
-    userId,
-    mailboxIds: [mailbox.mailboxId],
-    adapter: mailbox.adapter,
-  });
-  const needle = args.query?.trim().toLowerCase();
-  const matched = needle
-    ? contacts.filter((c) => c.email.includes(needle) || c.name?.toLowerCase().includes(needle))
-    : contacts;
-  return {
-    mailbox: mailbox.email,
-    count: Math.min(matched.length, args.limit),
-    contacts: matched.slice(0, args.limit),
   };
 }
 

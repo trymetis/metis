@@ -1,6 +1,6 @@
 # Workspaces — membership, resource links and data scope
 
-What a workspace is, how it borrows mailboxes, calendars and drives, which scope each table is keyed by, how membership changes cascade, and what the account data export holds. Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [connections.md](connections.md), [auth.md](auth.md), [search.md](search.md) (members pages), [mail-rendering.md](mail-rendering.md).
+What a workspace is, how it borrows mailboxes, calendars, drives and address books, which scope each table is keyed by, how membership changes cascade, and what the account data export holds. Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [connections.md](connections.md), [auth.md](auth.md), [search.md](search.md) (Settings → Members), [mail-rendering.md](mail-rendering.md).
 
 ## Code map
 
@@ -25,22 +25,22 @@ What a workspace is, how it borrows mailboxes, calendars and drives, which scope
 ### Resources
 
 - **A workspace only borrows a resource; the link row carries everything per-workspace.**
-  - `mailbox_workspace`, `calendar_workspace` and `drive_workspace` hold the per-workspace `slug` and `ai_enabled`, unique per (resource, workspace) and per (workspace, slug).
-  - The mailbox link also carries `phishing_detection_enabled`, the calendar link `visible_calendar_ids` ([calendar.md](calendar.md)), the drive link `visible_root_ids` ([drive.md](drive.md)).
+  - `mailbox_workspace`, `calendar_workspace`, `drive_workspace` and `address_book_workspace` hold the per-workspace `slug` and `ai_enabled`, unique per (resource, workspace) and per (workspace, slug).
+  - The mailbox link also carries `phishing_detection_enabled`, the calendar link `visible_calendar_ids` ([calendar.md](calendar.md)), the drive link `visible_root_ids` ([drive.md](drive.md)), the address-book link `visible_book_ids` ([contacts.md](contacts.md)).
 - **Every member sees every resource linked to the workspace; a resource is hidden from a workspace by detaching it.**
-  - `visibilityWhere` in `src/connections/{mailbox,calendar,drive}-store.ts` filters only by workspace and quarantine, so lookups take no user or role.
-  - A link's `visible_calendar_ids` and `visible_root_ids` narrow what the workspace shows of a resource, for every member alike.
+  - `visibilityWhere` in `src/connections/{mailbox,calendar,drive,address-book}-store.ts` filters only by workspace and quarantine, so lookups take no user or role.
+  - A link's `visible_calendar_ids`, `visible_root_ids` and `visible_book_ids` narrow what the workspace shows of a resource, for every member alike.
 - **Three distinct verbs.**
   - Attach inserts a link.
   - Detach deletes a link; the resource keeps working everywhere else.
   - Delete resource deletes the row and cascades its links; whether it revokes the grant is in [connections.md](connections.md).
 - **An attached resource starts with AI off** (`ai_enabled` defaults false), so attaching, from the app or an MCP tool, exposes nothing to any AI surface until a person turns it on with TOTP.
-- **Mailboxes, calendars and drives are equal reasons for a workspace to exist.** Mail and workflows need a mailbox; Workspace AI needs any of the three (`getWorkspaceGateData` with destination `assistant`).
+- **Mailboxes, calendars, drives and address books are equal reasons for a workspace to exist.** Mail and workflows need a mailbox; Workspace AI needs any of the four (`getWorkspaceGateData` with destination `assistant`).
 
 ### Membership
 
 - **Every user has a personal workspace**, created at signup ([auth.md](auth.md)).
-- **Losing membership drops the member's three link kinds in the same transaction as the `workspace_member` row.**
+- **Losing membership drops the member's four link kinds in the same transaction as the `workspace_member` row.**
   - `removeMember` matches them through `connection.user_id`, because no FK can express "links to resources this user owns".
   - It is the only place a membership is deleted directly; user and workspace deletion reach the links by cascade.
   - It refuses to remove the last owner.
@@ -69,9 +69,9 @@ What a workspace is, how it borrows mailboxes, calendars and drives, which scope
 
 - **The data export (`user.exportData`) is the account's own settings and history, never a mailbox archive.**
   - It holds preferences with the remote-content allowlist, workspace memberships, labels, user workflows, Workspace Assistant threads and the user's own audit events (`securityActivity`, [audit.md](audit.md)).
-  - Mail, events and files stay with the provider; the settings section and the file's `notice` both say so.
+  - Mail, events, files and contacts stay with the provider; the settings section and the file's `notice` both say so.
 - **It follows ownership, not visibility.**
-  - Resource links and labels come only from resources the user connected (`connection.user_id`), for all three kinds.
+  - Resource links and labels come only from resources the user connected (`connection.user_id`), for all four kinds.
   - Workflows are the live `user` workflows whose principal is the user; threads are every thread whose `resourceId` is the user, including threads from a workspace the user has left.
   - A label on a mailbox another member attached belongs to that member's export.
 - **It carries no credential and no instance-internal reference a reader cannot resolve.**
@@ -90,7 +90,7 @@ What a workspace is, how it borrows mailboxes, calendars and drives, which scope
   - `off`;
   - `optional`: the link's `phishing_detection_enabled` decides;
   - `required`: on for every mailbox, whatever the link says.
-- **Turning a policy on takes TOTP.** `ai_enabled` on for a mailbox, calendar or drive, or `phishing_detection_enabled` on for a mailbox, through `setPolicy` / `setPolicyEverywhere`; and every change through `workspaces.setPolicy` (owners and admins only).
+- **Turning a policy on takes TOTP.** `ai_enabled` on for a mailbox, calendar, drive or address book, or `phishing_detection_enabled` on for a mailbox, through `setPolicy` / `setPolicyEverywhere`; and every change through `workspaces.setPolicy` (owners and admins only).
 - **The data export** runs every read in parallel in `buildDataExport` and returns one JSON document; the settings section serializes it into `metis-suite-export-<date>.json` in the browser.
 
 ## Deliberate limits

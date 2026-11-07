@@ -8,6 +8,8 @@ export const REFERENCE_TYPES = [
   "label",
   "folder",
   "file",
+  "addressbook",
+  "contact",
 ] as const;
 
 export type ReferenceType = (typeof REFERENCE_TYPES)[number];
@@ -22,6 +24,8 @@ export const REFERENCE_TYPE_NOUN: Record<ReferenceType, string> = {
   label: "label",
   folder: "folder",
   file: "file",
+  addressbook: "address book",
+  contact: "contact",
 };
 
 export const REFERENCE_TYPE_HEADING: Record<ReferenceType, string> = {
@@ -34,6 +38,8 @@ export const REFERENCE_TYPE_HEADING: Record<ReferenceType, string> = {
   label: "Labels",
   folder: "Folders",
   file: "Files",
+  addressbook: "Address books",
+  contact: "Contacts",
 };
 
 export const WORKSPACE_REFERENCE_TYPES: readonly ReferenceType[] = [
@@ -46,6 +52,8 @@ export const WORKSPACE_REFERENCE_TYPES: readonly ReferenceType[] = [
   "label",
   "folder",
   "file",
+  "addressbook",
+  "contact",
 ];
 
 export interface AgentReference {

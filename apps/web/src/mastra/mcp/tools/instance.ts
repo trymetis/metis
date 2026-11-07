@@ -26,7 +26,7 @@ const OWNER_NOTE =
 
 export const getInstanceStats = createTool({
   id: "getInstanceStats",
-  description: `Count the users, workspaces, mailboxes, calendars and drives on this Metis Suite server. ${OWNER_NOTE}`,
+  description: `Count the users, workspaces, mailboxes, calendars, drives and address books on this Metis Suite server. ${OWNER_NOTE}`,
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
@@ -81,7 +81,7 @@ export const getInstancePeople = createTool({
 
 export const getInstanceWorkspaces = createTool({
   id: "getInstanceWorkspaces",
-  description: `Read every workspace on this server with its members and attached mailboxes, calendars and drives. ${OWNER_NOTE}`,
+  description: `Read every workspace on this server with its members and attached mailboxes, calendars, drives and address books. ${OWNER_NOTE}`,
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {

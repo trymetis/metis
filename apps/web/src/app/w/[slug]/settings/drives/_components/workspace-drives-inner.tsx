@@ -116,6 +116,8 @@ export function WorkspaceDrivesInner() {
     try {
       await orpc.workspaceDrives.detach({ ...scope, linkId: target.linkId });
       await refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not remove the drive");
     } finally {
       setBusy(null);
     }

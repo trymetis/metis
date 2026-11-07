@@ -78,9 +78,10 @@ export function DeleteAccountSection() {
       </div>
       <p className="mt-1 text-[12px] text-destructive-muted">
         Permanently deletes your account and everything we store — workspaces only you belong to,
-        mailboxes, calendars and drives you connected, labels, workflows, and scheduled sends —
-        except the security activity record, kept until your server&rsquo;s retention period ends.
-        Mail stays in {providers}. If you connected Outlook, also remove the app from your{" "}
+        mailboxes, calendars, drives and address books you connected, labels, workflows, and
+        scheduled sends — except the security activity record, kept until your server&rsquo;s
+        retention period ends. Mail stays in {providers}. If you connected Outlook, also remove the
+        app from your{" "}
         <a
           href={MICROSOFT_REVOKE_PERSONAL}
           target="_blank"
@@ -139,8 +140,9 @@ export function DeleteAccountSection() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete your account?</AlertDialogTitle>
             <AlertDialogDescription>
-              This cannot be undone. Workspaces only you belong to and the mailboxes, calendars and
-              drives you connected will be removed from here. Mail stays with {providers}.
+              This cannot be undone. Workspaces only you belong to and the mailboxes, calendars,
+              drives and address books you connected will be removed from here. Mail stays with{" "}
+              {providers}.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

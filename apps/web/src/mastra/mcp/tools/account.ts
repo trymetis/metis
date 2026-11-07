@@ -17,7 +17,7 @@ import { inWorkspace, workspaceTarget } from "../schema";
 export const listWorkspaces = createTool({
   id: "listWorkspaces",
   description:
-    "List the Metis Suite workspaces this client can reach, with each one's workspaceId, name and your role in it. Every mailbox, calendar, drive, workflow and member tool takes one of these workspaceIds and runs inside that workspace only. Call this first.",
+    "List the Metis Suite workspaces this client can reach, with each one's workspaceId, name and your role in it. Every mailbox, calendar, drive, contact, workflow and member tool takes one of these workspaceIds and runs inside that workspace only. Call this first.",
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => account.listWorkspaces(await mcpVisibleWorkspaces(requestContext))),
@@ -26,7 +26,7 @@ export const listWorkspaces = createTool({
 export const getWorkspace = createTool({
   id: "getWorkspace",
   description:
-    "Open one workspace: its name, your role, the mailboxes, calendar accounts and drives that have AI turned on there, and its members — every id the other tools take for that workspace, in one call.",
+    "Open one workspace: its name, your role, the mailboxes, calendar accounts, drives and address books that have AI turned on there, and its members — every id the other tools take for that workspace, in one call.",
   inputSchema: z.object(workspaceTarget),
   execute: async ({ workspaceId }, { requestContext }) =>
     withToolErrors(async () => {
@@ -38,7 +38,7 @@ export const getWorkspace = createTool({
 export const listAccountResources = createTool({
   id: "listAccountResources",
   description:
-    "List the mailbox, calendar and drive accounts you connected to Metis Suite, with the workspaces this client can reach that each one is attached to, and whether AI is on for it there. Accounts attached only to workspaces this client cannot reach are left out. Use a resourceId from here with attachResource. This lists accounts only — reading their contents goes through the workspace tools.",
+    "List the mailbox, calendar, drive and address book accounts you connected to Metis Suite, with the workspaces this client can reach that each one is attached to, and whether AI is on for it there. Accounts attached only to workspaces this client cannot reach are left out. Use a resourceId from here with attachResource. This lists accounts only — reading their contents goes through the workspace tools.",
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () =>
@@ -52,7 +52,7 @@ export const listAccountResources = createTool({
 export const listUnavailableAccounts = createTool({
   id: "listUnavailableAccounts",
   description:
-    "List your connected accounts that stopped working on this server. Their mailboxes, calendars and drives are unreachable until you fix them in Metis Suite.",
+    "List your connected accounts that stopped working on this server. Their mailboxes, calendars, drives and address books are unreachable until you fix them in Metis Suite.",
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => account.listUnavailableAccounts(mcpAccountFromCall(requestContext))),
@@ -69,13 +69,13 @@ export const createWorkspace = createTool({
 export const attachResource = createTool({
   id: "attachResource",
   description:
-    "Attach one of your own mailboxes, calendars or drives to a workspace. Get the resourceId from listAccountResources. AI stays off for it in that workspace until you turn it on in Metis Suite, so attaching does not make it readable here.",
+    "Attach one of your own mailboxes, calendars, drives or address books to a workspace. Get the resourceId from listAccountResources. AI stays off for it in that workspace until you turn it on in Metis Suite, so attaching does not make it readable here.",
   inputSchema: inWorkspace({
     kind: z.enum(CONNECTION_RESOURCES),
     resourceId: z
       .string()
       .min(1)
-      .describe("A mailbox, calendar or drive resourceId from listAccountResources"),
+      .describe("A mailbox, calendar, drive or address book resourceId from listAccountResources"),
   }),
   execute: async ({ workspaceId, kind, resourceId }, { requestContext }) =>
     withToolErrors(async () => {

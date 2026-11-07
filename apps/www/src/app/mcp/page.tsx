@@ -20,7 +20,7 @@ export default function McpPage() {
       <PageJsonLd path="/mcp" />
       <Exhibit
         model="patchboard"
-        headline="An MCP server for your Gmail, Outlook, calendars and drives"
+        headline="An MCP server for your Gmail, Outlook, calendars, drives and contacts"
         poses={POSES}
         actions={<StartActions />}
         plates={[
@@ -31,7 +31,7 @@ export default function McpPage() {
                 The suite, <em>inside your other tools.</em>
               </>
             ),
-            text: "Connect any MCP client to Metis and it gets the same mail, calendar and drive tools as the agent, limited to the workspaces and tools you approve.",
+            text: "Connect any MCP client to Metis and it gets the same mail, calendar, drive and contacts tools as the agent, limited to the workspaces and tools you approve.",
           },
           {
             label: "Clients",

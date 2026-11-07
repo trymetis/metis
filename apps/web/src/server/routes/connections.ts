@@ -1,33 +1,22 @@
 import "server-only";
 import { ORPCError } from "@orpc/server";
-import { eq } from "drizzle-orm";
 
 import { appActor, recordAuditEvent } from "@/audit";
 import {
-  attachCalendar,
-  attachDrive,
-  attachMailbox,
-  type ConnectionResource,
+  addConnectionResource,
   credentialResourceFor,
-  getCalendarLink,
   getConnection,
   getCredentialDriver,
-  getDriveLink,
   getDriver,
-  getMailboxLink,
   grantedResources,
   isProviderConfigured,
+  linkedConnectionResources,
   listUnavailableConnections,
   listUserConnections,
   resolveServerCredentials,
   revokeConnection,
-  upsertCalendar,
   upsertCredentialConnection,
-  upsertDrive,
-  upsertMailbox,
 } from "@/connections";
-import { db } from "@/db";
-import { calendar, drive, mailbox } from "@/db/schema";
 import { isRecord } from "@/lib/guards";
 import { rateLimit } from "@/services/rate-limit";
 import { getWorkspaceBySlug } from "@/workspace";
@@ -115,22 +104,7 @@ export const connectionsRouter = {
 
     const connections = await Promise.all(
       rows.map(async (row) => {
-        const [mailboxes, calendars, drives] = await Promise.all([
-          db
-            .select({ id: mailbox.id })
-            .from(mailbox)
-            .where(eq(mailbox.connectionId, row.connectionId)),
-          db
-            .select({ id: calendar.id })
-            .from(calendar)
-            .where(eq(calendar.connectionId, row.connectionId)),
-          db.select({ id: drive.id }).from(drive).where(eq(drive.connectionId, row.connectionId)),
-        ]);
-
-        const linked: ConnectionResource[] = [];
-        if (mailboxes.length > 0) linked.push("mailbox");
-        if (calendars.length > 0) linked.push("calendar");
-        if (drives.length > 0) linked.push("drive");
+        const linked = await linkedConnectionResources(row.connectionId);
 
         return {
           connectionId: row.connectionId,
@@ -217,63 +191,12 @@ export const connectionsRouter = {
         resources: [resource],
       });
 
-      if (resource === "drive") {
-        const disk = await upsertDrive(account);
-        if (!target) {
-          return { connectionId: account.connectionId, resource, slug: null };
-        }
-        const existing = await getDriveLink(disk.id, target.id);
-        const link =
-          existing ??
-          (await attachDrive({
-            driveId: disk.id,
-            email: disk.email,
-            workspaceId: target.id,
-          }));
-        return {
-          connectionId: account.connectionId,
-          resource,
-          slug: link.slug,
-        };
-      }
-
-      if (resource === "calendar") {
-        const cal = await upsertCalendar(account);
-        if (!target) {
-          return {
-            connectionId: account.connectionId,
-            resource,
-            slug: null,
-          };
-        }
-        const existing = await getCalendarLink(cal.id, target.id);
-        const link =
-          existing ??
-          (await attachCalendar({
-            calendarId: cal.id,
-            email: cal.email,
-            workspaceId: target.id,
-          }));
-        return {
-          connectionId: account.connectionId,
-          resource,
-          slug: link.slug,
-        };
-      }
-
-      const box = await upsertMailbox(account);
-      if (!target) {
-        return { connectionId: account.connectionId, resource, slug: null };
-      }
-      const existing = await getMailboxLink(box.id, target.id);
-      const link =
-        existing ??
-        (await attachMailbox({
-          mailboxId: box.id,
-          email: box.email,
-          workspaceId: target.id,
-        }));
-      return { connectionId: account.connectionId, resource, slug: link.slug };
+      const { slug } = await addConnectionResource({
+        account,
+        resource,
+        workspaceId: target?.id ?? null,
+      });
+      return { connectionId: account.connectionId, resource, slug };
     }),
 
   delete: appSession

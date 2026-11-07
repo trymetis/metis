@@ -8,10 +8,12 @@ import {
   sendSignupInvite,
 } from "@/auth/signup";
 import {
+  attachOwnedAddressBook,
   attachOwnedCalendar,
   attachOwnedDrive,
   attachOwnedMailbox,
   type ConnectionResource,
+  listAccountAddressBooks,
   listAccountCalendars,
   listAccountDrives,
   listAccountMailboxes,
@@ -19,6 +21,7 @@ import {
 } from "@/connections";
 import type { McpWorkspace } from "@/mcp/workspaces";
 import {
+  addressBookProviderSchema,
   calendarProviderSchema,
   connectionResourceSchema,
   mailProviderSchema,
@@ -59,6 +62,13 @@ export const getWorkspaceOutput = z.object({
     }),
   ),
   drives: listDrivesOutput.shape.drives,
+  addressBooks: z.array(
+    z.object({
+      addressBookId: z.string(),
+      email: z.string(),
+      provider: addressBookProviderSchema,
+    }),
+  ),
   members: listMembersOutput.shape.members,
 });
 
@@ -75,6 +85,7 @@ export const listAccountResourcesOutput = z.object({
   mailboxes: z.array(accountResourceOutput),
   calendars: z.array(accountResourceOutput),
   drives: z.array(accountResourceOutput),
+  addressBooks: z.array(accountResourceOutput),
 });
 
 export const listUnavailableAccountsOutput = z.object({
@@ -178,6 +189,11 @@ export async function getWorkspace(
       provider: c.provider,
     })),
     drives: listDrives(ctx.drives).drives,
+    addressBooks: ctx.addressBooks.map((b) => ({
+      addressBookId: b.accountId,
+      email: b.accountEmail,
+      provider: b.provider,
+    })),
     members: members.members,
   };
 }
@@ -216,15 +232,17 @@ export async function listAccountResources(
   account: AccountCtx,
   visible: McpWorkspace[],
 ): Promise<Output<typeof listAccountResourcesOutput>> {
-  const [mailboxes, calendars, drives] = await Promise.all([
+  const [mailboxes, calendars, drives, addressBooks] = await Promise.all([
     listAccountMailboxes(account.userId),
     listAccountCalendars(account.userId),
     listAccountDrives(account.userId),
+    listAccountAddressBooks(account.userId),
   ]);
   return {
     mailboxes: reachableResources(mailboxes, visible, (m) => m.mailboxId),
     calendars: reachableResources(calendars, visible, (c) => c.calendarId),
     drives: reachableResources(drives, visible, (d) => d.driveId),
+    addressBooks: reachableResources(addressBooks, visible, (b) => b.addressBookId),
   };
 }
 
@@ -241,7 +259,7 @@ export async function listUnavailableAccounts(
     })),
     note:
       rows.length > 0
-        ? "These accounts stopped working on this server and need attention in Metis Suite under Settings → Connections; their mailboxes, calendars and drives are unreachable until then."
+        ? "These accounts stopped working on this server and need attention in Metis Suite under Settings → Connections; their mailboxes, calendars, drives and address books are unreachable until then."
         : undefined,
   };
 }
@@ -259,8 +277,24 @@ export async function createWorkspace(
     workspaceId: created.workspaceId,
     slug: created.slug,
     name,
-    note: "It starts empty. Mailboxes, calendars and drives attached to it have AI off until you turn it on in Metis Suite.",
+    note: "It starts empty. Mailboxes, calendars, drives and address books attached to it have AI off until you turn it on in Metis Suite.",
   };
+}
+
+function attachOwned(
+  kind: ConnectionResource,
+  { resourceId, ...base }: { userId: string; workspaceId: string; resourceId: string },
+) {
+  switch (kind) {
+    case "mailbox":
+      return attachOwnedMailbox({ ...base, mailboxId: resourceId });
+    case "calendar":
+      return attachOwnedCalendar({ ...base, calendarId: resourceId });
+    case "drive":
+      return attachOwnedDrive({ ...base, driveId: resourceId });
+    case "addressbook":
+      return attachOwnedAddressBook({ ...base, addressBookId: resourceId });
+  }
 }
 
 export async function attachResource(
@@ -268,13 +302,11 @@ export async function attachResource(
   workspaceId: string,
   args: { kind: ConnectionResource; resourceId: string },
 ): Promise<Output<typeof attachResourceOutput>> {
-  const base = { userId: account.userId, workspaceId };
-  const linked =
-    args.kind === "mailbox"
-      ? await attachOwnedMailbox({ ...base, mailboxId: args.resourceId })
-      : args.kind === "calendar"
-        ? await attachOwnedCalendar({ ...base, calendarId: args.resourceId })
-        : await attachOwnedDrive({ ...base, driveId: args.resourceId });
+  const linked = await attachOwned(args.kind, {
+    userId: account.userId,
+    workspaceId,
+    resourceId: args.resourceId,
+  });
   if ("error" in linked) return { error: linked.error };
   return {
     attached: true,

@@ -61,6 +61,7 @@ import {
   type WorkflowKind,
 } from "./schema";
 import { stepDef } from "./steps";
+import type { ResourceKind } from "./steps/types";
 import { graphResources } from "./validation";
 
 export type DefinitionRow = typeof workflow.$inferSelect;
@@ -78,13 +79,9 @@ export interface LoadedDefinition {
   graph: WorkflowGraph;
 }
 
-export interface ResourceLinks {
-  mailbox: Record<string, string | null>;
-  calendar: Record<string, string | null>;
-  drive: Record<string, string | null>;
-}
+export type ResourceLinks = Record<ResourceKind, Record<string, string | null>>;
 
-export const NO_LINKS: ResourceLinks = { mailbox: {}, calendar: {}, drive: {} };
+export const NO_LINKS: ResourceLinks = { mailbox: {}, calendar: {}, drive: {}, addressbook: {} };
 
 export interface SaveDefinitionInput {
   id?: string;
@@ -152,10 +149,13 @@ function resourceRows(
     mailboxId: resource.kind === "mailbox" ? resource.id : null,
     calendarId: resource.kind === "calendar" ? resource.id : null,
     driveId: resource.kind === "drive" ? resource.id : null,
+    addressBookId: resource.kind === "addressbook" ? resource.id : null,
     mailboxWorkspaceId: resource.kind === "mailbox" ? (links.mailbox[resource.id] ?? null) : null,
     calendarWorkspaceId:
       resource.kind === "calendar" ? (links.calendar[resource.id] ?? null) : null,
     driveWorkspaceId: resource.kind === "drive" ? (links.drive[resource.id] ?? null) : null,
+    addressBookWorkspaceId:
+      resource.kind === "addressbook" ? (links.addressbook[resource.id] ?? null) : null,
   }));
 }
 
@@ -2039,7 +2039,7 @@ function receiptHolder(opts: ReceiptLookup) {
     .limit(1);
 }
 
-export const CLAIMED_OPERATIONS = new Set(["create-event", "upload"]);
+export const CLAIMED_OPERATIONS = new Set(["create-event", "upload", "create-contact"]);
 
 function dispatchHolder(opts: {
   operation: string;

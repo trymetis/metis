@@ -30,13 +30,14 @@ export default async function AssistantLayout({
   if (!appUser.workspaceId || !appUser.workspaceRole) redirect("/");
 
   const scope = { workspaceSlug: slug };
-  const [{ mailboxes }, { calendars }, { drives }] = await Promise.all([
+  const [{ mailboxes }, { calendars }, { drives }, { addressBooks }] = await Promise.all([
     orpc.workspaceMailboxes.list(scope),
     orpc.workspaceCalendars.list(scope),
     orpc.workspaceDrives.list(scope),
+    orpc.workspaceAddressBooks.list(scope),
   ]);
 
-  if (mailboxes.length + calendars.length + drives.length === 0) {
+  if (mailboxes.length + calendars.length + drives.length + addressBooks.length === 0) {
     const gate = await getWorkspaceGateData(appUser.userId, appUser.workspaceId, "assistant");
     if (!gate.showChooser) redirect(onboardingPath(slug));
     return (
@@ -67,6 +68,7 @@ export default async function AssistantLayout({
         mailboxes={emails(mailboxes)}
         calendars={emails(calendars)}
         drives={emails(drives)}
+        addressBooks={emails(addressBooks)}
       >
         {children}
       </AssistantShell>

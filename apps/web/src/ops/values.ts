@@ -3,6 +3,15 @@ import { z } from "zod";
 
 import { adapterForCalendar, assertWritable, type ResolvedCalendar } from "@/calendar/aggregate";
 import {
+  adapterForAddressBook,
+  assertBookVisible,
+  getContactIn,
+  listBooksAcross,
+  listContactsAcross,
+  type ResolvedAddressBook,
+} from "@/contacts/aggregate";
+import { emptyDraft, primaryEmail, withDisplayName } from "@/contacts/fields";
+import {
   adapterForDrive,
   type DriveSurface,
   driveSurfaceFor,
@@ -13,6 +22,7 @@ import { htmlToText, truncate } from "@/lib/utils";
 import type { MailAdapter } from "@/mail/adapter";
 import { parseCalendarInvite } from "@/mail/attachment-data";
 import { readRawMessage } from "@/mail/raw";
+import type { ContactDraft, ContactDto } from "@/server/schema";
 import type {
   CalendarEvent,
   EventDraft,
@@ -677,4 +687,168 @@ export function textToHtml(value: string): string {
     .split(/\n{2,}/)
     .map((paragraph) => `<p>${escapeHtml(paragraph).replaceAll("\n", "<br>")}</p>`)
     .join("");
+}
+
+export const contactValueOutput = z.object({
+  id: z.string(),
+  addressBookId: z.string(),
+  bookId: z.string(),
+  name: z.string(),
+  email: z.string(),
+  emails: z.array(z.string()),
+  phones: z.array(z.string()),
+  organization: z.string(),
+  title: z.string(),
+  notes: z.string(),
+});
+
+export type ContactValue = Output<typeof contactValueOutput>;
+
+export interface ContactFieldsInput {
+  name?: string;
+  email?: string;
+  phone?: string;
+  organization?: string;
+  title?: string;
+  notes?: string;
+}
+
+function contactValue(contact: ContactDto, addressBookId: string): ContactValue {
+  return {
+    id: contact.id,
+    addressBookId,
+    bookId: contact.bookId,
+    name: contact.name.display,
+    email: primaryEmail(contact) ?? "",
+    emails: contact.emails.map((e) => e.value),
+    phones: contact.phones.map((p) => p.value),
+    organization: contact.organization ?? "",
+    title: contact.title ?? "",
+    notes: contact.notes ? truncate(contact.notes, 4000) : "",
+  };
+}
+
+function withFields(base: ContactDraft, input: ContactFieldsInput): ContactDraft {
+  const next: ContactDraft = { ...base, name: { ...base.name } };
+  if (input.name) next.name = { display: input.name };
+  if (input.email) {
+    next.emails = [
+      { value: input.email, primary: true },
+      ...base.emails
+        .filter((e) => e.value.toLowerCase() !== input.email?.toLowerCase())
+        .map(({ primary: _p, ...e }) => e),
+    ];
+  }
+  if (input.phone) {
+    next.phones = [{ value: input.phone }, ...base.phones.filter((p) => p.value !== input.phone)];
+  }
+  if (input.organization) next.organization = input.organization;
+  if (input.title) next.title = input.title;
+  if (input.notes) next.notes = input.notes;
+  return withDisplayName(next);
+}
+
+export async function primaryBookId(account: ResolvedAddressBook): Promise<string> {
+  const { books } = await listBooksAcross([account]);
+  const visible = books.filter((b) => b.visible && !b.readOnly);
+  const book = visible.find((b) => b.primary) ?? visible[0];
+  if (!book) throw new Error("This address book shows no writable book in this workspace");
+  return book.id;
+}
+
+export async function listContactValues(
+  account: ResolvedAddressBook,
+  opts: { bookId?: string; query?: string; limit: number },
+): Promise<ContactValue[]> {
+  const { contacts, errors } = await listContactsAcross([account], {
+    bookIds: opts.bookId ? [opts.bookId] : undefined,
+    query: opts.query,
+    max: opts.limit,
+  });
+  const [failure] = errors;
+  if (failure && contacts.length === 0) throw new Error(failure.error);
+  return contacts.map((c) => contactValue(c, account.accountId));
+}
+
+export async function getContactValue(
+  account: ResolvedAddressBook,
+  bookId: string,
+  contactId: string,
+): Promise<ContactValue> {
+  const contact = await getContactIn([account], {
+    accountId: account.accountId,
+    bookId,
+    contactId,
+  });
+  return contactValue(contact, account.accountId);
+}
+
+export async function createContactValue(
+  account: ResolvedAddressBook,
+  bookId: string,
+  input: ContactFieldsInput,
+): Promise<ContactValue> {
+  assertBookVisible(account, bookId);
+  const draft = withFields(emptyDraft(), input);
+  const adapter = await adapterForAddressBook(account);
+  const created = await adapter.create(bookId, draft);
+  try {
+    return await getContactValue(account, created.bookId, created.id);
+  } catch {
+    return {
+      id: created.id,
+      addressBookId: account.accountId,
+      bookId: created.bookId,
+      name: draft.name.display,
+      email: input.email ?? "",
+      emails: draft.emails.map((e) => e.value),
+      phones: draft.phones.map((p) => p.value),
+      organization: draft.organization ?? "",
+      title: draft.title ?? "",
+      notes: draft.notes ?? "",
+    };
+  }
+}
+
+export async function updateContactValue(
+  account: ResolvedAddressBook,
+  bookId: string,
+  contactId: string,
+  input: ContactFieldsInput,
+): Promise<ContactValue> {
+  const current = await getContactIn([account], {
+    accountId: account.accountId,
+    bookId,
+    contactId,
+  });
+  const draft = withFields(
+    {
+      name: current.name,
+      nickname: current.nickname,
+      emails: current.emails,
+      phones: current.phones,
+      addresses: current.addresses,
+      organization: current.organization,
+      department: current.department,
+      title: current.title,
+      birthday: current.birthday,
+      urls: current.urls,
+      notes: current.notes,
+      groupIds: current.groupIds,
+    },
+    input,
+  );
+  const adapter = await adapterForAddressBook(account);
+  await adapter.update(bookId, contactId, draft);
+  return getContactValue(account, bookId, contactId);
+}
+
+export async function deleteContactValue(
+  account: ResolvedAddressBook,
+  bookId: string,
+  contactId: string,
+): Promise<void> {
+  assertBookVisible(account, bookId);
+  const adapter = await adapterForAddressBook(account);
+  await adapter.delete(bookId, contactId);
 }

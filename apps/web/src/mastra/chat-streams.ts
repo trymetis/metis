@@ -7,6 +7,7 @@ import { WORKSPACE_REFERENCE_TYPES } from "@/ai/references";
 import { recordAiUsage } from "@/ai/usage";
 import type { AiUsageFeature } from "@/ai/usage-features";
 import type { CalendarSession } from "@/calendar/session";
+import type { AddressBookSession } from "@/contacts/session";
 import { db } from "@/db";
 import { mailboxLabel } from "@/db/schema";
 import type { DriveSession } from "@/drive/session";
@@ -14,11 +15,17 @@ import { type MailSession, mailboxIds } from "@/mail/session";
 import { getLlm } from "@/services/llm";
 import type { WorkspaceRole } from "@/types/workspace";
 
-import { calendarAccountScope, driveViewScope, mailboxLabelDirectory } from "./chat-context";
+import {
+  calendarAccountScope,
+  contactsViewScope,
+  driveViewScope,
+  mailboxLabelDirectory,
+} from "./chat-context";
 import { mastra } from "./index";
 import { referenceLegend } from "./reference-legend";
 import {
   calendarRequestContext,
+  contactsRequestContext,
   driveRequestContext,
   getWorkspaceCtx,
   mailboxRequestContext,
@@ -112,6 +119,31 @@ export async function streamCalendarChat(
       requestContext,
       context: [{ role: "system", content: calendarAccountScope(session) }],
       onFinish: recordChatUsage(session, "calendar-chat"),
+    },
+    onError: mapStreamError,
+  });
+}
+
+export async function streamContactsChat(
+  session: AddressBookSession,
+  headers: Headers,
+  turn: ChatTurn,
+): Promise<ChatStream | null> {
+  const requestContext = contactsRequestContext(session, headers);
+  if (!requestContext) return null;
+
+  return handleChatStream({
+    mastra,
+    agentId: "contactsAgent",
+    version: "v7",
+    params: {
+      messages: applyTurnEnvelopes(turn.messages),
+      trigger: turn.trigger,
+    },
+    defaultOptions: {
+      requestContext,
+      context: [{ role: "system", content: contactsViewScope(session) }],
+      onFinish: recordChatUsage(session, "contacts-chat"),
     },
     onError: mapStreamError,
   });

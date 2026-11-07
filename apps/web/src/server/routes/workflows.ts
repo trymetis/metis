@@ -121,6 +121,13 @@ export const workflowsRouter = {
             name: d.name,
             aiEnabled: d.aiEnabled,
           })),
+          addressBooks: scope.addressBooks.map((a) => ({
+            id: a.addressBookId,
+            slug: a.slug,
+            email: a.email,
+            name: a.name,
+            aiEnabled: a.aiEnabled,
+          })),
           members: members.map((m) => ({ userId: m.userId, name: m.name, email: m.email })),
         },
       };

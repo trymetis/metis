@@ -1,6 +1,7 @@
 import "server-only";
 import type { ResolvedCalendar } from "@/calendar/aggregate";
 import type { MailProvider } from "@/connections/types";
+import type { ResolvedAddressBook } from "@/contacts/aggregate";
 import type { ResolvedDrive } from "@/drive/aggregate";
 import type { MailAdapter } from "@/mail/adapter";
 import type { ResolvedMailbox, ScopedMessage } from "@/mail/aggregate";
@@ -35,6 +36,7 @@ export interface WorkspaceCtx {
   mailboxes: AgentMailbox[];
   calendars: ResolvedCalendar[];
   drives: ResolvedDrive[];
+  addressBooks: ResolvedAddressBook[];
   members: () => Promise<WorkspaceMember[]>;
   actor: AgentActor;
 }

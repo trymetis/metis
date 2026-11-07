@@ -16,6 +16,7 @@ const RESOURCE_SETTINGS = {
   mailbox: { href: "/settings/mailboxes", label: "Your mailboxes" },
   calendar: { href: "/settings/calendars", label: "Your calendars" },
   drive: { href: "/settings/drives", label: "Your drives" },
+  addressbook: { href: "/settings/address-books", label: "Your address books" },
 } as const;
 
 export function AgentDisabled({

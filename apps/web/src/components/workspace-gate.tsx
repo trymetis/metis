@@ -27,6 +27,7 @@ function resourceSummary(destination: GateDestination, w: GateWorkspace): string
     w.mailboxes > 0 && plural(w.mailboxes, "mailbox", "mailboxes"),
     w.calendars > 0 && plural(w.calendars, "calendar", "calendars"),
     w.drives > 0 && plural(w.drives, "drive", "drives"),
+    w.addressBooks > 0 && plural(w.addressBooks, "address book", "address books"),
   ].filter(Boolean);
   return parts.length > 0 ? parts.join(" · ") : "nothing connected";
 }
@@ -52,7 +53,7 @@ export function WorkspaceGate({
   const { title, icon: Icon } = DESTINATIONS[destination];
   const needs =
     destination === "assistant"
-      ? "no connected mailboxes, calendars or drives"
+      ? "no connected mailboxes, calendars, drives or address books"
       : "no connected mailboxes";
 
   return (
@@ -99,7 +100,10 @@ export function WorkspaceGate({
             href={onboardingPath(currentSlug)}
             className="mt-5 text-[12px] font-medium text-primary hover:underline"
           >
-            …or connect {destination === "assistant" ? "a mailbox, calendar or drive" : "a mailbox"}{" "}
+            …or connect{" "}
+            {destination === "assistant"
+              ? "a mailbox, calendar, drive or address book"
+              : "a mailbox"}{" "}
             to {currentName ? `“${currentName}”` : "this workspace"}
           </Link>
         )}

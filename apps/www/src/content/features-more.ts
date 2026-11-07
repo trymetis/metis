@@ -68,28 +68,28 @@ export const MORE_AREAS = {
   agent: {
     kicker: "Agent",
     title: ["One agent", "across the suite."],
-    lede: "Ask across every mailbox, calendar and drive in one conversation. Anything that sends or deletes waits for your approval.",
+    lede: "Ask across every mailbox, calendar, drive and address book in one conversation. Anything that sends or deletes waits for your approval.",
     href: "/agent",
     features: [
       {
         icon: Bot,
         t: "An agent across the suite",
         shot: "agent/workspace",
-        d: "A full-page chat across every mailbox, calendar and drive, with saved, searchable conversations.",
+        d: "A full-page chat across every mailbox, calendar, drive and address book, with saved, searchable conversations.",
         tag: AI,
       },
       {
         icon: PanelRight,
         t: "An agent in every view",
         shot: "agent/every-view",
-        d: "Mail, calendar and drive each have a side panel focused on what you have open.",
+        d: "Mail, calendar, drive and contacts each have a side panel focused on what you have open.",
         tag: AI,
       },
       {
         icon: ListChecks,
         t: "Does the busywork",
         shot: "agent/busywork",
-        d: "Searches, reads, drafts, schedules, labels, archives and summarizes mail, edits events and organizes files.",
+        d: "Searches, reads, drafts, schedules, labels, archives and summarizes mail, edits events, organizes files and keeps contacts up to date.",
       },
       {
         icon: Users,
@@ -100,13 +100,13 @@ export const MORE_AREAS = {
         icon: CheckCheck,
         t: "Approve before it acts",
         shot: "agent/approval",
-        d: "Sending, deleting, and calendar, drive or workflow changes wait for your Approve or Decline.",
+        d: "Sending, deleting, and calendar, drive, contact or workflow changes wait for your Approve or Decline.",
       },
       {
         icon: AtSign,
         t: "Point with @",
         shot: "agent/references",
-        d: "Mention a mailbox, calendar, drive, person, email, event, label, folder or file.",
+        d: "Mention a mailbox, calendar, drive, address book, contact, teammate, email, event, label, folder or file.",
       },
       {
         icon: Cpu,
@@ -125,7 +125,7 @@ export const MORE_AREAS = {
   workflows: {
     kicker: "Workflows",
     title: ["Rules that", "run on their own."],
-    lede: "Workflows act on mail, calendars and drives as things change, on a schedule, by hand, from a webhook or before a send, with AI where a plain rule is not enough.",
+    lede: "Workflows act on mail, calendars, drives and contacts as things change, on a schedule, by hand, from a webhook or before a send, with AI where a plain rule is not enough.",
     href: "/workflows",
     features: [
       {
@@ -138,7 +138,7 @@ export const MORE_AREAS = {
         icon: GitBranch,
         t: "Triggers and actions",
         shot: "agent/steps",
-        d: "Start when mail arrives, an event changes, a file lands or a webhook calls, then label, reply, add events, save files, wait for an answer or ask someone to approve.",
+        d: "Start when mail arrives, an event changes, a file lands or a webhook calls, then label, reply, add events, save files, look up or save contacts, wait for an answer or ask someone to approve.",
       },
       {
         icon: Filter,
@@ -219,7 +219,7 @@ export const MORE_AREAS = {
   mcp: {
     kicker: "MCP",
     title: ["One server,", "every client."],
-    lede: "Use your mail, calendars and drives from Claude, Cursor, Codex, VS Code or any other MCP client, with the agent's own tools and only the workspaces you approve.",
+    lede: "Use your mail, calendars, drives and contacts from Claude, Cursor, Codex, VS Code or any other MCP client, with the agent's own tools and only the workspaces you approve.",
     href: "/mcp",
     features: [
       {
@@ -268,7 +268,7 @@ export const MORE_AREAS = {
         icon: ToggleRight,
         t: "Organize now, act when you choose",
         shot: "mcp/own-access",
-        d: "Reading, labeling and archiving work from the start. Sending, deleting and changing events or files stay off until you turn them on.",
+        d: "Reading, labeling and archiving work from the start. Sending, deleting and changing events, files or contacts stay off until you turn them on.",
       },
       {
         icon: Unplug,
@@ -298,7 +298,7 @@ export const MORE_AREAS = {
         icon: ShieldCheck,
         t: "AI switches still apply",
         shot: "security/ai",
-        d: "A workspace, mailbox, calendar or drive with AI off stays out of reach for every client.",
+        d: "A workspace, mailbox, calendar, drive or address book with AI off stays out of reach for every client.",
       },
       {
         icon: Ban,
@@ -352,13 +352,13 @@ export const MORE_AREAS = {
         icon: ToggleRight,
         t: "AI switches",
         shot: "security/ai",
-        d: "Allow or block AI per workspace. Every mailbox, calendar and drive has its own switch, and it starts off.",
+        d: "Allow or block AI per workspace. Every mailbox, calendar, drive and address book has its own switch, and it starts off.",
       },
       {
         icon: ServerCog,
         t: "Servers the owner approves",
         shot: "security/servers",
-        d: "People connect IMAP, CalDAV, S3, WebDAV, FTP and SFTP only through servers the instance owner added.",
+        d: "People connect IMAP, CalDAV, CardDAV, S3, WebDAV, FTP and SFTP only through servers the instance owner added.",
       },
       {
         icon: ImageOff,
@@ -394,7 +394,7 @@ export const MORE_AREAS = {
   teams: {
     kicker: "Workspaces",
     title: ["Shared where you choose,", "private everywhere else."],
-    lede: "Everyone gets a personal workspace and can create more for a team, a client or a side project, each with its own mailboxes, calendars and drives.",
+    lede: "Everyone gets a personal workspace and can create more for a team, a client or a side project, each with its own mailboxes, calendars, drives and address books.",
     features: [
       {
         icon: Building2,
@@ -406,7 +406,7 @@ export const MORE_AREAS = {
         icon: Users,
         t: "Shared or private",
         shot: "teams/share",
-        d: "Share each mailbox, calendar or drive with the workspace, or keep it to yourself.",
+        d: "Share each mailbox, calendar, drive or address book with the workspace, or keep it to yourself.",
       },
       {
         icon: Crown,
@@ -522,7 +522,7 @@ export const MORE_AREAS = {
       {
         icon: Smartphone,
         t: "Android app",
-        d: "Mail, calendar, drive and the agent on your phone, with files saved to Downloads. There is no iPhone app; the web app works in the iPhone's browser.",
+        d: "Mail, calendar, drive, contacts and the agent on your phone, with files saved to Downloads. There is no iPhone app; the web app works in the iPhone's browser.",
       },
       {
         icon: ScrollText,

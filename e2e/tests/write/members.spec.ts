@@ -167,7 +167,7 @@ export default function memberSpecs() {
     }
   });
 
-  test("the member profile promotes with TOTP, demotes and removes a member", async ({
+  test("Settings → Members promotes with TOTP, demotes and removes a member", async ({
     browser,
     page,
     rpc,
@@ -184,24 +184,14 @@ export default function memberSpecs() {
       ).members.find((m) => m.email === user.email)?.role;
     try {
       await joinByInvite(rpc, second.page, created.slug, user);
-      const { members } = await rpc<{
-        members: (Member & { userId: string })[];
-      }>("workspaces.listMembers", ws);
-      const target = members.find((m) => m.email === user.email);
-      expect(target).toBeDefined();
 
-      await page.goto(`/w/${created.slug}/members`);
-      await page
-        .getByRole("list", { name: "Members" })
-        .getByRole("link", { name: new RegExp(user.email) })
-        .click();
-      await expect(page).toHaveURL(
-        new RegExp(`/members/${encodeURIComponent(target?.userId ?? "")}`),
-      );
+      await page.goto(`/w/${created.slug}/settings/members`);
       const main = page.getByRole("main");
+      const list = main.getByRole("list", { name: "Members" });
+      await expect(list.getByText(user.email, { exact: false })).toBeVisible();
 
       await test.step("promoting asks for a TOTP code", async () => {
-        await main.getByRole("combobox", { name: "Role" }).click();
+        await list.getByRole("combobox", { name: `Role of ${user.email}` }).click();
         await page.getByRole("option", { name: "Admin", exact: true }).click();
         const confirm = page.getByRole("alertdialog", {
           name: "Make this member an admin?",
@@ -213,21 +203,21 @@ export default function memberSpecs() {
       });
 
       await test.step("demoting needs no code", async () => {
-        await main.getByRole("combobox", { name: "Role" }).click();
+        await list.getByRole("combobox", { name: `Role of ${user.email}` }).click();
         await page.getByRole("option", { name: "Member", exact: true }).click();
         await expect.poll(roleOf).toBe("member");
       });
 
       await test.step("removing confirms first", async () => {
-        await main.getByRole("button", { name: "Remove from workspace", exact: true }).click();
+        await list
+          .getByRole("button", { name: `Remove ${user.email} from the workspace`, exact: true })
+          .click();
         await page
           .getByRole("alertdialog", { name: /^Remove / })
           .getByRole("button", { name: "Remove", exact: true })
           .click();
         await expect.poll(roleOf).toBeUndefined();
-        await expect(
-          main.getByText("This person is not a member of this workspace."),
-        ).toBeVisible();
+        await expect(list.getByText(user.email, { exact: false })).toHaveCount(0);
       });
     } finally {
       await rpc("workspaces.delete", { ...ws, code: await harness.totp() });

@@ -115,6 +115,15 @@ export function catalog(driveKinds: string[]): Scenario[] {
       }),
     ),
     workspaceChat("live"),
+    workspaceChat("references"),
+    scenario({
+      id: "chat:contacts",
+      step: "chat",
+      arg: "contacts",
+      from: "world",
+      reads: [],
+      timeoutMs: 30 * MINUTE,
+    }),
     scenario({
       id: "chat:mailbox",
       step: "chat",

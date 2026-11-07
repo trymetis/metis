@@ -7,15 +7,19 @@ import { toast } from "sonner";
 
 import { type ResolvedReference, unpackReferenceId } from "@/ai/references";
 import { RESOURCE_PROVIDER_META } from "@/components/provider-meta";
+import { packContactRef } from "@/contacts/refs";
 import { orpc, rpc } from "@/lib/orpc";
 import type { DriveEntryRow } from "@/server/schema";
-import { membersPath } from "@/workspace/path";
+import { ALL_ADDRESS_BOOKS_SLUG, ALL_BOOKS, contactsPath } from "@/workspace/path";
 
-export interface ReferencePreview {
-  entry: DriveEntryRow;
-  driveSlug: string;
-  providerLabel: string;
-}
+export type ReferencePreview =
+  | {
+      kind: "file";
+      entry: DriveEntryRow;
+      driveSlug: string;
+      providerLabel: string;
+    }
+  | { kind: "member"; userId: string; label: string };
 
 export function useReferencePreview(workspaceSlug: string) {
   const router = useRouter();
@@ -26,7 +30,22 @@ export function useReferencePreview(workspaceSlug: string) {
   const open = useCallback(
     async (ref: ResolvedReference) => {
       if (ref.type === "member") {
-        router.push(membersPath(workspaceSlug, ref.id));
+        latest.current++;
+        setPreview({ kind: "member", userId: ref.id, label: ref.label });
+        return;
+      }
+      if (ref.type === "contact") {
+        const parts = unpackReferenceId(ref.id, 3);
+        if (!parts) return;
+        const [accountId, bookId, contactId] = parts;
+        router.push(
+          contactsPath(
+            workspaceSlug,
+            ALL_ADDRESS_BOOKS_SLUG,
+            ALL_BOOKS,
+            packContactRef({ accountId, bookId, contactId }),
+          ),
+        );
         return;
       }
       if (ref.type !== "file") return;
@@ -50,6 +69,7 @@ export function useReferencePreview(workspaceSlug: string) {
         });
         if (request !== latest.current || entry.kind !== "file") return;
         setPreview({
+          kind: "file",
           entry,
           driveSlug: drive.slug,
           providerLabel: RESOURCE_PROVIDER_META.drive[drive.provider].label,
@@ -58,7 +78,7 @@ export function useReferencePreview(workspaceSlug: string) {
         if (request === latest.current) toast.error("Could not open that file");
       }
     },
-    [workspaceSlug, router, queryClient],
+    [workspaceSlug, queryClient, router],
   );
 
   const close = useCallback(() => {

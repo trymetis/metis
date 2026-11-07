@@ -66,7 +66,7 @@ export const WORKFLOW_AGENTS = {
   workspace: agent(
     "workflowWorkspaceAgent",
     "Metis Workflow Workspace Agent",
-    "Your scope is every mailbox, calendar and drive of the workspace the workflow belongs to.",
+    "Your scope is every mailbox, calendar, drive and address book of the workspace the workflow belongs to.",
     () => allWorkspaceTools,
   ),
 } as const;

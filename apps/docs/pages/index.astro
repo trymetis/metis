@@ -28,22 +28,38 @@ const features = [
     alt: "A drive listing its folders and files",
   },
   {
+    title: "Contacts",
+    blurb: "Browse and edit your address books, and save the people you email in one click.",
+    href: "/guide/contacts/browse-your-contacts",
+    image: "contacts/all-contacts",
+    alt: "The Contacts section with a list of contacts",
+  },
+  {
     title: "AI assistant",
-    blurb: "Ask about your mail, calendar and files, and approve what it does.",
+    blurb: "Ask about your mail, calendar, files and contacts, and approve what it does.",
     href: "/guide/assistant/how-ai-works",
     image: "assistant/stored-conversation",
     alt: "A conversation with the Workspace Assistant",
   },
   {
     title: "Workflows",
-    blurb: "Act on mail, calendars and drives automatically, as things change or on a schedule.",
+    blurb:
+      "Act on mail, calendars, drives and contacts automatically, as things change or on a schedule.",
     href: "/guide/workflows/how-workflows-work",
     image: "workflows/workflows-page",
     alt: "A workflow on the canvas",
   },
   {
+    title: "Search",
+    blurb: "Find mail, events, files and people across the workspace from one box.",
+    href: "/guide/search/search-your-workspace",
+    image: "search/results",
+    alt: "Search results across mail, events and files",
+  },
+  {
     title: "Workspaces",
-    blurb: "Group mailboxes, calendars and drives, and invite the people you work with.",
+    blurb:
+      "Group mailboxes, calendars, drives and address books, and invite the people you work with.",
     href: "/guide/workspaces/about-workspaces",
     image: "workspaces/general-settings",
     alt: "The settings of a workspace",
@@ -132,9 +148,9 @@ const cloud = [
         Learn {product}, then run it yourself
       </h1>
       <p class="text-lg text-muted-foreground">
-        {product} brings your email, calendars and files into one place. It works with Gmail,
-        Outlook, Zoho and any IMAP mailbox, and its AI assistant helps you read, sort and act on
-        your mail.
+        {product} brings your email, calendars, files and contacts into one place. It works with
+        Gmail, Outlook, Zoho and any IMAP mailbox, and its AI assistant helps you read, sort and act
+        on your mail.
       </p>
       <div class="flex flex-wrap gap-3">
         <a
@@ -170,7 +186,7 @@ const cloud = [
     <p class="mb-8 text-muted-foreground">
       Each guide walks through one part of the app, step by step.
     </p>
-    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
       {features.map((feature) => (
         <a
           href={feature.href}

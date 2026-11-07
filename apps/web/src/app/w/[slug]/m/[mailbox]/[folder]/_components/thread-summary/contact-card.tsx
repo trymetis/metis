@@ -1,8 +1,27 @@
 "use client";
 
-import { Download, Globe, Mail, MapPin, Phone, StickyNote, UserRound } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  BookUser,
+  Download,
+  Globe,
+  Mail,
+  MapPin,
+  Phone,
+  StickyNote,
+  UserPlus,
+  UserRound,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 
+import { downloadVcard } from "@/components/contacts/download-vcard";
+import { matchHref, useSaveContact } from "@/components/contacts/use-save-contact";
+import { emptyDraft } from "@/contacts/fields";
+import { useWorkspaceSlug } from "@/hooks/use-workspace-path";
+import { rpc } from "@/lib/orpc";
+import { route } from "@/lib/route";
 import type { SummaryCardProps } from "@/mail/summary-catalog";
+import type { ContactDraft } from "@/server/schema";
 
 import {
   Actions,
@@ -18,40 +37,34 @@ import { directionsUrl } from "./format";
 
 type ContactProps = SummaryCardProps<"Contact">;
 
-function escapeVcard(value: string): string {
-  return value
-    .replace(/\\/g, "\\\\")
-    .replace(/\n/g, "\\n")
-    .replace(/,/g, "\\,")
-    .replace(/;/g, "\\;");
-}
-
-function toVcard(props: ContactProps): string {
-  const lines = ["BEGIN:VCARD", "VERSION:3.0", `FN:${escapeVcard(props.name)}`];
-  if (props.organization) lines.push(`ORG:${escapeVcard(props.organization)}`);
-  if (props.title) lines.push(`TITLE:${escapeVcard(props.title)}`);
-  for (const email of props.emails) lines.push(`EMAIL:${escapeVcard(email)}`);
-  for (const phone of props.phones) lines.push(`TEL:${escapeVcard(phone)}`);
-  for (const address of props.addresses) {
-    lines.push(`ADR:;;${escapeVcard(address)};;;;`);
-  }
-  if (props.websiteUrl) lines.push(`URL:${props.websiteUrl}`);
-  if (props.note) lines.push(`NOTE:${escapeVcard(props.note)}`);
-  lines.push("END:VCARD");
-  return `${lines.join("\r\n")}\r\n`;
-}
-
-function downloadVcard(props: ContactProps) {
-  const blob = new Blob([toVcard(props)], { type: "text/vcard" });
-  const href = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = href;
-  link.download = `${props.name.replace(/[^\w .-]+/g, "").trim() || "contact"}.vcf`;
-  link.click();
-  URL.revokeObjectURL(href);
+function toDraft(props: ContactProps): ContactDraft {
+  return {
+    ...emptyDraft(),
+    name: { display: props.name },
+    ...(props.organization ? { organization: props.organization } : {}),
+    ...(props.title ? { title: props.title } : {}),
+    emails: props.emails.map((value, index) => ({
+      value,
+      ...(index === 0 ? { primary: true } : {}),
+    })),
+    phones: props.phones.map((value) => ({ value })),
+    addresses: props.addresses.map((street) => ({ street })),
+    urls: props.websiteUrl ? [{ value: props.websiteUrl }] : [],
+    ...(props.note ? { notes: props.note } : {}),
+  };
 }
 
 export function ContactCard({ props }: { props: ContactProps }) {
+  const router = useRouter();
+  const workspaceSlug = useWorkspaceSlug();
+  const saveContact = useSaveContact();
+  const emails = props.emails.map((e) => e.trim().toLowerCase()).filter(Boolean);
+  const lookup = useQuery({
+    ...rpc.contacts.lookup.queryOptions({ input: { workspaceSlug, emails } }),
+    enabled: emails.length > 0,
+    staleTime: 60_000,
+  });
+  const saved = lookup.data?.matches[0];
   const role = [props.title, props.organization].filter(Boolean).join(" · ");
   const [email] = props.emails;
   const [phone] = props.phones;
@@ -83,8 +96,28 @@ export function ContactCard({ props }: { props: ContactProps }) {
         )}
       </Details>
       <Actions>
-        <CardAction intent="primary" icon={Download} onClick={() => downloadVcard(props)}>
-          Save contact
+        {saved ? (
+          <CardAction
+            intent="primary"
+            icon={BookUser}
+            onClick={() => router.push(route(matchHref(workspaceSlug, saved)))}
+          >
+            Open contact
+          </CardAction>
+        ) : (
+          <CardAction
+            intent="primary"
+            icon={UserPlus}
+            onClick={() => saveContact.save(toDraft(props))}
+          >
+            Save contact
+          </CardAction>
+        )}
+        <CardAction
+          icon={Download}
+          onClick={() => downloadVcard(toDraft(props), crypto.randomUUID())}
+        >
+          Download
         </CardAction>
         {email && (
           <CardLink href={`mailto:${email}`} icon={Mail}>
@@ -108,6 +141,7 @@ export function ContactCard({ props }: { props: ContactProps }) {
           </CardLink>
         )}
       </Actions>
+      {saveContact.dialog}
     </CardShell>
   );
 }

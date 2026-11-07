@@ -17,6 +17,7 @@ const POSES: Pose[] = [
   { yaw: 0, pitch: 17, dist: 12.4, target: SCREEN },
   { yaw: 14, pitch: 16, dist: 12.6, target: SCREEN },
   { yaw: -14, pitch: 16, dist: 12.6, target: SCREEN },
+  { yaw: -4, pitch: 18, dist: 12.4, target: SCREEN },
   { yaw: 7, pitch: 20, dist: 12.4, target: SCREEN },
   { yaw: -8, pitch: 14, dist: 12.4, target: SCREEN },
   { yaw: 24, pitch: 24, dist: 12.6, target: [0, 0.95, -0.6] },
@@ -28,7 +29,7 @@ export default function Home() {
       <SiteJsonLd />
       <Exhibit
         model="laptop"
-        headline="Metis Suite: the open-source email, calendar and drive client for Gmail, Outlook, Zoho and your own servers, with an AI agent, workflows and MCP"
+        headline="Metis Suite: the open-source email, calendar, drive and contacts client for Gmail, Outlook, Zoho and your own servers, with an AI agent, workflows and MCP"
         poses={POSES}
         actions={<StartActions />}
         plates={[
@@ -39,7 +40,7 @@ export default function Home() {
                 Every account you work in, <em>one suite.</em>
               </>
             ),
-            text: "Mail, calendars and drives from Google, Microsoft, Zoho and your own servers, joined in one place. An agent, workflows and MCP work across all of it, and the agent asks before anything is sent or deleted.",
+            text: "Mail, calendars, drives and contacts from Google, Microsoft, Zoho and your own servers, joined in one place. An agent, workflows and MCP work across all of it, and the agent asks before anything is sent or deleted.",
           },
           {
             label: "Mail",
@@ -72,13 +73,23 @@ export default function Home() {
             link: { href: "/drive", label: "See Drive" },
           },
           {
+            label: "Contacts",
+            title: (
+              <>
+                Every address book, <em>one list.</em>
+              </>
+            ),
+            text: "Google, Outlook, Zoho and CardDAV contacts together, saved from any email in one click.",
+            link: { href: "/contacts", label: "See Contacts" },
+          },
+          {
             label: "Agent",
             title: (
               <>
                 One agent <em>across all of it.</em>
               </>
             ),
-            text: "It searches mail, calendars and drives in one conversation, drafts replies and finds the free hour, then waits for your approval before anything is sent or deleted.",
+            text: "It searches mail, calendars, drives and contacts in one conversation, drafts replies and finds the free hour, then waits for your approval before anything is sent or deleted.",
             link: { href: "/agent", label: "See the agent" },
           },
           {

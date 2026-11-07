@@ -108,7 +108,7 @@ export function ConnectionsView() {
 
       <Section
         title="By provider"
-        description="Grants and the mailboxes, calendars and drives they carry."
+        description="Grants and the mailboxes, calendars, drives and address books they carry."
       >
         {data === null ? (
           <Pending />
@@ -123,6 +123,7 @@ export function ConnectionsView() {
                 <TableHead className="text-right">Mailboxes</TableHead>
                 <TableHead className="text-right">Calendars</TableHead>
                 <TableHead className="text-right">Drives</TableHead>
+                <TableHead className="text-right">Address books</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -142,6 +143,9 @@ export function ConnectionsView() {
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {number.format(row.drives)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {number.format(row.addressBooks)}
                   </TableCell>
                 </TableRow>
               ))}

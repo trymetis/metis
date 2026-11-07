@@ -225,8 +225,8 @@ export function DrivesList() {
             <AlertDialogTitle>Remove the drive for {confirmDelete?.email}?</AlertDialogTitle>
             <AlertDialogDescription>
               It disappears from every workspace it is in. Nothing is deleted at the provider. If
-              this account has no mailbox or calendar left here, the whole grant is revoked —
-              otherwise the file access stays granted until you remove the rest too.
+              this account has no mailbox, calendar or address book left here, the whole grant is
+              revoked — otherwise the file access stays granted until you remove the rest too.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

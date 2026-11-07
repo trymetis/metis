@@ -9,6 +9,7 @@ import {
 } from "@metis/ui/components/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@metis/ui/components/tooltip";
 import {
+  BookUser,
   CalendarDays,
   ChevronDown,
   HardDrive,
@@ -16,6 +17,7 @@ import {
   Inbox,
   LayoutGrid,
   SlidersHorizontal,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -78,6 +80,10 @@ export function WorkspaceMenuTile({ workspace, workspaceSlug }: WorkspaceMenuTil
           <SlidersHorizontal />
           General
         </DropdownMenuItem>
+        <DropdownMenuItem render={<Link href={workspaceSettingsPath(workspaceSlug, "members")} />}>
+          <Users />
+          Members
+        </DropdownMenuItem>
         <DropdownMenuItem
           render={<Link href={workspaceSettingsPath(workspaceSlug, "mailboxes")} />}
         >
@@ -93,6 +99,10 @@ export function WorkspaceMenuTile({ workspace, workspaceSlug }: WorkspaceMenuTil
         <DropdownMenuItem render={<Link href={workspaceSettingsPath(workspaceSlug, "drives")} />}>
           <HardDrive />
           Drives
+        </DropdownMenuItem>
+        <DropdownMenuItem render={<Link href={workspaceSettingsPath(workspaceSlug, "contacts")} />}>
+          <BookUser />
+          Contacts
         </DropdownMenuItem>
         {canSeeActivity && (
           <DropdownMenuItem

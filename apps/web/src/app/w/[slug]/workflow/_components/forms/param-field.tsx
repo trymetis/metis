@@ -248,6 +248,17 @@ function ValueEditor({
           anyLabel="Any drive"
         />
       );
+    case "addressbook":
+      return (
+        <ResourceSelect
+          id={id}
+          spec={spec}
+          bound={bound}
+          onChange={onChange}
+          entries={directory.addressBooks}
+          anyLabel="Any address book"
+        />
+      );
     case "workflow": {
       const others = workflows.filter((w) => w.id !== workflowId);
       const current = typeof value === "string" ? value : "";

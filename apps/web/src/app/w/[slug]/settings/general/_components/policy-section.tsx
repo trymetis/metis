@@ -38,7 +38,7 @@ import {
 const AI_ITEMS = [
   {
     value: "optional",
-    label: "Allowed — each mailbox, calendar and drive decides",
+    label: "Allowed — each mailbox, calendar, drive and address book decides",
   },
   { value: "off", label: "Off — no AI anywhere in this workspace" },
 ];
@@ -87,7 +87,7 @@ export function PolicySection({ canEdit }: { canEdit: boolean }) {
       body:
         next === "off"
           ? "The assistants stop working here, and no MCP client can reach this workspace. Clients keep working in their owners' other workspaces, and reach this one again once AI is allowed."
-          : "Each mailbox, calendar and drive here then decides for itself. Nothing turns on until its owner turns it on.",
+          : "Each mailbox, calendar, drive and address book here then decides for itself. Nothing turns on until its owner turns it on.",
       affected: [],
     });
   }
@@ -155,8 +155,8 @@ export function PolicySection({ canEdit }: { canEdit: boolean }) {
         AI &amp; privacy
       </h2>
       <p className="mt-2 text-[13px] text-muted-foreground">
-        What this workspace allows. A mailbox, calendar or drive can always be more restrictive than
-        the workspace, never less.
+        What this workspace allows. A mailbox, calendar, drive or address book can always be more
+        restrictive than the workspace, never less.
       </p>
 
       {error && !pending && (

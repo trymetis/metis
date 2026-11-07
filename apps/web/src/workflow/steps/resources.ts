@@ -12,6 +12,11 @@ function driveLine(ctx: CardContext, driveId: string) {
   return line(ctx.driveName(driveId) ?? "A drive you can't see");
 }
 
+function addressBookLine(ctx: CardContext, addressBookId: string) {
+  if (!addressBookId) return line("Pick an address book", "warn");
+  return line(ctx.addressBookName(addressBookId) ?? "An address book you can't see");
+}
+
 const event = p.expr("Event", T.event, { default: ITEM, required: true });
 const file = p.expr("File", T.file, { default: ITEM, required: true });
 
@@ -337,6 +342,111 @@ const remove = step({
   card: () => [line("Deletes it")],
 });
 
+const contact = p.expr("Contact", T.contact, { default: ITEM, required: true });
+const bookParam = p.text("Book id", {
+  bindable: false,
+  help: "Leave empty for the address book's primary book.",
+});
+
+const contactFieldParams = {
+  name: p.text("Name"),
+  email: p.text("Email"),
+  phone: p.text("Phone"),
+  organization: p.text("Organization"),
+  title: p.text("Job title"),
+  notes: p.longtext("Notes"),
+};
+
+const contactsList = step({
+  key: "contacts.list",
+  label: "List contacts",
+  category: "contacts",
+  description: "Passes on the contacts in an address book, one item each.",
+  params: {
+    addressbook: p.addressbook("Address book", { required: true }),
+    book: bookParam,
+    limit: p.number("At most", { bindable: false, default: literal(100), min: 1, max: 500 }),
+  },
+  many: true,
+  output: () => T.contact,
+  effect: "read",
+  card: (node, ctx) => [addressBookLine(ctx, literalString(node, "addressbook"))],
+});
+
+const contactsSearch = step({
+  key: "contacts.search",
+  label: "Search contacts",
+  category: "contacts",
+  description: "Passes on the contacts a search finds, one item each.",
+  params: {
+    addressbook: p.addressbook("Address book", { required: true }),
+    query: p.text("Search", { required: true }),
+    limit: p.number("At most", { bindable: false, default: literal(50), min: 1, max: 200 }),
+  },
+  many: true,
+  output: () => T.contact,
+  effect: "read",
+  card: (node, ctx) => [
+    addressBookLine(ctx, literalString(node, "addressbook")),
+    shown(node, "query", "For"),
+  ],
+});
+
+const contactsGet = step({
+  key: "contacts.get",
+  label: "Get a contact",
+  category: "contacts",
+  description: "Loads one contact.",
+  params: {
+    addressbook: p.addressbook("Address book", { required: true }),
+    book: p.text("Book id", { required: true }),
+    contactId: p.text("Contact id", { required: true }),
+  },
+  output: () => T.contact,
+  effect: "read",
+  card: (node, ctx) => [addressBookLine(ctx, literalString(node, "addressbook"))],
+});
+
+const contactsCreate = step({
+  key: "contacts.create",
+  label: "Create a contact",
+  category: "contacts",
+  description: "Saves a new contact. A create is never repeated.",
+  params: {
+    addressbook: p.addressbook("Address book", { required: true }),
+    book: bookParam,
+    ...contactFieldParams,
+  },
+  output: () => T.contact,
+  effect: "dispatch",
+  card: (node, ctx) => [
+    addressBookLine(ctx, literalString(node, "addressbook")),
+    shown(node, "name", "Name"),
+  ],
+});
+
+const contactsUpdate = step({
+  key: "contacts.update",
+  label: "Update a contact",
+  category: "contacts",
+  description: "Changes the fields you fill in; empty fields are left as they are.",
+  params: { contact, ...contactFieldParams },
+  output: () => T.contact,
+  effect: "write",
+  card: () => [line("Changes the filled-in fields")],
+});
+
+const contactsDelete = step({
+  key: "contacts.delete",
+  label: "Delete a contact",
+  category: "contacts",
+  description: "Deletes a contact from its address book.",
+  params: { contact },
+  output: () => T.contact,
+  effect: "write",
+  card: () => [line("Deletes it")],
+});
+
 function maintenance<const K extends string>(
   key: K,
   label: string,
@@ -375,6 +485,12 @@ export const RESOURCE_STEPS = [
   rename,
   copy,
   remove,
+  contactsList,
+  contactsSearch,
+  contactsGet,
+  contactsCreate,
+  contactsUpdate,
+  contactsDelete,
   maintenance("system.cimdPrune", "Prune MCP clients", "Removes abandoned MCP clients."),
   maintenance("system.auditPrune", "Prune audit events", "Removes audit events past retention."),
   maintenance(

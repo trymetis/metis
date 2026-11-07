@@ -8,6 +8,7 @@ import * as THREE from "three";
 import { live, smooth } from "./engine";
 import { CabinetModel } from "./models/cabinet";
 import { CalendarModel } from "./models/calendar";
+import { CardholderModel } from "./models/cardholder";
 import { EnvelopeModel } from "./models/envelope";
 import { GeartrainModel } from "./models/geartrain";
 import { LaptopModel } from "./models/laptop";
@@ -22,6 +23,7 @@ const MODELS: Record<ModelKey, () => React.JSX.Element> = {
   envelope: EnvelopeModel,
   calendar: CalendarModel,
   cabinet: CabinetModel,
+  cardholder: CardholderModel,
   typewriter: TypewriterModel,
   padlock: PadlockModel,
   server: ServerModel,

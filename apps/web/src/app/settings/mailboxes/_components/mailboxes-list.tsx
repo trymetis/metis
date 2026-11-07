@@ -234,10 +234,11 @@ export function MailboxesList() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete {confirmDelete?.email}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes the mailbox from every workspace. If you have no calendar or drive on
-              this account either, we disconnect it completely; otherwise it stays connected for
-              those, since mail access can&rsquo;t be removed on its own. The copies of your emails,
-              labels, and summaries we stored are deleted. Your actual mail is untouched.
+              This removes the mailbox from every workspace. If you have no calendar, drive or
+              address book on this account either, we disconnect it completely; otherwise it stays
+              connected for those, since mail access can&rsquo;t be removed on its own. The copies
+              of your emails, labels, and summaries we stored are deleted. Your actual mail is
+              untouched.
               {confirmDelete?.provider === "microsoft" && (
                 <>
                   {" "}

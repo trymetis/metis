@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { parseUIMessages } from "@/ai/messages";
-import { MemberActivity } from "@/components/members/member-activity";
+import { MemberDetails } from "@/components/members/member-details";
 import { ACCOUNT_PROVIDER_META } from "@/components/provider-meta";
 import { orpc, rpc } from "@/lib/orpc";
 import type {
@@ -246,29 +246,38 @@ function LocalPreview({
         <ChatPreview workspaceSlug={workspaceSlug} threadId={hit.threadId} title={hit.title} />
       );
     case "member":
-    case "contact":
       return (
-        <div className="flex flex-col gap-4">
+        <MemberDetails
+          workspaceSlug={workspaceSlug}
+          email={hit.email}
+          role={hit.role}
+          joinedAt={hit.date}
+          invited={hit.invited}
+          expiresAt={hit.expiresAt}
+          onNavigate={onNavigate}
+        >
+          <Title>{hit.title}</Title>
+        </MemberDetails>
+      );
+    case "contact": {
+      const details = (
+        <>
           <Title>{hit.title}</Title>
           <dl className="flex flex-col gap-1.5">
-            <Field label="Email">{hit.email}</Field>
-            {hit.kind === "member" && (
-              <>
-                <Field label="Role">{hit.role}</Field>
-                <Field label={hit.invited ? "Invited" : "Joined"}>{stamp(hit.date, "PP")}</Field>
-                {hit.invited && <Field label="Expires">{stamp(hit.expiresAt, "PP")}</Field>}
-              </>
-            )}
+            <Field label="Organization">{hit.organization}</Field>
+            <Field label="Phone">{hit.phone}</Field>
+            <Field label="Address book">{hit.bookName}</Field>
           </dl>
-          {!(hit.kind === "member" && hit.invited) && (
-            <MemberActivity
-              workspaceSlug={workspaceSlug}
-              email={hit.email}
-              onNavigate={onNavigate}
-            />
-          )}
-        </div>
+        </>
       );
+      return hit.email ? (
+        <MemberDetails workspaceSlug={workspaceSlug} email={hit.email} onNavigate={onNavigate}>
+          {details}
+        </MemberDetails>
+      ) : (
+        <div className="flex flex-col gap-4">{details}</div>
+      );
+    }
     case "workflow":
       return <WorkflowPreview workspaceSlug={workspaceSlug} hit={hit} />;
     case "run":
@@ -317,6 +326,24 @@ function LocalPreview({
             ) : (
               <>
                 <Field label="Provider">{ACCOUNT_PROVIDER_META[hit.provider].label}</Field>
+                <Field label="Slug">{hit.slug}</Field>
+                <Field label="AI">{hit.ai ? "On" : "Off"}</Field>
+              </>
+            )}
+          </dl>
+        </div>
+      );
+    case "addressbook":
+      return (
+        <div className="flex flex-col gap-4">
+          <Title>{hit.title}</Title>
+          <dl className="flex flex-col gap-1.5">
+            {hit.bookId ? (
+              <Field label="Account">{hit.subtitle ?? hit.email}</Field>
+            ) : (
+              <>
+                <Field label="Provider">{ACCOUNT_PROVIDER_META[hit.provider].label}</Field>
+                <Field label="Server">{hit.server}</Field>
                 <Field label="Slug">{hit.slug}</Field>
                 <Field label="AI">{hit.ai ? "On" : "Off"}</Field>
               </>

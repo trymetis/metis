@@ -12,7 +12,7 @@ export const SITE_URL = normalizeUrl(
 export const SITE_NAME = "Metis Suite";
 
 export const SITE_DESCRIPTION =
-  "Open-source email, calendar and drive client for Gmail, Outlook, Zoho and IMAP, with an AI agent, workflows and MCP. Self-host free or use Metis Cloud.";
+  "Open-source email, calendar, drive and contacts client for Gmail, Outlook, Zoho and IMAP, with an AI agent, workflows and MCP. Self-host free or use Metis Cloud.";
 
 export const ORG_NAME = "AstraQ Cyber Defence";
 

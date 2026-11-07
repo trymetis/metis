@@ -14,7 +14,7 @@ Hover over any icon in the rail to see its name.
 
 ### The workspace tile
 
-The tile at the top shows the workspace you are in. A workspace holds a set of mailboxes, calendars and drives, and can be shared with other people. Click the tile to open its menu. The menu shows the workspace's name and your role in it. It also has shortcuts to the workspace's settings: **General**, **Mailboxes**, **Calendars** and **Drives**. Owners and admins of the workspace also see **Activity**, which lists security-relevant changes made in the workspace. See [Workspace activity](/guide/workspaces/workspace-activity). **All workspaces** opens the list of every workspace you belong to.
+The tile at the top shows the workspace you are in. A workspace holds a set of mailboxes, calendars, drives and address books, and can be shared with other people. Click the tile to open its menu. The menu shows the workspace's name and your role in it. It also has shortcuts to the workspace's settings: **General**, **Members**, **Mailboxes**, **Calendars**, **Drives** and **Contacts**. Owners and admins of the workspace also see **Activity**, which lists security-relevant changes made in the workspace. See [Workspace activity](/guide/workspaces/workspace-activity). **All workspaces** opens the list of every workspace you belong to.
 
 To learn more, see [Workspaces](/guide/workspaces).
 
@@ -22,14 +22,15 @@ To learn more, see [Workspaces](/guide/workspaces).
 
 Below the workspace tile are the parts of Metis Suite you use every day:
 
-| Icon             | What it opens                                                                                                                                                                            |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Search**       | Search across the whole workspace: mail, events, files, chats, people, commands and settings. You can also press **Ctrl** + **K** (**⌘** + **K** on a Mac). See [Search](/guide/search). |
-| **Inbox**        | Your mail. See [Mail](/guide/mail).                                                                                                                                                      |
-| **Calendar**     | Your calendars and events. See [Calendar](/guide/calendar).                                                                                                                              |
-| **Drive**        | Your files. See [Drive](/guide/drive).                                                                                                                                                   |
-| **Workspace AI** | The AI assistant for this workspace. You see it only when your instance has AI turned on. See [AI assistant](/guide/assistant).                                                          |
-| **Workflows**    | Automations that run for you. See [Workflows](/guide/workflows).                                                                                                                         |
+| Icon             | What it opens                                                                                                                                                                                         |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Search**       | Search across the whole workspace: mail, events, files, chats, people and contacts, commands and settings. You can also press **Ctrl** + **K** (**⌘** + **K** on a Mac). See [Search](/guide/search). |
+| **Inbox**        | Your mail. See [Mail](/guide/mail).                                                                                                                                                                   |
+| **Calendar**     | Your calendars and events. See [Calendar](/guide/calendar).                                                                                                                                           |
+| **Drive**        | Your files. See [Drive](/guide/drive).                                                                                                                                                                |
+| **Contacts**     | The people in your address books. See [Contacts](/guide/contacts).                                                                                                                                    |
+| **Workspace AI** | The AI assistant for this workspace. You see it only when your instance has AI turned on. See [AI assistant](/guide/assistant).                                                                       |
+| **Workflows**    | Automations that run for you. See [Workflows](/guide/workflows).                                                                                                                                      |
 
 ### The workspace switcher
 
@@ -46,16 +47,16 @@ Near the bottom of the rail is a round button with your initials. Click it to op
 
 The top of the menu shows your name and email address. Below that:
 
-| Item                                     | What it does                                                                                                                    |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **Settings**                             | Opens your account settings.                                                                                                    |
-| **App settings**                         | Opens the settings of the desktop or mobile app. You see it only inside those apps. See [Desktop and mobile apps](/guide/apps). |
-| **Workspaces**                           | Lists every workspace you belong to.                                                                                            |
-| **Connections**                          | Lists the accounts you have connected, such as Gmail or Outlook.                                                                |
-| **Mailboxes**, **Calendars**, **Drives** | List every mailbox, calendar or drive you have connected.                                                                       |
-| **Dashboard**                            | Opens the instance dashboard. You see it only if you own the instance.                                                          |
-| **Dark mode** or **Light mode**          | Switches the color theme.                                                                                                       |
-| **Sign out**                             | Signs you out of this browser.                                                                                                  |
+| Item                                                        | What it does                                                                                                                    |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Settings**                                                | Opens your account settings.                                                                                                    |
+| **App settings**                                            | Opens the settings of the desktop or mobile app. You see it only inside those apps. See [Desktop and mobile apps](/guide/apps). |
+| **Workspaces**                                              | Lists every workspace you belong to.                                                                                            |
+| **Connections**                                             | Lists the accounts you have connected, such as Gmail or Outlook.                                                                |
+| **Mailboxes**, **Calendars**, **Drives**, **Address books** | List every mailbox, calendar, drive or address book you have connected.                                                         |
+| **Dashboard**                                               | Opens the instance dashboard. You see it only if you own the instance.                                                          |
+| **Dark mode** or **Light mode**                             | Switches the color theme.                                                                                                       |
+| **Sign out**                                                | Signs you out of this browser.                                                                                                  |
 
 ### The source code link
 
@@ -78,16 +79,16 @@ Open your user menu and click **Settings**. The settings page has a list of sect
 <img src="/images/get-started/settings.webp" alt="The settings sidebar with its list of sections" class="dark:hidden" />
 <img src="/images/get-started/settings-dark.webp" alt="The settings sidebar with its list of sections" class="hidden dark:block" />
 
-| Section                                  | What it holds                                                                                                                                                                                                                                                                                     |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Account**                              | Your name, your email, the browsers you are signed in on, and a download of your data. See [Manage signed-in devices](/guide/account/signed-in-devices) and [Export your data](/guide/account/export-your-data).                                                                                  |
-| **Privacy**                              | How messages you open treat images and links. See [Privacy settings](/guide/account/privacy-settings).                                                                                                                                                                                            |
-| **Workspaces**                           | Every workspace you belong to, and which one is your default.                                                                                                                                                                                                                                     |
-| **Connections**                          | The accounts you have connected.                                                                                                                                                                                                                                                                  |
-| **Mailboxes**, **Calendars**, **Drives** | Every mailbox, calendar and drive you have connected.                                                                                                                                                                                                                                             |
-| **MCP clients**                          | AI apps outside Metis Suite that you connect to your mailboxes, calendars and drives. You see it only when your instance has AI turned on. See [AI assistant](/guide/assistant).                                                                                                                  |
-| **Invites**                              | Invite people to create an account. See [Invite people to Metis Suite](/guide/account/invite-people).                                                                                                                                                                                             |
-| **Security**                             | Two-factor authentication, your password, sign-in alerts, your security activity and deleting your account. See [Two-factor authentication](/guide/account/two-factor-authentication), [Sign-in alerts](/guide/account/sign-in-alerts) and [Security activity](/guide/account/security-activity). |
+| Section                                                     | What it holds                                                                                                                                                                                                                                                                                     |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Account**                                                 | Your name, your email, the browsers you are signed in on, and a download of your data. See [Manage signed-in devices](/guide/account/signed-in-devices) and [Export your data](/guide/account/export-your-data).                                                                                  |
+| **Privacy**                                                 | How messages you open treat images and links. See [Privacy settings](/guide/account/privacy-settings).                                                                                                                                                                                            |
+| **Workspaces**                                              | Every workspace you belong to, and which one is your default.                                                                                                                                                                                                                                     |
+| **Connections**                                             | The accounts you have connected.                                                                                                                                                                                                                                                                  |
+| **Mailboxes**, **Calendars**, **Drives**, **Address books** | Every mailbox, calendar, drive and address book you have connected.                                                                                                                                                                                                                               |
+| **MCP clients**                                             | AI apps outside Metis Suite that you connect to your mailboxes, calendars, drives and address books. You see it only when your instance has AI turned on. See [AI assistant](/guide/assistant).                                                                                                   |
+| **Invites**                                                 | Invite people to create an account. See [Invite people to Metis Suite](/guide/account/invite-people).                                                                                                                                                                                             |
+| **Security**                                                | Two-factor authentication, your password, sign-in alerts, your security activity and deleting your account. See [Two-factor authentication](/guide/account/two-factor-authentication), [Sign-in alerts](/guide/account/sign-in-alerts) and [Security activity](/guide/account/security-activity). |
 
 **Back**, at the top of the list, opens your default workspace. The source code link and version number are at the bottom of the list.
 
@@ -95,4 +96,4 @@ Open your user menu and click **Settings**. The settings page has a list of sect
 
 Your workspace is still empty. Continue with [Connect your first mailbox](/guide/get-started/connect-your-first-mailbox) to bring in your email.
 
-Once your mail, calendars and files are in, use [workspace search](/guide/search/search-your-workspace) to find anything in them from one box.
+Once your mail, calendars, files and contacts are in, use [workspace search](/guide/search/search-your-workspace) to find anything in them from one box.

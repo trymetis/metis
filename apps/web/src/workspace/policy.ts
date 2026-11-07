@@ -70,6 +70,13 @@ export function resolveCalendarPolicy(
   return { ai: workspaceAllowsAi(workspace) && calendar.aiEnabled };
 }
 
+export function resolveAddressBookPolicy(
+  addressBook: { aiEnabled: boolean },
+  workspace: WorkspacePolicy,
+): { ai: boolean } {
+  return { ai: workspaceAllowsAi(workspace) && addressBook.aiEnabled };
+}
+
 export function resolveDrivePolicy(
   drive: { aiEnabled: boolean },
   workspace: WorkspacePolicy,

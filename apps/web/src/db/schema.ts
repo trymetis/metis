@@ -215,6 +215,23 @@ export const drive = sqliteTable(
   (table) => [uniqueIndex("drive_connection_idx").on(table.connectionId)],
 );
 
+export const addressBook = sqliteTable(
+  "address_book",
+  {
+    id: text("id").primaryKey(),
+    connectionId: text("connection_id")
+      .notNull()
+      .references(() => connection.id, { onDelete: "cascade" }),
+    active: bool("active").notNull().default(true),
+    lastSyncAt: timestamp("last_sync_at"),
+    createdAt: timestamp("created_at").notNull(),
+    updatedAt: timestamp("updated_at")
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [uniqueIndex("address_book_connection_idx").on(table.connectionId)],
+);
+
 export const mailboxWorkspace = sqliteTable(
   "mailbox_workspace",
   {
@@ -290,6 +307,35 @@ export const driveWorkspace = sqliteTable(
     index("drive_workspace_workspace_idx").on(table.workspaceId),
     uniqueIndex("drive_workspace_drive_workspace_idx").on(table.driveId, table.workspaceId),
     uniqueIndex("drive_workspace_workspace_slug_idx").on(table.workspaceId, table.slug),
+  ],
+);
+
+export const addressBookWorkspace = sqliteTable(
+  "address_book_workspace",
+  {
+    id: text("id").primaryKey(),
+    addressBookId: text("address_book_id")
+      .notNull()
+      .references(() => addressBook.id, { onDelete: "cascade" }),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspace.id, { onDelete: "cascade" }),
+    slug: text("slug").notNull(),
+    visibleBookIds: text("visible_book_ids", { mode: "json" })
+      .$type<string[]>()
+      .notNull()
+      .default(sql`'[]'`),
+    aiEnabled: bool("ai_enabled").notNull().default(false),
+    createdAt: timestamp("created_at").notNull(),
+  },
+  (table) => [
+    index("address_book_workspace_address_book_idx").on(table.addressBookId),
+    index("address_book_workspace_workspace_idx").on(table.workspaceId),
+    uniqueIndex("address_book_workspace_address_book_workspace_idx").on(
+      table.addressBookId,
+      table.workspaceId,
+    ),
+    uniqueIndex("address_book_workspace_workspace_slug_idx").on(table.workspaceId, table.slug),
   ],
 );
 
@@ -502,6 +548,9 @@ export const workflowResource = sqliteTable(
     mailboxId: text("mailbox_id").references(() => mailbox.id, { onDelete: "cascade" }),
     calendarId: text("calendar_id").references(() => calendar.id, { onDelete: "cascade" }),
     driveId: text("drive_id").references(() => drive.id, { onDelete: "cascade" }),
+    addressBookId: text("address_book_id").references(() => addressBook.id, {
+      onDelete: "cascade",
+    }),
     mailboxWorkspaceId: text("mailbox_workspace_id").references(() => mailboxWorkspace.id, {
       onDelete: "cascade",
     }),
@@ -511,15 +560,20 @@ export const workflowResource = sqliteTable(
     driveWorkspaceId: text("drive_workspace_id").references(() => driveWorkspace.id, {
       onDelete: "cascade",
     }),
+    addressBookWorkspaceId: text("address_book_workspace_id").references(
+      () => addressBookWorkspace.id,
+      { onDelete: "cascade" },
+    ),
   },
   (table) => [
     index("workflow_resource_node_idx").on(table.revisionId, table.nodeId),
     index("workflow_resource_mailbox_idx").on(table.mailboxId),
     index("workflow_resource_calendar_idx").on(table.calendarId),
     index("workflow_resource_drive_idx").on(table.driveId),
+    index("workflow_resource_address_book_idx").on(table.addressBookId),
     check(
       "workflow_resource_one_ck",
-      sql`(${table.kind} = 'mailbox' AND ${table.mailboxId} IS NOT NULL AND ${table.calendarId} IS NULL AND ${table.driveId} IS NULL) OR (${table.kind} = 'calendar' AND ${table.calendarId} IS NOT NULL AND ${table.mailboxId} IS NULL AND ${table.driveId} IS NULL) OR (${table.kind} = 'drive' AND ${table.driveId} IS NOT NULL AND ${table.mailboxId} IS NULL AND ${table.calendarId} IS NULL)`,
+      sql`(${table.kind} = 'mailbox' AND ${table.mailboxId} IS NOT NULL AND ${table.calendarId} IS NULL AND ${table.driveId} IS NULL AND ${table.addressBookId} IS NULL) OR (${table.kind} = 'calendar' AND ${table.calendarId} IS NOT NULL AND ${table.mailboxId} IS NULL AND ${table.driveId} IS NULL AND ${table.addressBookId} IS NULL) OR (${table.kind} = 'drive' AND ${table.driveId} IS NOT NULL AND ${table.mailboxId} IS NULL AND ${table.calendarId} IS NULL AND ${table.addressBookId} IS NULL) OR (${table.kind} = 'addressbook' AND ${table.addressBookId} IS NOT NULL AND ${table.mailboxId} IS NULL AND ${table.calendarId} IS NULL AND ${table.driveId} IS NULL)`,
     ),
   ],
 );

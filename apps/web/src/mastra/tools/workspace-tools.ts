@@ -2,6 +2,7 @@ import "server-only";
 import type { ToolKey } from "../toolkit/keys";
 import { workspaceAdminTools } from "./workspace-admin-tools";
 import { workspaceCalendarTools } from "./workspace-calendar-tools";
+import { workspaceContactTools } from "./workspace-contact-tools";
 import { workspaceDriveTools } from "./workspace-drive-tools";
 import { workspaceInboxTools } from "./workspace-inbox-tools";
 import { workspaceMailTools } from "./workspace-mail-tools";
@@ -14,6 +15,7 @@ export const allWorkspaceTools = {
   ...workspaceWorkflowTools,
   ...workspaceCalendarTools,
   ...workspaceDriveTools,
+  ...workspaceContactTools,
   ...workspaceMemberTools,
   ...workspaceAdminTools,
 } satisfies Record<ToolKey, unknown>;

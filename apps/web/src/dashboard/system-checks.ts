@@ -433,6 +433,7 @@ const SECTION_PROVIDERS: Partial<Record<InstanceSection, ConnectionProvider>> = 
   zoho: "zoho",
   imapServers: "imap",
   caldavServers: "caldav",
+  carddavServers: "carddav",
   cloudflareServers: "cloudflare",
   resendServers: "resend",
   s3Servers: "s3",

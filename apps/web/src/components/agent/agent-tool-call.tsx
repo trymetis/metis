@@ -28,6 +28,8 @@ import {
   Tag,
   Trash2,
   UserMinus,
+  UserPen,
+  UserPlus,
   Users,
   Wrench,
   XCircle,
@@ -331,6 +333,35 @@ function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): ToolCopy {
         success: reply ? `Replied "${reply}"` : "Replied to the invite",
       };
     }
+    case "createContact": {
+      const person = asString(input?.name) ?? asString(input?.givenName);
+      return {
+        icon: UserPlus,
+        loading: person ? `Saving ${person}...` : "Saving the contact...",
+        approval: person ? `Approve saving ${person} as a contact` : "Approve saving this contact",
+        success: person ? `Saved ${person}` : "Saved the contact",
+      };
+    }
+    case "updateContact": {
+      const what = asString(input?.summary);
+      return {
+        icon: UserPen,
+        loading: "Updating the contact...",
+        approval: what ? `Approve changing ${what}` : "Approve changing this contact",
+        success: "Updated the contact",
+      };
+    }
+    case "deleteContact": {
+      const what = asString(input?.summary);
+      return {
+        icon: Trash2,
+        loading: "Deleting the contact...",
+        approval: what
+          ? `Approve deleting ${what} — it can't be undone`
+          : "Approve deleting this contact — it can't be undone",
+        success: "Deleted the contact",
+      };
+    }
     case "createFolder": {
       const folder = asString(input?.name);
       return {
@@ -456,7 +487,7 @@ function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): ToolCopy {
         icon: UserMinus,
         loading: "Removing the member...",
         approval:
-          "Approve removing this member — their mailboxes, calendars and drives leave the workspace",
+          "Approve removing this member — their mailboxes, calendars, drives and address books leave the workspace",
         success: "Removed the member",
       };
     }

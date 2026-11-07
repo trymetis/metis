@@ -40,7 +40,13 @@ import { WorkflowEditor } from "./workflow-editor";
 type Selection = { mode: "new"; template: GraphTemplate } | { mode: "workflow"; id: string } | null;
 
 const NO_WORKFLOWS: WorkflowOutput[] = [];
-const NO_DIRECTORY: WorkflowDirectory = { mailboxes: [], calendars: [], drives: [], members: [] };
+const NO_DIRECTORY: WorkflowDirectory = {
+  mailboxes: [],
+  calendars: [],
+  drives: [],
+  addressBooks: [],
+  members: [],
+};
 
 interface WorkflowBuilderProps {
   allowDecisionSteps: boolean;

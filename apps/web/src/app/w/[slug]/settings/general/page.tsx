@@ -10,7 +10,6 @@ import { DEFAULT_THEME_BRAND, isThemeBrand } from "@/theme/brand";
 
 import { AppearanceSection } from "./_components/appearance-section";
 import { DeleteWorkspaceSection } from "./_components/delete-workspace-section";
-import { MembersSection } from "./_components/members-section";
 import { PolicySection } from "./_components/policy-section";
 
 export default function GeneralSettingsPage() {
@@ -25,7 +24,7 @@ export default function GeneralSettingsPage() {
     <div>
       <PageHeader
         title="General"
-        description="Members, appearance, and deletion for this workspace."
+        description="AI policy, appearance, and deletion for this workspace."
       />
 
       {error && (
@@ -43,7 +42,6 @@ export default function GeneralSettingsPage() {
         <p className="mt-8 text-[13px] text-faint">Unknown workspace.</p>
       ) : (
         <>
-          <MembersSection workspace={workspace} />
           <PolicySection
             key={`policy-${workspace.id}`}
             canEdit={workspace.role === "owner" || workspace.role === "admin"}

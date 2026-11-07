@@ -15,6 +15,7 @@ export const SEARCH_KINDS = [
   "mailbox",
   "calendar",
   "drive",
+  "addressbook",
   "mail-folder",
   "label",
   "connection",
@@ -106,6 +107,18 @@ export const SEARCH_FIELDS: readonly SearchField[] = [
     description: "In one drive",
   },
   {
+    key: "addressbook",
+    type: "slug",
+    kinds: ["contact", "addressbook"],
+    description: "In one address book",
+  },
+  {
+    key: "book",
+    type: "text",
+    kinds: ["contact", "addressbook"],
+    description: "A book inside an address book",
+  },
+  {
     key: "from",
     type: "text",
     kinds: ["mail", "subscription"],
@@ -161,7 +174,7 @@ export const SEARCH_FIELDS: readonly SearchField[] = [
   {
     key: "title",
     type: "text",
-    kinds: ["event", "chat"],
+    kinds: ["event", "chat", "contact"],
     description: "Title",
   },
   {
@@ -181,6 +194,7 @@ export const SEARCH_FIELDS: readonly SearchField[] = [
       "mailbox",
       "calendar",
       "drive",
+      "addressbook",
       "mail-folder",
       "label",
       "subscription",
@@ -214,6 +228,13 @@ export const SEARCH_FIELDS: readonly SearchField[] = [
     kinds: ["member", "contact", "connection"],
     description: "Email address",
   },
+  { key: "phone", type: "text", kinds: ["contact"], description: "Phone number" },
+  {
+    key: "organization",
+    type: "text",
+    kinds: ["contact"],
+    description: "Company or organization",
+  },
   {
     key: "role",
     type: "enum",
@@ -237,11 +258,12 @@ export const SEARCH_FIELDS: readonly SearchField[] = [
   {
     key: "provider",
     type: "enum",
-    kinds: ["mailbox", "calendar", "drive", "connection"],
+    kinds: ["mailbox", "calendar", "drive", "addressbook", "connection"],
     values: {
       mailbox: CONNECTION_PROVIDERS,
       calendar: CONNECTION_PROVIDERS,
       drive: CONNECTION_PROVIDERS,
+      addressbook: CONNECTION_PROVIDERS,
       connection: CONNECTION_PROVIDERS,
     },
     description: "Provider",

@@ -27,6 +27,7 @@ export function connectServers(c: InstanceConfig = getInstanceConfig()): Connect
     })),
     ...listed("imap", c.imapServers),
     ...listed("caldav", c.caldavServers),
+    ...listed("carddav", c.carddavServers),
     ...listed("cloudflare", c.cloudflareServers),
     ...listed("resend", c.resendServers),
     ...listed("s3", c.s3Servers),
@@ -78,6 +79,20 @@ export function resolveServerCredentials(
     if (!entry) return null;
     return {
       provider: "caldav",
+      serverId: entry.id,
+      server: entry.name,
+      url: entry.url,
+      user: stored.user,
+      pass: stored.pass,
+      allowInsecureTls: entry.allowInsecureTls,
+    };
+  }
+
+  if (stored.provider === "carddav") {
+    const entry = findEntry(c.carddavServers, stored);
+    if (!entry) return null;
+    return {
+      provider: "carddav",
       serverId: entry.id,
       server: entry.name,
       url: entry.url,

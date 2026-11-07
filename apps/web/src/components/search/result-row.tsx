@@ -6,6 +6,7 @@ import { cn } from "@metis/ui/lib/utils";
 import { format, isThisYear, isToday } from "date-fns";
 import type { LucideIcon } from "lucide-react";
 import {
+  BookUser,
   Bookmark,
   CalendarDays,
   ChevronDown,
@@ -107,6 +108,7 @@ const LOCAL_ICONS: Record<string, LucideIcon> = {
   mailbox: Inbox,
   calendar: CalendarDays,
   drive: HardDrive,
+  addressbook: BookUser,
   "mail-folder": Folder,
   label: Tag,
   connection: Link2,

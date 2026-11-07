@@ -5,6 +5,8 @@ import { and, eq, inArray, isNull, ne } from "drizzle-orm";
 import { hashToken, newInviteToken } from "@/auth/invite-token";
 import { db, type Executor } from "@/db";
 import {
+  addressBook,
+  addressBookWorkspace,
   calendar,
   calendarWorkspace,
   connection,
@@ -444,6 +446,21 @@ export async function removeMember(opts: {
               .select({ id: drive.id })
               .from(drive)
               .innerJoin(connection, eq(connection.id, drive.connectionId))
+              .where(eq(connection.userId, target.userId)),
+          ),
+        ),
+      );
+    await tx
+      .delete(addressBookWorkspace)
+      .where(
+        and(
+          eq(addressBookWorkspace.workspaceId, opts.workspaceId),
+          inArray(
+            addressBookWorkspace.addressBookId,
+            tx
+              .select({ id: addressBook.id })
+              .from(addressBook)
+              .innerJoin(connection, eq(connection.id, addressBook.connectionId))
               .where(eq(connection.userId, target.userId)),
           ),
         ),

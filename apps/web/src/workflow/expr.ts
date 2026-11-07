@@ -67,6 +67,7 @@ const RECORD_TYPE_NAMES: Record<RecordKind, string> = {
   file: "File",
   folder: "Folder",
   person: "Person",
+  contact: "Contact",
   blob: "Blob",
   answer: "Answer",
 };

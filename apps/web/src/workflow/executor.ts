@@ -6,6 +6,8 @@ import { readMail } from "@/ops/values";
 import type { BackgroundPrincipal } from "./authorization";
 import {
   authorizeCalendar,
+  authorizeAddressBook,
+  authorizeConnected,
   authorizeDrive,
   authorizeMailbox,
   authorizeMailboxAccess,
@@ -207,6 +209,7 @@ function receiptFor(receipt: StepReceipt | undefined, value: unknown): StepRecei
 const RESOURCE_KEYS: Record<string, ResourceKind> = {
   mailboxId: "mailbox",
   driveId: "drive",
+  addressBookId: "addressbook",
 };
 
 function resourcesTouched(def: StepDef, params: Params): { kind: ResourceKind; id: string }[] {
@@ -219,7 +222,9 @@ function resourcesTouched(def: StepDef, params: Params): { kind: ResourceKind; i
           ? "calendar"
           : spec.kind === "drive"
             ? "drive"
-            : null;
+            : spec.kind === "addressbook"
+              ? "addressbook"
+              : null;
     const value = params[name];
     if (kind && typeof value === "string" && value)
       found.set(`${kind}:${value}`, { kind, id: value });
@@ -805,6 +810,14 @@ export async function executeRun(opts: ExecuteOptions): Promise<ExecutionOutcome
               if (!resolved.ok) throw new BlockedError(resolved.reason);
               return resolved.value;
             },
+            async addressBook(addressBookId) {
+              const resolved = await authorizeAddressBook({
+                principal: opts.principal,
+                addressBookId,
+              });
+              if (!resolved.ok) throw new BlockedError(resolved.reason);
+              return resolved.value;
+            },
             async requireAi(resources) {
               for (const resource of resources) {
                 const allowed = await authorizeResourceAi({
@@ -882,12 +895,11 @@ export async function executeRun(opts: ExecuteOptions): Promise<ExecutionOutcome
                         principal: principal.value,
                         mailboxId: resource.id,
                       })
-                    : resource.kind === "calendar"
-                      ? await authorizeCalendar({
-                          principal: principal.value,
-                          accountId: resource.id,
-                        })
-                      : await authorizeDrive({ principal: principal.value, driveId: resource.id });
+                    : await authorizeConnected({
+                        principal: principal.value,
+                        kind: resource.kind,
+                        id: resource.id,
+                      });
                 if (!access.ok) throw new BlockedError(access.reason);
               }
             }

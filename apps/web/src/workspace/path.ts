@@ -5,22 +5,26 @@ import { route } from "@/lib/route";
 export const ALL_MAILBOXES_SLUG = "all";
 export const ALL_CALENDARS_SLUG = "all";
 export const ALL_DRIVES_SLUG = "all";
+export const ALL_ADDRESS_BOOKS_SLUG = "all";
+export const ALL_BOOKS = "all";
 
 export const MAIL_SEGMENT = "m";
 export const CALENDAR_SEGMENT = "c";
 export const DRIVE_SEGMENT = "d";
+export const CONTACTS_SEGMENT = "p";
 
 export const RESERVED_MAILBOX_SLUGS = new Set([ALL_MAILBOXES_SLUG]);
 export const RESERVED_CALENDAR_SLUGS = new Set([ALL_CALENDARS_SLUG]);
 export const RESERVED_DRIVE_SLUGS = new Set([ALL_DRIVES_SLUG]);
+export const RESERVED_ADDRESS_BOOK_SLUGS = new Set([ALL_ADDRESS_BOOKS_SLUG]);
 
 export type WorkspaceSection =
   | "mail"
   | "calendar"
   | "drive"
+  | "contacts"
   | "assistant"
   | "workflow"
-  | "members"
   | "settings"
   | "workspace";
 
@@ -30,6 +34,9 @@ export interface ParsedWorkspacePath {
   calendarSlug: string | null;
   driveSlug: string | null;
   drivePath: string[];
+  addressBookSlug: string | null;
+  bookRef: string | null;
+  contactRef: string | null;
   section: WorkspaceSection | null;
   folder: string | null;
 }
@@ -40,6 +47,9 @@ const EMPTY: ParsedWorkspacePath = {
   calendarSlug: null,
   driveSlug: null,
   drivePath: [],
+  addressBookSlug: null,
+  bookRef: null,
+  contactRef: null,
   section: null,
   folder: null,
 };
@@ -55,7 +65,6 @@ export function parseWorkspacePath(pathname: string): ParsedWorkspacePath {
   if (!next) return { ...base, section: "workspace" };
   if (next === "assistant") return { ...base, section: "assistant" };
   if (next === "workflow") return { ...base, section: "workflow" };
-  if (next === "members") return { ...base, section: "members" };
   if (next === "settings") return { ...base, section: "settings" };
 
   if (next === MAIL_SEGMENT) {
@@ -77,6 +86,16 @@ export function parseWorkspacePath(pathname: string): ParsedWorkspacePath {
       driveSlug: parts[3] ?? null,
       drivePath: parts.slice(4).map(decodeURIComponent),
       section: "drive",
+    };
+  }
+
+  if (next === CONTACTS_SEGMENT) {
+    return {
+      ...base,
+      addressBookSlug: parts[3] ?? null,
+      bookRef: parts[3] ? decodeURIComponent(parts[4] ?? ALL_BOOKS) : null,
+      contactRef: parts[5] ? decodeURIComponent(parts[5]) : null,
+      section: "contacts",
     };
   }
 
@@ -113,6 +132,20 @@ export function driveRootPath(workspaceSlug: string): Route {
   return route(`/w/${workspaceSlug}/${DRIVE_SEGMENT}`);
 }
 
+export function contactsRootPath(workspaceSlug: string): Route {
+  return route(`/w/${workspaceSlug}/${CONTACTS_SEGMENT}`);
+}
+
+export function contactsPath(
+  workspaceSlug: string,
+  addressBookSlug: string,
+  bookRef: string = ALL_BOOKS,
+  contactRef?: string,
+): Route {
+  const base = `/w/${workspaceSlug}/${CONTACTS_SEGMENT}/${addressBookSlug}/${encodeURIComponent(bookRef)}`;
+  return route(contactRef ? `${base}/${encodeURIComponent(contactRef)}` : base);
+}
+
 export function mailRootPath(workspaceSlug: string): Route {
   return route(`/w/${workspaceSlug}/${MAIL_SEGMENT}`);
 }
@@ -129,14 +162,6 @@ export function assistantPath(workspaceSlug: string, threadId?: string): Route {
 
 export function workflowPath(workspaceSlug: string, rest = ""): Route {
   return route(rest ? `/w/${workspaceSlug}/workflow/${rest}` : `/w/${workspaceSlug}/workflow`);
-}
-
-export function membersPath(workspaceSlug: string, userId?: string): Route {
-  return route(
-    userId
-      ? `/w/${workspaceSlug}/members/${encodeURIComponent(userId)}`
-      : `/w/${workspaceSlug}/members`,
-  );
 }
 
 export function workflowRunPath(workspaceSlug: string, runId: string): Route {
@@ -169,9 +194,9 @@ export function switchWorkspacePath(pathname: string, target: { slug: string }):
   if (parsed.section === "settings") {
     return workspaceSettingsPath(target.slug, parts[3] ?? "mailboxes");
   }
-  if (parsed.section === "members") return membersPath(target.slug);
   if (parsed.section === "calendar") return calendarRootPath(target.slug);
   if (parsed.section === "drive") return driveRootPath(target.slug);
+  if (parsed.section === "contacts") return contactsRootPath(target.slug);
   if (parsed.section === "mail") return mailRootPath(target.slug);
   return workspacePath(target.slug);
 }
@@ -201,5 +226,17 @@ export function calendarScope(pathname: string): {
   return {
     workspaceSlug: parsed.workspaceSlug,
     calendarSlug: parsed.calendarSlug,
+  };
+}
+
+export function addressBookScope(pathname: string): {
+  workspaceSlug: string;
+  addressBookSlug: string;
+} | null {
+  const parsed = parseWorkspacePath(pathname);
+  if (!parsed.workspaceSlug || !parsed.addressBookSlug) return null;
+  return {
+    workspaceSlug: parsed.workspaceSlug,
+    addressBookSlug: parsed.addressBookSlug,
   };
 }

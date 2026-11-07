@@ -6,8 +6,19 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Whi
 
 ## Unreleased
 
+### Upgrade notes
+
+- Contains a database migration that adds the address book tables and lets workflows reference an address book.
+- To offer contacts from Google, Microsoft or Zoho, add the contacts scope to your OAuth app: `https://www.googleapis.com/auth/contacts` (and enable the People API) for Google, `Contacts.ReadWrite` for Microsoft, `ZohoContacts.contactapi.ALL` for Zoho. Accounts already connected ask for it when someone adds their address book.
+- CardDAV servers are a new server list (Dashboard → System → CardDAV, `METIS_CARDDAV_SERVERS`).
+
+### Added
+
+- Contacts: connect a Google, Outlook, Zoho or CardDAV address book to a workspace, choose which of its books the workspace sees, and browse, filter, create, edit and delete contacts in the new Contacts section (rail icon, `/p/`), with its own AI panel. Click anyone in an open email for a menu that opens or saves them as a contact, emails them, invites them or searches everything with them, or save a summary's Contact card to an address book; the Contact card's `.vcf` button is now **Download**. Compose suggestions and search list saved contacts first. Workspace search finds address books and their books (`type:addressbook`, `addressbook:`, `book:`) and contacts by phone, organization or job title, including contacts with no email, and a contact's card downloads it as a `.vcf`. The assistant and MCP clients read and write contacts behind the address book's AI switch: every assistant write waits for approval, and MCP contact writes stay off until turned on for the client. New workflow Contacts steps list, search, get, create, update and delete contacts as the workflow's creator. The `searchContacts` tool now searches saved contacts.
+
 ### Changed
 
+- Workspace members moved to Settings → Members, which lists everyone; owners and admins invite and remove people, and the owner changes roles and transfers ownership. The separate Members page and member profiles are gone; a member chip in the assistant opens a member panel beside the chat.
 - Dashboard: the Instance page's description names its **Mail cache** and **Proxies** sections too.
 
 ## 0.2.2 - 2026-11-05

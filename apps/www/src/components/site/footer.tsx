@@ -56,8 +56,8 @@ export function Footer() {
               </span>
             </Link>
             <p className="mt-5 max-w-[30ch] text-[14px] leading-relaxed text-bone-2">
-              One suite over the accounts you already have: mail, calendars, drives, an agent,
-              workflows and MCP.
+              One suite over the accounts you already have: mail, calendars, drives, contacts, an
+              agent, workflows and MCP.
             </p>
           </div>
           <FooterCol title="Suite">

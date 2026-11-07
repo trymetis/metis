@@ -9,6 +9,7 @@ export default defineMeta({
     "mail",
     "calendar",
     "drive",
+    "contacts",
     "search",
     "assistant",
     "workflows",

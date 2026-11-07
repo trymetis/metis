@@ -28,12 +28,14 @@ const SETTINGS_PATH: Record<ConnectionResource, string> = {
   mailbox: "/settings/mailboxes",
   calendar: "/settings/calendars",
   drive: "/settings/drives",
+  addressbook: "/settings/address-books",
 };
 
 const RESOURCE_LABEL: Record<ConnectionResource, string> = {
   mailbox: "mail",
   calendar: "calendars",
   drive: "files",
+  addressbook: "contacts",
 };
 
 function redirectError(message: string) {

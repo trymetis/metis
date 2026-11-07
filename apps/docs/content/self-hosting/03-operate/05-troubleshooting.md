@@ -34,7 +34,7 @@ Warnings are grouped as follows.
 
 ### Nobody can connect an account
 
-The **System** page says "No provider is configured, so no mailbox, calendar or drive can be connected until one is added under Dashboard → System." Add a provider. See [OAuth providers](/self-hosting/configure/sign-in-providers) and [Server lists](/self-hosting/configure/server-lists).
+The **System** page says "No provider is configured, so no mailbox, calendar, drive or address book can be connected until one is added under Dashboard → System." Add a provider. See [OAuth providers](/self-hosting/configure/sign-in-providers) and [Server lists](/self-hosting/configure/server-lists).
 
 ### Connecting a Google, Microsoft or Zoho account fails
 

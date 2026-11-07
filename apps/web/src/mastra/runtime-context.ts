@@ -11,6 +11,8 @@ import {
   type WorkspaceMailboxRow,
 } from "@/connections";
 import type { MailProvider } from "@/connections/types";
+import type { ResolvedAddressBook } from "@/contacts/aggregate";
+import { type AddressBookSession, workspaceAddressBookAccounts } from "@/contacts/session";
 import {
   aggregateDriveSurface,
   type DriveSurface,
@@ -42,6 +44,7 @@ import { aiEnabled, workspaceAllowsAi } from "@/workspace/policy";
 const MAILBOX_CTX = "mailboxCtx";
 const CALENDAR_CTX = "calendarCtx";
 const DRIVE_CTX = "driveCtx";
+const CONTACTS_CTX = "contactsCtx";
 const WORKSPACE_CTX = "workspaceCtx";
 
 class MailboxCtxSlot {
@@ -63,6 +66,53 @@ class DriveCtxSlot {
   constructor(ctx: DriveCtx) {
     this.ctx = ctx;
   }
+}
+
+class ContactsCtxSlot {
+  readonly ctx: ContactsCtx;
+  constructor(ctx: ContactsCtx) {
+    this.ctx = ctx;
+  }
+}
+
+export interface ContactsCtx {
+  userId: string;
+  workspaceId: string;
+  workspaceRole: WorkspaceRole;
+  addressBookSlug: string;
+  isAggregate: boolean;
+  accounts: ResolvedAddressBook[];
+  headers: Headers;
+}
+
+export function contactsRequestContext(
+  session: AddressBookSession,
+  headers: Headers,
+): RequestContext | null {
+  const accounts = session.accounts.filter(aiEnabled);
+  if (accounts.length === 0) return null;
+  const rc = new RequestContext();
+  rc.set(
+    CONTACTS_CTX,
+    new ContactsCtxSlot({
+      userId: session.userId,
+      workspaceId: session.workspaceId,
+      workspaceRole: session.workspaceRole,
+      addressBookSlug: session.addressBookSlug,
+      isAggregate: session.isAggregate,
+      accounts,
+      headers,
+    }),
+  );
+  return rc;
+}
+
+export function getContactsCtx(rc: RequestContext | undefined): ContactsCtx {
+  const slot = rc?.get(CONTACTS_CTX);
+  if (!(slot instanceof ContactsCtxSlot)) {
+    throw new Error("contacts context missing from request context");
+  }
+  return slot.ctx;
 }
 
 class WorkspaceCtxSlot {
@@ -263,10 +313,11 @@ export async function resolveWorkspaceScope(
   }
   if (!workspaceAllowsAi(policy)) return null;
 
-  const [stored, calendars, drives] = await Promise.all([
+  const [stored, calendars, drives, addressBooks] = await Promise.all([
     listWorkspaceMailboxes(session.workspaceId),
     workspaceCalendarAccounts(session.workspaceId),
     workspaceDrives(session.userId, session.workspaceId),
+    workspaceAddressBookAccounts(session.workspaceId),
   ]);
   const resolved = await Promise.all(stored.filter(aiEnabled).map(toAgentMailbox));
   const mailboxes = resolved.filter((m): m is AgentMailbox => m !== null);
@@ -277,6 +328,7 @@ export async function resolveWorkspaceScope(
     mailboxes,
     calendars: calendars.filter(aiEnabled),
     drives: drives.filter(aiEnabled),
+    addressBooks: addressBooks.filter(aiEnabled),
     members: workspaceMembersLoader(session.workspaceId),
     actor,
   };
@@ -323,6 +375,7 @@ export function workspaceCtxReferenceScope(
     })),
     calendars: ctx.calendars,
     drives: ctx.drives,
+    addressBooks: ctx.addressBooks,
   };
 }
 
@@ -332,6 +385,10 @@ export function mailboxById(ctx: WorkspaceCtx, mailboxId: string) {
 
 export function calendarById(ctx: WorkspaceCtx, accountId: string) {
   return ctx.calendars.find((c) => c.accountId === accountId) ?? null;
+}
+
+export function addressBookById(ctx: WorkspaceCtx, accountId: string) {
+  return ctx.addressBooks.find((a) => a.accountId === accountId) ?? null;
 }
 
 export function driveById(ctx: WorkspaceCtx, driveId: string) {

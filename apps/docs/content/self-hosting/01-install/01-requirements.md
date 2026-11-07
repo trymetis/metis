@@ -33,10 +33,10 @@ On a cloud server, your provider's firewall may block these ports even when the 
 
 ## Accounts and services
 
-You need at least one way for users to connect their mail, calendars or files. Pick any of these:
+You need at least one way for users to connect their mail, calendars, files or contacts. Pick any of these:
 
 - An OAuth client from Google, Microsoft or Zoho. See [OAuth providers](/self-hosting/configure/sign-in-providers).
-- Your own IMAP, CalDAV, S3, WebDAV, FTP or SFTP servers. See [Server lists](/self-hosting/configure/server-lists).
+- Your own IMAP, CalDAV, CardDAV, S3, WebDAV, FTP or SFTP servers. See [Server lists](/self-hosting/configure/server-lists).
 - A mail gateway on your own domain. See [Mail gateways](/self-hosting/mail-gateways).
 
 You can add these after the install, from the owner dashboard. These are optional:

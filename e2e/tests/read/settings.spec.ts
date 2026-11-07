@@ -47,7 +47,7 @@ test("the account page downloads the data export and says mail stays with the pr
     });
   await expect(section).toContainText("This is not a mailbox archive.");
   await expect(section).toContainText(
-    "mail, calendar events and files stay with the provider you connected",
+    "mail, calendar events, files and contacts stay with the provider you connected",
   );
 
   const download = page.waitForEvent("download", { timeout: 30_000 });

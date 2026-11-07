@@ -227,10 +227,10 @@ export function CalendarsList() {
           <AlertDialogHeader>
             <AlertDialogTitle>Remove the calendar for {confirmDelete?.email}?</AlertDialogTitle>
             <AlertDialogDescription>
-              This removes the calendar from every workspace using it. If you have no mailbox or
-              drive on this account either, we disconnect it completely; otherwise it stays
-              connected for those, since calendar access can&rsquo;t be removed on its own. Your
-              events are untouched.
+              This removes the calendar from every workspace using it. If you have no mailbox, drive
+              or address book on this account either, we disconnect it completely; otherwise it
+              stays connected for those, since calendar access can&rsquo;t be removed on its own.
+              Your events are untouched.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

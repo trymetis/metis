@@ -1,6 +1,6 @@
 ---
 title: Server lists
-description: Offer your own IMAP, CalDAV, S3, WebDAV, FTP, FTPS and SFTP servers to the people on your instance.
+description: Offer your own IMAP, CalDAV, CardDAV, S3, WebDAV, FTP, FTPS and SFTP servers to the people on your instance.
 ---
 
 Besides Google, Microsoft and Zoho, users can connect to servers that you list. You decide the servers. Users pick one by its name in the connect dialog and bring only their own login. Metis Suite never connects to a server address that a user types in.
@@ -9,6 +9,7 @@ Besides Google, Microsoft and Zoho, users can connect to servers that you list. 
 | ------------------------ | ----------------------------------------------------------------- | ------------------------------------------------ |
 | IMAP                     | A mailbox over IMAP, sending over SMTP                            | **IMAP**                                         |
 | CalDAV                   | A calendar account                                                | **CalDAV**                                       |
+| CardDAV                  | An address book account                                           | **CardDAV**                                      |
 | S3                       | A bucket, on keys you hold. Users pick only a bucket and a prefix | **S3**                                           |
 | WebDAV                   | A drive, relayed through your server                              | **WebDAV**                                       |
 | FTP and FTPS             | A drive, relayed through your server                              | **FTP**                                          |
@@ -30,14 +31,15 @@ A save contacts only the entries you added and the entries whose connection sett
 
 These fields are the connection settings for each provider:
 
-| Provider               | Connection settings                                 |
-| ---------------------- | --------------------------------------------------- |
-| IMAP                   | See below.                                          |
-| CalDAV                 | **CalDAV URL**, **Accept invalid TLS certificates** |
-| WebDAV                 | **WebDAV URL**, **Accept invalid TLS certificates** |
-| Cloudflare Email       | **Worker endpoint**                                 |
-| Resend                 | **Gateway endpoint**                                |
-| S3, FTP and FTPS, SFTP | Every field                                         |
+| Provider               | Connection settings                                  |
+| ---------------------- | ---------------------------------------------------- |
+| IMAP                   | See below.                                           |
+| CalDAV                 | **CalDAV URL**, **Accept invalid TLS certificates**  |
+| CardDAV                | **CardDAV URL**, **Accept invalid TLS certificates** |
+| WebDAV                 | **WebDAV URL**, **Accept invalid TLS certificates**  |
+| Cloudflare Email       | **Worker endpoint**                                  |
+| Resend                 | **Gateway endpoint**                                 |
+| S3, FTP and FTPS, SFTP | Every field                                          |
 
 An IMAP entry has two checks, one for IMAP and one for SMTP. Each one runs again only when its own side changes:
 
@@ -61,7 +63,7 @@ If the check of an entry fails, nothing is saved. You can fix the entry and save
 
 Rules for every entry:
 
-- Each entry needs a **Name** of 1 to 64 characters, different from the other entries. Users see this name. For a CalDAV server, it is the name users see for their calendar account. After you save a rename, accounts already connected through the entry show the new name.
+- Each entry needs a **Name** of 1 to 64 characters, different from the other entries. Users see this name. For a CalDAV server, it is the name users see for their calendar account, and for a CardDAV server, the name they see for their address book account. After you save a rename, accounts already connected through the entry show the new name.
 - Host fields take a hostname such as `imap.example.com`, never a URL.
 - Renaming an entry keeps its connections.
 
@@ -97,6 +99,17 @@ For IMAP entries, the check on save and **Run check** do not tell you when a ser
 | ----------------------------------- | ----------------------------------- |
 | **CalDAV URL**                      | The full URL, including `https://`. |
 | **Accept invalid TLS certificates** | Off by default.                     |
+
+### CardDAV
+
+| Field                               | Notes                               |
+| ----------------------------------- | ----------------------------------- |
+| **CardDAV URL**                     | The full URL, including `https://`. |
+| **Accept invalid TLS certificates** | Off by default.                     |
+
+A URL without `http://` or `https://` is refused with "Enter the full CardDAV URL, including https://", and a URL that cannot be read with "That is not a valid URL". The check on save and **Run check** test the URL as the "CardDAV endpoint".
+
+CalDAV and CardDAV are separate lists. If one server offers both calendars and contacts, add it to each list. A user who wants both then connects twice, once for the calendar and once for the address book, with the same login.
 
 ### S3
 
@@ -176,13 +189,14 @@ Before the first start, you can set each list as a JSON array. After the first s
 ```bash
 METIS_IMAP_SERVERS=[{"name":"Fastmail","imap":{"host":"imap.fastmail.com"},"smtp":{"host":"smtp.fastmail.com"}}]
 METIS_CALDAV_SERVERS=[{"name":"Fastmail Calendar","url":"https://caldav.fastmail.com/dav/"}]
+METIS_CARDDAV_SERVERS=[{"name":"Fastmail Contacts","url":"https://carddav.fastmail.com/dav/"}]
 METIS_S3_SERVERS=[{"name":"Team Storage","endpoint":"https://s3.eu-central-1.amazonaws.com","region":"eu-central-1","accessKeyId":"AKIA...","secretAccessKey":"...","forcePathStyle":true}]
 METIS_WEBDAV_SERVERS=[{"name":"Nextcloud","url":"https://cloud.example.com/remote.php/dav/files/"}]
 METIS_FTP_SERVERS=[{"name":"Office FTP","host":"ftp.example.com","port":21,"secure":"explicit","poolSize":2}]
 METIS_SFTP_SERVERS=[{"name":"Office SFTP","host":"sftp.example.com","port":22,"hostKeySha256":"SHA256:..."}]
 ```
 
-The JSON keys are listed in [Environment variables](/self-hosting/reference/environment-variables#server-lists).
+The JSON keys are listed in [Environment variables](/self-hosting/reference/environment-variables#server-lists). In the [config file](/self-hosting/configure/how-configuration-works#the-optional-config-file), the lists sit under `connections`, with the names `imapServers`, `caldavServers`, `carddavServers`, `s3Servers`, `webdavServers`, `ftpServers` and `sftpServers`.
 
 :::note
 WebDAV, FTP, SFTP and relayed S3 servers need `METIS_DRIVE_RELAY_SECRET` set to a value of at least 32 characters. The bootstrap script generates it for you.

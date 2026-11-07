@@ -1,6 +1,6 @@
 import { MCP_TOOL_MANIFEST } from "@/mcp/tools";
 import type { AuditEvent } from "@/server/schema";
-import type { AuditAction, AuditResourceKind } from "@/types/audit";
+import { type AuditAction, type AuditResourceKind, AUDIT_RESOURCE_NOUNS } from "@/types/audit";
 
 const TOOL_LABELS = new Map<string, string>(
   MCP_TOOL_MANIFEST.map((tool) => [tool.key, tool.label]),
@@ -31,7 +31,7 @@ export function formatAuditEvent(event: AuditEvent): string {
   const actor = event.actorName || event.actorEmail || "A deleted account";
   const person = event.targetName || event.targetLabel || "a deleted account";
   const target = event.targetLabel ?? "";
-  const kind = event.resourceKind ?? "resource";
+  const kind = event.resourceKind ? AUDIT_RESOURCE_NOUNS[event.resourceKind] : "resource";
   const workspace = event.workspaceName;
   const { detail } = event;
   const tools = toolNames(detail.tools ?? detail.sensitiveTools);
@@ -90,7 +90,7 @@ export function formatAuditEvent(event: AuditEvent): string {
 }
 
 export function auditPhrase(action: AuditAction, kind: AuditResourceKind | null): string {
-  const resource = kind ?? "resource";
+  const resource = kind ? AUDIT_RESOURCE_NOUNS[kind] : "resource";
   switch (action) {
     case "account.deleted":
       return "deleted their account";

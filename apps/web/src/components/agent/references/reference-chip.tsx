@@ -1,5 +1,6 @@
 import { cn } from "@metis/ui/lib/utils";
 import {
+  BookUser,
   CalendarClock,
   CalendarDays,
   File,
@@ -9,6 +10,7 @@ import {
   Mail,
   Tag,
   User,
+  UserRound,
 } from "lucide-react";
 import type { ComponentType } from "react";
 
@@ -24,6 +26,8 @@ const ICONS: Record<ReferenceType, ComponentType<{ className?: string }>> = {
   label: Tag,
   folder: Folder,
   file: File,
+  addressbook: BookUser,
+  contact: UserRound,
 };
 
 export function ReferenceIcon({ type, className }: { type: ReferenceType; className?: string }) {

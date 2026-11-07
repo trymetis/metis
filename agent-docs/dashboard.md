@@ -43,7 +43,7 @@ See also [AGENTS.md](../AGENTS.md), [auth.md](auth.md), [configuration.md](confi
 
 ### Stats
 
-- **The dashboard covers mailboxes, calendars and drives alike** wherever it counts resources.
+- **The dashboard covers mailboxes, calendars, drives and address books alike** wherever it counts resources.
 - **`dashboardMcp` lists clients without a workspace join**, because a client belongs to a user.
 - **Usage is bucketed by UTC day** (`dashboardUsage`, `strftime` over `ai_usage.created_at`).
 - **Charts are TanStack Charts.** `.chart-surface` maps `--ts-chart-1…5` onto the `--chart-*` tokens, so both themes and all brands apply with no per-chart branch.

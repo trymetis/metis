@@ -36,6 +36,7 @@ import type { SavedSearch, SearchSuggestion } from "@/server/schema";
 import { useSearchStore } from "@/store/search-store";
 import {
   ALL_CALENDARS_SLUG,
+  ALL_ADDRESS_BOOKS_SLUG,
   ALL_DRIVES_SLUG,
   ALL_MAILBOXES_SLUG,
   drivePath,
@@ -68,7 +69,7 @@ const TOGGLES: { id: string; label: string; text: string }[] = [
   {
     id: "workspace",
     label: "Workspace",
-    text: "(type:mailbox OR type:calendar OR type:drive OR type:mail-folder OR type:label OR type:connection)",
+    text: "(type:mailbox OR type:calendar OR type:drive OR type:addressbook OR type:mail-folder OR type:label OR type:connection)",
   },
   {
     id: "commands",
@@ -97,6 +98,13 @@ function writeRecent(workspaceSlug: string, list: string[]) {
   } catch {}
 }
 
+const RESOURCE_GROUP_LABELS = {
+  mailbox: "Mailboxes",
+  calendar: "Calendars",
+  drive: "Drives",
+  addressbook: "Address books",
+} as const;
+
 function withoutToggles(query: string): string {
   let next = query;
   for (const toggle of TOGGLES) next = next.replace(toggle.text, " ");
@@ -116,6 +124,11 @@ function prefillFor(path: ReturnType<typeof useWorkspacePath>): string {
   }
   if (path.section === "drive" && path.driveSlug) {
     return path.driveSlug === ALL_DRIVES_SLUG ? "" : `${qualifier("drive", path.driveSlug)} `;
+  }
+  if (path.section === "contacts" && path.addressBookSlug) {
+    return path.addressBookSlug === ALL_ADDRESS_BOOKS_SLUG
+      ? ""
+      : `${qualifier("addressbook", path.addressBookSlug)} `;
   }
   return "";
 }
@@ -574,10 +587,12 @@ export function SearchDialog() {
     inputRef.current?.focus();
   };
 
-  const [resources, setResources] = useState<{ key: string; values: SearchSuggestion[] }[]>([]);
+  const [resources, setResources] = useState<
+    { key: keyof typeof RESOURCE_GROUP_LABELS; values: SearchSuggestion[] }[]
+  >([]);
   const loadResources = () => {
     void Promise.all(
-      (["mailbox", "calendar", "drive"] as const).map((key) =>
+      (["mailbox", "calendar", "drive", "addressbook"] as const).map((key) =>
         orpc.search
           .suggest({ workspaceSlug, key, prefix: "" })
           .then((res) => ({ key, values: res.values }))
@@ -752,13 +767,7 @@ export function SearchDialog() {
               {resources.map((group) =>
                 group.values.length === 0 ? null : (
                   <DropdownMenuGroup key={group.key}>
-                    <DropdownMenuLabel>
-                      {group.key === "mailbox"
-                        ? "Mailboxes"
-                        : group.key === "calendar"
-                          ? "Calendars"
-                          : "Drives"}
-                    </DropdownMenuLabel>
+                    <DropdownMenuLabel>{RESOURCE_GROUP_LABELS[group.key]}</DropdownMenuLabel>
                     {group.values.map((value) => (
                       <DropdownMenuItem
                         key={`${group.key}:${value.value}`}

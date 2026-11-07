@@ -57,8 +57,8 @@ export function DeleteWorkspaceSection({
       </div>
       <p className="mt-1 text-[12px] text-destructive-muted">
         Permanently deletes “{workspaceName}” for every member, including its mailboxes, calendars,
-        drives, workflows, labels, and scheduled sends. This cannot be undone. If anyone connected
-        Outlook, they should also remove the app from their{" "}
+        drives, address books, workflows, labels, and scheduled sends. This cannot be undone. If
+        anyone connected Outlook, they should also remove the app from their{" "}
         <a
           href="https://account.microsoft.com/privacy/app-access"
           target="_blank"
@@ -107,9 +107,9 @@ export function DeleteWorkspaceSection({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete “{workspaceName}”?</AlertDialogTitle>
             <AlertDialogDescription>
-              All members lose access immediately. Mailboxes, calendars, drives, workflows, labels,
-              scheduled sends, and cached data are erased from it. If anyone connected Outlook, they
-              should also remove the app from their{" "}
+              All members lose access immediately. Mailboxes, calendars, drives, address books,
+              workflows, labels, scheduled sends, and cached data are erased from it. If anyone
+              connected Outlook, they should also remove the app from their{" "}
               <a
                 href="https://account.microsoft.com/privacy/app-access"
                 target="_blank"

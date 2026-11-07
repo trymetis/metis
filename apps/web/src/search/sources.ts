@@ -4,19 +4,22 @@ import { listCalendarsAcross } from "@/calendar/aggregate";
 import { cachedCalendarList } from "@/calendar/list-cache";
 import { workspaceCalendarAccounts } from "@/calendar/session";
 import {
+  listWorkspaceAddressBooks,
   listWorkspaceCalendars,
   listWorkspaceConnectionsOf,
   listWorkspaceDrives,
   listWorkspaceMailboxes,
 } from "@/connections";
+import { ADDRESS_BOOK_PROVIDER_LABELS, addressBookName } from "@/connections/address-book-name";
 import { CALENDAR_PROVIDER_LABELS, calendarName } from "@/connections/calendar-name";
+import { savedContactIndex, workspaceBookList } from "@/contacts/lookup";
 import { DRIVE_PROVIDER_LABELS, driveName } from "@/drive/name";
-import { suggestContacts } from "@/mail/contacts";
 import { listCustomLabels } from "@/mail/custom-labels";
 import { LABEL_OPTIONS } from "@/mail/label-meta";
 import { mailSessionFor } from "@/mail/session";
 import { scanSubscriptions } from "@/mail/subscriptions";
 import { assistantThreadTexts, assistantThreadTitle, listAssistantThreads } from "@/mastra/memory";
+import { suggestPeople } from "@/people";
 import type { LocalSearchHit } from "@/server/schema";
 import { MAIL_FOLDERS } from "@/types/mail";
 import { listWorkspaceRuns, listWorkspaceWorkflows } from "@/workflow";
@@ -169,29 +172,92 @@ async function members(ctx: LocalSearchContext) {
 }
 
 async function contacts(ctx: LocalSearchContext) {
+  const { workspaceId } = ctx.appUser;
   const mail = await mailSessionFor(ctx.appUser, ALL_MAILBOXES_SLUG);
-  if (!mail) return [];
-  const found = await suggestContacts({
-    userId: ctx.appUser.userId,
-    mailboxIds: mail.mailboxes.map((m) => m.mailboxId),
-    adapter: mail.adapter,
+  const [entries, books, people] = await Promise.all([
+    savedContactIndex(workspaceId).catch((err: unknown) => {
+      console.warn("[search] saved contacts unavailable", err);
+      return [];
+    }),
+    listWorkspaceAddressBooks(workspaceId),
+    suggestPeople({
+      userId: ctx.appUser.userId,
+      workspaceId,
+      mailboxIds: mail?.mailboxes.map((m) => m.mailboxId) ?? [],
+      adapter: mail?.adapter ?? null,
+    }),
+  ]);
+  const accountEmail = new Map(books.map((b) => [b.slug, b.email]));
+  const grouped = new Map<string, typeof entries>();
+  for (const entry of entries) {
+    const key = `${entry.accountId}:${entry.bookId}:${entry.contactId}`;
+    grouped.set(key, [...(grouped.get(key) ?? []), entry]);
+  }
+  const saved = [...grouped.entries()].flatMap(([key, rows]): Candidate[] => {
+    const [first] = rows;
+    if (!first) return [];
+    const emails = rows.map((r) => r.email).filter(Boolean);
+    const email = emails[0] ?? "";
+    const name = first.name || email;
+    const phone = first.phones[0];
+    return [
+      {
+        hit: {
+          kind: "contact",
+          id: `contact:${key}`,
+          title: name || phone || first.organization || "Unnamed",
+          subtitle: email || phone || first.organization || first.bookName || undefined,
+          email,
+          ...(first.name ? { name: first.name } : {}),
+          ...(phone ? { phone } : {}),
+          ...(first.organization ? { organization: first.organization } : {}),
+          ...(first.bookName ? { bookName: first.bookName } : {}),
+          saved: {
+            addressBookSlug: first.addressBookSlug,
+            accountId: first.accountId,
+            bookId: first.bookId,
+            contactId: first.contactId,
+          },
+        },
+        doc: {
+          type: "contact",
+          text: [
+            first.name,
+            ...emails,
+            ...first.phones,
+            first.organization ?? "",
+            first.title ?? "",
+          ],
+          name: first.name,
+          email: emails,
+          phone: first.phones,
+          organization: first.organization ?? "",
+          title: first.title ?? "",
+          addressbook: [first.addressBookSlug, accountEmail.get(first.addressBookSlug) ?? ""],
+          book: first.bookName,
+        },
+      },
+    ];
   });
-  return found.map((c): Candidate => ({
-    hit: {
-      kind: "contact",
-      id: `contact:${c.email}`,
-      title: c.name || c.email,
-      subtitle: c.name ? c.email : undefined,
-      email: c.email,
-      name: c.name,
-    },
-    doc: {
-      type: "contact",
-      text: [c.name ?? "", c.email],
-      name: c.name ?? "",
-      email: c.email,
-    },
-  }));
+  const history = people
+    .filter((c) => !c.saved)
+    .map((c): Candidate => ({
+      hit: {
+        kind: "contact",
+        id: `contact:${c.email}`,
+        title: c.name || c.email,
+        subtitle: c.name ? c.email : undefined,
+        email: c.email,
+        name: c.name,
+      },
+      doc: {
+        type: "contact",
+        text: [c.name ?? "", c.email],
+        name: c.name ?? "",
+        email: c.email,
+      },
+    }));
+  return [...saved, ...history];
 }
 
 async function workflows(ctx: LocalSearchContext) {
@@ -362,6 +428,72 @@ async function drives(ctx: LocalSearchContext) {
   }));
 }
 
+async function addressBooks(ctx: LocalSearchContext) {
+  const { workspaceId } = ctx.appUser;
+  const [rows, list] = await Promise.all([
+    listWorkspaceAddressBooks(workspaceId),
+    workspaceBookList(workspaceId).catch((err: unknown) => {
+      console.warn("[search] address book lists unavailable", err);
+      return { books: [], groups: [], errors: [] };
+    }),
+  ]);
+  const accounts = rows.map((b): Candidate => ({
+    hit: {
+      kind: "addressbook",
+      id: `addressbook:${b.id}`,
+      title: addressBookName(b, rows),
+      subtitle: ADDRESS_BOOK_PROVIDER_LABELS[b.provider],
+      addressBookId: b.id,
+      linkId: b.linkId,
+      slug: b.slug,
+      email: b.email,
+      provider: b.provider,
+      server: b.server,
+      ai: b.policy.ai,
+      bookId: null,
+    },
+    doc: {
+      type: "addressbook",
+      text: [addressBookName(b, rows), b.email, b.slug],
+      name: [addressBookName(b, rows), b.email, b.slug],
+      provider: b.provider,
+      addressbook: [b.slug, b.email],
+    },
+  }));
+  const byId = new Map(rows.map((b) => [b.id, b]));
+  const inner = list.books.flatMap((book): Candidate[] => {
+    const account = byId.get(book.accountId);
+    if (!account || !book.visible) return [];
+    return [
+      {
+        hit: {
+          kind: "addressbook",
+          id: `book:${book.accountId}:${book.id}`,
+          title: book.name,
+          subtitle: addressBookName(account, rows),
+          addressBookId: account.id,
+          linkId: account.linkId,
+          slug: account.slug,
+          email: account.email,
+          provider: account.provider,
+          server: account.server,
+          ai: account.policy.ai,
+          bookId: book.id,
+        },
+        doc: {
+          type: "addressbook",
+          text: [book.name, addressBookName(account, rows), account.email],
+          name: book.name,
+          book: book.name,
+          provider: account.provider,
+          addressbook: [account.slug, account.email],
+        },
+      },
+    ];
+  });
+  return [...accounts, ...inner];
+}
+
 async function mailFolders(ctx: LocalSearchContext) {
   const rows = await listWorkspaceMailboxes(ctx.appUser.workspaceId);
   return rows.flatMap((m) =>
@@ -516,6 +648,7 @@ const LOADERS: Partial<Record<SearchKind, Loader>> = {
   mailbox: mailboxes,
   calendar: calendars,
   drive: drives,
+  addressbook: addressBooks,
   "mail-folder": mailFolders,
   label: labels,
   connection: connections,
@@ -541,7 +674,7 @@ export async function searchLocal(
         const matcher = matcherFor(ast, ctx.timeZone);
         return candidates
           .filter((c) => matcher.matches(c.doc))
-          .slice(0, kind === "calendar" ? LOCAL_LIMIT * 2 : LOCAL_LIMIT)
+          .slice(0, kind === "calendar" || kind === "addressbook" ? LOCAL_LIMIT * 2 : LOCAL_LIMIT)
           .map((c) => c.hit);
       } catch (err) {
         console.error(`[search] ${kind} failed:`, err);

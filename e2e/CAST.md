@@ -1,7 +1,7 @@
 # Cast and case catalog
 
 The people, companies, names and seeded cases of the e2e stack, and the recorded scenarios each one feeds. The docs and www screenshots come from this stack, so everything in it reads as a real account: no `harness`, `Harness`, `test`, `Acme`, `e2e` or `example` in anything a screen shows.
-Paths are from `e2e/`. The names live in `lib/cast.ts`; the seed in `seed/mailbox/`, `seed/calendar-events.ts` and `seed/drive-files.ts`. See also `README.md` (the stack and its seed data) and `E2E_MISSES.md` (what e2e does not cover).
+Paths are from `e2e/`. The names live in `lib/cast.ts`; the seed in `seed/mailbox/`, `seed/calendar-events.ts`, `lib/contacts.ts` (the address book) and `seed/drive-files.ts`. See also `README.md` (the stack and its seed data) and `E2E_MISSES.md` (what e2e does not cover).
 
 ## Rules
 

@@ -1,4 +1,5 @@
 import "server-only";
+import { listAddressBookWorkspaces, listUserAddressBooks } from "./address-book-store";
 import { listCalendarWorkspaces, listUserCalendars } from "./calendar-store";
 import { listDriveWorkspaces, listUserDrives } from "./drive-store";
 import { listMailboxWorkspaces, listUserMailboxes } from "./mailbox-store";
@@ -60,6 +61,27 @@ export async function listAccountDrives(userId: string) {
         name: w.workspaceName,
         workspaceSlug: w.workspaceSlug,
         driveSlug: w.slug,
+        aiEnabled: w.aiEnabled,
+        policy: w.policy,
+      })),
+    })),
+  );
+}
+
+export async function listAccountAddressBooks(userId: string) {
+  const mine = await listUserAddressBooks(userId);
+  return Promise.all(
+    mine.map(async (b) => ({
+      addressBookId: b.id,
+      provider: b.provider,
+      email: b.email,
+      server: b.server,
+      image: b.image,
+      workspaces: (await listAddressBookWorkspaces(b.id, userId)).map((w) => ({
+        linkId: w.linkId,
+        name: w.workspaceName,
+        workspaceSlug: w.workspaceSlug,
+        addressBookSlug: w.slug,
         aiEnabled: w.aiEnabled,
         policy: w.policy,
       })),

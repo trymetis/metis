@@ -3,6 +3,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Bookmark,
+  BookUser,
   CalendarDays,
   CalendarPlus,
   EyeOff,
@@ -33,9 +34,9 @@ import { matcherFor } from "@/search/match";
 import {
   assistantPath,
   calendarRootPath,
+  contactsRootPath,
   driveRootPath,
   mailRootPath,
-  membersPath,
   workflowPath,
   workspaceSettingsPath,
 } from "@/workspace/path";
@@ -160,12 +161,20 @@ export function clientEntries(ctx: EntryContext): ClientEntry[] {
       run: { type: "href", href: driveRootPath(ws) },
     },
     {
+      id: "command:contacts",
+      kind: "command",
+      title: "Go to contacts",
+      keywords: ["address book", "people"],
+      icon: BookUser,
+      run: { type: "href", href: contactsRootPath(ws) },
+    },
+    {
       id: "command:members",
       kind: "command",
       title: "Go to members",
       keywords: ["people", "team"],
       icon: Users,
-      run: { type: "href", href: membersPath(ws) },
+      run: { type: "href", href: workspaceSettingsPath(ws, "members") },
     },
   ];
 
@@ -177,6 +186,7 @@ export function clientEntries(ctx: EntryContext): ClientEntry[] {
     ["Mailboxes", "/settings/mailboxes", Mail, ["accounts"]],
     ["Calendars", "/settings/calendars", CalendarDays, ["accounts"]],
     ["Drives", "/settings/drives", HardDrive, ["storage"]],
+    ["Address books", "/settings/address-books", BookUser, ["contacts", "accounts"]],
     ...(ctx.ai
       ? ([["MCP clients", "/settings/mcp", Plug, ["mcp", "ai"]]] as [
           string,
@@ -191,11 +201,23 @@ export function clientEntries(ctx: EntryContext): ClientEntry[] {
       "Workspace settings: General",
       workspaceSettingsPath(ws, "general"),
       Settings,
-      ["members", "appearance", "policy"],
+      ["appearance", "policy"],
+    ],
+    [
+      "Workspace settings: Members",
+      workspaceSettingsPath(ws, "members"),
+      Users,
+      ["people", "invite"],
     ],
     ["Workspace settings: Mailboxes", workspaceSettingsPath(ws, "mailboxes"), Mail, []],
     ["Workspace settings: Calendars", workspaceSettingsPath(ws, "calendars"), CalendarDays, []],
     ["Workspace settings: Drives", workspaceSettingsPath(ws, "drives"), HardDrive, []],
+    [
+      "Workspace settings: Contacts",
+      workspaceSettingsPath(ws, "contacts"),
+      BookUser,
+      ["address books"],
+    ],
     ...(ctx.isAdmin
       ? ([
           [

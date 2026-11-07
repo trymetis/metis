@@ -53,7 +53,7 @@ See also [AGENTS.md](../AGENTS.md) (scope as explicit input), [auth.md](auth.md)
 ### Step-up
 
 - **A procedure uses `requireTotp`, rate-limited per user and scope, unless it already rate-limits on its own scope; then it calls `verify2FA` directly** ([auth.md](auth.md)).
-- **Step-up guards every change that widens what AI or other people can reach, or that cannot be undone:** turning AI on for a mailbox, calendar or drive, workspace policy, deletion, ownership and admin promotion, re-enabling an MCP client, and deleting the account.
+- **Step-up guards every change that widens what AI or other people can reach, or that cannot be undone:** turning AI on for a mailbox, calendar, drive or address book, workspace policy, deletion, ownership and admin promotion, re-enabling an MCP client, and deleting the account.
 
 ### Per namespace
 

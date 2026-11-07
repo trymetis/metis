@@ -101,6 +101,7 @@ const serverIdSchema = z
 export const SERVER_LIST_PROVIDERS = [
   "imap",
   "caldav",
+  "carddav",
   "cloudflare",
   "resend",
   "s3",
@@ -157,6 +158,20 @@ const caldavServerSchema = z.object({
     .string()
     .trim()
     .refine((value) => /^https?:\/\//i.test(value), "Enter the full CalDAV URL, including https://")
+    .refine((value) => URL.canParse(value), "That is not a valid URL"),
+  allowInsecureTls: z.boolean().default(false),
+});
+
+const carddavServerSchema = z.object({
+  id: serverIdSchema.optional(),
+  name: serverNameSchema,
+  url: z
+    .string()
+    .trim()
+    .refine(
+      (value) => /^https?:\/\//i.test(value),
+      "Enter the full CardDAV URL, including https://",
+    )
     .refine((value) => URL.canParse(value), "That is not a valid URL"),
   allowInsecureTls: z.boolean().default(false),
 });
@@ -296,6 +311,7 @@ const zohoRegionSchema = z.enum(ZOHO_REGIONS).default("com");
 export const SERVER_ENTRY_SCHEMAS = {
   imapServers: imapServerSchema,
   caldavServers: caldavServerSchema,
+  carddavServers: carddavServerSchema,
   cloudflareServers: gatewayServerSchema,
   resendServers: gatewayServerSchema,
   s3Servers: s3ServerSchema,
@@ -306,6 +322,7 @@ export const SERVER_ENTRY_SCHEMAS = {
 
 export const imapServersSchema = serverListSchema("imap", imapServerSchema);
 export const caldavServersSchema = serverListSchema("caldav", caldavServerSchema);
+export const carddavServersSchema = serverListSchema("carddav", carddavServerSchema);
 export const cloudflareServersSchema = serverListSchema("cloudflare", gatewayServerSchema);
 export const resendServersSchema = serverListSchema("resend", gatewayServerSchema);
 export const s3ServersSchema = serverListSchema("s3", s3ServerSchema);
@@ -660,6 +677,7 @@ export const instanceConfigSchema = z.object({
   zoho: zohoClientSchema,
   imapServers: imapServersSchema,
   caldavServers: caldavServersSchema,
+  carddavServers: carddavServersSchema,
   cloudflareServers: cloudflareServersSchema,
   resendServers: resendServersSchema,
   s3Servers: s3ServersSchema,
@@ -676,6 +694,7 @@ export type EncryptionConfig = z.infer<typeof encryptionConfigSchema>;
 export type ProviderCreds = z.infer<typeof providerCredsSchema>;
 export type ImapServerConfig = z.infer<typeof imapServerSchema>;
 export type CaldavServerConfig = z.infer<typeof caldavServerSchema>;
+export type CarddavServerConfig = z.infer<typeof carddavServerSchema>;
 export type GatewayServerConfig = z.infer<typeof gatewayServerSchema>;
 export type S3ServerConfig = z.infer<typeof s3ServerSchema>;
 export type WebdavServerConfig = z.infer<typeof webdavServerSchema>;

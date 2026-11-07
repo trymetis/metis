@@ -76,6 +76,7 @@ export function WorkspacesView() {
                   <TableHead className="text-right">Mailboxes</TableHead>
                   <TableHead className="text-right">Calendars</TableHead>
                   <TableHead className="text-right">Drives</TableHead>
+                  <TableHead className="text-right">Address books</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -103,6 +104,9 @@ export function WorkspacesView() {
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {number.format(row.drives)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {number.format(row.addressBooks)}
                     </TableCell>
                   </TableRow>
                 ))}

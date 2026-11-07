@@ -3,7 +3,7 @@ title: Included AI
 description: See how much of this month's included AI credit your instance has used, what happens when it runs out, and how to switch to your own provider and back.
 ---
 
-Every Cloud instance includes AI each month, on both plans. Your instance comes with AI models that Metis Cloud provides, so you do not need an AI provider of your own. As on any instance, AI is off for each mailbox, calendar and drive until its owner turns it on. See [How AI works in Metis Suite](/guide/assistant/how-ai-works).
+Every Cloud instance includes AI each month, on both plans. Your instance comes with AI models that Metis Cloud provides, so you do not need an AI provider of your own. As on any instance, AI is off for each mailbox, calendar, drive and address book until its owner turns it on. See [How AI works in Metis Suite](/guide/assistant/how-ai-works).
 
 The included AI covers two models, and each has its own monthly credit:
 

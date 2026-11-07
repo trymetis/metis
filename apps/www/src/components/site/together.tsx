@@ -11,23 +11,23 @@ const POINTS: {
   {
     icon: KeyRound,
     title: "Bring the accounts you have",
-    text: "Google, Microsoft and Zoho accounts, plus IMAP, CalDAV, S3, WebDAV, FTP and SFTP servers. Nothing moves, and your mail stays with your provider.",
+    text: "Google, Microsoft and Zoho accounts, plus IMAP, CalDAV, CardDAV, S3, WebDAV, FTP and SFTP servers. Nothing moves, and your mail stays with your provider.",
   },
   {
     icon: Search,
     title: "One search for everything",
-    text: "⌘K or Ctrl+K searches mail, events, files and people at once, with filters like from:, after: and type:file, and searches you can save.",
+    text: "⌘K or Ctrl+K searches mail, events, files, contacts and people at once, with filters like from:, after: and type:file, and searches you can save.",
   },
   {
     icon: AtSign,
     title: "One agent with the whole picture",
-    text: "Ask about a thread, a meeting and a file in the same conversation, or point at any of them with @.",
+    text: "Ask about a thread, a meeting, a file and a contact in the same conversation, or point at any of them with @.",
     link: { href: "/agent", label: "See the agent" },
   },
   {
     icon: Building2,
     title: "One workspace for the team",
-    text: "Share a mailbox, calendar or drive with a workspace and keep the rest private. Roles, invites and branding cover all three.",
+    text: "Share a mailbox, calendar, drive or address book with a workspace and keep the rest private. Roles, invites and branding cover all four.",
     link: { href: "/security#teams", label: "See workspaces" },
   },
 ];

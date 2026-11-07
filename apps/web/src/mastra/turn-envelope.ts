@@ -138,6 +138,31 @@ function renderDrive(envelope: Extract<ParsedEnvelope, { kind: "drive" }>) {
   return lines.join("\n");
 }
 
+function renderContacts(envelope: Extract<ParsedEnvelope, { kind: "contacts" }>) {
+  const lines = [`<turn${attrs({ "sent-at": envelope.sentAt, "time-zone": envelope.timeZone })}>`];
+  if (envelope.contacts.length === 0) {
+    lines.push('<attached-contacts count="0" />');
+  } else {
+    lines.push(`<attached-contacts count="${envelope.contacts.length}">`);
+    for (const contact of envelope.contacts) {
+      lines.push(
+        `<contact${attrs({
+          "address-book-id": contact.addressBookId,
+          "book-id": contact.bookId,
+          "contact-id": contact.contactId,
+          book: contact.bookName,
+        })}>`,
+      );
+      lines.push(...el("name", contact.name));
+      lines.push(...el("email", contact.email));
+      lines.push("</contact>");
+    }
+    lines.push("</attached-contacts>");
+  }
+  lines.push("</turn>");
+  return lines.join("\n");
+}
+
 function renderWorkspace(envelope: Extract<ParsedEnvelope, { kind: "workspace" }>) {
   return `<turn${attrs({
     "sent-at": envelope.sentAt,
@@ -149,6 +174,7 @@ function renderEnvelope(envelope: ParsedEnvelope) {
   if (envelope.kind === "mail") return renderMail(envelope);
   if (envelope.kind === "calendar") return renderCalendar(envelope);
   if (envelope.kind === "drive") return renderDrive(envelope);
+  if (envelope.kind === "contacts") return renderContacts(envelope);
   return renderWorkspace(envelope);
 }
 

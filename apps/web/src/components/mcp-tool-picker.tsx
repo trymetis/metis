@@ -19,7 +19,7 @@ const TIERS = [
   {
     sensitive: false,
     title: "Non-sensitive",
-    detail: "Read and organize your mail, calendars and drives",
+    detail: "Read and organize your mail, calendars, drives and contacts",
     icon: ShieldCheck,
   },
   {

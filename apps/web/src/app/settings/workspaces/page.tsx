@@ -13,9 +13,20 @@ import { PageHeader } from "@/components/page-header";
 import { type WorkspaceItem, workspacesQuery } from "@/hooks/use-workspaces";
 import { orpc } from "@/lib/orpc";
 import { getInitials } from "@/lib/utils";
-import { calendarRootPath, driveRootPath, mailPath, onboardingPath } from "@/workspace/path";
+import {
+  calendarRootPath,
+  contactsRootPath,
+  driveRootPath,
+  mailPath,
+  onboardingPath,
+} from "@/workspace/path";
 
-function resourceSummary(mailboxes: number, calendars: number, drives: number): string {
+function resourceSummary(
+  mailboxes: number,
+  calendars: number,
+  drives: number,
+  addressBooks: number,
+): string {
   const parts: string[] = [];
   if (mailboxes > 0) {
     parts.push(mailboxes === 1 ? "1 mailbox" : `${mailboxes} mailboxes`);
@@ -26,6 +37,9 @@ function resourceSummary(mailboxes: number, calendars: number, drives: number): 
   if (drives > 0) {
     parts.push(drives === 1 ? "1 drive" : `${drives} drives`);
   }
+  if (addressBooks > 0) {
+    parts.push(addressBooks === 1 ? "1 address book" : `${addressBooks} address books`);
+  }
   return parts.length > 0 ? parts.join(" · ") : "Empty";
 }
 
@@ -33,6 +47,7 @@ function workspaceHref(w: WorkspaceItem) {
   if (w.inboxMailboxSlug) return mailPath(w.slug, w.inboxMailboxSlug, "inbox");
   if (w.firstCalendarSlug) return calendarRootPath(w.slug);
   if (w.firstDriveSlug) return driveRootPath(w.slug);
+  if (w.firstAddressBookSlug) return contactsRootPath(w.slug);
   return onboardingPath(w.slug);
 }
 
@@ -113,7 +128,12 @@ export default function GlobalWorkspacesPage() {
                     </span>
                   </span>
                   <span className="shrink-0 text-[12px] text-faint max-md:w-full max-md:pl-12">
-                    {resourceSummary(w.mailboxCount, w.calendarCount, w.driveCount)}
+                    {resourceSummary(
+                      w.mailboxCount,
+                      w.calendarCount,
+                      w.driveCount,
+                      w.addressBookCount,
+                    )}
                   </span>
                 </Link>
                 <div className="shrink-0 pr-4 pl-3">

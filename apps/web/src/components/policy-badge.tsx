@@ -1,5 +1,6 @@
 import { cn } from "@metis/ui/lib/utils";
 
+import type { ConnectionResource } from "@/connections/types";
 import type { WorkspacePolicySettings } from "@/server/schema";
 
 export function PolicyBadge({
@@ -31,7 +32,7 @@ export function overrideLabel(enabled: boolean, resolved: boolean): string | nul
 
 export function attachPolicyNotice(
   policy: WorkspacePolicySettings | null,
-  resource: "mailbox" | "calendar" | "drive",
+  resource: ConnectionResource,
 ): string | null {
   if (!policy) return null;
 
@@ -50,6 +51,7 @@ export function attachPolicyNotice(
     mailbox: "Mailboxes",
     calendar: "Calendars",
     drive: "Drives",
+    addressbook: "Address books",
   }[resource];
   return `This workspace ${rules.join(" and ")}. ${noun} you add here follow that, whatever they are set to in your other workspaces.`;
 }

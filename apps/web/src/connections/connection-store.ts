@@ -2,6 +2,8 @@ import { and, desc, eq, isNull, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
+  addressBook,
+  addressBookWorkspace,
   calendar,
   calendarWorkspace,
   connection,
@@ -10,6 +12,7 @@ import {
   mailbox,
   mailboxWorkspace,
 } from "@/db/schema";
+import { keysOf } from "@/lib/guards";
 
 import { parseConnectionCredentials } from "./credential-schema";
 import { getDriver, getOAuthDriver } from "./registry";
@@ -164,7 +167,7 @@ export async function listWorkspaceConnectionsOf(
   userId: string,
   workspaceId: string,
 ): Promise<WorkspaceConnectionSummary[]> {
-  const [mailRows, calendarRows, driveRows, owned] = await Promise.all([
+  const [mailRows, calendarRows, driveRows, bookRows, owned] = await Promise.all([
     db
       .selectDistinct({ connectionId: mailbox.connectionId })
       .from(mailbox)
@@ -180,16 +183,23 @@ export async function listWorkspaceConnectionsOf(
       .from(drive)
       .innerJoin(driveWorkspace, eq(driveWorkspace.driveId, drive.id))
       .where(eq(driveWorkspace.workspaceId, workspaceId)),
+    db
+      .selectDistinct({ connectionId: addressBook.connectionId })
+      .from(addressBook)
+      .innerJoin(addressBookWorkspace, eq(addressBookWorkspace.addressBookId, addressBook.id))
+      .where(eq(addressBookWorkspace.workspaceId, workspaceId)),
     listUserConnections(userId),
   ]);
   const mail = linked(mailRows);
   const cal = linked(calendarRows);
   const files = linked(driveRows);
+  const books = linked(bookRows);
   return owned.flatMap((row) => {
     const resources: ConnectionResource[] = [];
     if (mail.has(row.connectionId)) resources.push("mailbox");
     if (cal.has(row.connectionId)) resources.push("calendar");
     if (files.has(row.connectionId)) resources.push("drive");
+    if (books.has(row.connectionId)) resources.push("addressbook");
     if (resources.length === 0) return [];
     return [
       {
@@ -347,13 +357,32 @@ export async function upsertCredentialConnection(args: {
   return saved;
 }
 
+const RESOURCE_TABLES = {
+  mailbox,
+  calendar,
+  drive,
+  addressbook: addressBook,
+} as const satisfies Record<ConnectionResource, unknown>;
+
+export async function linkedConnectionResources(
+  connectionId: string,
+): Promise<ConnectionResource[]> {
+  const found = await Promise.all(
+    keysOf(RESOURCE_TABLES).map(async (resource) => {
+      const table = RESOURCE_TABLES[resource];
+      const rows = await db
+        .select({ id: table.id })
+        .from(table)
+        .where(eq(table.connectionId, connectionId))
+        .limit(1);
+      return rows.length > 0 ? [resource] : [];
+    }),
+  );
+  return found.flat();
+}
+
 async function countConnectionResources(connectionId: string): Promise<number> {
-  const [mailboxes, calendars, drives] = await Promise.all([
-    db.select({ id: mailbox.id }).from(mailbox).where(eq(mailbox.connectionId, connectionId)),
-    db.select({ id: calendar.id }).from(calendar).where(eq(calendar.connectionId, connectionId)),
-    db.select({ id: drive.id }).from(drive).where(eq(drive.connectionId, connectionId)),
-  ]);
-  return mailboxes.length + calendars.length + drives.length;
+  return (await linkedConnectionResources(connectionId)).length;
 }
 
 export async function revokeConnection(target: Connection): Promise<void> {

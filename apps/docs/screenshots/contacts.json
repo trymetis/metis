@@ -1,0 +1,284 @@
+[
+  {
+    "name": "contacts/all-contacts",
+    "path": "{workspace}/p/all/all",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"All contacts\"]"
+      },
+      {
+        "waitFor": "role=list[name=\"Contacts\"] >> role=button[name=/Raj Mehta/]"
+      }
+    ]
+  },
+  {
+    "name": "contacts/sidebar",
+    "path": "{workspace}/p/all/all",
+    "steps": [
+      {
+        "waitFor": "role=navigation[name=\"Books\"] >> role=button[name=\"Studio contacts\"]"
+      }
+    ],
+    "element": "aside[aria-label=\"Address books\"]"
+  },
+  {
+    "name": "contacts/switcher",
+    "path": "{workspace}/p/all/all",
+    "steps": [
+      {
+        "waitFor": "role=button[name=\"Switch address book\"]"
+      },
+      {
+        "click": "role=button[name=\"Switch address book\"]"
+      },
+      {
+        "waitFor": "role=menu >> text=Add address book"
+      }
+    ],
+    "element": ["role=button[name=\"Switch address book\"]", "role=menu"]
+  },
+  {
+    "name": "contacts/contact-card",
+    "path": "{workspace}/p/all/all",
+    "steps": [
+      {
+        "waitFor": "role=list[name=\"Contacts\"] >> role=button[name=/Raj Mehta/]"
+      },
+      {
+        "click": "role=list[name=\"Contacts\"] >> role=button[name=/Raj Mehta/]"
+      },
+      {
+        "waitFor": "role=article[name=\"Raj Mehta\"] >> role=heading[level=1][name=\"Raj Mehta\"]"
+      },
+      {
+        "waitFor": "role=article[name=\"Raj Mehta\"] >> text=Recent mail with them"
+      }
+    ]
+  },
+  {
+    "name": "contacts/filter",
+    "path": "{workspace}/p/all/all",
+    "steps": [
+      {
+        "waitFor": "role=list[name=\"Contacts\"] >> role=button[name=/Raj Mehta/]"
+      },
+      {
+        "fill": "role=textbox[name=\"Filter contacts\"]",
+        "value": "fernhill"
+      },
+      {
+        "waitForHidden": "role=list[name=\"Contacts\"] >> role=button[name=/Kenji Watanabe/]"
+      }
+    ],
+    "clip": {
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "height": 420
+    }
+  },
+  {
+    "name": "contacts/new-contact-dialog",
+    "path": "{workspace}/p/all/all",
+    "steps": [
+      {
+        "waitFor": "role=button[name=\"New contact\"]"
+      },
+      {
+        "click": "role=button[name=\"New contact\"]"
+      },
+      {
+        "waitFor": "role=dialog[name=\"New contact\"]"
+      },
+      {
+        "fill": "role=dialog >> role=textbox[name=\"Display name\"]",
+        "value": "Mina Okafor"
+      },
+      {
+        "fill": "role=dialog >> role=textbox[name=\"Email 1\"]",
+        "value": "mina@harbourhall.example"
+      },
+      {
+        "wait": 300
+      }
+    ],
+    "element": "role=dialog"
+  },
+  {
+    "name": "contacts/contacts-ai-panel",
+    "clip": {
+      "x": 800,
+      "y": 0,
+      "width": 640,
+      "height": 900
+    },
+    "path": "{workspace}/p/all/all",
+    "steps": [
+      {
+        "waitFor": "role=list[name=\"Contacts\"] >> role=button[name=/Raj Mehta/]"
+      },
+      {
+        "click": "role=list[name=\"Contacts\"] >> role=button[name=/Raj Mehta/]"
+      },
+      {
+        "waitFor": "role=article[name=\"Raj Mehta\"]"
+      },
+      {
+        "click": "role=button[name=\"Contacts AI\"]"
+      },
+      {
+        "waitFor": "text=Ask about your contacts"
+      }
+    ]
+  },
+  {
+    "name": "contacts/save-from-mail",
+    "path": "{workspace}/m/{mailbox}/inbox",
+    "steps": [
+      {
+        "click": "role=tab[name=/^All$/]"
+      },
+      {
+        "click": "main [aria-roledescription=\"draggable\"] >> text=\"Rebrand kickoff\""
+      },
+      {
+        "waitFor": "main h2:has-text(\"Rebrand kickoff\")"
+      },
+      {
+        "waitFor": "role=button[name=/^To: /]"
+      },
+      {
+        "click": "role=button[name=/^To: /]"
+      },
+      {
+        "waitFor": "role=button[name=/\\(ana@demo\\.trymetis\\.email\\)$/]"
+      },
+      {
+        "click": "role=button[name=/\\(ana@demo\\.trymetis\\.email\\)$/] >> nth=0"
+      },
+      {
+        "waitFor": "role=menu >> role=menuitem[name=\"Add to contacts\"]"
+      },
+      {
+        "click": "role=menu >> role=menuitem[name=\"Add to contacts\"]"
+      },
+      {
+        "waitFor": "role=dialog[name=\"Save contact\"] >> role=button[name=/Studio contacts/]"
+      },
+      {
+        "click": "role=dialog[name=\"Save contact\"] >> role=button[name=/Studio contacts/]"
+      },
+      {
+        "wait": 300
+      }
+    ],
+    "element": "role=dialog"
+  },
+  {
+    "name": "contacts/person-menu",
+    "path": "{workspace}/m/{mailbox}/inbox",
+    "steps": [
+      {
+        "click": "role=tab[name=/^All$/]"
+      },
+      {
+        "click": "main [aria-roledescription=\"draggable\"] >> text=\"Rebrand kickoff\""
+      },
+      {
+        "waitFor": "main h2:has-text(\"Rebrand kickoff\")"
+      },
+      {
+        "waitFor": "role=button[name=\"Raj Mehta (raj@demo.trymetis.email)\"]"
+      },
+      {
+        "click": "role=button[name=\"Raj Mehta (raj@demo.trymetis.email)\"]"
+      },
+      {
+        "waitFor": "role=menu >> role=menuitem[name=\"Open contact\"]"
+      },
+      {
+        "wait": 300
+      }
+    ],
+    "element": [
+      "main div.mb-8:has(button[aria-label=\"Raj Mehta (raj@demo.trymetis.email)\"]) > button[aria-hidden=\"true\"]",
+      "role=button[name=\"Raj Mehta (raj@demo.trymetis.email)\"]",
+      "role=menu"
+    ]
+  },
+  {
+    "name": "contacts/summary-contact-card",
+    "clip": {
+      "x": 640,
+      "y": 90,
+      "width": 780,
+      "height": 440
+    },
+    "path": "{workspace}/m/{mailbox}/inbox",
+    "steps": [
+      {
+        "click": "main [aria-roledescription=\"draggable\"] >> text=\"Introducing Layla Haddad from Saffron & Sage\""
+      },
+      {
+        "waitFor": "main h2:has-text(\"Introducing Layla Haddad from Saffron & Sage\")"
+      },
+      {
+        "waitFor": "main >> role=button[name=\"Save contact\"]"
+      }
+    ]
+  },
+  {
+    "name": "contacts/workspace-settings",
+    "path": "{workspace}/settings/contacts",
+    "steps": [
+      {
+        "waitFor": "main >> role=heading[level=1][name=\"Contacts\"]"
+      },
+      {
+        "waitFor": "main >> role=button[name=\"Show address books\"]"
+      },
+      {
+        "click": "main >> role=button[name=\"Show address books\"]"
+      },
+      {
+        "waitFor": "main >> role=switch[name=\"Show Studio contacts in this workspace\"]"
+      }
+    ],
+    "element": "main"
+  },
+  {
+    "name": "contacts/connect-address-book-providers",
+    "path": "{workspace}/settings/contacts",
+    "steps": [
+      {
+        "waitFor": "main >> role=button[name=/Add address book$/]"
+      },
+      {
+        "click": "main >> role=button[name=/Add address book$/]"
+      },
+      {
+        "waitFor": "role=dialog[name=\"Add an address book\"]"
+      },
+      {
+        "click": "role=dialog >> role=button[name=/^Connect a new account$/]"
+      },
+      {
+        "waitFor": "role=dialog >> role=heading[name=/Connect an address book$/]"
+      },
+      {
+        "wait": 400
+      }
+    ],
+    "element": "role=dialog"
+  },
+  {
+    "name": "contacts/account-address-books",
+    "path": "/settings/address-books",
+    "steps": [
+      {
+        "waitFor": "main >> text=Fernhill Contacts"
+      }
+    ],
+    "element": "main"
+  }
+]

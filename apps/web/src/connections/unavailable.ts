@@ -3,6 +3,8 @@ import { and, eq, exists, isNotNull, or, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
+  addressBook,
+  addressBookWorkspace,
   calendar,
   calendarWorkspace,
   connection,
@@ -71,6 +73,21 @@ export async function listUnavailableConnections(userId: string): Promise<Unavai
           ),
         )
         .where(eq(drive.connectionId, connection.id)),
+    ),
+    exists(
+      db
+        .select({ one: sql`1` })
+        .from(addressBookWorkspace)
+        .innerJoin(addressBook, eq(addressBook.id, addressBookWorkspace.addressBookId))
+        .innerJoin(
+          workspaceMember,
+          and(
+            eq(workspaceMember.workspaceId, addressBookWorkspace.workspaceId),
+            eq(workspaceMember.userId, userId),
+            eq(workspaceMember.role, "owner"),
+          ),
+        )
+        .where(eq(addressBook.connectionId, connection.id)),
     ),
   );
 

@@ -35,7 +35,7 @@ See also [AGENTS.md](../AGENTS.md), [drive-providers.md](drive-providers.md), [d
 
 ### The resource
 
-- **A drive is a peer of a mailbox and a calendar.** Anything that handles one resource kind (menus, gates, counts, policy, copy) handles all three.
+- **A drive is a peer of a mailbox and a calendar.** Anything that handles one resource kind (menus, gates, counts, policy, copy) handles all four ([contacts.md](contacts.md)).
 - **Google Drive and OneDrive hang off the same `connection` row as the account's mail and calendar**, through its existing OAuth flow and redirect URI ([connections.md](connections.md)).
   - Scopes are Google `…/auth/drive` and Microsoft `Files.ReadWrite` (not `.All`); Zoho has no drive.
 - **`drive`, `drive_workspace` and `drive_pin` mirror the mailbox and calendar tables**, and `drive-store.ts` mirrors their stores, quarantine filter included ([workspaces.md](workspaces.md)).

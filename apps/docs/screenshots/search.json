@@ -47,6 +47,51 @@
     "element": "role=dialog[name=\"Search\"]"
   },
   {
+    "name": "search/address-books",
+    "path": "{workspace}/workflow",
+    "steps": [
+      {
+        "waitFor": "role=navigation[name=\"App navigation\"] >> role=button[name=/^Search$/]"
+      },
+      {
+        "click": "role=navigation[name=\"App navigation\"] >> role=button[name=/^Search$/]"
+      },
+      {
+        "type": "role=dialog[name=\"Search\"] >> role=searchbox[name=\"Search this workspace\"]",
+        "text": "type:addressbook"
+      },
+      {
+        "waitFor": "role=dialog[name=\"Search\"] >> role=option[name=/Studio contacts/]"
+      },
+      {
+        "waitFor": "role=dialog[name=\"Search\"] >> role=complementary[name=\"Preview\"] >> role=heading"
+      },
+      { "wait": 400 }
+    ],
+    "element": "role=dialog[name=\"Search\"]"
+  },
+  {
+    "name": "search/contact-filters",
+    "path": "{workspace}/workflow",
+    "steps": [
+      {
+        "waitFor": "role=navigation[name=\"App navigation\"] >> role=button[name=/^Search$/]"
+      },
+      {
+        "click": "role=navigation[name=\"App navigation\"] >> role=button[name=/^Search$/]"
+      },
+      {
+        "type": "role=dialog[name=\"Search\"] >> role=searchbox[name=\"Search this workspace\"]",
+        "text": "type:contact organization:fernhill"
+      },
+      {
+        "waitFor": "role=dialog[name=\"Search\"] >> role=option[name=/Raj Mehta/]"
+      },
+      { "wait": 400 }
+    ],
+    "element": "role=dialog[name=\"Search\"]"
+  },
+  {
     "name": "search/actions",
     "path": "{workspace}/workflow",
     "steps": [

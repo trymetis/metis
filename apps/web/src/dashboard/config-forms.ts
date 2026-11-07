@@ -274,6 +274,11 @@ const LIST_FIELDS: Partial<Record<ListSection, DashboardConfigField[]>> = {
     field("url", "CalDAV URL", "url"),
     ALLOW_INSECURE_TLS,
   ],
+  carddavServers: [
+    field("name", "Name", "text"),
+    field("url", "CardDAV URL", "url"),
+    ALLOW_INSECURE_TLS,
+  ],
   cloudflareServers: [
     field("name", "Name", "text"),
     field("domain", "Domain", "text"),

@@ -1,5 +1,13 @@
 import { cn } from "@metis/ui/lib/utils";
-import { CalendarSync, Cylinder, FolderLock, FolderSync, FolderUp, Inbox } from "lucide-react";
+import {
+  BookUser,
+  CalendarSync,
+  Cylinder,
+  FolderLock,
+  FolderSync,
+  FolderUp,
+  Inbox,
+} from "lucide-react";
 
 import { ResendIconBlack } from "./svgs/resendIconBlack";
 import { ResendIconWhite } from "./svgs/resendIconWhite";
@@ -33,6 +41,10 @@ export const ImapServer: BrandMark = ({ className }) => (
 
 export const CaldavServer: BrandMark = ({ className }) => (
   <CalendarSync aria-hidden className={className} strokeWidth={1.5} />
+);
+
+export const CarddavServer: BrandMark = ({ className }) => (
+  <BookUser aria-hidden className={className} strokeWidth={1.5} />
 );
 
 export const ObjectStorage: BrandMark = ({ className }) => (

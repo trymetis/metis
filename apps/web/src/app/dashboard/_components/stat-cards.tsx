@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@metis/ui/components/card";
 import {
+  BookUser,
   CalendarDays,
   HardDrive,
   Loader2,
@@ -56,6 +57,12 @@ const STAT_CARDS: {
     label: "Drives",
     hint: "Connected across all accounts",
     icon: HardDrive,
+  },
+  {
+    key: "addressBooks",
+    label: "Address books",
+    hint: "Connected across all accounts",
+    icon: BookUser,
   },
 ];
 

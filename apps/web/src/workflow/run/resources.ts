@@ -5,7 +5,9 @@ import { isOneOf } from "@/lib/guards";
 import { pruneCachedBodies } from "@/mail/cache";
 import { pruneAbandonedCimdClients } from "@/mcp/prune-cimd-clients";
 import {
+  createContactValue,
   createEventValue,
+  deleteContactValue,
   deleteEventOp,
   deleteFileOp,
   downloadAttachment,
@@ -13,18 +15,22 @@ import {
   type EventValue,
   findFolderPath,
   freeSlots,
+  getContactValue,
   getEventValue,
   getFileValue,
   importIcs,
+  listContactValues,
   listEventValues,
   listFileValues,
   moveFileOp,
+  primaryBookId,
   readFileBytes,
   readFileText,
   renameFileOp,
   resolveFolderPath,
   respondEventOp,
   searchFileValues,
+  updateContactValue,
   updateEventValue,
   writeFileBytes,
 } from "@/ops/values";
@@ -63,6 +69,26 @@ function fileRef(params: Params, name = "file") {
   const id = str(file.id);
   if (!driveId || !id) throw new Error("This step needs a file");
   return { driveId, id, value: file };
+}
+
+function contactRef(params: Params) {
+  const contact = record(params.contact);
+  const addressBookId = str(contact.addressBookId);
+  const bookId = str(contact.bookId);
+  const id = str(contact.id);
+  if (!addressBookId || !bookId || !id) throw new Error("This step needs a contact");
+  return { addressBookId, bookId, id, value: contact };
+}
+
+function contactFields(params: Params) {
+  return {
+    name: text(params, "name") || undefined,
+    email: text(params, "email") || undefined,
+    phone: text(params, "phone") || undefined,
+    organization: text(params, "organization") || undefined,
+    title: text(params, "title") || undefined,
+    notes: text(params, "notes") || undefined,
+  };
 }
 
 function isoOf(params: Params, name: string): string | undefined {
@@ -438,6 +464,105 @@ const remove: Runner = {
   },
 };
 
+const contactsList: Runner = {
+  async run(ctx, params) {
+    const account = await ctx.addressBook(text(params, "addressbook"));
+    const contacts = await listContactValues(account, {
+      bookId: text(params, "book") || undefined,
+      limit: numberOf(params, "limit", 100),
+    });
+    return {
+      kind: "emit",
+      emits: contacts.map((c) => ({ result: c, key: `${c.addressBookId}:${c.bookId}:${c.id}` })),
+      detail: `${contacts.length} contact(s)`,
+    };
+  },
+};
+
+const contactsSearch: Runner = {
+  async run(ctx, params) {
+    const account = await ctx.addressBook(text(params, "addressbook"));
+    const contacts = await listContactValues(account, {
+      query: text(params, "query"),
+      limit: numberOf(params, "limit", 50),
+    });
+    return {
+      kind: "emit",
+      emits: contacts.map((c) => ({ result: c, key: `${c.addressBookId}:${c.bookId}:${c.id}` })),
+      detail: `${contacts.length} contact(s)`,
+    };
+  },
+};
+
+const contactsGet: Runner = {
+  async run(ctx, params) {
+    const account = await ctx.addressBook(text(params, "addressbook"));
+    return emit(await getContactValue(account, text(params, "book"), text(params, "contactId")));
+  },
+};
+
+const contactsCreate: Runner = {
+  expect(params) {
+    return {
+      addressBookId: text(params, "addressbook"),
+      bookId: text(params, "book"),
+      name: text(params, "name"),
+      email: text(params, "email"),
+    };
+  },
+  async run(ctx, params) {
+    const account = await ctx.addressBook(text(params, "addressbook"));
+    const fields = contactFields(params);
+    if (!fields.name && !fields.email && !fields.organization) {
+      throw new Error("A contact needs a name, an email or an organization");
+    }
+    const bookId = text(params, "book") || (await primaryBookId(account));
+    const created = await createContactValue(account, bookId, fields);
+    return emit(created, `saved ${created.name || created.email}`, {
+      operation: "create-contact",
+      providerMessageId: created.id,
+      resourceId: account.accountId,
+    });
+  },
+  preview(_ctx, params) {
+    return emit(
+      {
+        ...record(emptyValue(T.contact)),
+        addressBookId: text(params, "addressbook"),
+        name: text(params, "name"),
+        email: text(params, "email"),
+      },
+      "would save the contact",
+    );
+  },
+};
+
+const contactsUpdate: Runner = {
+  async run(ctx, params) {
+    const ref = contactRef(params);
+    const account = await ctx.addressBook(ref.addressBookId);
+    return emit(
+      await updateContactValue(account, ref.bookId, ref.id, contactFields(params)),
+      "updated",
+    );
+  },
+  preview(_ctx, params) {
+    return emit(contactRef(params).value, "would update the contact");
+  },
+};
+
+const contactsDelete: Runner = {
+  async run(ctx, params) {
+    const ref = contactRef(params);
+    const account = await ctx.addressBook(ref.addressBookId);
+    await deleteContactValue(account, ref.bookId, ref.id);
+    return emit(ref.value, "deleted");
+  },
+  preview(_ctx, params) {
+    return emit(contactRef(params).value, "would delete the contact");
+  },
+};
+
 function maintenance(task: (ctx: StepCtx) => Promise<number>, what: string): Runner {
   return {
     async run(ctx) {
@@ -473,6 +598,12 @@ export const RESOURCE_RUNNERS = {
   "drive.rename": rename,
   "drive.copy": copy,
   "drive.delete": remove,
+  "contacts.list": contactsList,
+  "contacts.search": contactsSearch,
+  "contacts.get": contactsGet,
+  "contacts.create": contactsCreate,
+  "contacts.update": contactsUpdate,
+  "contacts.delete": contactsDelete,
   "system.cimdPrune": maintenance((ctx) => pruneAbandonedCimdClients(ctx.now), "client(s)"),
   "system.auditPrune": maintenance((ctx) => pruneAuditEvents(ctx.now), "audit event(s)"),
   "system.mailCachePrune": maintenance(

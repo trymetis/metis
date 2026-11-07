@@ -36,6 +36,7 @@ const SEEDED_WORKFLOWS = [
 const CONFIGURED_PROVIDERS: Record<string, number> = {
   imap: 1,
   caldav: 1,
+  carddav: 1,
   cloudflare: 1,
   resend: 1,
   s3: 2,
@@ -340,6 +341,7 @@ const READS: Case[] = [
         mailboxes: { email: string }[];
         calendarAccounts: unknown[];
         drives: unknown[];
+        addressBooks: { provider: string }[];
         members: { email: string; role: string }[];
       }>("getWorkspace", ws(c));
       expect(out.workspaceId).toBe(c.workspaceId);
@@ -347,6 +349,7 @@ const READS: Case[] = [
       expect(out.mailboxes.map((m) => m.email)).toEqual([c.account.email]);
       expect(out.drives).toHaveLength(Object.keys(c.account.driveSlugs).length);
       expect(out.calendarAccounts.length).toBeGreaterThan(0);
+      expect(out.addressBooks.map((b) => b.provider)).toEqual(["carddav"]);
       expect(out.members).toContainEqual(
         expect.objectContaining({ email: c.account.email, role: "owner" }),
       );
@@ -359,11 +362,14 @@ const READS: Case[] = [
         mailboxes: { email: string; workspaces: { workspaceSlug: string }[] }[];
         calendars: unknown[];
         drives: unknown[];
+        addressBooks: { provider: string; workspaces: { workspaceSlug: string }[] }[];
       }>("listAccountResources", {});
       const mailbox = out.mailboxes.find((m) => m.email === c.account.email);
       expect(mailbox?.workspaces.map((w) => w.workspaceSlug)).toContain(c.account.workspaceSlug);
       expect(out.drives.length).toBeGreaterThanOrEqual(Object.keys(c.account.driveSlugs).length);
       expect(out.calendars.length).toBeGreaterThan(0);
+      const book = out.addressBooks.find((b) => b.provider === "carddav");
+      expect(book?.workspaces.map((w) => w.workspaceSlug)).toContain(c.account.workspaceSlug);
     },
   },
   {
@@ -394,6 +400,7 @@ const READS: Case[] = [
       expect(out.mailboxes).toBeGreaterThanOrEqual(1);
       expect(out.calendars).toBeGreaterThanOrEqual(1);
       expect(out.drives).toBeGreaterThanOrEqual(Object.keys(c.account.driveSlugs).length);
+      expect(out.addressBooks).toBeGreaterThanOrEqual(1);
     },
   },
   {
@@ -744,17 +751,6 @@ const READS: Case[] = [
         attachmentId: "no-such-attachment",
       });
       expect(unknown).toContain('Unknown attachmentId "no-such-attachment"');
-    },
-  },
-  {
-    tool: "searchContacts",
-    run: async (s, c) => {
-      const out = await s.ok<{ count: number; contacts: { email: string }[] }>("searchContacts", {
-        ...box(c),
-        query: "raj",
-      });
-      expect(out.count).toBe(out.contacts.length);
-      expect(out.contacts.map((m) => m.email)).toContain(PEOPLE.raj.email);
     },
   },
   {
@@ -1691,6 +1687,139 @@ const CALENDAR: Case[] = [
   },
 ];
 
+interface ContactRow {
+  addressBookId: string;
+  bookId: string;
+  contactId: string;
+  name: string;
+  email?: string;
+}
+
+async function studioBook(
+  s: McpSession,
+  c: Context,
+): Promise<{ addressBookId: string; bookId: string }> {
+  const { books } = await s.ok<{
+    books: { addressBookId: string; bookId: string; name: string }[];
+  }>("listAddressBooks", ws(c));
+  const book = books.find((b) => b.name === "Studio contacts");
+  if (!book) throw new Error("the seeded address book is not visible");
+  return { addressBookId: book.addressBookId, bookId: book.bookId };
+}
+
+async function withContact(
+  s: McpSession,
+  c: Context,
+  run: (
+    target: { addressBookId: string; bookId: string; contactId: string },
+    name: string,
+  ) => Promise<void>,
+): Promise<void> {
+  const book = await studioBook(s, c);
+  const name = uniqueName();
+  const created = await s.ok<{ contactId: string; bookId: string }>("createContact", {
+    ...ws(c),
+    ...book,
+    name,
+    emails: [`${name}@demo.trymetis.email`],
+    summary: `Save ${name}`,
+  });
+  const target = { ...book, bookId: created.bookId, contactId: created.contactId };
+  try {
+    await run(target, name);
+  } finally {
+    await s.call("deleteContact", { ...ws(c), ...target, summary: `Delete ${name}` });
+  }
+}
+
+const CONTACTS: Case[] = [
+  {
+    tool: "listAddressBooks",
+    run: async (s, c) => {
+      const out = await s.ok<{ books: { name: string; provider: string }[] }>(
+        "listAddressBooks",
+        ws(c),
+      );
+      expect(out.books).toEqual([
+        expect.objectContaining({ name: "Studio contacts", provider: "carddav" }),
+      ]);
+    },
+  },
+  {
+    tool: "searchContacts",
+    run: async (s, c) => {
+      const out = await s.ok<{ count: number; contacts: ContactRow[] }>("searchContacts", {
+        ...ws(c),
+        query: "raj",
+      });
+      expect(out.count).toBe(out.contacts.length);
+      expect(out.contacts.map((m) => m.email)).toEqual([PEOPLE.raj.email]);
+    },
+  },
+  {
+    tool: "getContact",
+    run: async (s, c) => {
+      const [raj] = (
+        await s.ok<{ contacts: ContactRow[] }>("searchContacts", { ...ws(c), query: "raj" })
+      ).contacts;
+      if (!raj) throw new Error("Raj is not a saved contact");
+      const out = await s.ok<{ name: { display: string }; title?: string }>("getContact", {
+        ...ws(c),
+        addressBookId: raj.addressBookId,
+        bookId: raj.bookId,
+        contactId: raj.contactId,
+      });
+      expect(out).toMatchObject({ name: { display: "Raj Mehta" }, title: "Rebrand lead" });
+    },
+  },
+  {
+    tool: "createContact",
+    run: async (s, c) => {
+      await withContact(s, c, async (target, name) => {
+        expect(await s.ok("getContact", { ...ws(c), ...target })).toMatchObject({
+          name: { display: name },
+        });
+      });
+    },
+  },
+  {
+    tool: "updateContact",
+    run: async (s, c) => {
+      await withContact(s, c, async (target) => {
+        expect(
+          await s.ok("updateContact", {
+            ...ws(c),
+            ...target,
+            organization: "Harbour Hall Venues",
+            summary: "Set the organization",
+          }),
+        ).toMatchObject({ updated: true });
+        expect(await s.ok("getContact", { ...ws(c), ...target })).toMatchObject({
+          organization: "Harbour Hall Venues",
+        });
+      });
+    },
+  },
+  {
+    tool: "deleteContact",
+    run: async (s, c) => {
+      const book = await studioBook(s, c);
+      const name = uniqueName();
+      const created = await s.ok<{ contactId: string; bookId: string }>("createContact", {
+        ...ws(c),
+        ...book,
+        name,
+        summary: `Save ${name}`,
+      });
+      const target = { ...book, bookId: created.bookId, contactId: created.contactId };
+      expect(
+        await s.ok("deleteContact", { ...ws(c), ...target, summary: `Delete ${name}` }),
+      ).toMatchObject({ deleted: true });
+      expect(await s.refused("getContact", { ...ws(c), ...target })).toBeTruthy();
+    },
+  },
+];
+
 const WORKFLOWS: Case[] = [
   {
     tool: "createWorkflow",
@@ -1884,6 +2013,24 @@ const ACCOUNT: Case[] = [
       expect(await s.refused("attachResource", attach)).toBe(
         "That mailbox is already in this workspace",
       );
+      const { addressBooks } = await s.ok<{
+        addressBooks: { resourceId: string; provider: string }[];
+      }>("listAccountResources", {});
+      const book = addressBooks.find((b) => b.provider === "carddav");
+      expect(book).toBeDefined();
+      const attachBook = {
+        workspaceId: temp.workspaceId,
+        kind: "addressbook",
+        resourceId: book?.resourceId ?? "",
+      };
+      expect(await s.ok("attachResource", attachBook)).toMatchObject({
+        attached: true,
+        kind: "addressbook",
+        aiEnabled: false,
+      });
+      expect(await s.refused("attachResource", attachBook)).toBe(
+        "That address book is already in this workspace",
+      );
     },
   },
   {
@@ -2047,7 +2194,7 @@ const CASES: Record<ToolGroup, Case[]> = {
   inbox: INBOX,
   labels: LABELS,
   drive: DRIVE,
-  calendar: CALENDAR,
+  calendar: [...CALENDAR, ...CONTACTS],
   workflows: WORKFLOWS,
   account: ACCOUNT,
 };

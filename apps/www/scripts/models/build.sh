@@ -8,7 +8,7 @@ trap 'rm -rf "$WORK"' EXIT
 
 MODELS=("$@")
 if [ ${#MODELS[@]} -eq 0 ]; then
-  MODELS=(laptop envelope padlock server calendar cabinet typewriter patchboard geartrain)
+  MODELS=(laptop envelope padlock server calendar cabinet cardholder typewriter patchboard geartrain)
 fi
 
 blender -b --factory-startup -P "$HERE/kit/tex.py" -- "$WORK" > "$WORK/tex.log" 2>&1 || { cat "$WORK/tex.log"; exit 1; }

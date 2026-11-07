@@ -1,16 +1,24 @@
 import "server-only";
 import { getAppUser, isWorkspaceUser } from "@/auth/session";
 import {
+  getWorkspaceAddressBookBySlug,
   getWorkspaceCalendarBySlug,
   getWorkspaceDriveBySlug,
   getWorkspaceMailboxBySlug,
+  listWorkspaceAddressBooks,
   listWorkspaceCalendars,
   listWorkspaceDrives,
 } from "@/connections";
+import { addressBookName } from "@/connections/address-book-name";
 import { calendarName } from "@/connections/calendar-name";
 import { driveName } from "@/drive/name";
 
-import { ALL_CALENDARS_SLUG, ALL_DRIVES_SLUG, ALL_MAILBOXES_SLUG } from "./path";
+import {
+  ALL_ADDRESS_BOOKS_SLUG,
+  ALL_CALENDARS_SLUG,
+  ALL_DRIVES_SLUG,
+  ALL_MAILBOXES_SLUG,
+} from "./path";
 
 type ResourceTitle = (slug: string, workspaceId: string) => Promise<string | null>;
 
@@ -82,6 +90,27 @@ export function driveTitle(
         listWorkspaceDrives(workspaceId),
       ]);
       return drive ? driveName(drive, drives) : null;
+    },
+  );
+}
+
+export function addressBookTitle(
+  headers: Headers,
+  workspaceSlug: string,
+  addressBookSlug: string,
+): Promise<string | null> {
+  return resourceTitle(
+    headers,
+    workspaceSlug,
+    addressBookSlug,
+    ALL_ADDRESS_BOOKS_SLUG,
+    "All address books",
+    async (slug, workspaceId) => {
+      const [book, books] = await Promise.all([
+        getWorkspaceAddressBookBySlug(slug, workspaceId),
+        listWorkspaceAddressBooks(workspaceId),
+      ]);
+      return book ? addressBookName(book, books) : null;
     },
   );
 }

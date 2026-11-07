@@ -19,7 +19,7 @@ export default function AgentPage() {
       <PageJsonLd path="/agent" />
       <Exhibit
         model="typewriter"
-        headline="An AI agent for email, calendars and drives that asks before it sends or deletes"
+        headline="An AI agent for email, calendars, drives and contacts that asks before it sends or deletes"
         poses={POSES}
         plates={[
           {
@@ -29,7 +29,7 @@ export default function AgentPage() {
                 One agent <em>across the suite.</em>
               </>
             ),
-            text: "It searches, reads and drafts across mail, calendar and drive in one conversation. Anything that sends or deletes waits for you.",
+            text: "It searches, reads and drafts across mail, calendar, drive and contacts in one conversation. Anything that sends or deletes waits for you.",
           },
           {
             label: "Steps",

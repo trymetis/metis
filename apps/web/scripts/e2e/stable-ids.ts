@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const NAMESPACE = "3d4f8e0a-6c1b-4f7e-9a2d-5b8c7e1f0a92";
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
-const RESOURCES = ["mailbox", "calendar", "drive"] as const;
+const RESOURCES = ["mailbox", "calendar", "drive", "address_book"] as const;
 
 export function stableId(name: string): string {
   const bytes = createHash("sha1")

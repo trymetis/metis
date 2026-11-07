@@ -1,16 +1,23 @@
 import { CALENDAR_COLLECTIONS, calendarCollectionUrl } from "@metis/e2e/lib/calendars";
+import { ADDRESS_BOOK_COLLECTIONS, addressBookCollectionUrl } from "@metis/e2e/lib/contacts";
 import { env } from "@metis/e2e/lib/env";
 import { eq } from "drizzle-orm";
 
 import * as connections from "../../../src/connections";
 import { credentialAccountId } from "../../../src/connections/drivers/credential";
 import { db } from "../../../src/db";
-import { calendarWorkspace, driveWorkspace, mailboxWorkspace } from "../../../src/db/schema";
+import {
+  addressBookWorkspace,
+  calendarWorkspace,
+  driveWorkspace,
+  mailboxWorkspace,
+} from "../../../src/db/schema";
 import type { Account } from "./account";
 
 export interface Resources {
   mailboxSlug: string;
   calendarSlug: string;
+  addressBookSlug: string;
   driveSlugs: Record<string, string>;
 }
 
@@ -42,34 +49,13 @@ export async function connectResources(account: Account): Promise<Resources> {
       },
       resources: [resource],
     });
-    if (resource === "mailbox") {
-      const box = await connections.upsertMailbox(connection);
-      return (
-        await connections.attachMailbox({
-          mailboxId: box.id,
-          email: box.email,
-          workspaceId,
-        })
-      ).slug;
-    }
-    if (resource === "calendar") {
-      const cal = await connections.upsertCalendar(connection);
-      return (
-        await connections.attachCalendar({
-          calendarId: cal.id,
-          email: cal.email,
-          workspaceId,
-        })
-      ).slug;
-    }
-    const disk = await connections.upsertDrive(connection);
-    return (
-      await connections.attachDrive({
-        driveId: disk.id,
-        email: disk.email,
-        workspaceId,
-      })
-    ).slug;
+    const { slug } = await connections.addConnectionResource({
+      account: connection,
+      resource,
+      workspaceId,
+    });
+    if (!slug) throw new Error(`${provider} was not attached to the workspace`);
+    return slug;
   }
 
   const { bucket } = env.s3;
@@ -87,6 +73,15 @@ export async function connectResources(account: Account): Promise<Resources> {
     {
       provider: "caldav",
       server: env.servers.caldav,
+      user: env.caldav.user,
+      pass: env.caldav.pass,
+    },
+    email,
+  );
+  const addressBookSlug = await connect(
+    {
+      provider: "carddav",
+      server: env.servers.carddav,
       user: env.caldav.user,
       pass: env.caldav.pass,
     },
@@ -155,7 +150,7 @@ export async function connectResources(account: Account): Promise<Resources> {
     ),
   };
   console.log(
-    `[generate] connected mail=${mailboxSlug} calendar=${calendarSlug} drives=${Object.entries(
+    `[generate] connected mail=${mailboxSlug} calendar=${calendarSlug} contacts=${addressBookSlug} drives=${Object.entries(
       driveSlugs,
     )
       .map(([kind, slug]) => `${kind}:${slug}`)
@@ -177,9 +172,16 @@ export async function connectResources(account: Account): Promise<Resources> {
     .update(driveWorkspace)
     .set({ aiEnabled: true })
     .where(eq(driveWorkspace.workspaceId, workspaceId));
+  const visibleBookIds = ADDRESS_BOOK_COLLECTIONS.map((c) =>
+    addressBookCollectionUrl(env.servers.carddavOrigin, env.caldav.user, c.slug),
+  );
+  await db
+    .update(addressBookWorkspace)
+    .set({ aiEnabled: true, visibleBookIds })
+    .where(eq(addressBookWorkspace.workspaceId, workspaceId));
   console.log(
     `[generate] AI on for all links, visible calendars: ${visibleCalendarIds.join(", ")}`,
   );
 
-  return { mailboxSlug, calendarSlug, driveSlugs };
+  return { mailboxSlug, calendarSlug, addressBookSlug, driveSlugs };
 }

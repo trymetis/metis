@@ -1,8 +1,8 @@
 import { Button } from "@metis/ui/components/button";
-import { CalendarDays, HardDrive, Inbox } from "lucide-react";
+import { BookUser, CalendarDays, HardDrive, Inbox } from "lucide-react";
 import Link from "next/link";
 
-import { connectServers } from "@/connections";
+import { type ConnectionResource, connectServers } from "@/connections";
 import { workspaceSettingsPath } from "@/workspace/path";
 
 import { providerNames, serverProviders, serversForResource } from "./provider-meta";
@@ -10,6 +10,7 @@ import { providerNames, serverProviders, serversForResource } from "./provider-m
 const COPY = {
   mailbox: {
     Icon: Inbox,
+    noun: "mailbox",
     title: "No mailbox in this workspace",
     body: (providers: string) =>
       `Connect a ${providers} mailbox, or pick one you have already connected on your account.`,
@@ -19,6 +20,7 @@ const COPY = {
   },
   calendar: {
     Icon: CalendarDays,
+    noun: "calendar",
     title: "No calendar in this workspace",
     body: (providers: string) =>
       `Connect a ${providers} account, then choose which of its calendars this workspace can see.`,
@@ -28,6 +30,7 @@ const COPY = {
   },
   drive: {
     Icon: HardDrive,
+    noun: "drive",
     title: "No drive in this workspace",
     body: (providers: string) =>
       `Connect a ${providers} account to browse its files here, or pick one you have already connected.`,
@@ -35,16 +38,26 @@ const COPY = {
     page: "drives",
     label: "account",
   },
-} as const;
+  addressbook: {
+    Icon: BookUser,
+    noun: "address book",
+    title: "No address book in this workspace",
+    body: (providers: string) =>
+      `Connect a ${providers} account, then choose which of its address books this workspace can see.`,
+    cta: "Go to contacts settings",
+    page: "contacts",
+    label: "account",
+  },
+} as const satisfies Record<ConnectionResource, unknown>;
 
 export function AttachResourceCard({
   resource,
   workspaceSlug,
 }: {
-  resource: "mailbox" | "calendar" | "drive";
+  resource: ConnectionResource;
   workspaceSlug: string;
 }) {
-  const { Icon, title, body, cta, page, label } = COPY[resource];
+  const { Icon, noun, title, body, cta, page, label } = COPY[resource];
   const providers = providerNames(
     serverProviders(serversForResource(connectServers(), resource)),
     label,
@@ -63,7 +76,7 @@ export function AttachResourceCard({
         <p className="mx-auto mt-2 max-w-sm text-[13px] text-muted-foreground">
           {providers
             ? body(providers)
-            : `No ${resource} providers are set up yet. The instance owner adds them in the dashboard.`}
+            : `No ${noun} providers are set up yet. The instance owner adds them in the dashboard.`}
         </p>
 
         <Button

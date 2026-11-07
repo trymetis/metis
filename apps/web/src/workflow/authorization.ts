@@ -5,6 +5,8 @@ import type { ResolvedCalendar } from "@/calendar/aggregate";
 import { workspaceCalendarAccounts } from "@/calendar/session";
 import { isMailProvider, resolveConnectionAuth } from "@/connections";
 import type { ConnectionAuth, ConnectionProvider, MailProvider } from "@/connections/types";
+import type { ResolvedAddressBook } from "@/contacts/aggregate";
+import { workspaceAddressBookAccounts } from "@/contacts/session";
 import { db } from "@/db";
 import { connection, mailbox, mailboxWorkspace, workspaceMember } from "@/db/schema";
 import type { ResolvedDrive } from "@/drive/aggregate";
@@ -288,10 +290,46 @@ export async function authorizeDrive(opts: {
   return { ok: true, value: drive };
 }
 
+export async function authorizeAddressBook(opts: {
+  principal: BackgroundPrincipal;
+  addressBookId: string;
+}): Promise<Authorization<ResolvedAddressBook>> {
+  const scope = principalWorkspace(opts.principal);
+  if (!scope.ok) return scope;
+  const accounts = await workspaceAddressBookAccounts(scope.value.workspaceId);
+  const account = accounts.find((candidate) => candidate.accountId === opts.addressBookId);
+  if (!account) return blocked("That address book is no longer attached to this workspace");
+  return { ok: true, value: account };
+}
+
+type ConnectedResource = ResolvedCalendar | ResolvedDrive | ResolvedAddressBook;
+
+export async function authorizeConnected(opts: {
+  principal: BackgroundPrincipal;
+  kind: Exclude<ResourceKind, "mailbox">;
+  id: string;
+}): Promise<Authorization<ConnectedResource>> {
+  switch (opts.kind) {
+    case "calendar":
+      return authorizeCalendar({ principal: opts.principal, accountId: opts.id });
+    case "drive":
+      return authorizeDrive({ principal: opts.principal, driveId: opts.id });
+    case "addressbook":
+      return authorizeAddressBook({ principal: opts.principal, addressBookId: opts.id });
+    default:
+      return opts.kind satisfies never;
+  }
+}
+
+function connectedEmail(resource: ConnectedResource): string {
+  return "accountEmail" in resource ? resource.accountEmail : resource.email;
+}
+
 const AI_OFF: Record<ResourceKind, string> = {
   mailbox: "AI is turned off for this mailbox",
   calendar: "AI is turned off for this calendar",
   drive: "AI is turned off for this drive",
+  addressbook: "AI is turned off for this address book",
 };
 
 export async function authorizeResourceAi(opts: {
@@ -302,10 +340,11 @@ export async function authorizeResourceAi(opts: {
   if (opts.kind === "mailbox") {
     return authorizeMailboxAi({ principal: opts.principal, mailboxId: opts.id });
   }
-  const resolved =
-    opts.kind === "calendar"
-      ? await authorizeCalendar({ principal: opts.principal, accountId: opts.id })
-      : await authorizeDrive({ principal: opts.principal, driveId: opts.id });
+  const resolved = await authorizeConnected({
+    principal: opts.principal,
+    kind: opts.kind,
+    id: opts.id,
+  });
   if (!resolved.ok) return resolved;
   return resolved.value.policy.ai ? { ok: true, value: true } : blocked(AI_OFF[opts.kind]);
 }
@@ -334,13 +373,13 @@ export async function resourceAuth(opts: {
     if (!auth) return blocked("Could not authenticate that mailbox");
     return { ok: true, value: { provider: row.value.provider, auth, email: row.value.email } };
   }
-  const resolved =
-    opts.kind === "calendar"
-      ? await authorizeCalendar({ principal: opts.principal, accountId: opts.id })
-      : await authorizeDrive({ principal: opts.principal, driveId: opts.id });
+  const resolved = await authorizeConnected({
+    principal: opts.principal,
+    kind: opts.kind,
+    id: opts.id,
+  });
   if (!resolved.ok) return resolved;
-  const email =
-    "accountEmail" in resolved.value ? resolved.value.accountEmail : resolved.value.email;
+  const email = connectedEmail(resolved.value);
   return {
     ok: true,
     value: { provider: resolved.value.provider, auth: await resolved.value.auth(), email },

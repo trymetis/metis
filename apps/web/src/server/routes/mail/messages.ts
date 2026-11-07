@@ -8,11 +8,11 @@ import {
   getCachedMessage,
   touchCachedMessage,
 } from "@/mail/cache";
-import { suggestContacts } from "@/mail/contacts";
 import { seedProviderLabels } from "@/mail/labels";
 import { readRawMessage } from "@/mail/raw";
 import { listMailInState } from "@/mail/search";
 import { forSender, type MailSession, mailboxIds, scopeMessage } from "@/mail/session";
+import { suggestPeople } from "@/people";
 import { mailSession } from "@/server/middlewares/mail-session";
 import {
   bulkDeleteInputSchema,
@@ -254,11 +254,14 @@ export const messagesRouter = {
     .handler(async ({ context }) => {
       const { mail } = context;
       return {
-        contacts: await suggestContacts({
-          userId: mail.userId,
-          mailboxIds: mailboxIds(mail),
-          adapter: mail.adapter,
-        }),
+        contacts: (
+          await suggestPeople({
+            userId: mail.userId,
+            workspaceId: mail.workspaceId,
+            mailboxIds: mailboxIds(mail),
+            adapter: mail.adapter,
+          })
+        ).map(({ email, name }) => ({ email, ...(name ? { name } : {}) })),
       };
     }),
 

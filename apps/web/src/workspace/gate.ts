@@ -1,7 +1,12 @@
 import "server-only";
 import { eq } from "drizzle-orm";
 
-import { listWorkspaceCalendars, listWorkspaceDrives, listWorkspaceMailboxes } from "@/connections";
+import {
+  listWorkspaceAddressBooks,
+  listWorkspaceCalendars,
+  listWorkspaceDrives,
+  listWorkspaceMailboxes,
+} from "@/connections";
 import { db } from "@/db";
 import { userPrefs } from "@/db/schema";
 import { orderByIds } from "@/lib/utils";
@@ -19,6 +24,7 @@ export interface GateWorkspace {
   mailboxes: number;
   calendars: number;
   drives: number;
+  addressBooks: number;
   usable: boolean;
   inboxMailboxSlug: string | null;
 }
@@ -46,14 +52,15 @@ export async function getWorkspaceGateData(
   const ordered = orderByIds(mine, prefsRow?.workspaceOrder ?? []);
   const workspaces = await Promise.all(
     ordered.map(async (w) => {
-      const [mailboxes, calendars, drives] = await Promise.all([
+      const [mailboxes, calendars, drives, addressBooks] = await Promise.all([
         listWorkspaceMailboxes(w.id),
         destination === "assistant" ? listWorkspaceCalendars(w.id) : [],
         destination === "assistant" ? listWorkspaceDrives(w.id) : [],
+        destination === "assistant" ? listWorkspaceAddressBooks(w.id) : [],
       ]);
       const usable =
         destination === "assistant"
-          ? mailboxes.length + calendars.length + drives.length > 0
+          ? mailboxes.length + calendars.length + drives.length + addressBooks.length > 0
           : mailboxes.length > 0;
       return {
         id: w.id,
@@ -64,6 +71,7 @@ export async function getWorkspaceGateData(
         mailboxes: mailboxes.length,
         calendars: calendars.length,
         drives: drives.length,
+        addressBooks: addressBooks.length,
         usable,
         inboxMailboxSlug: mailboxes[0]?.slug ?? null,
       };

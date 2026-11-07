@@ -138,6 +138,7 @@ function seedRaw(raw: Raw): Record<string, unknown> {
     },
     imapServers: connections.imapServers,
     caldavServers: connections.caldavServers,
+    carddavServers: connections.carddavServers,
     cloudflareServers: connections.cloudflareServers,
     resendServers: connections.resendServers,
     s3Servers: connections.s3Servers,

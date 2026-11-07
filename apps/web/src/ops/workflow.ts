@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 
 import { resolvedCalendarName } from "@/calendar/aggregate";
+import { resolvedAddressBookName } from "@/contacts/aggregate";
 import { driveName } from "@/drive/name";
 import {
   cancelWorkflowRunOutputSchema,
@@ -135,6 +136,14 @@ export async function workspaceScope(ctx: WorkspaceCtx): Promise<WorkspaceScope>
       name: driveName(d, ctx.drives),
       slug: d.driveSlug,
       aiEnabled: d.policy.ai,
+    })),
+    addressBooks: ctx.addressBooks.map((a) => ({
+      addressBookId: a.accountId,
+      linkId: a.linkId,
+      email: a.accountEmail,
+      name: resolvedAddressBookName(a, ctx.addressBooks),
+      slug: a.accountSlug,
+      aiEnabled: a.policy.ai,
     })),
   };
 }

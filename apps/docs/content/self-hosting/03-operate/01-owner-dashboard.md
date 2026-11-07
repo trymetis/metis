@@ -5,7 +5,7 @@ description: Every page of the owner dashboard, from usage stats to instance set
 
 The owner dashboard shows what your instance is carrying and holds its settings. Only the owner can open it: the account whose email matches `METIS_OWNER_EMAIL`. For everyone else, and for everyone when no owner email is set, the dashboard does not exist.
 
-The owner is not an administrator of other people's data. The dashboard shows counts, settings and the audit log, never anyone's mail, events or files. The audit log does show people's account names (or their email addresses, when they have no name or their account was deleted), the email addresses of invited people, connected accounts, mailboxes, calendars and drives, the names of MCP clients, and the IP addresses and devices changes came from.
+The owner is not an administrator of other people's data. The dashboard shows counts, settings and the audit log, never anyone's mail, events, files or contacts. The audit log does show people's account names (or their email addresses, when they have no name or their account was deleted), the email addresses of invited people, connected accounts, mailboxes, calendars, drives and address books, the names of MCP clients, and the IP addresses and devices changes came from.
 
 ## Open the dashboard
 
@@ -22,7 +22,7 @@ Every page except **System** is read-only.
 
 "What this instance is carrying right now."
 
-- **Counts:** **Users**, **Workspaces**, **Mailboxes**, **Calendars** and **Drives**.
+- **Counts:** **Users**, **Workspaces**, **Mailboxes**, **Calendars**, **Drives** and **Address books**.
 - **Health cards:** **Quarantined connections** (accounts whose provider was removed from the settings), **Scheduled mail pending** (with how many are overdue) and **Scheduled mail failed** (scheduled mail that was given up on). A health card turns red when it is above zero.
 - **AI tokens, last 7 days:** a small chart, with a **Full usage** link to **AI usage**.
 
@@ -41,8 +41,8 @@ The tokens every AI feature used, counted per day in UTC. Pick **7 days**, **30 
 
 Every connected account on the instance and what it provides.
 
-- **Grants** and **Quarantined** counts. A grant is one connected account, which can provide a mailbox, a calendar and a drive.
-- **By provider:** grants, mailboxes, calendars and drives per provider.
+- **Grants** and **Quarantined** counts. A grant is one connected account, which can provide a mailbox, a calendar, a drive and an address book.
+- **By provider:** "Grants and the mailboxes, calendars, drives and address books they carry." The table has one row for each provider, with a column for each of these.
 - **Quarantined:** accounts whose provider or server is no longer configured. They come back when you configure the provider again, or restore the removed server entry from **History**.
 
 ## People
@@ -56,7 +56,7 @@ This page is read-only. The dashboard has no way to disable, delete or edit acco
 
 ## Workspaces
 
-How the instance is split up: **Workspaces**, **Shared** (more than one member) and **Personal** (one member). The **All workspaces** table lists each workspace, newest first, with its AI setting, members, mailboxes, calendars and drives.
+How the instance is split up: **Workspaces**, **Shared** (more than one member) and **Personal** (one member). The **All workspaces** table lists each workspace, newest first, with its AI setting, members, mailboxes, calendars, drives and address books.
 
 ## Automation
 
@@ -92,7 +92,7 @@ Every external MCP client registered on the instance: **Clients**, **Enabled** a
 <img src="/images/self-hosting/dashboard-audit.webp" alt="The Audit log page with the All events card, the search box, the event type list and the empty state" class="dark:hidden" />
 <img src="/images/self-hosting/dashboard-audit-dark.webp" alt="The Audit log page with the All events card, the search box, the event type list and the empty state" class="hidden dark:block" />
 
-The **All events** card lists changes such as turned-off two-factor authentication, turned-off sign-in alerts, approved MCP clients, disconnected accounts, removed or detached mailboxes, calendars and drives, role changes, removed members, ownership transfers, invites, deleted workspaces and accounts, and undone upgrades. The full list of what is recorded is in [Security activity](/guide/account/security-activity#what-is-recorded). Each change is recorded after it succeeds. Reading mail, events or files is never recorded.
+The **All events** card lists changes such as turned-off two-factor authentication, turned-off sign-in alerts, approved MCP clients, disconnected accounts, removed or detached mailboxes, calendars, drives and address books, role changes, removed members, ownership transfers, invites, deleted workspaces and accounts, and undone upgrades. The full list of what is recorded is in [Security activity](/guide/account/security-activity#what-is-recorded). Each change is recorded after it succeeds. Reading mail, events, files or contacts is never recorded.
 
 Each row shows:
 
@@ -101,7 +101,7 @@ Each row shows:
 
 The IP address is the visitor's address, found through **Trusted proxies** on the **Proxies** card of the **Instance** page. Behind Cloudflare, it is Cloudflare's address until you list Cloudflare's ranges there. Behind another CDN in front of the bundled Caddy, it is always the CDN's address. See [Proxies](/self-hosting/reference/dashboard-settings#proxies).
 
-The person who made the change, and a member it was done to, are shown by the name on their account today. With no name, or for a deleted account, the row shows their email address. With neither, it says "A deleted account". Invited people, MCP clients, mailboxes, calendars, drives and connected accounts are shown as they were named when the change was made.
+The person who made the change, and a member it was done to, are shown by the name on their account today. With no name, or for a deleted account, the row shows their email address. With neither, it says "A deleted account". Invited people, MCP clients, mailboxes, calendars, drives, address books and connected accounts are shown as they were named when the change was made.
 
 The newest change is at the top, 50 at a time. Click **Load more** for older ones. The log cannot be edited from the app. If nothing has been recorded yet, the card says "No audit events yet."
 
@@ -112,12 +112,12 @@ Above the list are a search box ("Search events") and a list of event types, whi
 - **Search:** looks through the whole log, not only the rows already on screen. The list updates shortly after you stop typing. Search finds your text in:
   - the event type, such as **Workspace invite revoked**. Event type names show only in the event type list, not on rows;
   - the fixed words of the sentence, without the names, email addresses, workspaces, roles, tools or versions in it. For example, "revoked the invite", "turned off" and "deleted their account" find rows, but "role from member" does not. Such a search finds every change of that type;
-  - what the change was about, such as an invited person's or member's email address, a client's name, the email address of a mailbox, calendar or drive, or the versions of an undone upgrade;
+  - what the change was about, such as an invited person's or member's email address, a client's name, the email address of a mailbox, calendar, drive or address book, or the versions of an undone upgrade;
   - the email address of the person who made the change, not their name;
   - the workspace's name;
   - the IP address.
 - **Not searched:** people's names, the roles and tool names in a sentence, the device, the date and time, the words **Workspace Assistant** and **MCP client** on the second line, and "a deleted account".
-- **Filter:** pick an event type. The list has **Account deleted** and every type in the [Security activity filter](/guide/account/security-activity#filter-by-event-type). **Resource removed** and **Resource detached from a workspace** each cover mailboxes, calendars and drives.
+- **Filter:** pick an event type. The list has **Account deleted** and every type in the [Security activity filter](/guide/account/security-activity#filter-by-event-type). **Resource removed** and **Resource detached from a workspace** each cover mailboxes, calendars, drives and address books.
 - **Both together:** a row must match both. If no row matches, the card says "No events match your search." **Load more** keeps showing older matches, 50 at a time.
 
 How the text is matched, and other limits:
@@ -150,7 +150,7 @@ The System page groups cards into **Instance**, **Drivers** and **Providers**:
 - **Drivers:** one card per driver with its state. LLM and phishing detection show **On** or **Off**. Mail shows **Delivering**, **Console only** or **Not delivered**. Cache shows **In process** or **Shared**. The workflow runner shows **Never ticked**, **Failing**, **Delayed**, **Busy** or **Idle**. Database shows the driver.
 - **Providers:** the number of entries for each provider, or **Off**, and how many connections and quarantined connections it has.
 
-Warnings appear above the cards. On a new instance you see: "No provider is configured, so no mailbox, calendar or drive can be connected until one is added under Dashboard → System."
+Warnings appear above the cards. On a new instance you see: "No provider is configured, so no mailbox, calendar, drive or address book can be connected until one is added under Dashboard → System."
 
 Under **System** in the sidebar are these pages:
 
@@ -158,7 +158,7 @@ Under **System** in the sidebar are these pages:
 - **History:** every stored version of the configuration (below).
 - **Updates:** upgrading to a newer release and undoing the last upgrade. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo).
 - **Drivers:** **LLM** (with the decision model), **Phishing detection**, **Mail**, **Cache**, **Workflow runner** and **Database**.
-- **Providers:** **Google**, **Microsoft**, **Zoho**, **IMAP**, **CalDAV**, **Cloudflare Email**, **Resend**, **S3**, **WebDAV**, **FTP** and **SFTP**.
+- **Providers:** **Google**, **Microsoft**, **Zoho**, **IMAP**, **CalDAV**, **CardDAV**, **Cloudflare Email**, **Resend**, **S3**, **WebDAV**, **FTP** and **SFTP**.
 
 Every field on these pages is listed in [Dashboard settings](/self-hosting/reference/dashboard-settings).
 

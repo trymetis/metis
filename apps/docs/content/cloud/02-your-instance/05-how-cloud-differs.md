@@ -21,7 +21,7 @@ A Cloud instance cannot send mail over SMTP ports 25 and 465. Like other hosting
 
 ## AI
 
-Your instance comes with AI models that Metis Cloud provides. As on any instance, AI is off for each mailbox, calendar and drive until its owner turns it on. See [How AI works in Metis Suite](/guide/assistant/how-ai-works). Your instance uses included models for the LLM and the decision model, each with a monthly credit. You can switch to your own provider at any time. See [Included AI](/cloud/your-instance/included-ai).
+Your instance comes with AI models that Metis Cloud provides. As on any instance, AI is off for each mailbox, calendar, drive and address book until its owner turns it on. See [How AI works in Metis Suite](/guide/assistant/how-ai-works). Your instance uses included models for the LLM and the decision model, each with a monthly credit. You can switch to your own provider at any time. See [Included AI](/cloud/your-instance/included-ai).
 
 ## Phishing detection
 

@@ -10,7 +10,6 @@ import { actorHeaders, getWorkspaceCtx } from "../runtime-context";
 import { requireMailbox, withToolErrors } from "../toolkit/resolve";
 import {
   attachmentTarget,
-  contactSearchFields,
   createLabelFields,
   draftFields,
   draftTarget,
@@ -393,20 +392,6 @@ const setLabelsTool = createTool({
     }),
 });
 
-const searchContactsTool = createTool({
-  id: "searchContacts",
-  description:
-    "Look up people this mailbox writes to and hears from, most frequent first, by part of a name or address. Use it to find an address before drafting.",
-  inputSchema: z.object(contactSearchFields),
-  execute: async ({ mailboxId, query, limit }, { requestContext }) =>
-    withToolErrors(async () => {
-      const ctx = getWorkspaceCtx(requestContext);
-      const r = requireMailbox(ctx, mailboxId);
-      if ("error" in r) return r;
-      return mail.searchContacts(ctx.userId, r.mailbox, { query, limit });
-    }),
-});
-
 const deleteDraftTool = createTool({
   id: "deleteDraft",
   description: "Delete a draft from a specific mailbox.",
@@ -476,7 +461,6 @@ export const workspaceMailTools = {
   createLabel: createLabelTool,
   deleteLabel: deleteLabelTool,
   setLabels: setLabelsTool,
-  searchContacts: searchContactsTool,
   deleteDraft: deleteDraftTool,
   getRawEmail: getRawEmailTool,
   summarizeThread: summarizeThreadTool,

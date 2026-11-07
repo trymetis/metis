@@ -17,6 +17,7 @@ import {
 import { cn } from "@metis/ui/lib/utils";
 import {
   AppWindow,
+  BookUser,
   CalendarDays,
   GitBranch,
   HardDrive,
@@ -51,6 +52,8 @@ import {
   assistantPath,
   calendarPath,
   calendarRootPath,
+  contactsPath,
+  contactsRootPath,
   drivePath,
   driveRootPath,
   mailPath,
@@ -82,7 +85,7 @@ async function handleSignOut() {
 export function AppRail({ user, isOwner, source }: AppRailProps) {
   const aiEnabled = usePlatformPolicy().ai;
   const pathname = usePathname();
-  const { mailboxSlug, calendarSlug, driveSlug, section } = useWorkspacePath();
+  const { mailboxSlug, calendarSlug, driveSlug, addressBookSlug, section } = useWorkspacePath();
   const workspaceSlug = useWorkspaceSlug();
   const { workspaces } = useWorkspaces();
   const { resolvedTheme, setTheme } = useTheme();
@@ -100,6 +103,9 @@ export function AppRail({ user, isOwner, source }: AppRailProps) {
     ? calendarPath(workspaceSlug, calendarSlug)
     : calendarRootPath(workspaceSlug);
   const driveHref = driveSlug ? drivePath(workspaceSlug, driveSlug) : driveRootPath(workspaceSlug);
+  const contactsHref = addressBookSlug
+    ? contactsPath(workspaceSlug, addressBookSlug)
+    : contactsRootPath(workspaceSlug);
   const assistantHref = assistantPath(workspaceSlug);
   const workflowHref = workflowPath(workspaceSlug);
 
@@ -144,6 +150,10 @@ export function AppRail({ user, isOwner, source }: AppRailProps) {
 
         <IconLink label="Drive" href={driveHref} active={section === "drive"}>
           <HardDrive className="size-4.5" strokeWidth={1.8} />
+        </IconLink>
+
+        <IconLink label="Contacts" href={contactsHref} active={section === "contacts"}>
+          <BookUser className="size-4.5" strokeWidth={1.8} />
         </IconLink>
 
         {aiEnabled && (
@@ -222,6 +232,10 @@ export function AppRail({ user, isOwner, source }: AppRailProps) {
             <DropdownMenuItem render={<Link href="/settings/drives" />}>
               <HardDrive />
               Drives
+            </DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/settings/address-books" />}>
+              <BookUser />
+              Address books
             </DropdownMenuItem>
             {isOwner && (
               <DropdownMenuItem render={<Link href="/dashboard" />}>

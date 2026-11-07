@@ -46,6 +46,7 @@
     "@googleapis/calendar": "^20.1.0",
     "@googleapis/drive": "^27.0.0",
     "@googleapis/gmail": "22.0.2",
+    "@googleapis/people": "12.0.1",
     "@json-render/core": "^0.21.3",
     "@json-render/react": "^0.21.3",
     "@libsql/client": "catalog:",

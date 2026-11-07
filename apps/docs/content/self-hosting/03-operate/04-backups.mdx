@@ -28,7 +28,7 @@ With the Compose stack installed in `/opt/metis-suite`:
 If your databases are on Turso, they live there instead of in the `metis_sqld` volume. The updater then takes no snapshot, so back them up before every upgrade.
 
 :::warning[The encryption key and the database belong together]
-The passwords and tokens in the database can be read only with the `METIS_ENCRYPTION_KEY` that was in use when they were stored. A database backup without its key is not enough to bring connections back: every user would have to reconnect every mailbox, calendar and drive. Keep a copy of `.env`, or at least the key, with every database backup, and store it somewhere other than the server.
+The passwords and tokens in the database can be read only with the `METIS_ENCRYPTION_KEY` that was in use when they were stored. A database backup without its key is not enough to bring connections back: every user would have to reconnect every mailbox, calendar, drive and address book. Keep a copy of `.env`, or at least the key, with every database backup, and store it somewhere other than the server.
 :::
 
 ## The upgrade snapshot is not a backup

@@ -15,6 +15,7 @@ export const RECORD_KINDS = [
   "file",
   "folder",
   "person",
+  "contact",
   "blob",
   "answer",
 ] as const;
@@ -42,6 +43,7 @@ export const T = {
   file: { kind: "file" },
   folder: { kind: "folder" },
   person: { kind: "person" },
+  contact: { kind: "contact" },
   blob: { kind: "blob" },
   answer: { kind: "answer" },
   list: (of: ValueType): ValueType => ({ kind: "list", of }),
@@ -130,6 +132,18 @@ export const RECORD_FIELDS: Record<RecordKind, Record<string, ValueType>> = {
   },
   folder: { id: T.text, driveId: T.text, name: T.text, url: T.text },
   person: { email: T.text, name: T.text },
+  contact: {
+    id: T.text,
+    addressBookId: T.text,
+    bookId: T.text,
+    name: T.text,
+    email: T.text,
+    emails: T.list(T.text),
+    phones: T.list(T.text),
+    organization: T.text,
+    title: T.text,
+    notes: T.text,
+  },
   blob: { id: T.text, name: T.text, mimeType: T.text, size: T.integer },
   answer: {
     value: T.text,
@@ -150,6 +164,7 @@ export const RECORD_LABELS: Record<RecordKind, string> = {
   file: "File",
   folder: "Folder",
   person: "Person",
+  contact: "Contact",
   blob: "File contents",
   answer: "Answer",
 };
@@ -293,6 +308,18 @@ const recordSchemas: Record<RecordKind, z.ZodType> = {
     url: z.string().default(""),
   }),
   person: z.object({ email: z.string(), name: z.string().default("") }),
+  contact: z.object({
+    id: z.string(),
+    addressBookId: z.string(),
+    bookId: z.string(),
+    name: z.string().default(""),
+    email: z.string().default(""),
+    emails: z.array(z.string()).default([]),
+    phones: z.array(z.string()).default([]),
+    organization: z.string().default(""),
+    title: z.string().default(""),
+    notes: z.string().default(""),
+  }),
   blob: z.object({
     id: z.string(),
     name: z.string(),
@@ -365,8 +392,12 @@ export function identityOf(value: unknown): string | null {
   const record = value;
   const id = typeof record.id === "string" ? record.id : null;
   if (!id) return null;
-  const scope = [record.mailboxId, record.accountId, record.calendarId, record.driveId].find(
-    (part): part is string => typeof part === "string" && part.length > 0,
-  );
+  const scope = [
+    record.mailboxId,
+    record.accountId,
+    record.calendarId,
+    record.driveId,
+    record.addressBookId,
+  ].find((part): part is string => typeof part === "string" && part.length > 0);
   return scope ? `${scope}:${id}` : id;
 }

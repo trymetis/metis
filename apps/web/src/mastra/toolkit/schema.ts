@@ -91,15 +91,6 @@ export const setLabelsFields = {
   label: z.string().min(1),
 };
 
-export const contactSearchFields = {
-  ...mailboxTarget,
-  query: z
-    .string()
-    .optional()
-    .describe("Part of a name or address; omit for the most frequent contacts"),
-  limit: z.number().int().min(1).max(100).default(20),
-};
-
 export const summarizeThreadFields = {
   ...messageTarget,
   threadId: z.string().optional(),
@@ -285,4 +276,46 @@ export const moveFileFields = {
     .string()
     .optional()
     .describe("The folder to move it into; omit for the top level"),
+};
+
+export const addressBookTarget = {
+  addressBookId: z
+    .string()
+    .optional()
+    .describe("The address book account from listAddressBooks; optional when there is only one"),
+  bookId: z
+    .string()
+    .describe("The book inside that account, from listAddressBooks or searchContacts"),
+};
+
+export const contactTarget = {
+  ...addressBookTarget,
+  contactId: z.string().describe("From searchContacts"),
+};
+
+export const contactFields = {
+  name: z.string().optional().describe("Display name"),
+  givenName: z.string().optional(),
+  familyName: z.string().optional(),
+  emails: z.array(z.string()).optional().describe("Every email address; the first is primary"),
+  phones: z.array(z.string()).optional(),
+  organization: z.string().optional(),
+  title: z.string().optional().describe("Job title"),
+  department: z.string().optional(),
+  birthday: z.string().optional().describe("YYYY-MM-DD, or --MM-DD without a year"),
+  address: z.string().optional().describe("One postal address on one line"),
+  website: z.string().optional(),
+  notes: z.string().optional(),
+  groupIds: z.array(z.string()).optional().describe("Group ids from listAddressBooks"),
+};
+
+export const searchContactsFields = {
+  query: z
+    .string()
+    .optional()
+    .describe("Words to match in names, emails, phones and organizations"),
+  addressBookId: z.string().optional().describe("Limit to one address book account"),
+  bookId: z.string().optional().describe("Limit to one book of that account"),
+  groupId: z.string().optional(),
+  limit: z.number().int().min(1).max(200).default(50),
 };

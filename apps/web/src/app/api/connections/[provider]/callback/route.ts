@@ -5,18 +5,11 @@ import { nativeOpenLink, nativeReturnPath } from "@/auth/native-link";
 import { getAppUser } from "@/auth/session";
 import { config } from "@/config";
 import {
-  attachCalendar,
-  attachDrive,
-  attachMailbox,
-  getCalendarLink,
-  getDriveLink,
+  addConnectionResource,
+  type ConnectionResource,
   getDriver,
-  getMailboxLink,
   isConnectionProvider,
-  upsertCalendar,
   upsertConnection,
-  upsertDrive,
-  upsertMailbox,
 } from "@/connections";
 import {
   connectionsCallbackUrl,
@@ -26,6 +19,21 @@ import {
 } from "@/connections/oauth-state";
 import { getWorkspaceBySlug } from "@/workspace";
 import { mailPath, workspaceSettingsPath } from "@/workspace/path";
+
+function landingPath(resource: ConnectionResource, workspaceSlug: string, slug: string): string {
+  switch (resource) {
+    case "mailbox":
+      return mailPath(workspaceSlug, slug, "inbox");
+    case "calendar":
+      return workspaceSettingsPath(workspaceSlug, "calendars");
+    case "drive":
+      return workspaceSettingsPath(workspaceSlug, "drives");
+    case "addressbook":
+      return workspaceSettingsPath(workspaceSlug, "contacts");
+    default:
+      return resource satisfies never;
+  }
+}
 
 function redirectTo(path: string, native: boolean, clearNonce?: string) {
   const target = native ? nativeReturnPath(nativeOpenLink(path)) : path;
@@ -113,48 +121,12 @@ export async function GET(
       ? await getWorkspaceBySlug(userId, state.attachWorkspaceSlug)
       : null;
 
-    if (state.resource === "calendar") {
-      const cal = await upsertCalendar(account);
-      if (target) {
-        const existing = await getCalendarLink(cal.id, target.id);
-        if (!existing) {
-          await attachCalendar({
-            calendarId: cal.id,
-            email: cal.email,
-            workspaceId: target.id,
-          });
-        }
-        dest = workspaceSettingsPath(target.slug, "calendars");
-      }
-    } else if (state.resource === "drive") {
-      const disk = await upsertDrive(account);
-      if (target) {
-        const existing = await getDriveLink(disk.id, target.id);
-        if (!existing) {
-          await attachDrive({
-            driveId: disk.id,
-            email: disk.email,
-            workspaceId: target.id,
-          });
-        }
-        dest = workspaceSettingsPath(target.slug, "drives");
-      }
-    } else {
-      const box = await upsertMailbox(account);
-      if (target) {
-        const existing = await getMailboxLink(box.id, target.id);
-        const slug =
-          existing?.slug ??
-          (
-            await attachMailbox({
-              mailboxId: box.id,
-              email: box.email,
-              workspaceId: target.id,
-            })
-          ).slug;
-        dest = mailPath(target.slug, slug, "inbox");
-      }
-    }
+    const { slug } = await addConnectionResource({
+      account,
+      resource: state.resource,
+      workspaceId: target?.id ?? null,
+    });
+    if (target && slug) dest = landingPath(state.resource, target.slug, slug);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Connection failed";
     return redirectError(message.slice(0, 200), state.nonce, native);

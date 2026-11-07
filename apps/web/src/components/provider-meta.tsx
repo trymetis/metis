@@ -1,6 +1,7 @@
 import {
   type BrandMark,
   CaldavServer,
+  CarddavServer,
   FtpServer,
   ImapServer,
   ObjectStorage,
@@ -18,6 +19,7 @@ import { GoogleCalendar } from "@metis/ui/components/svgs/googleCalendar";
 import { MicrosoftOutlook } from "@metis/ui/components/svgs/microsoft-outlook";
 import { MicrosoftOnedrive } from "@metis/ui/components/svgs/microsoftOnedrive";
 
+import { ADDRESS_BOOK_PROVIDER_LABELS } from "@/connections/address-book-name";
 import { CALENDAR_PROVIDER_LABELS } from "@/connections/calendar-name";
 import {
   type ConnectionProvider,
@@ -41,6 +43,7 @@ export const ACCOUNT_PROVIDER_META: Record<ConnectionProvider, ProviderMeta> = {
   zoho: { label: "Zoho", Mark: ZohoMail },
   imap: { label: "IMAP", Mark: ImapServer },
   caldav: { label: "CalDAV", Mark: CaldavServer },
+  carddav: { label: "CardDAV", Mark: CarddavServer },
   cloudflare: { label: "Cloudflare", Mark: Cloudflare },
   resend: { label: "Resend", Mark: ResendMail },
   s3: { label: "S3", Mark: ObjectStorage },
@@ -73,6 +76,12 @@ export const RESOURCE_PROVIDER_META: {
     webdav: { label: DRIVE_PROVIDER_LABELS.webdav, Mark: WebdavServer },
     ftp: { label: DRIVE_PROVIDER_LABELS.ftp, Mark: FtpServer },
     sftp: { label: DRIVE_PROVIDER_LABELS.sftp, Mark: SftpServer },
+  },
+  addressbook: {
+    google: { label: ADDRESS_BOOK_PROVIDER_LABELS.google, Mark: Gmail },
+    microsoft: { label: ADDRESS_BOOK_PROVIDER_LABELS.microsoft, Mark: MicrosoftOutlook },
+    zoho: { label: ADDRESS_BOOK_PROVIDER_LABELS.zoho, Mark: ZohoMail },
+    carddav: { label: ADDRESS_BOOK_PROVIDER_LABELS.carddav, Mark: CarddavServer },
   },
 };
 

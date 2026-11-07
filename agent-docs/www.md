@@ -47,7 +47,7 @@ How `apps/www` (the marketing site at www.trymetis.email) gets its page metadata
 - **The models, the HDRI and their textures come only from `scripts/models/build.sh`**; a `.glb` or `studio.hdr` is never edited by hand.
   - `build.sh` with no arguments rebuilds the HDRI and every model; `build.sh typewriter cabinet` rebuilds only those. It needs `blender` on the PATH and uses the GPU for the ambient-occlusion bake when Cycles finds one.
   - Each model script builds real-world-size geometry in metres; the component scales it with its `S`.
-- **Every model draws only from `PALETTE` in `scripts/models/kit/kit.py`**, so the nine pages share one look: bone enamel, graphite, brass, steel, aluminium, paper and amber.
+- **Every model draws only from `PALETTE` in `scripts/models/kit/kit.py`**, so the ten pages share one look: bone enamel, graphite, brass, steel, aluminium, paper and amber.
 - **A part a component moves is a named pivot node, listed in the script's `kit.export(anim=…)`.**
   - meshopt quantization rewrites the transform of any node without children, which would move a rotating part's pivot; `kit.wrap` gives each such part an empty parent carrying the name, with the mesh as `<name>_mesh`.
   - Components find parts by node name and animate them as offsets from the position they loaded with.

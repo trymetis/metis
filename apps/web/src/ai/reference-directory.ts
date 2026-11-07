@@ -11,6 +11,15 @@ import {
 } from "@/calendar/aggregate";
 import { workspaceCalendarAccounts } from "@/calendar/session";
 import type { MailProvider } from "@/connections/types";
+import {
+  getContactIn,
+  isBookVisible,
+  listBooksAcross,
+  listContactsAcross,
+  type ResolvedAddressBook,
+  resolvedAddressBookName,
+} from "@/contacts/aggregate";
+import { workspaceAddressBookAccounts } from "@/contacts/session";
 import { driveSurfaceFor, type ResolvedDrive } from "@/drive/aggregate";
 import { DRIVE_PROVIDER_LABELS, driveName } from "@/drive/name";
 import { workspaceDrives } from "@/drive/session";
@@ -50,6 +59,7 @@ export interface ReferenceScope {
   mailboxes: ReferenceMailbox[];
   calendars: ResolvedCalendar[];
   drives: ResolvedDrive[];
+  addressBooks: ResolvedAddressBook[];
 }
 
 function referenceMailbox(mailbox: ResolvedMailbox): ReferenceMailbox {
@@ -79,10 +89,11 @@ export async function workspaceReferenceScope(
   appUser: WorkspaceUserSession,
   types: readonly ReferenceType[],
 ): Promise<ReferenceScope> {
-  const [mail, calendars, drives] = await Promise.all([
+  const [mail, calendars, drives, addressBooks] = await Promise.all([
     mailSessionFor(appUser, "all"),
     workspaceCalendarAccounts(appUser.workspaceId),
     workspaceDrives(appUser.userId, appUser.workspaceId),
+    workspaceAddressBookAccounts(appUser.workspaceId),
   ]);
 
   return {
@@ -91,6 +102,7 @@ export async function workspaceReferenceScope(
     mailboxes: mail ? mail.mailboxes.filter(aiEnabled).map(referenceMailbox) : [],
     calendars: calendars.filter(aiEnabled),
     drives: drives.filter(aiEnabled),
+    addressBooks: addressBooks.filter(aiEnabled),
   };
 }
 
@@ -327,6 +339,49 @@ async function suggestFiles(
     });
 }
 
+async function suggestAddressBooks(
+  scope: ReferenceScope,
+  query: string,
+  limit: number,
+): Promise<ResolvedReference[]> {
+  if (scope.addressBooks.length === 0) return [];
+  const { books } = await listBooksAcross(scope.addressBooks);
+  return books
+    .filter((b) => b.visible)
+    .filter((b) => matches(query, b.name, b.accountEmail))
+    .slice(0, limit)
+    .map((b) => {
+      const account = scope.addressBooks.find((a) => a.accountId === b.accountId);
+      return {
+        type: "addressbook" as const,
+        id: packReferenceId(b.accountId, b.id),
+        label: b.name,
+        detail: account ? resolvedAddressBookName(account, scope.addressBooks) : b.accountEmail,
+      };
+    });
+}
+
+async function suggestContactRefs(
+  scope: ReferenceScope,
+  query: string,
+  limit: number,
+): Promise<ResolvedReference[]> {
+  if (query.length < MIN_REMOTE_QUERY || scope.addressBooks.length === 0) return [];
+  const { contacts } = await listContactsAcross(scope.addressBooks, { query, max: limit });
+  return contacts.flatMap((c) =>
+    c.accountId
+      ? [
+          {
+            type: "contact" as const,
+            id: packReferenceId(c.accountId, c.bookId, c.id),
+            label: c.name.display || c.emails[0]?.value || "Contact",
+            detail: c.emails[0]?.value ?? c.bookName,
+          },
+        ]
+      : [],
+  );
+}
+
 export async function suggestReferences(
   scope: ReferenceScope,
   query: string,
@@ -354,6 +409,10 @@ export async function suggestReferences(
         return { type, items: suggestFolders(trimmed, limit) };
       case "file":
         return { type, items: await suggestFiles(scope, trimmed, limit) };
+      case "addressbook":
+        return { type, items: await suggestAddressBooks(scope, trimmed, limit) };
+      case "contact":
+        return { type, items: await suggestContactRefs(scope, trimmed, limit) };
     }
   });
 
@@ -567,6 +626,8 @@ export async function resolveReferences(
   const events: EventRefEntry[] = [];
   const calendars: CalendarRefEntry[] = [];
   const files: AgentReference[] = [];
+  const contactRefs: AgentReference[] = [];
+  const bookDetails: ReferenceDetail[] = [];
 
   const needsLabels = refs.some((r) => r.type === "label");
   const needsMembers = refs.some((r) => r.type === "member");
@@ -651,7 +712,62 @@ export async function resolveReferences(
         files.push(ref);
         break;
       }
+      case "addressbook": {
+        const parts = unpackReferenceId(ref.id, 2);
+        const account = parts
+          ? scope.addressBooks.find((a) => a.accountId === parts[0])
+          : undefined;
+        if (!parts || !account || !isBookVisible(account, parts[1])) {
+          unresolved.push(ref);
+          break;
+        }
+        const detail = {
+          ...ref,
+          label: parts[1],
+          detail: resolvedAddressBookName(account, scope.addressBooks),
+          toolArgs: { addressBookId: parts[0], bookId: parts[1] },
+        };
+        resolved.push(detail);
+        bookDetails.push(detail);
+        break;
+      }
+      case "contact": {
+        contactRefs.push(ref);
+        break;
+      }
     }
+  }
+
+  if (contactRefs.length > 0) {
+    await Promise.all(
+      contactRefs.slice(0, MAX_HYDRATIONS).map(async (ref) => {
+        const parts = unpackReferenceId(ref.id, 3);
+        const account = parts
+          ? scope.addressBooks.find((a) => a.accountId === parts[0])
+          : undefined;
+        if (!parts || !account || !isBookVisible(account, parts[1])) {
+          unresolved.push(ref);
+          return;
+        }
+        const [addressBookId, bookId, contactId] = parts;
+        try {
+          const contact = opts.hydrate
+            ? await getContactIn([account], { accountId: addressBookId, bookId, contactId })
+            : null;
+          resolved.push({
+            type: "contact",
+            id: ref.id,
+            label: contact?.name.display || contactId,
+            detail:
+              contact?.emails[0]?.value ?? resolvedAddressBookName(account, scope.addressBooks),
+            toolArgs: { addressBookId, bookId, contactId },
+          });
+        } catch {
+          unresolved.push(ref);
+        }
+      }),
+    );
+    for (const ref of contactRefs.slice(MAX_HYDRATIONS)) unresolved.push(ref);
   }
 
   if (files.length > 0) {
@@ -678,6 +794,19 @@ export async function resolveReferences(
         }
       }),
     );
+  }
+
+  if (opts.hydrate && bookDetails.length > 0) {
+    const accountIds = new Set(bookDetails.map((d) => d.toolArgs.addressBookId));
+    const { books } = await listBooksAcross(
+      scope.addressBooks.filter((a) => accountIds.has(a.accountId)),
+    );
+    for (const detail of bookDetails) {
+      const found = books.find(
+        (b) => b.accountId === detail.toolArgs.addressBookId && b.id === detail.toolArgs.bookId,
+      );
+      if (found) detail.label = found.name;
+    }
   }
 
   if (opts.hydrate) {

@@ -1,5 +1,6 @@
 import "server-only";
 import type { ResolvedCalendar } from "@/calendar/aggregate";
+import type { ResolvedAddressBook } from "@/contacts/aggregate";
 import { type DriveSurface, driveSurfaceFor } from "@/drive/aggregate";
 import { sanitizeError } from "@/lib/errors/sanitize-error";
 import type { Resolved } from "@/ops/scope";
@@ -115,3 +116,23 @@ export async function requireMember(
 }
 
 export type { Resolved };
+
+export function requireAddressBook(
+  accounts: ResolvedAddressBook[],
+  accountId?: string,
+): Resolved<{ account: ResolvedAddressBook }> {
+  const choices = accounts.map((a) => `${a.accountId} (${a.accountEmail})`).join(", ");
+  if (accounts.length === 0) {
+    return { error: "No address book with AI turned on is reachable here." };
+  }
+  if (!accountId) {
+    const only = accounts.length === 1 ? accounts[0] : null;
+    if (only) return { account: only };
+    return { error: `Pass addressBookId. These are all of them: ${choices}` };
+  }
+  const account = accounts.find((a) => a.accountId === accountId);
+  if (account) return { account };
+  return {
+    error: `Unknown addressBookId "${accountId}" — not an address book you can reach here. These are all of them: ${choices}`,
+  };
+}

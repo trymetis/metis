@@ -20,7 +20,7 @@ const listInvitesTool = createTool({
 const removeMemberTool = createTool({
   id: "removeMember",
   description:
-    "Remove someone from this workspace. Their mailboxes, calendars and drives are detached from it. Workspace owners and admins only.",
+    "Remove someone from this workspace. Their mailboxes, calendars, drives and address books are detached from it. Workspace owners and admins only.",
   inputSchema: z.object({
     ...memberTarget,
     summary: z.string().describe("Short description of who is being removed"),

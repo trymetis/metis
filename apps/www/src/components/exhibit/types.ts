@@ -2,6 +2,7 @@ export type ModelKey =
   | "envelope"
   | "calendar"
   | "cabinet"
+  | "cardholder"
   | "typewriter"
   | "padlock"
   | "server"

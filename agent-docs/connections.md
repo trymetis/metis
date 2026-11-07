@@ -8,30 +8,31 @@ See also [AGENTS.md](../AGENTS.md), [workspaces.md](workspaces.md), [servers.md]
 
 | Concern                                       | Where                                                                                                                                                                                                                             |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Tables                                        | `src/db/schema.ts` → `connection`, `mailbox`, `calendar`, `drive`                                                                                                                                                                 |
+| Tables                                        | `src/db/schema.ts` → `connection`, `mailbox`, `calendar`, `drive`, `addressBook`                                                                                                                                                  |
 | Column encryption                             | `src/db/crypto.ts` → `encryptedText`                                                                                                                                                                                              |
 | The grant store                               | `src/connections/connection-store.ts` → `upsertConnection`, `resolveConnectionAuth`, `getFreshAccessToken`                                                                                                                        |
-| Resource stores                               | `src/connections/{mailbox,calendar,drive}-store.ts` → `visibilityWhere` (module-private)                                                                                                                                          |
+| Resource stores                               | `src/connections/{mailbox,calendar,drive,address-book}-store.ts` → `visibilityWhere` (module-private)                                                                                                                             |
 | Providers and resources                       | `src/connections/types.ts` → `PROVIDER_RESOURCES`                                                                                                                                                                                 |
 | Drivers                                       | `src/connections/registry.ts` → `getDriver` · `src/connections/oauth-drivers.ts` → `OAUTH_DRIVERS` · `src/connections/drivers/oauth.ts` → `createOAuthDriver`, `scopesFor` · `src/connections/drivers/{google,microsoft,zoho}.ts` |
 | OAuth key pairs                               | `src/connections/credentials.ts` → `configuredOAuthProviders`, `providerCredentials`                                                                                                                                              |
 | What can be connected                         | `src/connections/servers.ts` → `connectServers`, `isProviderConfigured` · client `src/components/connect-servers-context.tsx` → `ConnectServersProvider`                                                                          |
 | Connect flow                                  | `src/app/api/connections/start/[provider]/[resource]/route.ts` · `src/app/api/connections/[provider]/callback/route.ts` · state `src/connections/oauth-state.ts` → `encodeOAuthState`                                             |
-| Procedures                                    | `src/server/routes/connections.ts` → `createCredential`, `delete`, `unavailable` · resource deletes in `src/server/routes/{mailboxes,calendars,drives}.ts`                                                                        |
+| Procedures                                    | `src/server/routes/connections.ts` → `createCredential`, `delete`, `unavailable` · resource deletes in `src/server/routes/{mailboxes,calendars,drives,address-books}.ts`                                                          |
 | Quarantine                                    | `src/connections/quarantine.ts` → `reconcileQuarantine`, `backfillServerIds` · run by `scripts/preflight.ts` and a dashboard save (`store` in `src/dashboard/system-config.ts`)                                                   |
 | Quarantine disclosure                         | `src/components/unavailable-accounts-banner.tsx` → `UnavailableAccountsBanner` · `src/connections/unavailable.ts` → `listUnavailableConnections` (`connections.unavailable` and the `listUnavailableAccounts` MCP tool)           |
-| A user's resources with their workspace links | `src/connections/account-resources.ts` → `listAccountMailboxes`, `listAccountCalendars`, `listAccountDrives` (the `list` procedures and the `listAccountResources` MCP tool)                                                      |
+| A user's resources with their workspace links | `src/connections/account-resources.ts` → `listAccountMailboxes`, `listAccountCalendars`, `listAccountDrives`, `listAccountAddressBooks` (the `list` procedures and the `listAccountResources` MCP tool)                           |
 
 ## Rules
 
 ### The grant
 
-- **The grant is the entity; a mailbox, a calendar and a drive are resources hanging off it.**
+- **The grant is the entity; a mailbox, a calendar, a drive and an address book are resources hanging off it.**
   - `connection` holds identity, tokens and the granted `scope`, owned by one user; it is unique per (user, provider, provider account).
-  - `mailbox`, `calendar` and `drive` are one resource row per connection, and are what every other table points at.
+  - `mailbox`, `calendar`, `drive` and `address_book` are one resource row per connection, and are what every other table points at.
 - **Keep the connection key at those three columns: providers issue one grant per (client, account), not one per scope set.** Two rows for one Google account would let deleting a calendar kill the mailbox's refresh token.
 - **Tokens refresh at request time and write back to the one `connection` row**, so one grant never diverges across workspaces (Microsoft rotates refresh tokens).
-- **Detach never revokes; deleting a resource revokes only when no other resource still uses the connection; `connections.delete` always revokes the whole grant.** Providers cannot give back part of a grant, so removing a mailbox from an account that still has a calendar leaves the mail scopes live; the confirm copy says so.
+- **Detach never revokes; deleting a resource revokes only when no other resource still uses the connection; `connections.delete` always revokes the whole grant.**
+  - `linkedConnectionResources` in `connection-store.ts` reads every resource table through `RESOURCE_TABLES` (`satisfies Record<ConnectionResource, …>`), so a new resource kind cannot be left out of the revoke count or the Connections list. Providers cannot give back part of a grant, so removing a mailbox from an account that still has a calendar leaves the mail scopes live; the confirm copy says so.
 
 ### Secrets at rest
 
@@ -60,7 +61,7 @@ See also [AGENTS.md](../AGENTS.md), [workspaces.md](workspaces.md), [servers.md]
 ### Quarantine
 
 - **A grant whose provider or server entry leaves config is quarantined.** Runtime reads `connection.quarantined_at`, not config.
-  - `visibilityWhere` in all three resource stores, the `listUnattached*` and `list*Workspaces` queries, and `getFreshAccessToken` (which returns null) all exclude it.
+  - `visibilityWhere` in all four resource stores, the `listUnattached*` and `list*Workspaces` queries, and `getFreshAccessToken` (which returns null) all exclude it.
   - The resource vanishes from every workspace surface with no UI branch; account pages still list it so it can be deleted.
   - The workflow runner blocks its runs (`src/workflow/authorization.ts`), so an operator's config change cannot fail queued mail.
   - The only disclosure is `UnavailableAccountsBanner`, dismissed against a fingerprint of the quarantined ids.
@@ -74,6 +75,7 @@ See also [AGENTS.md](../AGENTS.md), [workspaces.md](workspaces.md), [servers.md]
 - **OAuth connect.**
   - The start route checks the session (or consumes a native ticket, [desktop.md](desktop.md)), validates `attachTo` and an optional `expectConnection`, computes the scope set, signs the state (`encodeOAuthState`, valid for `STATE_TTL_SEC`) and sets a nonce cookie.
   - The callback decodes the state, requires the matching nonce cookie, upserts the `connection` and the resource row, and attaches it to the requested workspace.
+  - The callback and `connections.createCredential` both create and attach the resource through `addConnectionResource` (`src/connections/attach.ts`), an exhaustive switch over `ConnectionResource`, so a new kind fails to compile until it has a branch.
 - **Adding a resource to an existing account.** `?expectConnection=<id>` carries the expected account in the state; when the user picks a different account at the provider, the callback connects it as a separate account and says so.
 - **Credential connect** is `connections.createCredential` ([servers.md](servers.md)).
 - **`reconcileQuarantine`** stamps `quarantined_at` on connections whose provider is unconfigured or whose server reference no longer resolves, and clears it when the entry returns.

@@ -108,7 +108,7 @@ export function useMemberAdmin({
   const dialogs = (
     <>
       <TotpConfirmDialog
-        body={`${promote?.email ?? "This member"} will be able to change this workspace's AI and privacy settings, and manage its mailboxes, calendars and drives.`}
+        body={`${promote?.email ?? "This member"} will be able to change this workspace's AI and privacy settings, and manage its mailboxes, calendars, drives and address books.`}
         confirmLabel="Make admin"
         onConfirm={async (code) => {
           if (!promote) return;
@@ -133,8 +133,8 @@ export function useMemberAdmin({
               Remove {removing?.email} from {workspaceName}?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              They immediately lose access to every mailbox, calendar and drive in this workspace.
-              Anything they connected themselves stays on their own account.
+              They immediately lose access to every mailbox, calendar, drive and address book in
+              this workspace. Anything they connected themselves stays on their own account.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -1,0 +1,58 @@
+---
+title: How AI works in Metis Suite
+description: The five assistants, the switches that control them, and what they can and cannot see.
+---
+
+Metis Suite has AI assistants that can read, search and act on your mail, calendars, files and contacts. You can also connect an outside AI app, such as Claude Code or Cursor, through MCP (Model Context Protocol, a standard way for AI apps to use tools). This page explains how these pieces fit together and who decides what AI may read.
+
+## The five assistants
+
+| Assistant        | Where you find it                                    | What it works on                                                                       |
+| ---------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **Workspace AI** | Its own page, from **Workspace AI** in the left rail | Every mailbox, calendar, drive and address book in the workspace that has AI turned on |
+| **Mail AI**      | A side panel in a mailbox                            | The mailbox you have open                                                              |
+| **Calendar AI**  | A side panel in the calendar                         | The calendar you have open, or all calendars                                           |
+| **Drive AI**     | A side panel in a drive                              | The drive you have open, or all drives                                                 |
+| **Contacts AI**  | A side panel in Contacts                             | The address book you have open, or all address books                                   |
+
+The Workspace Assistant is the most capable. It can work across mail, calendars, files, contacts, people and workflows at once, and it saves your conversations. The four side panels are quick helpers for the page you are on. Their conversations are not saved.
+
+See [Use Workspace AI](/guide/assistant/use-workspace-ai) and [Use the Mail, Calendar, Drive and Contacts AI panels](/guide/assistant/use-the-side-panels).
+
+## Three layers of switches
+
+AI only reaches a mailbox, calendar, drive or address book when all three layers allow it.
+
+1. **The server.** The person who runs your Metis Suite server decides whether AI is available at all. When it is not, you do not see **Workspace AI** in the rail, the AI panel buttons are hidden, and **MCP clients** is missing from your settings.
+2. **The workspace.** An owner or admin of the workspace sets **AI features** under **Workspace settings**, **General**, **AI & privacy**. The choices are **Allowed** (each mailbox, calendar, drive and address book decides) or **Off** (no AI anywhere in this workspace). Changing it asks for a two-factor code.
+3. **Each mailbox, calendar, drive and address book.** The person who connected a mailbox, calendar, drive or address book turns AI on or off for it, separately in each workspace where it is used. The switch is in **Workspace settings**, under **Mailboxes**, **Calendars**, **Drives** or **Contacts**. You can also find it in your account **Settings**, under **Mailboxes**, **Calendars**, **Drives** or **Address books**. There, the button that shows how many workspaces it is in (for example **In 2 workspaces**) lists each workspace, with a way to turn AI on or off everywhere at once. Turning AI on asks for a two-factor code. Turning it off happens at once.
+
+A mailbox, calendar, drive or address book can always be stricter than its workspace, never less strict. For the settings pages themselves, see [Workspaces and accounts](/guide/workspaces).
+
+:::note[AI starts off]
+AI is off for a new mailbox, calendar, drive or address book until its owner turns it on. Allowing AI in a workspace does not turn anything on by itself. Each owner still decides for their own mailboxes, calendars, drives and address books.
+:::
+
+## What turning AI off does
+
+When AI is off, the assistants and MCP clients cannot read that mailbox, calendar, drive or address book at all.
+
+- If the workspace has AI off, the Workspace Assistant page shows **Assistant turned off** with a **Workspace settings** button. The side panels show the same heading.
+- If only one mailbox, calendar, drive or address book has AI off, its side panel says "AI is turned off for this mailbox, so the assistant has nothing it can read." (or calendar, drive or address book).
+- The `@` reference picker only offers items that have AI turned on.
+- No MCP client can reach a workspace while its AI is off. Clients keep working in your other workspaces.
+
+The same switches also control AI steps in workflows. See [Workflows](/guide/workflows).
+
+## What is shared and what is private
+
+- **Your Workspace AI conversations are private.** Each person sees only their own conversations, in each workspace.
+- **Side panel conversations are not kept.** Closing the panel or leaving the page starts a fresh conversation.
+- **Each MCP client belongs to you**, not to a workspace. It reaches only the workspaces you let it reach.
+- **The AI switches are the same for everyone in a workspace.** When the owner of a mailbox turns AI on for it in a workspace, it is on for every member who can use that mailbox there.
+
+## Changes ask for your approval
+
+The assistants can read freely, but sensitive actions pause first. Sending email, deleting, changing calendar events, changing files and changing contacts all show an approval card in the chat. Nothing happens until you press **Approve**. See [Approve or decline actions](/guide/assistant/approve-or-decline-actions).
+
+MCP clients work differently: they have no approval card. Instead, sensitive tools stay off for a client until you switch them on. See [What an MCP client can do](/guide/assistant/what-an-mcp-client-can-do).

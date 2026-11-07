@@ -31,6 +31,7 @@ export const p = {
   mailbox: (label = "Mailbox", extra?: Extra) => spec("mailbox", label, T.text, extra),
   calendar: (label = "Calendar", extra?: Extra) => spec("calendar", label, T.text, extra),
   drive: (label = "Drive", extra?: Extra) => spec("drive", label, T.text, extra),
+  addressbook: (label = "Address book", extra?: Extra) => spec("addressbook", label, T.text, extra),
   mailFolder: (label = "Folder", extra?: Extra) =>
     spec("mailFolder", label, T.text, { default: literal("inbox"), ...extra }),
   driveFolder: (label = "Folder", extra?: Extra) =>

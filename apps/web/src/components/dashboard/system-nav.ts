@@ -117,21 +117,22 @@ export const SYSTEM_DRIVERS_NAV: SystemDriverNav[] = keysOf(DRIVER_COPY).map((dr
 const PROVIDER_COPY: Record<ConnectionProvider, { label: string; description: string }> = {
   google: {
     label: "Google",
-    description: "Gmail, Google Calendar and Google Drive over one OAuth client.",
+    description: "Gmail, Google Calendar, Google Drive and Google Contacts over one OAuth client.",
   },
   microsoft: {
     label: "Microsoft",
-    description: "Outlook, Outlook Calendar and OneDrive over one OAuth client.",
+    description: "Outlook, Outlook Calendar, OneDrive and Outlook Contacts over one OAuth client.",
   },
   zoho: {
     label: "Zoho",
-    description: "Zoho Mail and Zoho Calendar over one OAuth client.",
+    description: "Zoho Mail, Zoho Calendar and Zoho Contacts over one OAuth client.",
   },
   imap: {
     label: "IMAP",
     description: "Mailboxes over IMAP, sending over SMTP.",
   },
   caldav: { label: "CalDAV", description: "Calendar accounts." },
+  carddav: { label: "CardDAV", description: "Address books." },
   cloudflare: {
     label: "Cloudflare Email",
     description: "Gateway Workers, one per domain.",

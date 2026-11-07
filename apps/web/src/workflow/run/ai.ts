@@ -52,6 +52,9 @@ function resourcesIn(value: unknown, into: { kind: ResourceKind; id: string }[] 
     into.push({ kind: "calendar", id: own.accountId });
   }
   if (typeof own.driveId === "string" && own.driveId) into.push({ kind: "drive", id: own.driveId });
+  if (typeof own.addressBookId === "string" && own.addressBookId) {
+    into.push({ kind: "addressbook", id: own.addressBookId });
+  }
   for (const nested of Object.values(own)) resourcesIn(nested, into, depth + 1);
   return into;
 }
@@ -62,6 +65,7 @@ function nodeResources(params: Params): { kind: ResourceKind; id: string }[] {
     ["mailbox", "mailbox"],
     ["calendar", "calendar"],
     ["drive", "drive"],
+    ["addressbook", "addressbook"],
   ] as const) {
     const id = text(params, name);
     if (id) own.push({ kind, id });

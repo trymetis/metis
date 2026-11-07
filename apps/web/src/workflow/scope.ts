@@ -1,5 +1,11 @@
 import "server-only";
-import { listWorkspaceCalendars, listWorkspaceDrives, listWorkspaceMailboxes } from "@/connections";
+import {
+  listWorkspaceAddressBooks,
+  listWorkspaceCalendars,
+  listWorkspaceDrives,
+  listWorkspaceMailboxes,
+} from "@/connections";
+import { addressBookName } from "@/connections/address-book-name";
 import { calendarName } from "@/connections/calendar-name";
 import { driveName } from "@/drive/name";
 import type { WorkspaceRole } from "@/types/workspace";
@@ -18,10 +24,11 @@ export async function workflowScopeFor(appUser: WorkflowScopeUser): Promise<
     directory: { mailboxId: string; slug: string; email: string }[];
   }
 > {
-  const [boxes, calendars, drives] = await Promise.all([
+  const [boxes, calendars, drives, addressBooks] = await Promise.all([
     listWorkspaceMailboxes(appUser.workspaceId),
     listWorkspaceCalendars(appUser.workspaceId),
     listWorkspaceDrives(appUser.workspaceId),
+    listWorkspaceAddressBooks(appUser.workspaceId),
   ]);
   return {
     workspaceId: appUser.workspaceId,
@@ -49,6 +56,14 @@ export async function workflowScopeFor(appUser: WorkflowScopeUser): Promise<
       name: driveName(d, drives),
       slug: d.slug,
       aiEnabled: d.policy.ai,
+    })),
+    addressBooks: addressBooks.map((a) => ({
+      addressBookId: a.id,
+      linkId: a.linkId,
+      email: a.email,
+      name: addressBookName(a, addressBooks),
+      slug: a.slug,
+      aiEnabled: a.policy.ai,
     })),
     directory: boxes.map((m) => ({ mailboxId: m.id, slug: m.slug, email: m.email })),
   };

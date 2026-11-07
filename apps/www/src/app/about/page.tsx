@@ -15,7 +15,7 @@ import {
 export const metadata = pageMetadata("/about");
 
 const FACTS: [string, React.ReactNode][] = [
-  ["Product", `${SITE_NAME}: an email, calendar and drive client`],
+  ["Product", `${SITE_NAME}: an email, calendar, drive and contacts client`],
   ["Built by", ORG_LEGAL_NAME],
   ["Registered office", ORG_ADDRESS],
   [
@@ -50,7 +50,7 @@ export default function AboutPage() {
             Built in the open, <em>by AstraQ.</em>
           </>
         }
-        text={`${SITE_NAME} is an open-source client for the mail, calendars and drives you already have at Google, Microsoft, Zoho and your own servers, with an AI agent, workflows and MCP across all of them. ${ORG_LEGAL_NAME} builds it in Akola, India, and publishes every line under AGPL-3.0-or-later.`}
+        text={`${SITE_NAME} is an open-source client for the mail, calendars, drives and contacts you already have at Google, Microsoft, Zoho and your own servers, with an AI agent, workflows and MCP across all of them. ${ORG_LEGAL_NAME} builds it in Akola, India, and publishes every line under AGPL-3.0-or-later.`}
       />
       <section className="px-[var(--gx)] pb-28">
         <div className="mx-auto grid max-w-[1280px] gap-16 border-t border-line pt-14 lg:grid-cols-[1fr_1fr]">
