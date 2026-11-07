@@ -227,6 +227,7 @@ async function signIn(browser: Browser) {
     colorScheme: "light",
     timezoneId: "UTC",
     locale: "en-US",
+    extraHTTPHeaders: { "X-Forwarded-For": "203.0.113.10" },
   });
   await ctx.addInitScript(() => localStorage.setItem("theme", "light"));
   const page = await ctx.newPage();

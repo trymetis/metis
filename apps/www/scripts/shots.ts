@@ -106,6 +106,7 @@ function contextOptions() {
     colorScheme: "light" as const,
     timezoneId: "UTC",
     locale: "en-US",
+    extraHTTPHeaders: { "X-Forwarded-For": "203.0.113.10" },
   };
 }
 

@@ -70,7 +70,7 @@ export const SYSTEM_INSTANCE_NAV = {
   href: SYSTEM_INSTANCE_HREF,
   label: "Instance",
   description:
-    "App URL, sign-up, the owner, legal consent, drive relay limits and the mail image proxy.",
+    "App URL, sign-up, the owner, legal consent, drive relay limits, the mail image proxy, how long message bodies are kept and trusted proxies.",
   icon: SlidersHorizontal,
 };
 

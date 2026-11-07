@@ -6,6 +6,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Whi
 
 ## Unreleased
 
+### Changed
+
+- Dashboard: the Instance page's description names its **Mail cache** and **Proxies** sections too.
+
 ## 0.2.2 - 2026-11-05
 
 ### Upgrade notes
