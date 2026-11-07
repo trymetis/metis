@@ -13,7 +13,7 @@ A workspace is where you and your team use mail, calendars, drives and contacts 
 - [Manage your connected accounts](/guide/workspaces/manage-connected-accounts): see every account you have connected, and disconnect or delete them.
 - [Fix an account that stops working](/guide/workspaces/fix-an-account): reconnect an account, and what an unavailable account means.
 - [Members and roles](/guide/workspaces/members-and-roles): the Members page, inviting people, changing roles, transferring ownership and removing members.
-- [Workspace activity](/guide/workspaces/workspace-activity): for owners and admins, see who changed roles, members, invites and resources in the workspace.
+- [Workspace activity](/guide/workspaces/workspace-activity): for owners and admins, see who changed roles, members, invites, workflows and resources in the workspace.
 - [AI and privacy settings](/guide/workspaces/ai-and-privacy): decide whether AI and phishing detection are allowed in the workspace.
 - [Logo and color](/guide/workspaces/appearance): give the workspace its own logo and accent color.
 - [Delete a workspace](/guide/workspaces/delete-a-workspace): remove a workspace for every member.

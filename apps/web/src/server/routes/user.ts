@@ -4,6 +4,7 @@ import { and, asc, desc, eq, gt, inArray } from "drizzle-orm";
 
 import { buildDataExport } from "@/account/export";
 import { appActor, recordAuditEvent } from "@/audit";
+import { isOwnerEmail } from "@/auth/owner";
 import { getAuth, verify2FA } from "@/auth/server";
 import { refreshHasAnyUser } from "@/auth/signup";
 import { getDriver, listUserConnections } from "@/connections";
@@ -98,6 +99,13 @@ async function assertCanDeleteAccount(
   if (email.toLowerCase() !== appUser.user.email.toLowerCase()) {
     throw new ORPCError("BAD_REQUEST", {
       message: "Type your account email to confirm.",
+    });
+  }
+
+  if (isOwnerEmail(appUser.user.email)) {
+    throw new ORPCError("BAD_REQUEST", {
+      message:
+        "You're this instance's owner. Make another account the owner first, then come back.",
     });
   }
 

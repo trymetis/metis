@@ -8,7 +8,13 @@ import { getAuth } from "@/auth/server";
 import { sectionCached } from "@/config/runtime";
 import type { McpAuthInfo } from "@/mastra/mcp/context";
 import { buildMcpServer } from "@/mastra/mcp/server";
-import { APP_ORIGIN, MCP_AUDIENCE, resolveMcpClient, touchMcpClient } from "@/mcp/auth";
+import {
+  APP_ORIGIN,
+  MCP_AUDIENCE,
+  MCP_RESOURCE_METADATA,
+  resolveMcpClient,
+  touchMcpClient,
+} from "@/mcp/auth";
 import { aiEnabled } from "@/services/llm";
 import { rateLimit, tooManyRequests } from "@/services/rate-limit";
 
@@ -16,6 +22,21 @@ const handle = async (request: Request, jwt: JWTPayload) => {
   if (!aiEnabled()) return new Response(null, { status: 404 });
 
   const client = await resolveMcpClient(jwt);
+  if (client === "revoked") {
+    return Response.json(
+      {
+        jsonrpc: "2.0",
+        error: { code: -32001, message: "This access token was revoked. Sign in again." },
+        id: null,
+      },
+      {
+        status: 401,
+        headers: {
+          "WWW-Authenticate": `Bearer error="invalid_token", error_description="The access token was revoked", resource_metadata="${MCP_RESOURCE_METADATA}"`,
+        },
+      },
+    );
+  }
   if (!client) {
     return Response.json(
       {

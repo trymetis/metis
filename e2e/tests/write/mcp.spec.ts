@@ -40,6 +40,7 @@ interface McpClientRow {
 }
 
 const CLIENT_GONE = "This MCP client is disabled or no longer registered";
+const TOKEN_REVOKED = "This access token was revoked";
 
 async function clientRow(rpc: Rpc, clientId: string): Promise<McpClientRow | undefined> {
   return (await rpc<McpClientRow[]>("mcp.listClients")).find((c) => c.clientId === clientId);
@@ -194,9 +195,12 @@ export default function mcpSpecs() {
       expect((await callStatus(tokens.access_token)).status).toBe(200);
     });
 
-    await test.step("revoking its grants makes a refresh fail", async () => {
+    await test.step("revoking its grants makes a refresh fail and the issued token a 401", async () => {
       await rpc("mcp.revokeGrants", { clientId });
       await expect(refresh(clientId, tokens.refresh_token ?? "")).rejects.toThrow();
+      const call = await callStatus(tokens.access_token);
+      expect(call.status).toBe(401);
+      expect(call.text).toContain(TOKEN_REVOKED);
     });
 
     await test.step("removing the client turns the token into a 403", async () => {
@@ -333,6 +337,36 @@ export default function mcpSpecs() {
       expect(last?.status).toBe(429);
       expect(Number(last?.headers.get("retry-after"))).toBeGreaterThan(0);
     });
+  });
+
+  test("revoking a client's only authorization cuts its token at once and asks for consent again", async ({
+    page,
+    rpc,
+  }, testInfo) => {
+    const grant = await authorize(page, clientIdFor(uniqueName(testInfo)));
+    const { clientId } = grant;
+    try {
+      expect((await callStatus(grant.tokens.access_token)).status).toBe(200);
+      const grants = await rpc<{ id: string }[]>("mcp.listGrants", { clientId });
+      expect(grants).toHaveLength(1);
+
+      await rpc("mcp.revokeGrants", { clientId, grantId: grants[0]?.id });
+      const call = await callStatus(grant.tokens.access_token);
+      expect(call.status).toBe(401);
+      expect(call.text).toContain(TOKEN_REVOKED);
+
+      const again = await beginAuthorization(clientId);
+      try {
+        await page.goto(again.authorizationUrl.toString());
+        await expect(
+          page.getByRole("main").getByRole("button", { name: "Approve", exact: true }),
+        ).toBeVisible();
+      } finally {
+        await again.callback.close();
+      }
+    } finally {
+      await rpc("mcp.deleteClient", { clientId });
+    }
   });
 
   test("a manually added client: loopback ports on 127.0.0.1 only, and repeated labels get a numbered slug", async ({

@@ -134,9 +134,6 @@ export const createSignupInviteOutput = orFailure(
     inviteId: z.string(),
     email: z.string(),
     expiresAt: z.string(),
-    delivered: z.boolean(),
-    url: z.string().optional(),
-    note: z.string().optional(),
   }),
 );
 
@@ -349,11 +346,6 @@ export async function createSignupInvite(
     inviteId: sent.invite.id,
     email: sent.invite.email,
     expiresAt: sent.invite.expiresAt.toISOString(),
-    delivered: sent.delivered,
-    url: sent.delivered ? undefined : sent.url,
-    note: sent.delivered
-      ? undefined
-      : "The invite was created but the email did not go out. Give the user this link to pass on — it is shown only once.",
   };
 }
 

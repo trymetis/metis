@@ -63,7 +63,7 @@ Each time you save a workflow, Metis Suite keeps that version as a revision. You
 3. The **Revisions** panel opens: "Each save makes a revision. Pick one to see what it changed from the one before."
 4. Click a revision in the list to see its changes below the list.
 
-The list shows the latest 20 revisions, newest first. Each one is named, for example "Revision 3", with the date and time of the save. When the editor has changes you have not saved, an **Unsaved changes** entry comes first. It shows what you changed since the last save.
+The list shows the latest 20 revisions, newest first. Each one is named, for example "Revision 3", with the date and time of the save and the name of the person who saved it, for example "· Ana Lopez". The name is left out when Metis Suite does not know who saved the revision, or when that person is no longer a member of the workspace. When the editor has changes you have not saved, an **Unsaved changes** entry comes first. It shows what you changed since the last save.
 
 For each revision, you see what changed from the one before it:
 

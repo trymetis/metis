@@ -1,6 +1,6 @@
 ---
 title: Invite people to Metis Suite
-description: Invite someone to create an account on your instance, share the link by hand if the email fails, and revoke an invite.
+description: Invite someone to create an account on your instance by email, see the invites you sent, and revoke an invite.
 ---
 
 Most Metis Suite instances are invite-only: people cannot create an account unless someone invites them. Anyone who already has an account can send an invite.
@@ -21,14 +21,16 @@ You see "Invite sent to" followed by their address. They get an email with a **C
 
 Every invite expires after 7 days.
 
-### If the email could not be sent
-
-Sometimes Metis Suite creates the invite but cannot send the email. A box then shows the invite link. Copy it and send it to the person yourself, for example in a chat message. The link expires in 7 days.
+The invite reaches the person only by email. Metis Suite never shows you the invite link.
 
 ### If the invite is refused
 
+A red message under the form tells you why:
+
 - "That email already has an account": this person can already sign in. If you want to work together, invite them to a workspace instead.
 - "That email already has a pending invite": an invite for this address is still waiting. Wait for them to use it, or revoke it and send a new one.
+- "The instance owner's address can't be invited": this address belongs to the owner of your Metis Suite instance.
+- "The invite email couldn't be sent, so no invite was created. Ask the instance owner to check the mail settings, then try again.": Metis Suite could not send the email. Nothing was created, so the person has no invite. Ask your instance owner to check the mail settings, then send the invite again.
 
 ## See your invites
 

@@ -30,15 +30,10 @@ export function SignupInvitesList() {
   const [sending, setSending] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [undelivered, setUndelivered] = useState<{
-    email: string;
-    url: string;
-  } | null>(null);
 
   async function send(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-    setUndelivered(null);
 
     const parsed = createSignupInviteInputSchema.safeParse({ email });
     if (!parsed.success) {
@@ -51,11 +46,7 @@ export function SignupInvitesList() {
       const res = await orpc.signupInvites.create(parsed.data);
       setEmail("");
       await refresh();
-      if (res.delivered) {
-        toast.success(`Invite sent to ${parsed.data.email}`);
-      } else {
-        setUndelivered({ email: parsed.data.email, url: res.url });
-      }
+      toast.success(`Invite sent to ${res.invite.email}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send the invite");
     } finally {
@@ -104,18 +95,6 @@ export function SignupInvitesList() {
           </Button>
         </form>
         {error && <p className="mt-2 text-xs text-destructive-text">{error}</p>}
-
-        {undelivered && (
-          <div className="mt-3 rounded-lg border border-dashed border-border p-3">
-            <p className="text-xs text-muted-foreground">
-              The invite for {undelivered.email} was created, but the email couldn&apos;t be sent.
-              Send them this link yourself — it expires in 7 days.
-            </p>
-            <code className="mt-2 block break-all rounded-md bg-hover px-2 py-1.5 font-mono text-[11px] text-foreground">
-              {undelivered.url}
-            </code>
-          </div>
-        )}
 
         {invites === null && loadError ? (
           <p className="mt-4 text-[13px] text-destructive-text">{loadError}</p>

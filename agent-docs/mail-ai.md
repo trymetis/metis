@@ -28,7 +28,7 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [mail.md](mail
 
 ### Phishing
 
-- **Phishing analysis is a per-workspace mailbox switch, separate from AI.** `ai.analyzePhishing` refuses a mailbox whose resolved policy has `phishingDetection` off ([workspaces.md](workspaces.md)).
+- **Phishing analysis is a per-workspace mailbox switch, separate from AI.** `ai.analyzePhishing` and the `analyzePhishing` tool body (`src/ops/phishing.ts`, used by the chat agents, workflow agents and MCP) both refuse a mailbox whose resolved policy has `phishingDetection` off ([workspaces.md](workspaces.md)).
 - **The phishing driver and its on/off are database-backed.** `getPhishingDetection()` rebuilds on the first call after the section changes; `phishingDetectionEnabled()` gates `ai.analyzePhishing`, the toolkit and both tool rosters per request ([configuration.md](configuration.md)).
 - **The decision driver and its switches are database-backed too.** `getDecision()` rebuilds on the first call after the `decision` section changes, and `decisionEnabled(feature)` gates the label path and the summary gate per call ([configuration.md](configuration.md)).
 - **Phishing analysis must work without a cookie.** The backend verifies a Better Auth JWT against `/api/auth/jwks`.

@@ -92,6 +92,7 @@ See also [AGENTS.md](../AGENTS.md), [drive-providers.md](drive-providers.md), [d
 - **Routes touch `DriveSurface`, never `DriveAdapter`, except the relay route.**
   - `DriveSession` carries a ready-built `surface`, as `MailSession` carries an adapter, so the `drive.*` procedures have no `isAggregate` branch.
   - The relay route holds a signature, not a session, so it builds the adapter from the drive id and calls `readStream` / `writeStream` directly.
+  - `workspaceDrives.roots` builds the adapter too, because it lists every top-level folder unfiltered for the visibility picker; it carries the same owner, admin or drive-owner check as `workspaceDrives.setVisibility`, so a member never sees the names of hidden roots.
 - **Composite ids `<driveId>:<providerFileId>` are produced only by the aggregate surface**, and a cross-drive `move` is refused.
 - **`visible_root_ids` is an app-level restriction, never provider isolation**: the token still reads the whole drive, so describe it as a product guarantee only. Empty means no restriction.
 - **Every read except a root listing, and every write, checks the entry's top-level ancestor.**

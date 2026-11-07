@@ -5,6 +5,8 @@ description: Every page of the owner dashboard, from usage stats to instance set
 
 The owner dashboard shows what your instance is carrying and holds its settings. Only the owner can open it: the account whose email matches `METIS_OWNER_EMAIL`. For everyone else, and for everyone when no owner email is set, the dashboard does not exist.
 
+The owner cannot delete their own account. Trying shows "You're this instance's owner. Make another account the owner first, then come back." To hand the instance to someone else, set `METIS_OWNER_EMAIL` to the new owner's email and restart the app. The old owner can then delete their account. See [Delete your account](/guide/account/delete-your-account).
+
 The owner is not an administrator of other people's data. The dashboard shows counts, settings and the audit log, never anyone's mail, events, files or contacts. The audit log does show people's account names (or their email addresses, when they have no name or their account was deleted), the email addresses of invited people, connected accounts, mailboxes, calendars, drives and address books, the names of MCP clients, and the IP addresses and devices changes came from.
 
 ## Open the dashboard
@@ -89,10 +91,10 @@ Every external MCP client registered on the instance: **Clients**, **Enabled** a
 
 "Security-relevant changes by every user on this instance."
 
-<img src="/images/self-hosting/dashboard-audit.webp" alt="The Audit log page with the All events card, the search box, the event type list and the empty state" class="dark:hidden" />
-<img src="/images/self-hosting/dashboard-audit-dark.webp" alt="The Audit log page with the All events card, the search box, the event type list and the empty state" class="hidden dark:block" />
+<img src="/images/self-hosting/dashboard-audit.webp" alt="The Audit log page with the All events card, the search box, the event type list set to All events, and the latest events" class="dark:hidden" />
+<img src="/images/self-hosting/dashboard-audit-dark.webp" alt="The Audit log page with the All events card, the search box, the event type list set to All events, and the latest events" class="hidden dark:block" />
 
-The **All events** card lists changes such as turned-off two-factor authentication, turned-off sign-in alerts, approved MCP clients, disconnected accounts, removed or detached mailboxes, calendars, drives and address books, role changes, removed members, ownership transfers, invites, deleted workspaces and accounts, and undone upgrades. The full list of what is recorded is in [Security activity](/guide/account/security-activity#what-is-recorded). Each change is recorded after it succeeds. Reading mail, events, files or contacts is never recorded.
+The **All events** card lists changes such as turned-off two-factor authentication, turned-off sign-in alerts, approved MCP clients, disconnected accounts, removed or detached mailboxes, calendars, drives and address books, role changes, removed members, ownership transfers, invites, deleted workspaces and accounts, undone upgrades, and workflows that were created, edited, turned on, turned off or deleted. The full list of what is recorded is in [Security activity](/guide/account/security-activity#what-is-recorded). Each change is recorded after it succeeds. Reading mail, events, files or contacts is never recorded.
 
 Each row shows:
 
@@ -101,7 +103,7 @@ Each row shows:
 
 The IP address is the visitor's address, found through **Trusted proxies** on the **Proxies** card of the **Instance** page. Behind Cloudflare, it is Cloudflare's address until you list Cloudflare's ranges there. Behind another CDN in front of the bundled Caddy, it is always the CDN's address. See [Proxies](/self-hosting/reference/dashboard-settings#proxies).
 
-The person who made the change, and a member it was done to, are shown by the name on their account today. With no name, or for a deleted account, the row shows their email address. With neither, it says "A deleted account". Invited people, MCP clients, mailboxes, calendars, drives, address books and connected accounts are shown as they were named when the change was made.
+The person who made the change, and a member it was done to, are shown by the name on their account today. With no name, or for a deleted account, the row shows their email address. With neither, it says "A deleted account". Invited people, MCP clients, mailboxes, calendars, drives, address books, connected accounts and workflows are shown as they were named when the change was made.
 
 The newest change is at the top, 50 at a time. Click **Load more** for older ones. The log cannot be edited from the app. If nothing has been recorded yet, the card says "No audit events yet."
 
@@ -112,7 +114,7 @@ Above the list are a search box ("Search events") and a list of event types, whi
 - **Search:** looks through the whole log, not only the rows already on screen. The list updates shortly after you stop typing. Search finds your text in:
   - the event type, such as **Workspace invite revoked**. Event type names show only in the event type list, not on rows;
   - the fixed words of the sentence, without the names, email addresses, workspaces, roles, tools or versions in it. For example, "revoked the invite", "turned off" and "deleted their account" find rows, but "role from member" does not. Such a search finds every change of that type;
-  - what the change was about, such as an invited person's or member's email address, a client's name, the email address of a mailbox, calendar, drive or address book, or the versions of an undone upgrade;
+  - what the change was about, such as an invited person's or member's email address, a client's name, the email address of a mailbox, calendar, drive or address book, a workflow's name, or the versions of an undone upgrade;
   - the email address of the person who made the change, not their name;
   - the workspace's name;
   - the IP address.

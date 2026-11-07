@@ -17,7 +17,7 @@ Next to each account, icons for what it supports (**Mail**, **Calendar**, **Driv
 - "Mail is set up on this account": you use it for mail already.
 - "Set up mail on this account" or "Add mail to this account": you do not use it for mail yet. Click the dashed icon to add it. Metis Suite sends you to the provider's sign-in with this account already chosen.
 
-If you pick a different account at the provider, Metis Suite connects that one as a separate account and tells you so: "Connected ... You started from ..., so this is a separate account." Click the X to dismiss the notice.
+When you come back from the provider, Metis Suite asks you to confirm before it connects anything. See [Confirm the connection](/guide/workspaces/connect-an-account#confirm-the-connection). If you pick a different account at the provider, the confirmation page does not say so. Clicking **Connect** connects the other account as a separate account. If you kept **Don't add to a workspace**, you come back to this page, and a notice tells you, for example: "Connected ben@gmail.com. You started from ana@gmail.com, so this is a separate account." Click the X to dismiss the notice. If you picked a workspace instead, no notice shows.
 
 ### Disconnect an account
 

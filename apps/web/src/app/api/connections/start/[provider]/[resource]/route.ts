@@ -123,6 +123,7 @@ export async function GET(
     resources: requested,
     callbackURL,
     attachWorkspaceSlug,
+    attachPreselect: request.headers.get("sec-fetch-site") === "same-origin",
     expect: expected ? { accountId: expected.providerAccountId, email: expected.email } : undefined,
     nativeUserId: nativeUserId ?? undefined,
   });

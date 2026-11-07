@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { sanitizeError } from "@/lib/errors/sanitize-error";
 import { cacheAnalysis, getCachedAnalysis } from "@/mail/cache";
+import { policyForMailbox } from "@/mail/session";
 import { analysisResultSchema } from "@/server/schema";
 import { getPhishingDetection, phishingDetectionEnabled } from "@/services/phishing-detection";
 
@@ -26,6 +27,9 @@ export async function analyzePhishing(args: {
   }
   try {
     const scoped = mailbox.scope(id);
+    if (!policyForMailbox(mailbox, scoped.mailboxId).phishingDetection) {
+      return { id, error: "Phishing detection is turned off for this mailbox" };
+    }
     const cached = await getCachedAnalysis(scoped);
     if (cached) {
       return {

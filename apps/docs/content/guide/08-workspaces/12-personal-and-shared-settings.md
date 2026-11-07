@@ -46,4 +46,4 @@ These apply to everyone in the workspace.
 | Which address books of an account the workspace shows | Owners, admins, and the person who connected the account                                                          |
 | Members, roles and invites                            | Owners and admins invite and remove members, on the **Members** page and in search. Only the owner changes roles. |
 
-Owners and admins can see who changed members, roles, invites and resources in the workspace on its **Activity** page. See [Workspace activity](/guide/workspaces/workspace-activity).
+Owners and admins can see who changed members, roles, invites, workflows and resources in the workspace on its **Activity** page. See [Workspace activity](/guide/workspaces/workspace-activity).

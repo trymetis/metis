@@ -48,6 +48,10 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
 - **Every later account comes from a `signup_invite`, which creates an account and grants no membership.** Workspace membership comes from a separate `workspace_invite` ([workspaces.md](workspaces.md)).
   - Any signed-in user may issue one.
   - The email comes from the invite row, never the form.
+- **The invite link only ever reaches the invited address.** `sendSignupInvite` returns no URL; when the email cannot be sent it deletes the invite and fails, so nobody else can open a link that creates an already-verified account under that address.
+  - The e2e seed generator creates its member through `createSignupInvite` and `inviteSignup` directly, since the e2e mailer only logs.
+- **The `METIS_OWNER_EMAIL` address can never come from an invite.** `createSignupInvite`, `previewSignupInvite` and `inviteSignup` all refuse it, because ownership is that address and an invite would hand the instance to whoever opened the link.
+  - The owner cannot delete their own account (`assertCanDeleteAccount` in `src/server/routes/user.ts`), so the owner address never becomes free; handing over ownership means changing `METIS_OWNER_EMAIL` first.
 - **The `signup.*` procedures are public and IP rate-limited** ([orpc.md](orpc.md)).
 - **One rule finds the client IP: the rightmost `X-Forwarded-For` hop that is not in the `proxies` section's trusted list** (`clientIp`), with any `:port` stripped; the signup limits, Better Auth and the audit log all use it.
   - `cf-connecting-ip` counts only when every `X-Forwarded-For` hop is trusted, so Cloudflare's address is believed only when it arrived through a listed proxy; `x-real-ip` is never read, because Caddy passes it through from the caller.
@@ -108,7 +112,7 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
 - **Gate responses.**
   - No session: a redirect to `/` (401 JSON on `/api/*`).
   - No 2FA: a redirect to `/2fa/setup` (403 on `/api/*`) with the page stored in `metis-2fa-callback`, which `/2fa/setup` returns to.
-  - `proxy` lets `/invite/accept` through without a session, connection callbacks through on their signed state and nonce cookie, and native-ticket connection starts through on the ticket.
+  - `proxy` lets `/invite/accept` through without a session, connection callbacks through on their signed state and nonce cookie (the callback page and its Connect action, [connections.md](connections.md)), and native-ticket connection starts through on the ticket.
 - **Pages that check 2FA too.** The server pages and layouts under `/w` that redirect before rendering check `twoFactorEnabled` after `getAppUser` and redirect to `/2fa/setup`.
 - **Step-up on Better Auth endpoints.** `hooks.before` in `src/auth/server.ts` requires a code in `x-totp-code` for the password- and session-changing endpoints and for accepting `/oauth2/consent`.
 - **Disabling 2FA is audited in `hooks.after`** on `/two-factor/disable`, because the client calls Better Auth directly ([audit.md](audit.md)).

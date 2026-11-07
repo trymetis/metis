@@ -44,7 +44,7 @@ A workspace has three roles:
 
 For the full comparison, see [Roles and permissions](/guide/reference/roles-and-permissions).
 
-Role changes, ownership transfers, removed members and invites are recorded. Owners and admins see them on the workspace's **Activity** page. See [Workspace activity](/guide/workspaces/workspace-activity).
+Role changes, ownership transfers, removed members, invites and workflow changes are recorded. Owners and admins see them on the workspace's **Activity** page. See [Workspace activity](/guide/workspaces/workspace-activity).
 
 ## Invite people
 
@@ -68,12 +68,9 @@ Owners and admins can invite people from the **Members** page.
 Each person gets an email titled with your name and the workspace's name, with an **Accept invite** button. Invites expire after 7 days.
 
 - A workspace invite works only for someone who already has an account on your Metis Suite instance, unless your instance lets anyone sign up. To invite someone who has no account yet, first send them an account invite. See [Account](/guide/account).
+- An invite works only for the account with the email address you invited. If someone else opens the link, they cannot use it to join.
 - Metis Suite does not show the invite link in the dialog, so the person needs the email to join.
 - If you send too many invites in a short time, the dialog lists the addresses that failed.
-
-:::warning[Treat invite links as private]
-Treat an invite link like a password. Share it only with the person you invited, because anyone who opens it can use it.
-:::
 
 ### Pending invites
 
@@ -92,7 +89,9 @@ When someone clicks **Accept invite**:
 
 - If they are signed out, they see "Sign in to accept". They click **Go to sign in**, and after signing in they come back to the invite.
 - If it works, they see "You're in!" and the workspace opens.
-- If it does not, they see "Couldn't accept invite" with the reason: "Invite not found", "Invite already used" or "Invite expired". Ask an owner or admin for a new invite.
+- If it does not, they see "Couldn't accept invite" with the reason:
+  - "Invite not found", "Invite already used" or "Invite expired": ask an owner or admin for a new invite.
+  - "This invite was sent to a different email address. Sign in with that account to accept it.": they are signed in with another account. They sign out, sign in with the account for the invited address, and open the invite again.
 
 ## Manage a member
 

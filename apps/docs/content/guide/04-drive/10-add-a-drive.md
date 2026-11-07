@@ -29,7 +29,7 @@ If every drive account you have is already in this workspace, the dialog says "E
 
 ### Google Drive and OneDrive
 
-Click **Google Drive** or **OneDrive**. You sign in with Google or Microsoft, then come back to the workspace. If you sign in with a Google or Microsoft account you already use in Metis for mail or calendar, the drive is added to that same account.
+Click **Google Drive** or **OneDrive**. You sign in with Google or Microsoft. Metis Suite then asks you to confirm, with this workspace already picked under **Add to a workspace** (in the desktop and mobile apps, pick it yourself). Click **Connect**, and you come back to this workspace's drive settings. See [Confirm the connection](/guide/workspaces/connect-an-account#confirm-the-connection). If you sign in with a Google or Microsoft account you already use in Metis Suite for mail or calendar, the drive is added to that same account.
 
 ### S3 storage
 

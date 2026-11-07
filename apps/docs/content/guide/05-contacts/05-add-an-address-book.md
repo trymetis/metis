@@ -30,11 +30,11 @@ If every address book account you have is already in this workspace, the dialog 
 
 ### Google Contacts, Outlook Contacts and Zoho Contacts
 
-Click **Google Contacts**, **Outlook Contacts** or **Zoho Contacts**. You sign in with the provider, then come back to this workspace's contacts settings.
+Click **Google Contacts**, **Outlook Contacts** or **Zoho Contacts**. You sign in with the provider. Metis Suite then asks you to confirm, with this workspace already picked under **Add to a workspace** (in the desktop and mobile apps, pick it yourself). Click **Connect**, and you come back to this workspace's contacts settings. See [Confirm the connection](/guide/workspaces/connect-an-account#confirm-the-connection).
 
 If you sign in with an account you already use in Metis Suite for mail, calendar or drive, the address book is added to that same account. The provider asks you to allow access to your contacts.
 
-If something goes wrong at the provider, you land in your default workspace without a message, and the address book is not added. Try again.
+If you decline access at the provider, or something goes wrong there, Metis Suite shows a "Nothing was connected" card instead of the confirmation page, and the address book is not added. Click **Go back** and try again.
 
 ### A contacts server
 

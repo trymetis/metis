@@ -51,8 +51,6 @@ export const signupInvitesRouter = {
           acceptedAt: null,
           createdAt: sent.invite.createdAt.toISOString(),
         },
-        url: sent.url,
-        delivered: sent.delivered,
       };
     }),
 

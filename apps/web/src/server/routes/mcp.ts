@@ -365,7 +365,29 @@ export const mcpRouter = {
         .where(and(...scope))
         .returning({ id: oauthRefreshToken.id });
 
-      if (!input.grantId) {
+      await db
+        .update(mcpClient)
+        .set({ tokensRevokedAt: new Date() })
+        .where(
+          and(eq(mcpClient.clientId, input.clientId), eq(mcpClient.userId, context.appUser.userId)),
+        );
+
+      const [remaining] = input.grantId
+        ? await db
+            .select({ id: oauthRefreshToken.id })
+            .from(oauthRefreshToken)
+            .where(
+              and(
+                eq(oauthRefreshToken.clientId, input.clientId),
+                eq(oauthRefreshToken.userId, context.appUser.userId),
+                isNull(oauthRefreshToken.revoked),
+                gt(oauthRefreshToken.expiresAt, new Date()),
+              ),
+            )
+            .limit(1)
+        : [];
+
+      if (!remaining) {
         await db
           .delete(oauthAccessToken)
           .where(

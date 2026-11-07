@@ -172,6 +172,7 @@ async function writeRevision(
     links: ResourceLinks;
     previous: WorkflowGraph | null;
     now: Date;
+    authorUserId: string | null;
   },
 ): Promise<string> {
   const revisionId = crypto.randomUUID();
@@ -181,6 +182,7 @@ async function writeRevision(
     revision: opts.revision,
     graph: opts.graph,
     createdAt: opts.now,
+    createdByUserId: opts.authorUserId,
   });
 
   const rows = resourceRows(opts.graph, opts.workflowId, revisionId, opts.links);
@@ -348,6 +350,7 @@ export async function saveDefinition(input: SaveDefinitionInput): Promise<Loaded
       links: input.links ?? NO_LINKS,
       previous: null,
       now,
+      authorUserId: input.principalUserId ?? null,
     });
   });
 
@@ -362,6 +365,7 @@ export async function reviseDefinition(opts: {
   enabled: boolean;
   graph: WorkflowGraph;
   links?: ResourceLinks;
+  authorUserId?: string | null;
 }): Promise<LoadedDefinition | null> {
   const now = new Date();
 
@@ -387,6 +391,7 @@ export async function reviseDefinition(opts: {
       links: opts.links ?? NO_LINKS,
       previous: current.graph,
       now,
+      authorUserId: opts.authorUserId ?? null,
     });
     if (!current.definition.enabled && opts.enabled) {
       await rearmTriggers(tx, opts.workflowId, now);
@@ -446,12 +451,21 @@ export async function loadRevision(
 export async function listRevisions(
   workflowId: string,
   limit: number,
-): Promise<{ id: string; revision: number; createdAt: Date; graph: WorkflowGraph }[]> {
+): Promise<
+  {
+    id: string;
+    revision: number;
+    createdAt: Date;
+    createdByUserId: string | null;
+    graph: WorkflowGraph;
+  }[]
+> {
   return db
     .select({
       id: workflowRevision.id,
       revision: workflowRevision.revision,
       createdAt: workflowRevision.createdAt,
+      createdByUserId: workflowRevision.createdByUserId,
       graph: workflowRevision.graph,
     })
     .from(workflowRevision)
@@ -2464,6 +2478,7 @@ export interface RunDetailRow {
   deletedAt: Date | null;
   revision: number;
   revisionCreatedAt: Date;
+  revisionAuthorUserId: string | null;
   graph: WorkflowGraph;
   scheduledFor: Date;
   event: unknown;
@@ -2506,6 +2521,7 @@ export async function loadRunDetail(runId: string): Promise<RunDetailRow | null>
       deletedAt: workflow.deletedAt,
       revision: workflowRevision.revision,
       revisionCreatedAt: workflowRevision.createdAt,
+      revisionAuthorUserId: workflowRevision.createdByUserId,
       graph: workflowRevision.graph,
       scheduledFor: workflowEvent.scheduledFor,
       event: workflowEvent.payload,

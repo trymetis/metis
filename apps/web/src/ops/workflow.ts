@@ -34,7 +34,7 @@ import { STEP_CATEGORIES } from "@/workflow/steps/types";
 import { typeLabel } from "@/workflow/values";
 
 import { orFailure, type Output } from "./output";
-import { type AgentMailbox, mailScopeFor, type WorkspaceCtx } from "./scope";
+import { type AgentMailbox, auditedBy, mailScopeFor, type WorkspaceCtx } from "./scope";
 
 export const listWorkflowsOutput = z.object({
   workflows: z.array(workflowSchema),
@@ -264,7 +264,11 @@ export async function createWorkflow(args: {
   ctx: WorkspaceCtx;
   workflow: unknown;
 }): Promise<Output<typeof workflowWriteOutput>> {
-  const created = await createUserWorkflow(await workspaceScope(args.ctx), args.workflow);
+  const created = await createUserWorkflow(
+    await workspaceScope(args.ctx),
+    args.workflow,
+    auditedBy(args.ctx),
+  );
   if (typeof created === "string") return { error: created };
   return { workflow: created };
 }
@@ -278,6 +282,7 @@ export async function updateWorkflow(args: {
     await workspaceScope(args.ctx),
     args.workflowId,
     args.workflow,
+    auditedBy(args.ctx),
   );
   if (typeof updated === "string") return { error: updated };
   return { workflow: updated };
@@ -292,6 +297,7 @@ export async function toggleWorkflow(args: {
     await workspaceScope(args.ctx),
     args.workflowId,
     args.enabled,
+    auditedBy(args.ctx),
   );
   if (!found) {
     return { error: `No workflow "${args.workflowId}" in this workspace` };
@@ -307,7 +313,11 @@ export async function deleteWorkflow(args: {
   if (args.role !== "owner" && args.role !== "admin") {
     return { error: "Only a workspace owner or admin can delete workflows" };
   }
-  const found = await deleteUserWorkflow(await workspaceScope(args.ctx), args.workflowId);
+  const found = await deleteUserWorkflow(
+    await workspaceScope(args.ctx),
+    args.workflowId,
+    auditedBy(args.ctx),
+  );
   if (!found) {
     return { error: `No workflow "${args.workflowId}" in this workspace` };
   }

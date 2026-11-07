@@ -96,7 +96,7 @@ export async function prepareOutgoing(opts: {
   workspaceId: string;
   mailboxId: string;
   payload: DraftPayload;
-}): Promise<DraftPayload> {
+}): Promise<{ payload: DraftPayload; addedBcc: string[] }> {
   const { payload } = opts;
   const bccs = await collectSendPolicyBccs({
     workspaceId: opts.workspaceId,
@@ -110,6 +110,6 @@ export async function prepareOutgoing(opts: {
       hasAttachment: (payload.attachments?.length ?? 0) > 0,
     },
   });
-  if (bccs.length === 0) return payload;
-  return { ...payload, bcc: [...(payload.bcc ?? []), ...bccs] };
+  if (bccs.length === 0) return { payload, addedBcc: [] };
+  return { payload: { ...payload, bcc: [...(payload.bcc ?? []), ...bccs] }, addedBcc: bccs };
 }

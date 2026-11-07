@@ -1,6 +1,6 @@
 ---
 title: Workspace activity
-description: See who changed roles, removed members, sent or revoked invites, or detached mailboxes, calendars, drives and address books in a workspace.
+description: See who changed roles, removed members, sent or revoked invites, detached mailboxes, calendars, drives and address books, or created, changed or deleted workflows in a workspace.
 ---
 
 The **Activity** page of a workspace lists security-relevant changes made in it: who changed what, and when. Only the workspace's owner and admins can see it.
@@ -17,7 +17,7 @@ There are three ways to open it:
 
 Members do not see **Activity** in the workspace menu, in the settings list or in search. If a member opens the page's address, the page says "Only workspace owners and admins can see activity." They see no rows, no search box and no filter.
 
-The page says "Role changes, ownership transfers, removed members, invites and detached mailboxes, calendars, drives and address books in this workspace." If nothing has been recorded yet, it says "Nothing has happened in this workspace yet."
+The page says "Role changes, ownership transfers, removed members, invites, workflow changes and detached mailboxes, calendars, drives and address books in this workspace." If nothing has been recorded yet, it says "Nothing has happened in this workspace yet."
 
 ## What it lists
 
@@ -31,6 +31,18 @@ The **Event type** column holds the names in the [event type list](#filter-by-ev
 | **Workspace invite sent**              | "… invited carol@example.com to Design as an admin"     | An owner or admin invites someone.                                                                                                                                                                                                                                                          |
 | **Workspace invite revoked**           | "… revoked the invite for carol@example.com to Design"  | An owner or admin cancels a pending invite.                                                                                                                                                                                                                                                 |
 | **Resource detached from a workspace** | "… detached the calendar alice@example.com from Design" | Someone takes a mailbox, calendar, drive or address book out of this workspace. This can happen on the workspace's **Mailboxes**, **Calendars**, **Drives** or **Contacts** page, with **Detach from this workspace** in search, or in the account settings of the person who connected it. |
+| **Workflow created**                   | "… created the workflow Forward invoices"               | Someone creates a workflow in this workspace.                                                                                                                                                                                                                                               |
+| **Workflow edited**                    | "… edited the workflow Forward invoices"                | Someone saves changes to a workflow.                                                                                                                                                                                                                                                        |
+| **Workflow turned on**                 | "… turned on the workflow Forward invoices"             | Someone turns a workflow on.                                                                                                                                                                                                                                                                |
+| **Workflow turned off**                | "… turned off the workflow Forward invoices"            | Someone turns a workflow off.                                                                                                                                                                                                                                                               |
+| **Workflow deleted**                   | "… deleted the workflow Forward invoices"               | Someone deletes a workflow.                                                                                                                                                                                                                                                                 |
+
+A workflow row can end with one or two notes:
+
+- ", which runs as ben@example.com" when the workflow runs as someone other than the person who made the change. See [Who a workflow runs as](/guide/workflows/how-workflows-work#who-a-workflow-runs-as).
+- ", which can add a Bcc to mail members send" when the workflow starts with **Before mail is sent**. See [Add a BCC to outgoing mail](/guide/workflows/add-a-bcc-to-outgoing-mail).
+
+With both, the row reads, for example, "Ana Lopez edited the workflow Forward invoices, which runs as ben@example.com and which can add a Bcc to mail members send".
 
 Each change is recorded after it succeeds. Some changes that affect the workspace are not listed here:
 
@@ -51,7 +63,7 @@ How people are named in the sentence:
 - **The person who made the change, and a member it was done to,** are shown by the name on their account today.
 - **If the account has no name, or it was deleted,** the row shows their email address instead.
 - **If neither is known,** the row says "A deleted account" (or "a deleted account" in the middle of the sentence).
-- **Invited people, mailboxes, calendars, drives and address books** are shown as they were named when the change was made, such as an email address.
+- **Invited people, mailboxes, calendars, drives, address books and workflows** are shown as they were named when the change was made, such as an email address or a workflow's name.
 
 The second line is smaller and lighter. It shows:
 
@@ -66,8 +78,8 @@ The newest change is at the top. The page shows 50 rows at a time. Click **Load 
 
 Above the list are a search box ("Search events") and a list of event types, which starts at **All events**. Use them to find one change without scrolling.
 
-<img src="/images/workspaces/workspace-activity.webp" alt="The workspace Activity page with the search box, the event type list set to All events, and the empty state" class="dark:hidden" />
-<img src="/images/workspaces/workspace-activity-dark.webp" alt="The workspace Activity page with the search box, the event type list set to All events, and the empty state" class="hidden dark:block" />
+<img src="/images/workspaces/workspace-activity.webp" alt="The workspace Activity page with its title and subtitle, the search box, the event type list set to All events, and the latest events" class="dark:hidden" />
+<img src="/images/workspaces/workspace-activity-dark.webp" alt="The workspace Activity page with its title and subtitle, the search box, the event type list set to All events, and the latest events" class="hidden dark:block" />
 
 ### Search
 
@@ -79,13 +91,13 @@ Search finds rows where your text appears in:
 
 - the event type, such as **Member removed** or **Workspace invite revoked**. These are the names in the [event type list](#filter-by-event-type);
 - the fixed words of the sentence, without the names, email addresses, workspaces or roles in it. For example, "revoked the invite" and "role from" find rows, but "role from member" does not;
-- what the change was about: the member's or the invited person's email address, or the email address of the mailbox, calendar, drive or address book;
+- what the change was about: the member's or the invited person's email address, the email address of the mailbox, calendar, drive or address book, or the workflow's name;
 - the email address of the person who made the change. Their name is not searched;
 - the workspace's name. Every row on this page belongs to this workspace, so typing the workspace's name shows every row.
 
 A search for the sentence's words finds every change of that type, not only rows that read exactly like your text. For example, "detached the drive" finds every detached drive, and "detached the address book" finds every detached address book. Names such as "Address book detached" or "Drive detached" work too.
 
-Search does not look at people's names, the roles in a sentence (such as "member to admin"), the date and time, the words **Workspace Assistant** and **MCP client** on the second line, or "a deleted account".
+Search does not look at people's names, the roles in a sentence (such as "member to admin"), the notes at the end of a workflow row (such as "which runs as ben@example.com" or "which can add a Bcc to mail members send"), the date and time, the words **Workspace Assistant** and **MCP client** on the second line, or "a deleted account".
 
 How the text is matched:
 
@@ -106,6 +118,11 @@ Pick a type to show only those rows:
 - **Ownership transferred**
 - **Workspace invite sent**
 - **Workspace invite revoked**
+- **Workflow created**
+- **Workflow edited**
+- **Workflow turned on**
+- **Workflow turned off**
+- **Workflow deleted**
 
 A row's sentence names the kind of resource, such as "detached the drive" or "detached the address book", but the list has one type for all four: **Resource detached from a workspace**. Pick it to see every detached mailbox, calendar, drive and address book.
 

@@ -1,3 +1,4 @@
+import { declaredValues } from "./css";
 export const BLOCKED_SRC_ATTR = "data-metis-src";
 
 const DEFAULT_SIZE = 48;
@@ -16,8 +17,8 @@ function pixels(value: string | null): number | null {
   return n > 0 ? Math.min(n, MAX_SIZE) : null;
 }
 
-function styleSize(style: string, prop: "width" | "height"): number | null {
-  const match = style.match(new RegExp(`(?:^|;)\\s*${prop}\\s*:\\s*(\\d+(?:\\.\\d+)?)px`, "i"));
+function styleSize(style: Map<string, string>, prop: "width" | "height"): number | null {
+  const match = /^(\d+(?:\.\d+)?)px\b/i.exec(style.get(prop) ?? "");
   return pixels(match?.[1] ?? null);
 }
 
@@ -25,7 +26,7 @@ export function declaredSize(el: Element): {
   width: number;
   height: number;
 } {
-  const style = el.getAttribute("style") ?? "";
+  const style = declaredValues(el.getAttribute("style") ?? "");
   const width = pixels(el.getAttribute("width")) ?? styleSize(style, "width");
   const height = pixels(el.getAttribute("height")) ?? styleSize(style, "height");
   if (width && height) return { width, height };

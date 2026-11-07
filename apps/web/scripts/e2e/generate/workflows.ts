@@ -7,6 +7,7 @@ import { calledWorkflow, seededWorkflows } from "./workflow-graphs";
 
 export async function seedWorkflows(account: Account, resources: Resources): Promise<void> {
   const scope = await workspaceScope(account.userId, account.workspaceId);
+  const by = { userId: account.userId, email: account.email, via: "app" as const };
   const [box] = scope.mailboxes;
   if (!box) throw new Error("the seeded mailbox is not in the workspace");
   const calendar = scope.calendars.find((c) => c.slug === resources.calendarSlug);
@@ -14,7 +15,7 @@ export async function seedWorkflows(account: Account, resources: Resources): Pro
   const drive = scope.drives.find((d) => d.slug === resources.driveSlugs.s3);
   if (!drive) throw new Error("the seeded S3 drive is not in the workspace");
 
-  const called = await createUserWorkflow(scope, calledWorkflow());
+  const called = await createUserWorkflow(scope, calledWorkflow(), by);
   if (typeof called === "string") throw new Error(`workflow "${calledWorkflow().name}": ${called}`);
 
   const seeded = seededWorkflows({
@@ -25,7 +26,7 @@ export async function seedWorkflows(account: Account, resources: Resources): Pro
     calledWorkflowId: called.id,
   });
   for (const workflow of seeded) {
-    const created = await createUserWorkflow(scope, workflow);
+    const created = await createUserWorkflow(scope, workflow, by);
     if (typeof created === "string") {
       throw new Error(`workflow "${workflow.name}": ${created}`);
     }

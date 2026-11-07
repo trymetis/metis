@@ -1,3 +1,4 @@
+import { declaredValues } from "./css";
 import { requiredLiteral } from "./literal-hint";
 import type { TrackerVendor } from "./types";
 
@@ -61,25 +62,20 @@ export function hasOpenPath(url: URL): boolean {
   return OPEN_PATH.test(url.pathname);
 }
 
-function styleValue(style: string, prop: string): string | null {
-  const m = style.match(new RegExp(`(?:^|;)\\s*${prop}\\s*:\\s*([^;!]+)`, "i"));
-  return m?.[1]?.trim() ?? null;
-}
-
 export function isHiddenOrTiny(el: Element): boolean {
-  const style = el.getAttribute("style") ?? "";
+  const style = declaredValues(el.getAttribute("style") ?? "");
   const sizes = [
     el.getAttribute("width"),
     el.getAttribute("height"),
-    styleValue(style, "width"),
-    styleValue(style, "height"),
-    styleValue(style, "max-width"),
-    styleValue(style, "max-height"),
+    style.get("width") ?? null,
+    style.get("height") ?? null,
+    style.get("max-width") ?? null,
+    style.get("max-height") ?? null,
   ];
   if (sizes.some((s) => s !== null && TINY.test(s))) return true;
-  if (/^none$/i.test(styleValue(style, "display") ?? "")) return true;
-  if (/^hidden$/i.test(styleValue(style, "visibility") ?? "")) return true;
-  const opacity = styleValue(style, "opacity");
+  if (/^none$/i.test(style.get("display") ?? "")) return true;
+  if (/^hidden$/i.test(style.get("visibility") ?? "")) return true;
+  const opacity = style.get("opacity") ?? null;
   return opacity !== null && Number.parseFloat(opacity) === 0;
 }
 

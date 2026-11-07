@@ -23,7 +23,18 @@ export type ResolvedMcpClient = {
   capabilities: McpCapabilityPrefs;
 };
 
-export async function resolveMcpClient(jwt: JWTPayload): Promise<ResolvedMcpClient | null> {
+function issuedAfter(jwt: JWTPayload, cutoff: Date): boolean {
+  return typeof jwt.iat === "number" && jwt.iat * 1000 > cutoff.getTime();
+}
+
+export const MCP_RESOURCE_METADATA = new URL(
+  `/.well-known/oauth-protected-resource${new URL(MCP_AUDIENCE).pathname}`,
+  config.auth.url,
+).toString();
+
+export async function resolveMcpClient(
+  jwt: JWTPayload,
+): Promise<ResolvedMcpClient | "revoked" | null> {
   const clientId = typeof jwt.azp === "string" ? jwt.azp : undefined;
   const userId = typeof jwt.sub === "string" ? jwt.sub : undefined;
   if (!clientId || !userId) return null;
@@ -37,6 +48,7 @@ export async function resolveMcpClient(jwt: JWTPayload): Promise<ResolvedMcpClie
       hiddenWorkspaceIds: mcpClient.hiddenWorkspaceIds,
       capabilities: mcpClient.capabilities,
       enabled: mcpClient.enabled,
+      tokensRevokedAt: mcpClient.tokensRevokedAt,
     })
     .from(mcpClient)
     .innerJoin(user, eq(user.id, mcpClient.userId))
@@ -44,6 +56,7 @@ export async function resolveMcpClient(jwt: JWTPayload): Promise<ResolvedMcpClie
     .limit(1);
 
   if (!row?.enabled) return null;
+  if (row.tokensRevokedAt && !issuedAfter(jwt, row.tokensRevokedAt)) return "revoked";
 
   return {
     clientId: row.clientId,

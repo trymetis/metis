@@ -83,6 +83,7 @@ interface Entry {
   key: string;
   label: string;
   when: string | null;
+  author: string | null;
   diff: GraphDiff | null;
 }
 
@@ -110,7 +111,7 @@ export function RevisionsSheet({
     const unsaved = latest ? diffGraphs(latest.graph, current) : null;
     return [
       ...(unsaved && !isEmptyDiff(unsaved)
-        ? [{ key: "unsaved", label: "Unsaved changes", when: null, diff: unsaved }]
+        ? [{ key: "unsaved", label: "Unsaved changes", when: null, author: null, diff: unsaved }]
         : []),
       ...revisions.map((revision, index) => {
         const previous = revisions[index + 1];
@@ -118,6 +119,7 @@ export function RevisionsSheet({
           key: String(revision.revision),
           label: `Revision ${revision.revision}`,
           when: revision.createdAt,
+          author: revision.author?.name ?? null,
           diff: previous ? diffGraphs(previous.graph, revision.graph) : null,
         };
       }),
@@ -159,6 +161,7 @@ export function RevisionsSheet({
                       {entry.when && (
                         <span className="text-[11px] text-faint">
                           {format(new Date(entry.when), "PPp")}
+                          {entry.author && ` · ${entry.author}`}
                         </span>
                       )}
                     </button>

@@ -1,4 +1,5 @@
 import "server-only";
+import { type AuditActor, recordAuditEvent } from "@/audit";
 import { decisionEnabled } from "@/config/runtime";
 import { getInstanceConfig } from "@/config/runtime";
 import type { WorkspaceRole } from "@/types/workspace";
@@ -186,6 +187,7 @@ export interface WorkflowRunNode {
 export interface WorkflowRunDetail extends WorkflowRunSummary {
   revision: number;
   revisionCreatedAt: string;
+  revisionAuthor: WorkflowRunPerson | null;
   currentRevision: number | null;
   principal: WorkflowRunPerson | null;
   trigger: {
@@ -424,9 +426,39 @@ export async function getWorkspaceWorkflow(
   return loaded ? summarize(loaded.definition, loaded.graph) : null;
 }
 
+type WorkflowAuditAction =
+  | "workflow.created"
+  | "workflow.edited"
+  | "workflow.enabled"
+  | "workflow.disabled"
+  | "workflow.deleted";
+
+async function recordWorkflowEvent(
+  by: AuditActor,
+  scope: WorkspaceScope,
+  action: WorkflowAuditAction,
+  loaded: { definition: { name: string; principalUserId: string | null }; graph: WorkflowGraph },
+): Promise<void> {
+  const principal = loaded.definition.principalUserId;
+  const runsAs =
+    principal && principal !== by.userId
+      ? ((await listMemberIdentities(scope.workspaceId, [principal])).get(principal)?.email ?? null)
+      : null;
+  await recordAuditEvent(by, {
+    action,
+    workspaceId: scope.workspaceId,
+    targetLabel: loaded.definition.name,
+    detail: {
+      runsAs,
+      sendPolicy: loaded.graph.nodes.some((node) => node.step === "trigger.mail.beforeSend"),
+    },
+  });
+}
+
 export async function createUserWorkflow(
   scope: WorkspaceScope,
   raw: unknown,
+  by: AuditActor,
 ): Promise<WorkflowSummary | string> {
   const parsed = parseWorkflowInput(raw);
   if (typeof parsed === "string") return parsed;
@@ -442,6 +474,7 @@ export async function createUserWorkflow(
     links: links(scope),
   });
   await ensureWebhookEndpoints(saved.definition.id);
+  await recordWorkflowEvent(by, scope, "workflow.created", saved);
   return summarize(saved.definition, saved.graph);
 }
 
@@ -449,6 +482,7 @@ export async function updateUserWorkflow(
   scope: WorkspaceScope,
   workflowId: string,
   raw: unknown,
+  by: AuditActor,
 ): Promise<WorkflowSummary | string> {
   const existing = await ownWorkflow(scope, workflowId);
   if (!existing) return `No workflow "${workflowId}" in this workspace`;
@@ -462,9 +496,11 @@ export async function updateUserWorkflow(
     enabled: parsed.enabled,
     graph: parsed.graph,
     links: links(scope),
+    authorUserId: scope.userId,
   });
   if (!revised) return `No workflow "${workflowId}" in this workspace`;
   await ensureWebhookEndpoints(workflowId);
+  await recordWorkflowEvent(by, scope, "workflow.edited", revised);
   return summarize(revised.definition, revised.graph);
 }
 
@@ -472,6 +508,7 @@ export async function toggleUserWorkflow(
   scope: WorkspaceScope,
   workflowId: string,
   enabled: boolean,
+  by: AuditActor,
 ): Promise<boolean> {
   const existing = await ownWorkflow(scope, workflowId);
   if (!existing) return false;
@@ -479,16 +516,28 @@ export async function toggleUserWorkflow(
     const invalid = await checkGraph(existing.graph, scope);
     if (invalid) return false;
   }
-  return setDefinitionEnabled(workflowId, enabled);
+  const changed = await setDefinitionEnabled(workflowId, enabled);
+  if (changed && existing.definition.enabled !== enabled) {
+    await recordWorkflowEvent(
+      by,
+      scope,
+      enabled ? "workflow.enabled" : "workflow.disabled",
+      existing,
+    );
+  }
+  return changed;
 }
 
 export async function deleteUserWorkflow(
   scope: WorkspaceScope,
   workflowId: string,
+  by: AuditActor,
 ): Promise<boolean> {
   const existing = await ownWorkflow(scope, workflowId);
   if (!existing) return false;
-  return softDeleteDefinition(workflowId);
+  const deleted = await softDeleteDefinition(workflowId);
+  if (deleted) await recordWorkflowEvent(by, scope, "workflow.deleted", existing);
+  return deleted;
 }
 
 export async function listWorkflowRevisions(
@@ -499,9 +548,14 @@ export async function listWorkflowRevisions(
   const existing = await ownWorkflow(scope, workflowId);
   if (!existing) return null;
   const rows = await listRevisions(workflowId, limit);
+  const authors = await listMemberIdentities(
+    scope.workspaceId,
+    rows.flatMap((row) => (row.createdByUserId ? [row.createdByUserId] : [])),
+  );
   return rows.map((row) => ({
     revision: row.revision,
     createdAt: row.createdAt.toISOString(),
+    author: row.createdByUserId ? (authors.get(row.createdByUserId) ?? null) : null,
     graph: row.graph,
   }));
 }
@@ -599,6 +653,7 @@ export async function getWorkspaceRun(
     scope.workspaceId,
     [
       row.workflowPrincipalUserId,
+      row.revisionAuthorUserId,
       requester,
       ...approverIds,
       ...row.stepRuns.map((stepRun) => stepRun.resolvedByUserId),
@@ -714,6 +769,7 @@ export async function getWorkspaceRun(
     steps: lines.map((line) => ({ ...line, detail: mask(line.detail) ?? undefined })),
     revision: row.revision,
     revisionCreatedAt: row.revisionCreatedAt.toISOString(),
+    revisionAuthor: person(row.revisionAuthorUserId),
     currentRevision: row.deletedAt ? null : row.currentRevision,
     principal: person(row.workflowPrincipalUserId),
     trigger: {

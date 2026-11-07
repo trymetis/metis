@@ -492,6 +492,7 @@ export function WorkflowRunDetailView({ runId }: { runId: string }) {
                   Revision {run.revision}
                   <p className="text-[12px] text-faint">
                     saved {when(run.revisionCreatedAt)}
+                    {run.revisionAuthor && ` by ${run.revisionAuthor.name}`}
                     {run.currentRevision === null
                       ? " · workflow deleted since"
                       : edited

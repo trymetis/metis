@@ -1,7 +1,6 @@
 import "server-only";
 import { z } from "zod";
 
-import type { AuditActor } from "@/audit";
 import { themeBrandSchema, workspaceRoleSchema } from "@/server/schema";
 import type { ThemeBrandId } from "@/theme/brand";
 import {
@@ -12,7 +11,7 @@ import {
 } from "@/workspace/admin";
 
 import { orFailure, type Output } from "./output";
-import { actorHeaders, type WorkspaceCtx, type WorkspaceMember } from "./scope";
+import { auditedBy, type WorkspaceCtx, type WorkspaceMember } from "./scope";
 
 export const listInvitesOutput = orFailure(
   z.object({
@@ -48,13 +47,6 @@ export const setWorkspaceThemeOutput = orFailure(
 
 function actor(ctx: WorkspaceCtx) {
   return { workspaceId: ctx.workspaceId, actorRole: ctx.workspaceRole };
-}
-
-function auditedBy(ctx: WorkspaceCtx): AuditActor {
-  if (ctx.actor.kind === "mcp") {
-    return { userId: ctx.userId, via: "mcp", mcpClientId: ctx.actor.clientId };
-  }
-  return { userId: ctx.userId, via: "assistant", headers: actorHeaders(ctx) };
 }
 
 export async function listInvites(ctx: WorkspaceCtx): Promise<Output<typeof listInvitesOutput>> {

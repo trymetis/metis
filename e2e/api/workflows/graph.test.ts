@@ -665,3 +665,67 @@ test(
   },
   4 * 60_000,
 );
+
+test("workflow changes are recorded in the workspace activity, each revision names who saved it, and a before-send Bcc is reported to the sender", async () => {
+  const { rpc, account } = await ana();
+  const name = uniqueName();
+  const archive = `${uniqueName()}@discard.demo.trymetis.email`;
+  const graph = graphOf(
+    [
+      node("sending", "trigger.mail.beforeSend", at(0)),
+      node("bcc", "mail.addBcc", at(1), { address: lit(archive) }),
+    ],
+    [edge("sending", "bcc")],
+  );
+  const { workflow } = await rpc<{ workflow: { id: string } }>("workflows.create", {
+    ...scope(account),
+    workflow: { name, enabled: false, graph },
+  });
+  try {
+    await rpc("workflows.update", {
+      ...scope(account),
+      id: workflow.id,
+      workflow: { name, enabled: false, graph },
+    });
+    await rpc("workflows.toggle", { ...scope(account), id: workflow.id, enabled: true });
+
+    const scheduled = await rpc<{ id: string; addedBcc: string[] }>("mail.scheduledSend.create", {
+      ...mailboxScope(account),
+      payload: {
+        to: [`${uniqueName()}@discard.demo.trymetis.email`],
+        subject: uniqueName(),
+        bodyHtml: "<p>Sent by the e2e suite.</p>",
+      },
+      scheduledFor: new Date(Date.now() + 24 * 60 * 60_000).toISOString(),
+    });
+    try {
+      expect(scheduled.addedBcc).toEqual([archive]);
+    } finally {
+      await rpc("mail.scheduledSend.cancel", { ...mailboxScope(account), id: scheduled.id });
+    }
+
+    await rpc("workflows.toggle", { ...scope(account), id: workflow.id, enabled: false });
+
+    const { revisions } = await rpc<{
+      revisions: { revision: number; author: { name: string; email: string } | null }[];
+    }>("workflows.revisions", { ...scope(account), id: workflow.id, limit: 20 });
+    expect(revisions.map((r) => r.author?.email)).toEqual([account.email, account.email]);
+  } finally {
+    await rpc("workflows.delete", { ...scope(account), id: workflow.id });
+  }
+
+  const { events } = await rpc<{
+    events: { action: string; targetLabel: string | null; detail: Record<string, unknown> }[];
+  }>("audit.workspace", scope(account));
+  const mine = events.filter((e) => e.targetLabel === name);
+  expect(mine.map((e) => e.action).toSorted()).toEqual([
+    "workflow.created",
+    "workflow.deleted",
+    "workflow.disabled",
+    "workflow.edited",
+    "workflow.enabled",
+  ]);
+  for (const event of mine) {
+    expect(event.detail).toMatchObject({ runsAs: null, sendPolicy: true });
+  }
+});

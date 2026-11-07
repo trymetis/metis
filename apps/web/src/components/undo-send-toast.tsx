@@ -12,8 +12,18 @@ interface UndoSendCardProps {
   holdMs: number;
   error?: string;
   scheduledFor?: Date;
+  addedBcc?: string[];
   onUndo: () => void;
   onDismiss: () => void;
+}
+
+function AddedBcc({ addresses }: { addresses?: string[] }) {
+  if (!addresses || addresses.length === 0) return null;
+  return (
+    <div className="mt-0.5 text-[11px] text-faint">
+      A workflow added Bcc: {addresses.join(", ")}
+    </div>
+  );
 }
 
 function UndoSendCard({
@@ -21,6 +31,7 @@ function UndoSendCard({
   holdMs,
   error,
   scheduledFor,
+  addedBcc,
   onUndo,
   onDismiss,
 }: UndoSendCardProps) {
@@ -71,7 +82,10 @@ function UndoSendCard({
       {status === "sent" && (
         <>
           <CheckCircle2 className="h-4 w-4 text-status-success" />
-          <div className="flex-1 text-[13px] text-foreground">Email sent</div>
+          <div className="flex-1 text-[13px] text-foreground">
+            Email sent
+            <AddedBcc addresses={addedBcc} />
+          </div>
           <DismissButton onClick={onDismiss} />
         </>
       )}
@@ -103,6 +117,7 @@ function UndoSendCard({
                 })}
               </div>
             )}
+            <AddedBcc addresses={addedBcc} />
           </div>
           <DismissButton onClick={onDismiss} />
         </>

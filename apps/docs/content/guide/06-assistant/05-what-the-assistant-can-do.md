@@ -16,7 +16,7 @@ The Workspace Assistant can do everything below, across all the mailboxes, calen
 - Read an email or a whole conversation, including its headers and original source
 - List an email's attachments and read the text inside them (for example a PDF, a calendar invitation, a contact card or a forwarded email)
 - Summarize a conversation
-- Check an email for phishing (when phishing detection is on)
+- Check an email for phishing (when phishing detection is on for that mailbox in this workspace)
 - Mark as read or unread, star, archive and restore
 - Delete emails **(approval)**
 - List labels, set or clear a label on one or many emails, and create a label
@@ -29,6 +29,8 @@ The Workspace Assistant can do everything below, across all the mailboxes, calen
 - Mute or unmute a conversation, and list muted conversations
 - Add to, remove from and list Read later
 - Find newsletters you receive, and unsubscribe from them **(approval)**
+
+When phishing detection is off for a mailbox, the check reports that phishing detection is turned off for this mailbox. If your Metis Suite server has no phishing detection, the assistant cannot check for phishing.
 
 ### Calendar
 
@@ -85,12 +87,12 @@ Only for workspace owners and admins:
 
 The side panels can do less than the Workspace Assistant. Each one works only with the mailbox, calendar, drive or address book you have open.
 
-| Panel           | Can read                                                                                           | Can change                                                                     |
-| --------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| **Mail AI**     | List and search emails, read an email, check an email for phishing (when phishing detection is on) | Star or unstar, set a label that already exists, delete emails **(approval)**  |
-| **Calendar AI** | List calendars and events, read an event                                                           | Add, change and delete events, reply to invitations (all **approval**)         |
-| **Drive AI**    | List drives, browse folders, search files, read file details and plain text files                  | Create a folder, rename, move within the same drive, delete (all **approval**) |
-| **Contacts AI** | List address books and groups, search contacts, read a contact                                     | Create, change and delete contacts (all **approval**)                          |
+| Panel           | Can read                                                                                                           | Can change                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| **Mail AI**     | List and search emails, read an email, check an email for phishing (when phishing detection is on for the mailbox) | Star or unstar, set a label that already exists, delete emails **(approval)**  |
+| **Calendar AI** | List calendars and events, read an event                                                                           | Add, change and delete events, reply to invitations (all **approval**)         |
+| **Drive AI**    | List drives, browse folders, search files, read file details and plain text files                                  | Create a folder, rename, move within the same drive, delete (all **approval**) |
+| **Contacts AI** | List address books and groups, search contacts, read a contact                                                     | Create, change and delete contacts (all **approval**)                          |
 
 Mail AI cannot send email or save drafts. When you ask it to draft a reply, it writes the text in the chat.
 

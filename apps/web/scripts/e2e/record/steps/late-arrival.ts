@@ -37,7 +37,11 @@ export async function run(ctx: StepContext): Promise<void> {
   );
   if (!workflow) throw new Error(`workflow "${LATE_ARRIVAL_WORKFLOW}" not seeded`);
 
-  await toggleUserWorkflow(scope, workflow.id, true);
+  await toggleUserWorkflow(scope, workflow.id, true, {
+    userId: appUser.userId,
+    email: appUser.user.email,
+    via: "app",
+  });
   await tickUntil(async () => false, 3);
   await appendLateArrival(env.imap);
   try {

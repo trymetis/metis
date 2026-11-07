@@ -174,6 +174,11 @@ export const sendMessageInputSchema = mailboxScopeSchema
     message: "Missing required fields",
   });
 
+export const sendMessageOutputSchema = z.object({
+  success: z.literal(true),
+  addedBcc: z.array(z.string()),
+});
+
 export const messageIdInputSchema = mailboxScopeSchema.extend({
   id: z.string().min(1),
 });
@@ -1530,8 +1535,6 @@ export const createSignupInviteInputSchema = z.object({
 
 export const createSignupInviteOutputSchema = z.object({
   invite: signupInviteSchema,
-  url: z.string(),
-  delivered: z.boolean(),
 });
 
 export const listSignupInvitesOutputSchema = z.object({
@@ -2750,6 +2753,7 @@ const workflowRunPersonSchema = z.object({ name: z.string(), email: z.string() }
 export const workflowRunDetailSchema = workflowRunSchema.extend({
   revision: z.number(),
   revisionCreatedAt: z.string(),
+  revisionAuthor: workflowRunPersonSchema,
   currentRevision: z.number().nullable(),
   principal: workflowRunPersonSchema,
   trigger: z.object({
@@ -3009,7 +3013,12 @@ export const workflowRevisionsInputSchema = workspaceScopeSchema.extend({
 
 export const workflowRevisionsOutputSchema = z.object({
   revisions: z.array(
-    z.object({ revision: z.number(), createdAt: z.string(), graph: workflowGraphSchema }),
+    z.object({
+      revision: z.number(),
+      createdAt: z.string(),
+      author: z.object({ name: z.string(), email: z.string() }).nullable(),
+      graph: workflowGraphSchema,
+    }),
   ),
 });
 
@@ -3081,6 +3090,7 @@ export const createScheduledSendInputSchema = mailboxScopeSchema
 export const createScheduledSendOutputSchema = z.object({
   id: z.string(),
   scheduledFor: z.string(),
+  addedBcc: z.array(z.string()),
 });
 
 export const listScheduledSendOutputSchema = z.object({

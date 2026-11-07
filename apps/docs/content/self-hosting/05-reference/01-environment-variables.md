@@ -26,14 +26,14 @@ Invalid configuration:
 
 ## Core
 
-| Variable               | Kind    | What it does                                                                                                         | Default                             |
-| ---------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| `BETTER_AUTH_URL`      | Startup | The address people use to reach the app. An `https://` address turns on secure cookies.                              | `http://localhost:3000`             |
-| `BETTER_AUTH_SECRET`   | Startup | The app's secret. At least 32 characters. Required.                                                                  |                                     |
-| `METIS_ENCRYPTION_KEY` | Startup | Protects stored passwords and tokens. 32 random bytes, base64 (`openssl rand -base64 32`). Required. Back it up.     |                                     |
-| `METIS_SETUP_CODE`     | Startup | Opens `/setup` to create the first account. At least 8 characters.                                                   | Not set                             |
-| `METIS_OWNER_EMAIL`    | Startup | The owner's email. Only this account sees the owner dashboard. When not set, nobody does.                            | Not set                             |
-| `METIS_SOURCE_URL`     | Startup | Where the **Source code** link on every page goes. See [Source code link](/self-hosting/configure/source-code-link). | `https://github.com/trymetis/metis` |
+| Variable               | Kind    | What it does                                                                                                                                                                                                                                                     | Default                             |
+| ---------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
+| `BETTER_AUTH_URL`      | Startup | The address people use to reach the app. An `https://` address turns on secure cookies.                                                                                                                                                                          | `http://localhost:3000`             |
+| `BETTER_AUTH_SECRET`   | Startup | The app's secret. At least 32 characters. Required.                                                                                                                                                                                                              |                                     |
+| `METIS_ENCRYPTION_KEY` | Startup | Protects stored passwords and tokens. 32 random bytes, base64 (`openssl rand -base64 32`). Required. Back it up.                                                                                                                                                 |                                     |
+| `METIS_SETUP_CODE`     | Startup | Opens `/setup` to create the first account. At least 8 characters.                                                                                                                                                                                               | Not set                             |
+| `METIS_OWNER_EMAIL`    | Startup | The owner's email. Only this account sees the owner dashboard. When not set, nobody does. The owner's account cannot be deleted, and this address cannot be invited to sign up. To hand the instance to another account, set this to that account's email first. | Not set                             |
+| `METIS_SOURCE_URL`     | Startup | Where the **Source code** link on every page goes. See [Source code link](/self-hosting/configure/source-code-link).                                                                                                                                             | `https://github.com/trymetis/metis` |
 
 ## Database
 

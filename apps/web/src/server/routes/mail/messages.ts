@@ -33,6 +33,7 @@ import {
   searchMessagesInputSchema,
   searchMessagesOutputSchema,
   sendMessageInputSchema,
+  sendMessageOutputSchema,
   snoozeMessageInputSchema,
   snoozeMessageOutputSchema,
   starMessageInputSchema,
@@ -160,7 +161,7 @@ export const messagesRouter = {
     }),
 
   send: mailSession(sendMessageInputSchema)
-    .output(successSchema)
+    .output(sendMessageOutputSchema)
     .handler(async ({ input, context }) => {
       const { mail } = context;
 
@@ -180,7 +181,7 @@ export const messagesRouter = {
       const from = await resolveSender(mail, input.fromMailboxSlug);
 
       try {
-        const payload = await prepareOutgoing({
+        const { payload, addedBcc } = await prepareOutgoing({
           workspaceId: mail.workspaceId,
           mailboxId: from.mailboxId,
           payload: forSender(mail, from, draft),
@@ -188,7 +189,7 @@ export const messagesRouter = {
 
         const adapter = await adapterForMailbox(from);
         await adapter.sendMessage(payload);
-        return { success: true as const };
+        return { success: true as const, addedBcc };
       } catch (err) {
         throw adapterError(err);
       }

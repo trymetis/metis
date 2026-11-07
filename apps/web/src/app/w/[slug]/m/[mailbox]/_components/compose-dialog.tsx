@@ -395,14 +395,14 @@ export function ComposeDialog() {
     setError(null);
     const payload = buildPayload();
     try {
-      await orpc.mail.scheduledSend.create({
+      const { addedBcc } = await orpc.mail.scheduledSend.create({
         ...scope,
         fromMailboxSlug,
         payload,
         scheduledFor: date.toISOString(),
       });
       void refreshQueries(rpc.mail.scheduledSend.list.key());
-      notifyScheduled(payload, scope, date);
+      notifyScheduled(payload, scope, date, addedBcc);
       resetForm();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to schedule send");

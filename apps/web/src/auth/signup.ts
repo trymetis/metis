@@ -15,6 +15,7 @@ import { createWorkspace, personalWorkspaceName, setDefaultWorkspaceSlug } from 
 
 import { hashToken, newInviteToken } from "./invite-token";
 import { legalConfig } from "./legal-consent";
+import { isOwnerEmail } from "./owner";
 
 const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -115,11 +116,16 @@ export async function firstUserSignup(opts: {
   });
 }
 
+const OWNER_EMAIL_ERROR = "The instance owner's address can't be invited";
+
 export async function createSignupInvite(opts: {
   email: string;
   invitedBy: string;
 }): Promise<{ id: string; token: string; expiresAt: Date; createdAt: Date } | { error: string }> {
   const email = opts.email.toLowerCase();
+  if (isOwnerEmail(email)) {
+    return { error: OWNER_EMAIL_ERROR };
+  }
   if (await emailInUse(email)) {
     return { error: "That email already has an account" };
   }
@@ -159,7 +165,7 @@ export async function sendSignupInvite(opts: {
   email: string;
   inviter: { userId: string; name: string };
   by: AuditActor;
-}): Promise<{ invite: SignupInviteRow; url: string; delivered: boolean } | { error: string }> {
+}): Promise<{ invite: SignupInviteRow } | { error: string }> {
   await enforceRateLimit(opts.inviter.userId, {
     scope: "signup-invite-send",
     limit: 10,
@@ -171,23 +177,26 @@ export async function sendSignupInvite(opts: {
     invitedBy: opts.inviter.userId,
   });
   if ("error" in invite) return invite;
-  await recordAuditEvent(opts.by, {
-    action: "signup_invite.created",
-    targetLabel: opts.email.toLowerCase(),
-  });
 
-  const url = signupInviteUrl(invite.token);
-  let delivered = true;
   try {
     await sendSignupInviteEmail({
       to: opts.email,
-      url,
+      url: signupInviteUrl(invite.token),
       inviterName: opts.inviter.name,
     });
   } catch (err) {
     console.error("[signup-invites] failed to send email", err);
-    delivered = false;
+    await db.delete(signupInvite).where(eq(signupInvite.id, invite.id));
+    return {
+      error:
+        "The invite email couldn't be sent, so no invite was created. Ask the instance owner to check the mail settings, then try again.",
+    };
   }
+
+  await recordAuditEvent(opts.by, {
+    action: "signup_invite.created",
+    targetLabel: opts.email.toLowerCase(),
+  });
 
   return {
     invite: {
@@ -197,8 +206,6 @@ export async function sendSignupInvite(opts: {
       acceptedAt: null,
       createdAt: invite.createdAt,
     },
-    url,
-    delivered,
   };
 }
 
@@ -256,6 +263,9 @@ export async function previewSignupInvite(
   if (!invite || invite.acceptedAt || invite.expiresAt.getTime() < Date.now()) {
     return { error: "This invite link is no longer valid" };
   }
+  if (isOwnerEmail(invite.email)) {
+    return { error: OWNER_EMAIL_ERROR };
+  }
   if (await emailInUse(invite.email)) {
     return { error: "That email already has an account" };
   }
@@ -277,6 +287,9 @@ export async function inviteSignup(opts: {
 
     if (!invite || invite.acceptedAt || invite.expiresAt.getTime() < Date.now()) {
       return { error: "This invite link is no longer valid" };
+    }
+    if (isOwnerEmail(invite.email)) {
+      return { error: OWNER_EMAIL_ERROR };
     }
     if (await emailInUse(invite.email, tx)) {
       return { error: "That email already has an account" };

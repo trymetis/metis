@@ -14,6 +14,7 @@ export const invitesRouter = {
       const result = await acceptInvite({
         token: input.token,
         userId: context.appUser.userId,
+        email: context.appUser.user.email,
       });
 
       if ("error" in result) {

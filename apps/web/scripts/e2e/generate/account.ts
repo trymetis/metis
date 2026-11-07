@@ -1,8 +1,9 @@
 import { env } from "@metis/e2e/lib/env";
 import * as OTPAuth from "otpauth";
 
+import { recordAuditEvent } from "../../../src/audit";
 import { getAuth } from "../../../src/auth/server";
-import { firstUserSignup, inviteSignup, sendSignupInvite } from "../../../src/auth/signup";
+import { createSignupInvite, firstUserSignup, inviteSignup } from "../../../src/auth/signup";
 import { getWorkspaceBySlug } from "../../../src/workspace";
 
 export interface Account {
@@ -76,15 +77,13 @@ export async function createAccount(): Promise<Account> {
 export async function createMember(owner: Account): Promise<Account> {
   const { name, email, password } = env.member;
 
-  const sent = await sendSignupInvite({
-    email,
-    inviter: { userId: owner.userId, name: owner.name },
-    by: { userId: owner.userId, email: owner.email, via: "app" },
-  });
-  if ("error" in sent) throw new Error(sent.error);
-  const token = new URL(sent.url).searchParams.get("token");
-  if (!token) throw new Error("the signup invite URL carries no token");
-  const created = await inviteSignup({ token, name, password });
+  const invite = await createSignupInvite({ email, invitedBy: owner.userId });
+  if ("error" in invite) throw new Error(invite.error);
+  await recordAuditEvent(
+    { userId: owner.userId, email: owner.email, via: "app" },
+    { action: "signup_invite.created", targetLabel: email.toLowerCase() },
+  );
+  const created = await inviteSignup({ token: invite.token, name, password });
   if ("error" in created) throw new Error(created.error);
   console.log(`[generate] member ${email} -> /w/${created.workspaceSlug}`);
 

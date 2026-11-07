@@ -1,4 +1,5 @@
 import "server-only";
+import type { AuditActor } from "@/audit";
 import type { ResolvedCalendar } from "@/calendar/aggregate";
 import type { MailProvider } from "@/connections/types";
 import type { ResolvedAddressBook } from "@/contacts/aggregate";
@@ -54,4 +55,11 @@ export function mailScopeFor(ctx: WorkspaceCtx, mailbox: AgentMailbox): MailScop
 
 export function actorHeaders(ctx: WorkspaceCtx): Headers | undefined {
   return ctx.actor.kind === "session" ? ctx.actor.headers : undefined;
+}
+
+export function auditedBy(ctx: WorkspaceCtx): AuditActor {
+  if (ctx.actor.kind === "mcp") {
+    return { userId: ctx.userId, via: "mcp", mcpClientId: ctx.actor.clientId };
+  }
+  return { userId: ctx.userId, via: "assistant", headers: actorHeaders(ctx) };
 }

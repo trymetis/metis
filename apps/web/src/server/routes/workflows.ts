@@ -1,6 +1,7 @@
 import "server-only";
 import { ORPCError } from "@orpc/server";
 
+import { appActor } from "@/audit";
 import { mailSessionFor } from "@/mail/session";
 import { rateLimit } from "@/services/rate-limit";
 import {
@@ -137,21 +138,46 @@ export const workflowsRouter = {
     .output(workflowOutputSchema)
     .handler(async ({ input, context }) => {
       const scope = await workflowScopeFor(context.appUser);
-      return { workflow: orThrow(await createUserWorkflow(scope, input.workflow)) };
+      return {
+        workflow: orThrow(
+          await createUserWorkflow(
+            scope,
+            input.workflow,
+            appActor(context.appUser, context.headers),
+          ),
+        ),
+      };
     }),
 
   update: workspaceSession(updateWorkflowInputSchema)
     .output(workflowOutputSchema)
     .handler(async ({ input, context }) => {
       const scope = await workflowScopeFor(context.appUser);
-      return { workflow: orThrow(await updateUserWorkflow(scope, input.id, input.workflow)) };
+      return {
+        workflow: orThrow(
+          await updateUserWorkflow(
+            scope,
+            input.id,
+            input.workflow,
+            appActor(context.appUser, context.headers),
+          ),
+        ),
+      };
     }),
 
   toggle: workspaceSession(toggleWorkflowInputSchema)
     .output(toggleWorkflowOutputSchema)
     .handler(async ({ input, context }) => {
       const scope = await workflowScopeFor(context.appUser);
-      if (!(await toggleUserWorkflow(scope, input.id, input.enabled))) throw notFound();
+      if (
+        !(await toggleUserWorkflow(
+          scope,
+          input.id,
+          input.enabled,
+          appActor(context.appUser, context.headers),
+        ))
+      )
+        throw notFound();
       return { success: true as const };
     }),
 
@@ -163,7 +189,8 @@ export const workflowsRouter = {
         throw new ORPCError("FORBIDDEN", { message: "Only an admin can delete workflows" });
       }
       const scope = await workflowScopeFor(appUser);
-      if (!(await deleteUserWorkflow(scope, input.id))) throw notFound();
+      if (!(await deleteUserWorkflow(scope, input.id, appActor(appUser, context.headers))))
+        throw notFound();
       return { success: true as const };
     }),
 

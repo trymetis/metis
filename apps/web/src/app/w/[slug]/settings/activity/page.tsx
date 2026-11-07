@@ -25,7 +25,7 @@ export default function WorkspaceActivityPage() {
     <div>
       <PageHeader
         title="Activity"
-        description="Role changes, ownership transfers, removed members, invites and detached mailboxes, calendars, drives and address books in this workspace."
+        description="Role changes, ownership transfers, removed members, invites, workflow changes and detached mailboxes, calendars, drives and address books in this workspace."
       />
 
       <div className="mt-6 rounded-xl border border-border bg-surface p-4">

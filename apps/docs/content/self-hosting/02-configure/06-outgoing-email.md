@@ -19,6 +19,8 @@ Open **Dashboard**, **System**, **Mail** under **Drivers**.
 | `console`       | Only for Metis Cloud instances. Each email goes to the instance's [**Mail**](https://console.trymetis.email/instances/~/mail) tab in the Metis Cloud console. A self-hosted instance cannot use it. This driver has nothing to do with the **Console only** badge of `log`. | **Delivering**           |
 | `noop`          | Nothing is sent or logged. Magic link sign-in, email verification, password reset, workspace invites and sign-in alerts are turned off.                                                                                                                                     | **Not delivered**        |
 
+With `noop`, a sign-up invite is still created and the app says "Invite sent to" and the address, but no invite email goes out and nobody is shown the invite link.
+
 With `log` or `noop`, your users get no sign-in alerts. They can still turn the **Sign-in alerts** switch on or off in their settings, and the app does not warn them that no alert will arrive.
 
 With `log`, you can read the links in the app's log:

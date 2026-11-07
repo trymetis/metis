@@ -57,7 +57,8 @@ See also [AGENTS.md](../AGENTS.md), [mobile.md](mobile.md), [auth.md](auth.md), 
 - **The deep link carries only a code useless without the verifier, which stays in the shell**, because on Windows and Linux any app can register the same scheme.
 - **The login confirm page always asks the user to confirm**, so a local app cannot silently take a session.
 - **The exchange creates a new, separate session in the shell's own `persist:metis-suite` partition**, so signing out in the browser does not sign the app out.
-- **Only the browser that started a connection can finish it.** The callback trusts the ticket's user only together with that browser's own nonce cookie ([connections.md](connections.md)).
+- **Only the browser that started a connection can finish it.** The callback trusts the ticket's user only together with that browser's own nonce cookie, and the callback page names the Metis account the grant goes into before anything is exchanged ([connections.md](connections.md)).
+  - A ticket still binds the flow to whoever minted it, so a ticket link opened by someone else ends in the minter's account if they click Connect; that limit is recorded in [connections.md](connections.md).
 - **Codes and tickets are single-use and race-safe**: stored in Better Auth's `verification` table under `native-login:` / `native-connect:` + sha256 of the token, and spent with `consumeVerificationValue`.
 - **The web takes `NATIVE_SCHEME`, `NATIVE_USER_AGENT_TOKEN` and `NATIVE_SETTINGS_PATH` from `@metis/shell-core/links`**, the module both shells read, so the scheme, user-agent token and settings path cannot drift.
 - **The routes and their copy are shell-neutral** (`native`, "the Metis app"), because the mobile shell speaks the same protocol.
@@ -121,7 +122,8 @@ See also [AGENTS.md](../AGENTS.md), [mobile.md](mobile.md), [auth.md](auth.md), 
 - **Connecting an account.**
   - The shell intercepts `/api/connections/start/*`, gets a single-use ticket bound to that pathname (`POST /api/auth/native/connect-ticket`, valid for `CONNECT_TICKET_TTL_MS`), and opens `start?…&nativeTicket=…` in the browser.
   - The start route consumes the ticket in place of a browser session and writes `nativeUserId` into the HMAC-signed OAuth state.
-  - Success and every post-decode error end at `/native/return?to=metis-suite://open?path=<the destination or error path the web would use>`; errors raised before the state decodes stay on the web error page.
+  - After consent the browser shows the callback page, which picks the workspace with no browser session.
+  - Connect and Cancel end at `/native/return?to=metis-suite://open?path=<the destination the web would use>`; a failed check shows a "Nothing was connected" card whose Go back link goes through the same return page.
 - **Downloads.** A top-level navigation to `/api/drive/download` that redirects to another origin goes to `downloadURL` (Electron's save dialog), except Google hosts. Every other cross-origin link, including `window.open`, opens in the system browser. Same-origin links that open a new window, such as Print and View original, open in an in-app child window.
 - **Reopen where you left off.**
   - Every main-frame navigation under `/w/` on the paired server is written to `lastPath` (beside `server`, not under `settings`); start-up opens it instead of `/w` while `restoreLastPage` is on.

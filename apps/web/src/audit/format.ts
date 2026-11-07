@@ -86,7 +86,26 @@ export function formatAuditEvent(event: AuditEvent): string {
       return `${actor} revoked the sign-up invite for ${target}`;
     case "instance.upgrade_undone":
       return `${actor} undid the last upgrade (${target})`;
+    case "workflow.created":
+      return `${actor} created the workflow ${target}${workflowNote(detail)}`;
+    case "workflow.edited":
+      return `${actor} edited the workflow ${target}${workflowNote(detail)}`;
+    case "workflow.enabled":
+      return `${actor} turned on the workflow ${target}${workflowNote(detail)}`;
+    case "workflow.disabled":
+      return `${actor} turned off the workflow ${target}${workflowNote(detail)}`;
+    case "workflow.deleted":
+      return `${actor} deleted the workflow ${target}${workflowNote(detail)}`;
   }
+}
+
+function workflowNote(detail: AuditEvent["detail"]): string {
+  const runsAs = text(detail.runsAs);
+  const notes = [
+    runsAs ? `which runs as ${runsAs}` : null,
+    detail.sendPolicy === true ? "which can add a Bcc to mail members send" : null,
+  ].filter((note): note is string => note !== null);
+  return notes.length > 0 ? `, ${list(notes)}` : "";
 }
 
 export function auditPhrase(action: AuditAction, kind: AuditResourceKind | null): string {
@@ -130,5 +149,15 @@ export function auditPhrase(action: AuditAction, kind: AuditResourceKind | null)
       return "revoked the sign-up invite for";
     case "instance.upgrade_undone":
       return "undid the last upgrade";
+    case "workflow.created":
+      return "created the workflow";
+    case "workflow.edited":
+      return "edited the workflow";
+    case "workflow.enabled":
+      return "turned on the workflow";
+    case "workflow.disabled":
+      return "turned off the workflow";
+    case "workflow.deleted":
+      return "deleted the workflow";
   }
 }

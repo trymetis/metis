@@ -350,9 +350,11 @@ export async function executeRun(opts: ExecuteOptions): Promise<ExecutionOutcome
 
   let event: unknown = opts.input.event;
   try {
-    event = await hydrate(opts.input.event, async (mailboxId, id) =>
-      readMail(await mailbox(mailboxId), id),
-    );
+    if (opts.input.source !== "inbound") {
+      event = await hydrate(opts.input.event, async (mailboxId, id) =>
+        readMail(await mailbox(mailboxId), id),
+      );
+    }
   } catch (err) {
     if (err instanceof BlockedError) {
       summary.push({

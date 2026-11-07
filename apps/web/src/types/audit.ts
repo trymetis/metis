@@ -18,6 +18,11 @@ export const AUDIT_ACTIONS = [
   "signup_invite.created",
   "signup_invite.revoked",
   "instance.upgrade_undone",
+  "workflow.created",
+  "workflow.edited",
+  "workflow.enabled",
+  "workflow.disabled",
+  "workflow.deleted",
 ] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
 
@@ -32,6 +37,11 @@ export const WORKSPACE_AUDIT_ACTIONS = [
   "workspace.ownership_transferred",
   "workspace_invite.created",
   "workspace_invite.revoked",
+  "workflow.created",
+  "workflow.edited",
+  "workflow.enabled",
+  "workflow.disabled",
+  "workflow.deleted",
 ] as const satisfies readonly AuditAction[];
 
 export const AUDIT_VIAS = ["app", "assistant", "mcp"] as const;
@@ -62,6 +72,11 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   "signup_invite.created": "Sign-up invite sent",
   "signup_invite.revoked": "Sign-up invite revoked",
   "instance.upgrade_undone": "Instance upgrade undone",
+  "workflow.created": "Workflow created",
+  "workflow.edited": "Workflow edited",
+  "workflow.enabled": "Workflow turned on",
+  "workflow.disabled": "Workflow turned off",
+  "workflow.deleted": "Workflow deleted",
 };
 
 export const AUDIT_RESOURCE_NOUNS: Record<AuditResourceKind, string> = {

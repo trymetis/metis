@@ -17,6 +17,7 @@ const statePayloadSchema = z.object({
   resources: z.array(z.string()).optional(),
   callbackURL: z.string(),
   attachWorkspaceSlug: z.string().optional(),
+  attachPreselect: z.boolean().optional(),
   expect: z.unknown().optional(),
   nativeUserId: z.unknown().optional(),
   exp: z.number(),
@@ -34,6 +35,7 @@ export interface OAuthState {
   resources: ConnectionResource[];
   callbackURL: string;
   attachWorkspaceSlug?: string;
+  attachPreselect?: boolean;
   expect?: ExpectedAccount;
   nativeUserId?: string;
   exp: number;
@@ -65,6 +67,7 @@ export function encodeOAuthState(input: {
   resources: ConnectionResource[];
   callbackURL: string;
   attachWorkspaceSlug?: string;
+  attachPreselect?: boolean;
   expect?: ExpectedAccount;
   nativeUserId?: string;
 }): { state: string; nonce: string } {
@@ -123,6 +126,7 @@ export function decodeOAuthState(
       resources: resources.length > 0 ? resources : [parsed.resource],
       callbackURL: parsed.callbackURL,
       attachWorkspaceSlug: parsed.attachWorkspaceSlug,
+      attachPreselect: parsed.attachPreselect === true,
       expect: parseExpected(parsed.expect),
       nativeUserId:
         typeof parsed.nativeUserId === "string" && parsed.nativeUserId.length > 0

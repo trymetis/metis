@@ -87,8 +87,8 @@ export async function scheduleSend(opts: {
   linkId: string | null;
   payload: DraftPayload;
   at: Date;
-}): Promise<{ id: string; scheduledFor: string }> {
-  const prepared = await prepareOutgoing({
+}): Promise<{ id: string; scheduledFor: string; addedBcc: string[] }> {
+  const { payload: prepared, addedBcc } = await prepareOutgoing({
     workspaceId: opts.workspaceId,
     mailboxId: opts.mailboxId,
     payload: opts.payload,
@@ -108,7 +108,7 @@ export async function scheduleSend(opts: {
   await putDraftBlob(saved.definition.id, prepared);
   await setDefinitionEnabled(saved.definition.id, true);
 
-  return { id: saved.definition.id, scheduledFor: opts.at.toISOString() };
+  return { id: saved.definition.id, scheduledFor: opts.at.toISOString(), addedBcc };
 }
 
 export async function scheduleOutgoing(opts: {
@@ -116,7 +116,7 @@ export async function scheduleOutgoing(opts: {
   from: ResolvedMailbox;
   payload: DraftPayload;
   scheduledFor: string;
-}): Promise<{ id: string; scheduledFor: string } | { error: string }> {
+}): Promise<{ id: string; scheduledFor: string; addedBcc: string[] } | { error: string }> {
   await enforceRateLimit(opts.mail.userId, {
     scope: "schedule-send",
     limit: 30,

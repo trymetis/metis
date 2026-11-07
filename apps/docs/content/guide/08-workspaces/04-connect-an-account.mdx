@@ -3,7 +3,7 @@ title: Connect an account
 description: Connect a mailbox, calendar account, drive or address book by signing in with your provider or by entering your login for a server.
 ---
 
-Connecting an account gives Metis Suite access to your mailbox, calendar account, drive or address book. You can connect from a workspace, which adds the account to that workspace straight away, or from your account settings, which adds it to no workspace yet.
+Connecting an account gives Metis Suite access to your mailbox, calendar account, drive or address book. You can connect from a workspace or from your account settings. When you sign in with Google, Microsoft or Zoho, Metis Suite then asks you to confirm, and you choose the workspace to add the account to. See [Confirm the connection](#confirm-the-connection).
 
 ## Connect from a workspace
 
@@ -47,7 +47,7 @@ If the workspace has AI turned off, or requires or turns off phishing detection,
 2. Click **Connect mailbox**, **Connect calendar**, **Connect drive** or **Connect address book**.
 3. Pick your provider or server, then sign in or fill in the login form.
 
-It is added to your Metis Suite account only, not to any workspace. You choose which workspaces use it afterwards. See [Add and remove resources](/guide/workspaces/add-resources).
+A server login is added to your Metis Suite account only, not to any workspace. When you sign in with Google, Microsoft or Zoho, the confirmation page starts on **Don't add to a workspace**, and you can pick a workspace there instead. You can choose which workspaces use the account at any time afterwards. See [Add and remove resources](/guide/workspaces/add-resources).
 
 ## Which providers you can pick
 
@@ -64,20 +64,75 @@ For what each provider supports, see [Supported providers](/guide/reference/supp
 
 ## Sign in with Google, Microsoft or Zoho
 
-When you pick Gmail, Outlook, Zoho Mail or one of the matching calendar, drive or contacts providers, Metis Suite sends you to the provider's own sign-in page. Sign in there and allow access. Finish within 10 minutes, or start again.
+When you pick Gmail, Outlook, Zoho Mail or one of the matching calendar, drive or contacts providers, Metis Suite sends you to the provider's own sign-in page. Sign in there and allow access.
 
-When you come back:
+You have 10 minutes to finish. The 10 minutes start when you click the provider in Metis Suite, and they include the time you spend on the confirmation page. If they run out, start again.
 
-- **A mailbox added from a workspace** opens in that workspace's inbox, already added.
-- **A calendar account, drive or address book added from a workspace** opens that workspace's **Calendars**, **Drives** or **Contacts** settings, already added.
-- **From your account settings**, you return to the same settings page. The account is not in any workspace yet.
+### Confirm the connection
+
+When you come back from the provider, Metis Suite shows a confirmation page. Nothing is connected until you click **Connect**.
+
+The title names the provider, for example "Connect Gmail?". It says Gmail, Outlook or Zoho Mail, also when you connect a calendar account, drive or address book. Below it, the page names your Metis Suite account, for example: "This connects the Gmail account you just approved, for mail, to the Metis Suite account ana@example.com. Only continue if that is your account and you started this yourself." For a calendar account, drive or address book, it says "for calendars", "for files" or "for contacts" instead of "for mail".
+
+The page does not show the address of the account you signed in with at the provider. The Metis Suite account it names is the one you are signed in with in this browser. If you started from the desktop or mobile app, it is the account the app is signed in with.
+
+1. Check that the Metis Suite account named on the page is yours. If it is not, or you did not start this connection yourself, click **Cancel**.
+2. Under **Add to a workspace**, pick the workspace to add the account to, or keep **Don't add to a workspace**. The list shows **Don't add to a workspace** first, then every workspace you belong to.
+   - If you started from a workspace's settings in your browser, that workspace is already picked.
+   - If you started anywhere else, the list starts on **Don't add to a workspace**. This includes your account settings, the **Connections** page, and the desktop and mobile apps, even from a workspace's settings.
+3. Click **Connect**. While Metis Suite connects the account, the button reads "Connecting…", and you cannot change the list or click the buttons.
+
+**Cancel** connects nothing. It does not contact the provider again, and it takes you back to where you started.
+
+If you reload the confirmation page before you click anything, it shows the same page again, as long as the 10 minutes have not run out.
+
+After you click **Connect**:
+
+- **A mailbox added to a workspace** opens in that workspace's inbox.
+- **A calendar account, drive or address book added to a workspace** opens that workspace's **Calendars**, **Drives** or **Contacts** settings.
+- With **Don't add to a workspace**, you return to where you started. The account is not in any workspace yet.
+
+If you started from one account on the **Connections** page but signed in with a different one at the provider, Metis Suite connects the other one as a separate account. See [Manage your connected accounts](/guide/workspaces/manage-connected-accounts#connections).
+
+### If Connect does not work
+
+When something stops the connection after you click **Connect** or **Cancel**, the confirmation page stays open and a message shows in red under **Add to a workspace**.
+
+| Message                                                                                              | What to do                                                                                                                                                                                                                                                |
+| ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "This connection request is no longer valid. Connect the account again."                             | The 10 minutes ran out. Start connecting the account again.                                                                                                                                                                                               |
+| "This connection was started in another browser, or it already finished. Connect the account again." | This connection already finished. For example, you clicked **Connect** or **Cancel** on it in another tab, or an earlier **Connect** ended with the error in the last row of this table. Start again.                                                     |
+| "Sign in with the account that started this connection, then connect the account again."             | You signed out of Metis Suite in this browser after you started. Sign in, then start again. You do not see this message if you started from the desktop or mobile app.                                                                                    |
+| "Pick a workspace you belong to."                                                                    | You are no longer a member of the workspace you picked. Pick another workspace, or **Don't add to a workspace**, and click **Connect** again.                                                                                                             |
+| An error message, followed by "Connect the account again."                                           | The connection could not be completed, for example because the provider's sign-in code expired. Clicking **Connect** again does not help. Start connecting the account again. If it keeps failing, ask your instance owner to check the provider's setup. |
+
+### If the confirmation page does not open
+
+Sometimes Metis Suite shows a "Nothing was connected" card instead of the confirmation page. The card shows one message. Most messages come with a **Go back** link that takes you back to where you started. If you started from the desktop or mobile app, **Go back** first shows a "Back to the app" page that opens the app.
+
+| Message                                                                                              | Why                                                                                                                                                                                            |
+| ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "This connection request is no longer valid. Connect the account again."                             | More than 10 minutes passed since you clicked the provider in Metis Suite. This card has no **Go back** link. Start again.                                                                     |
+| "This connection was started in another browser, or it already finished. Connect the account again." | You opened the page in a different browser. Or you already clicked **Connect** or **Cancel**, then reloaded the page or went back to it. Start again if you still want to connect the account. |
+| "Sign in with the account that started this connection, then connect the account again."             | You are signed out of Metis Suite in this browser. Sign in, then start again. You do not see this message if you started from the desktop or mobile app.                                       |
+| "Gmail did not grant access", followed by a reason and "Nothing was connected."                      | You declined access at the provider, or the provider refused it. Start again and allow access.                                                                                                 |
+| "Gmail sent no authorization code. Connect the account again."                                       | The provider sent you back without finishing the sign-in. Start again.                                                                                                                         |
+| "The account that started this connection no longer exists."                                         | The Metis Suite account that started the connection was deleted. This card has no **Go back** link.                                                                                            |
+
+The messages name your provider: Gmail, Outlook or Zoho Mail.
+
+Logins for a server (IMAP, CalDAV, CardDAV, WebDAV, FTP, SFTP, S3, Cloudflare Email and Resend) have no confirmation page. See [Fill in the login form](#fill-in-the-login-form).
+
+### After you connect
 
 A new calendar account shows no calendars at first, and a new address book account shows no address books. Choose which ones the workspace shows, as described in [Choose which calendars a workspace shows](/guide/workspaces/add-resources#choose-which-calendars-a-workspace-shows) and [Choose which address books a workspace shows](/guide/workspaces/add-resources#choose-which-address-books-a-workspace-shows).
 
 One provider account is one connection. If you already use a Google account for mail and later add its calendar or contacts, Metis Suite adds them to the same connection. The provider may ask you to allow the extra access.
 
 :::tip[If the sign-in does not finish]
-If something goes wrong at the provider, you land in your default workspace without a message, and the account is not added. Try again. If it keeps failing, ask your instance owner to check the provider's setup.
+If you decline access at the provider, or the provider sends you back with an error, Metis Suite shows a "Nothing was connected" card with a **Go back** link. The account is not added. Try again. If it keeps failing, ask your instance owner to check the provider's setup. See [If the confirmation page does not open](#if-the-confirmation-page-does-not-open).
+
+If you never reach the provider's sign-in page, you land in your default workspace without a message, and nothing is connected. Try again.
 :::
 
 ## Fill in the login form

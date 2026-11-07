@@ -29,9 +29,11 @@ See also [AGENTS.md](../AGENTS.md), [workspaces.md](workspaces.md) (the data exp
   - Resources: a grant revoked (`connection.deleted`), a mailbox, calendar, drive or address book deleted or detached from a workspace, for all four kinds alike.
   - Workspaces: role changes, ownership transfers, member removals, workspace invites sent and revoked, workspace deletion.
   - Sign-up invites sent and revoked.
+  - Workflows: created, edited, turned on, turned off and deleted (`recordWorkflowEvent` in `src/workflow/index.ts`), with `detail.runsAs` when the person acting is not the one the workflow runs as and `detail.sendPolicy` when it starts with **Before mail is sent**.
   - Instance: an upgrade undone from Dashboard → Updates (`instance.upgrade_undone`), which discards every write since that upgrade ([updater.md](updater.md)).
 - **An event is written after the change succeeds, in the function every caller shares.**
-  - `removeWorkspaceMember`, `revokeWorkspaceInvite` (`src/workspace/admin.ts`), `sendSignupInvite` and `revokeSignupInvite` (`src/auth/signup.ts`) take a `by: AuditActor`, so the app, the Workspace Assistant and MCP write the same event.
+  - `removeWorkspaceMember`, `revokeWorkspaceInvite` (`src/workspace/admin.ts`), `sendSignupInvite` and `revokeSignupInvite` (`src/auth/signup.ts`), and `createUserWorkflow`, `updateUserWorkflow`, `toggleUserWorkflow` and `deleteUserWorkflow` (`src/workflow/index.ts`) take a `by: AuditActor`, so the app, the Workspace Assistant and MCP write the same event.
+  - The ops layer builds the assistant and MCP actor with `auditedBy` (`src/ops/scope.ts`).
   - An undone upgrade is the exception: restoring the snapshot would erase an event written before it, so `recordUndo` in `src/dashboard/updates.ts` writes it once the restored release first reports the finished undo, keyed by `detail.upgradeId`, with the requester the updater kept (`requested_by`) as actor and no network details.
   - Route-only changes record in their procedure (sign-in alerts in `user.updatePreferences`, only when the stored value goes from on to off); two-factor disable records in `hooks.after` on `/two-factor/disable` in `src/auth/server.ts`, because the client calls Better Auth directly.
 - **A failed audit insert never fails the change.** `recordAuditEvent` catches and logs `[audit] failed to record …`, because the change it describes has already happened.

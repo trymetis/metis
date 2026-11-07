@@ -77,7 +77,11 @@
       },
       { "scroll": "main h2:text-is('Security activity')" }
     ],
-    "element": "section:has(h2:text-is('Security activity'))"
+    "element": [
+      "section:has(h2:text-is('Security activity')) > div:first-child",
+      "section:has(h2:text-is('Security activity')) ul[aria-label='Audit events'] > li:nth-child(3)"
+    ],
+    "pad": 17
   },
   {
     "name": "account/sign-in-alerts",

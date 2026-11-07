@@ -2,7 +2,7 @@ import { getInstanceConfig } from "@/config/runtime";
 
 import type { OAuthProfile, TokenSet } from "../types";
 import { parseZohoAccounts, pickZohoAccount, zohoAccountAddress } from "../zoho-accounts";
-import { zohoRegionOrder } from "../zoho-regions";
+import { isZohoRegion, zohoRegionOrder } from "../zoho-regions";
 import { createOAuthDriver, postForm } from "./oauth";
 
 interface ZohoUserInfo {
@@ -17,9 +17,31 @@ interface ZohoUserInfo {
 
 const accountsServer = (dc: string) => `https://accounts.zoho.${dc}`;
 const defaultAccountsServer = () => accountsServer(getInstanceConfig().zoho.region);
+const ACCOUNTS_HOST_PREFIX = "accounts.zoho.";
+
+function knownAccountsServer(raw: string): string | null {
+  let url: URL;
+  try {
+    url = new URL(raw);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== "https:" || url.username || url.password || url.port) return null;
+  if (url.pathname !== "/" || url.search || url.hash) return null;
+  if (!url.hostname.startsWith(ACCOUNTS_HOST_PREFIX)) return null;
+  const dc = url.hostname.slice(ACCOUNTS_HOST_PREFIX.length);
+  return isZohoRegion(dc) ? accountsServer(dc) : null;
+}
+
+function requireAccountsServer(raw: string | null | undefined): string {
+  if (!raw) return defaultAccountsServer();
+  const server = knownAccountsServer(raw);
+  if (!server) throw new Error("Zoho named an accounts server this app does not know");
+  return server;
+}
 
 async function getProfile(token: TokenSet): Promise<OAuthProfile> {
-  const server = token.meta?.accountsServer ?? defaultAccountsServer();
+  const server = requireAccountsServer(token.meta?.accountsServer);
   const headers = { Authorization: `Zoho-oauthtoken ${token.accessToken}` };
 
   let email = "";
@@ -83,7 +105,7 @@ export const zohoDriver = createOAuthDriver({
   tokenEndpoint: () => `${defaultAccountsServer()}/oauth/v2/token`,
   authorizeParams: () => ({ access_type: "offline", prompt: "consent" }),
   exchangeTarget: ({ query }) => {
-    const server = query.get("accounts-server") ?? defaultAccountsServer();
+    const server = requireAccountsServer(query.get("accounts-server"));
     return {
       endpoint: `${server}/oauth/v2/token`,
       meta: { accountsServer: server },

@@ -519,6 +519,7 @@ export async function listPendingInvites(workspaceId: string) {
 export async function acceptInvite(opts: {
   token: string;
   userId: string;
+  email: string;
 }): Promise<
   { workspaceId: string; workspaceName: string; workspaceSlug: string } | { error: string }
 > {
@@ -530,6 +531,12 @@ export async function acceptInvite(opts: {
   if (!invite) return { error: "Invite not found" };
   if (invite.acceptedAt) return { error: "Invite already used" };
   if (invite.expiresAt.getTime() < Date.now()) return { error: "Invite expired" };
+  if (invite.email.trim().toLowerCase() !== opts.email.trim().toLowerCase()) {
+    return {
+      error:
+        "This invite was sent to a different email address. Sign in with that account to accept it.",
+    };
+  }
 
   const [existing] = await db
     .select({ id: workspaceMember.id })

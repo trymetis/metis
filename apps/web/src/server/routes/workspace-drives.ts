@@ -136,6 +136,13 @@ export const workspaceDrivesRouter = {
         throw new ORPCError("NOT_FOUND", { message: "Drive not found" });
       }
 
+      const isAdmin = appUser.workspaceRole === "owner" || appUser.workspaceRole === "admin";
+      if (!isAdmin && link.userId !== appUser.userId) {
+        throw new ORPCError("FORBIDDEN", {
+          message: "Only an admin can change what someone else's drive shows",
+        });
+      }
+
       try {
         const adapter = getDriveAdapter(link.provider, await requireAuth(link), link.email);
         const listing = await adapter.listFolder(null);

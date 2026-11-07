@@ -17,6 +17,7 @@ See also [AGENTS.md](../AGENTS.md), [workspaces.md](workspaces.md), [servers.md]
 | OAuth key pairs                               | `src/connections/credentials.ts` → `configuredOAuthProviders`, `providerCredentials`                                                                                                                                              |
 | What can be connected                         | `src/connections/servers.ts` → `connectServers`, `isProviderConfigured` · client `src/components/connect-servers-context.tsx` → `ConnectServersProvider`                                                                          |
 | Connect flow                                  | `src/app/api/connections/start/[provider]/[resource]/route.ts` · `src/app/api/connections/[provider]/callback/route.ts` · state `src/connections/oauth-state.ts` → `encodeOAuthState`                                             |
+| Confirming a connect                          | page `src/app/(auth)/api/connections/[provider]/callback/page.tsx` (the callback URL itself) · server action `actions.ts` → `confirmConnection` · shared check `src/connections/callback.ts` → `readConnectRequest`               |
 | Procedures                                    | `src/server/routes/connections.ts` → `createCredential`, `delete`, `unavailable` · resource deletes in `src/server/routes/{mailboxes,calendars,drives,address-books}.ts`                                                          |
 | Quarantine                                    | `src/connections/quarantine.ts` → `reconcileQuarantine`, `backfillServerIds` · run by `scripts/preflight.ts` and a dashboard save (`store` in `src/dashboard/system-config.ts`)                                                   |
 | Quarantine disclosure                         | `src/components/unavailable-accounts-banner.tsx` → `UnavailableAccountsBanner` · `src/connections/unavailable.ts` → `listUnavailableConnections` (`connections.unavailable` and the `listUnavailableAccounts` MCP tool)           |
@@ -45,7 +46,14 @@ See also [AGENTS.md](../AGENTS.md), [workspaces.md](workspaces.md), [servers.md]
 
 ### Connecting and scopes
 
-- **Connecting is an account-level act: the path and the signed state carry no workspace.** The optional `?attachTo=<workspace slug>` is checked against live membership, carried inside the HMAC-signed state, re-checked in the callback, and only records "the user asked to add it here".
+- **Connecting is an account-level act: the path and the signed state carry no workspace.** The optional `?attachTo=<workspace slug>` is checked against live membership, carried inside the HMAC-signed state, and only pre-selects a workspace on the callback page.
+  - It pre-selects only when the start request was a same-origin navigation (`Sec-Fetch-Site: same-origin`, stored as `attachPreselect`), so a link from another site, an email or a pasted URL starts on "Don't add to a workspace".
+- **Nothing reaches the provider's token endpoint until the person clicks Connect.** The callback URL is a page, not a route handler: it checks the request and renders a confirmation that names the Metis account the grant goes into, the resource, and the workspace to add it to, with the callback query in a hidden field.
+  - `confirmConnection` re-runs `readConnectRequest` (signed state, nonce cookie, signed-in user for a browser connect), then exchanges the code, upserts the `connection` and attaches the resource; the provider's single-use code makes the confirmation single-use.
+  - The page names no provider account, because only the token exchange reveals it; the "separate account" notice follows the connect as before.
+  - Cancel deletes the nonce cookie and never calls the provider.
+  - Server actions refuse a foreign `Origin`, and `confirmConnection` also compares it with `config.auth.url`.
+- **The Zoho callback's `accounts-server` must be `https://accounts.zoho.<dc>` with `<dc>` in `ZOHO_REGIONS`** (`requireAccountsServer` in `src/connections/drivers/zoho.ts`). Any other value fails the callback, because the token exchange posts the client secret to that host; `getProfile` re-checks the stored value.
 - **The callback path is `/api/connections/[provider]/callback` for every resource**, because it is a registered redirect URI in three provider consoles.
 - **Scopes are per resource, unioned per grant.** Each driver exposes `grantedResources(scope)`; an OAuth driver builds the scope it requests from the resources (`scopesFor`, used by `buildAuthUrl` and `exchangeCode`).
   - Google sends `include_granted_scopes=true` and the callback unions the returned scope.
@@ -74,14 +82,17 @@ See also [AGENTS.md](../AGENTS.md), [workspaces.md](workspaces.md), [servers.md]
 
 - **OAuth connect.**
   - The start route checks the session (or consumes a native ticket, [desktop.md](desktop.md)), validates `attachTo` and an optional `expectConnection`, computes the scope set, signs the state (`encodeOAuthState`, valid for `STATE_TTL_SEC`) and sets a nonce cookie.
-  - The callback decodes the state, requires the matching nonce cookie, upserts the `connection` and the resource row, and attaches it to the requested workspace.
-  - The callback and `connections.createCredential` both create and attach the resource through `addConnectionResource` (`src/connections/attach.ts`), an exhaustive switch over `ConnectionResource`, so a new kind fails to compile until it has a branch.
-- **Adding a resource to an existing account.** `?expectConnection=<id>` carries the expected account in the state; when the user picks a different account at the provider, the callback connects it as a separate account and says so.
+  - The callback page decodes the state, requires the matching nonce cookie and renders the confirmation; a provider `error`, a missing code or a failed check renders a "Nothing was connected" card instead.
+  - Connect exchanges the code, upserts the `connection` and the resource row, attaches it to the chosen workspace, deletes the nonce cookie and redirects (through `/native/return` for an app connect).
+  - `confirmConnection` and `connections.createCredential` both create and attach the resource through `addConnectionResource` (`src/connections/attach.ts`), an exhaustive switch over `ConnectionResource`, so a new kind fails to compile until it has a branch.
+- **Adding a resource to an existing account.** `?expectConnection=<id>` carries the expected account in the state; when the user picks a different account at the provider, Connect connects it as a separate account and the landing page says so.
 - **Credential connect** is `connections.createCredential` ([servers.md](servers.md)).
 - **`reconcileQuarantine`** stamps `quarantined_at` on connections whose provider is unconfigured or whose server reference no longer resolves, and clears it when the entry returns.
 - **Token refresh.** `resolveConnectionAuth(row)` returns `{kind: "oauth", accessToken, email}`, refreshing through `getFreshAccessToken` when near expiry, or `{kind: "credentials", credentials, email}` for credential providers.
 - **Revoke.** `revokeConnection` deletes the row, then calls the driver's `revoke`: a POST to `oauth2.googleapis.com/revoke` for Google, every Zoho DC, nothing for Microsoft.
 
 ## Deliberate limits
+
+- **A native connect ticket still binds the flow to whoever minted it** ([desktop.md](desktop.md)). Someone else who opens a ticket link and approves consent sees the minter's Metis account on the callback page, but can still click Connect; the browser holds no session to compare against.
 
 - **Microsoft grants are revoked by the user**, at account.microsoft.com / myapps.microsoft.com, because Microsoft has no per-app revoke API.

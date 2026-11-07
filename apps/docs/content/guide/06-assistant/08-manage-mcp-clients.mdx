@@ -67,12 +67,12 @@ Choose which of your workspaces this client can reach. Each workspace has a swit
 
 ### Authorizations
 
-Each time you approve the client's sign-in, it gets an authorization. This section lists each one, with when you approved it and when it expires. If the client has none, the section says it will ask for your approval the next time it connects.
+Each time you approve the client's sign-in, it gets an authorization. This section lists each one, with when you approved it and when it expires. If the client has none, the section shows "Not authorized. The client will ask for consent the next time it connects."
 
-- **Revoke** ends one authorization. The client cannot renew it, so it must ask for your approval again, with your two-factor code. Other authorizations it holds keep working.
-- **Revoke all** (shown when there is more than one) ends every authorization. The client stays on your list, so you do not need to set it up again in your app.
+- **Revoke** ends one authorization. The client must sign in again on its next request. If it has other authorizations, it signs back in through them without asking you. If that was its last one, it must ask for your approval again, with your two-factor code.
+- **Revoke all** (shown when there is more than one) ends every authorization. The client's access stops working on its next request, and it must ask for your approval again. The client stays on your list, so you do not need to set it up again in your app.
 
-Access the client already has can keep working until it expires. To cut a client off at once, turn it off or remove it.
+After a revoke, the client's next request is refused with "This access token was revoked. Sign in again." Your AI app may show this message or ask you to sign in again.
 
 Changes to tools and workspaces apply from the client's next request.
 
@@ -109,13 +109,14 @@ Adding a client, approving a client, turning a client back on, and turning on se
 
 ## Common messages
 
-| Message                                                  | What it means                                                                 |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| "Invalid authenticator or backup code"                   | The two-factor code was wrong or expired. Type a new one.                     |
-| "Enter your authenticator code to re-enable this client" | Type your two-factor code before you click **Enable**.                        |
-| "Too many attempts. Please slow down."                   | You tried too many times in a short time. Wait a few minutes, then try again. |
-| "Claude Code needs a fixed sign-in port."                | Fill in **Sign-in port** when you add a Claude Code client.                   |
-| "At least one callback URL is required"                  | Fill in **Sign-in return URL** when you add an **Other client**.              |
-| "Could not add the client"                               | Something went wrong. Try again.                                              |
+| Message                                                  | What it means                                                                                                     |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| "Invalid authenticator or backup code"                   | The two-factor code was wrong or expired. Type a new one.                                                         |
+| "Enter your authenticator code to re-enable this client" | Type your two-factor code before you click **Enable**.                                                            |
+| "Too many attempts. Please slow down."                   | You tried too many times in a short time. Wait a few minutes, then try again.                                     |
+| "Claude Code needs a fixed sign-in port."                | Fill in **Sign-in port** when you add a Claude Code client.                                                       |
+| "At least one callback URL is required"                  | Fill in **Sign-in return URL** when you add an **Other client**.                                                  |
+| "Could not add the client"                               | Something went wrong. Try again.                                                                                  |
+| "This access token was revoked. Sign in again."          | Your AI app may show this after you revoke its authorizations. Approve its sign-in again, or leave it signed out. |
 
 If your AI app reports that it is sending too many requests, wait a minute and try again. Metis Suite limits how many requests each client can make per minute.

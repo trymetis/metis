@@ -51,6 +51,8 @@ The message being sent has these fields: `to`, `cc`, `bcc`, `subject`, `body` (t
 - **Only a few steps work here.** After **Before mail is sent**, you can use only **If**, **Switch**, **Filter**, **Stop** and **Add a Bcc**. Any other step shows a problem such as "Label cannot run before a message is sent", and the workflow cannot be saved. **Before mail is sent** must also be the workflow's only trigger.
 - **It follows the creator's access.** A workflow adds its address only to mail sent from mailboxes its creator can reach in the workspace.
 - **Several workflows can add addresses.** If more than one enabled workflow applies to a message, each one adds its address.
+- **The sender is told.** After someone clicks **Send** or schedules a message, the notice adds the addresses a workflow added, for example "A workflow added Bcc: archive@example.com". The notice then stays on screen for 10 seconds.
+- **Changes are recorded.** Creating, editing, turning on or off and deleting a workflow that starts with **Before mail is sent** is recorded, and the row says the workflow "can add a Bcc to mail members send". Workspace owners and admins see it on the workspace [Activity](/guide/workspaces/workspace-activity) page.
 - **No runs in the history.** These workflows run as part of sending, so they do not appear under **Activity**.
 - **Turned off means no copy.** A disabled workflow adds nothing.
 - **Check the address yourself.** The step adds the address exactly as you typed it, so check it carefully.

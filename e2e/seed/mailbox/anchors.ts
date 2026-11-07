@@ -28,6 +28,7 @@ const NEWSLETTER = `<!doctype html>
 <link rel="stylesheet" href="${PIXEL}/never/link.css">
 <style>
 @import url(${PIXEL}/never/import.css);
+@\\69mport url(${PIXEL}/never/import-escaped.css);
 @font-face { font-family: Kestrel; src: url(${PIXEL}/never/font.woff2); }
 :root { --hero: url(${PIXEL}/image/var); }
 .banner { background-image: url('${PIXEL}/image/style-block'); height: 40px; }
@@ -35,6 +36,9 @@ const NEWSLETTER = `<!doctype html>
 .set { background-image: image-set("${PIXEL}/image/image-set" 1x); height: 40px; }
 .hero { background-image: var(--hero); height: 40px; }
 .spy { background-image: url(${PIXEL}/never/known/wf/open?upn=css); }
+.spy-escaped { background-image: u\\72l("${PIXEL}/never/known/wf/open?upn=css-escaped"); height: 4px; }
+.spy-comment { background-image: url("${PIXEL}/never/known/wf/open?upn=css-comment"/**/); height: 4px; }
+.spy-set { background-image: image-s\\65t("${PIXEL}/never/known/wf/open?upn=css-image-set" 1x); height: 4px; }
 h1 { font-family: Kestrel, Georgia, serif; }
 @media (prefers-color-scheme: dark) { body { background: #111; color: #eee; } }
 </style>
@@ -51,6 +55,10 @@ h1 { font-family: Kestrel, Georgia, serif; }
 <div class="badge">Back in stock</div>
 <div class="set">Gift cards</div>
 <div class="hero">Our autumn lookbook</div>
+<div class="spy-escaped"></div>
+<div class="spy-comment"></div>
+<div class="spy-set"></div>
+<div style="background-image:u\\72l('${PIXEL}/never/known/wf/open?upn=style-escaped');height:4px"></div>
 <svg width="300" height="60"><image href="${PIXEL}/image/svg-image" width="300" height="60"/></svg>
 <svg width="300" height="20"><rect width="300" height="20" fill="url(${PIXEL}/image/svg-fill#p)"/><rect width="10" height="10" fill="url(${PIXEL}/never/svg-unclosed"/></svg>
 <svg width="300" height="20"><a><animate attributeName="href" by="${PIXEL}/never/animate-by"/><text y="15">Shop the edit</text></a></svg>

@@ -9,6 +9,7 @@ import type { UndoSendStatus } from "@/types/mail";
 import { useMailStore } from "./mail-store";
 
 export const UNDO_SEND_HOLD_MS = 5000;
+const ADDED_BCC_SHOW_MS = 10000;
 
 interface DraftAttachment {
   filename: string;
@@ -33,12 +34,18 @@ interface Pending {
   status: UndoSendStatus;
   error?: string;
   scheduledFor?: Date;
+  addedBcc?: string[];
 }
 
 interface UndoSendState {
   pending: Pending | null;
   startSend: (payload: DraftPayload, scope: MailboxScope, fromMailboxSlug?: string) => void;
-  notifyScheduled: (payload: DraftPayload, scope: MailboxScope, scheduledFor: Date) => void;
+  notifyScheduled: (
+    payload: DraftPayload,
+    scope: MailboxScope,
+    scheduledFor: Date,
+    addedBcc: string[],
+  ) => void;
   cancel: () => void;
   fire: () => Promise<void>;
   setStatus: (status: UndoSendStatus | null, error?: string) => void;
@@ -66,6 +73,7 @@ export const useUndoSendStore = create<UndoSendState>((set, get) => {
       holdMs: UNDO_SEND_HOLD_MS,
       error: pending.error,
       scheduledFor: pending.scheduledFor,
+      addedBcc: pending.addedBcc,
       onUndo: () => get().cancel(),
       onDismiss: () => get().setStatus(null),
     });
@@ -96,11 +104,11 @@ export const useUndoSendStore = create<UndoSendState>((set, get) => {
       }, UNDO_SEND_HOLD_MS);
     },
 
-    notifyScheduled: (payload, scope, scheduledFor) => {
+    notifyScheduled: (payload, scope, scheduledFor, addedBcc) => {
       clearTimers();
       const id = crypto.randomUUID();
-      render({ id, payload, scope, status: "scheduled", scheduledFor });
-      clearAfter(id, 6000);
+      render({ id, payload, scope, status: "scheduled", scheduledFor, addedBcc });
+      clearAfter(id, addedBcc.length > 0 ? ADDED_BCC_SHOW_MS : 6000);
     },
 
     cancel: () => {
@@ -129,13 +137,13 @@ export const useUndoSendStore = create<UndoSendState>((set, get) => {
       render({ ...current, status: "sending" });
 
       try {
-        await orpc.mail.messages.send({
+        const { addedBcc } = await orpc.mail.messages.send({
           ...current.scope,
           fromMailboxSlug: current.fromMailboxSlug,
           ...current.payload,
         });
-        render({ ...current, status: "sent" });
-        clearAfter(current.id, 3000);
+        render({ ...current, status: "sent", addedBcc });
+        clearAfter(current.id, addedBcc.length > 0 ? ADDED_BCC_SHOW_MS : 3000);
         void refreshQueries(rpc.mail.messages.contacts.key());
       } catch (e) {
         render({

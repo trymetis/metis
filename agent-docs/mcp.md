@@ -33,6 +33,11 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [auth.md](auth
 - **One OAuth client per MCP client; clients arrive by hand at `/settings/mcp` or through CIMD.** `allowDynamicClientRegistration` and `allowUnauthenticatedClientRegistration` are both false.
 - **The `mcp_client` row is the kill switch**: a client with no row, or a disabled one, has no access.
 - **Every request is gated per client.** JWTs are verified offline with no client-existence check, so deleting or disabling the OAuth client leaves an issued token valid; the route resolves `mcp_client` from the JWT's `azp` claim and answers 403 when the row is missing or disabled.
+- **Revoking authorizations cuts issued access tokens on the next request.** `mcp.revokeGrants` deletes the refresh tokens and stamps `mcp_client.tokens_revoked_at`; `resolveMcpClient` refuses any token whose `iat` is not after that time.
+  - The route answers 401 with a `WWW-Authenticate` bearer challenge (`MCP_RESOURCE_METADATA`), so a client refreshes or signs in again; a disabled or missing client still gets 403.
+  - Revoking one authorization also cuts the current access tokens of that client's other authorizations, which refresh with their own refresh tokens.
+  - Revoking the last authorization, one at a time or all at once, also deletes the stored `oauth_consent`, so the client's next sign-in shows `/oauth/consent` and asks for TOTP again; Better Auth skips the consent page while a consent covering the scopes exists.
+  - A token issued in the same second as the revoke counts as revoked, because `iat` has whole-second precision.
 - **A CIMD client never takes over a manually registered row.** The plugin stores `clientDiscoveryId = "cimd"` on clients it registered from a metadata URL, and that provenance is the guard.
 - **CIMD fetches go through `@better-auth/cimd/node`**, because the contract needs resolve-once DNS, rejection of RFC 6890 special-use addresses, address pinning and no redirects; plain `fetch` does none of that.
 - **Discovery must advertise both `client_id_metadata_document_supported: true` and `"none"` in `token_endpoint_auth_methods_supported`.** The CIMD plugin and the oauth-provider metadata emit them; check both after a bump. Claude and Codex check the pair and fall back to DCR, which fails here, if either is missing.

@@ -36,6 +36,7 @@ See also [AGENTS.md](../AGENTS.md), [workflow-runtime.md](workflow-runtime.md), 
 ### Storage
 
 - **A workflow is a graph with immutable revisions.** Saving writes a new `workflow_revision`; a run carries its `revision_id` and executes that revision to the end.
+  - `workflow_revision.created_by_user_id` records who saved each revision (the creator for the first); the Revisions sheet and run details show it beside **Runs as**, because an edit never changes who a workflow runs as.
 - **`workflow_resource` ties a revision to every mailbox, calendar, drive and address book it names through real FKs**, with a CHECK that exactly one of the four is set per row.
 - **Contact steps (`contacts.*`) take an `addressbook` param and act on `contact` values; there are no contact triggers.** An empty book param on List and Create uses the address book's primary visible book (`primaryBookId` in `src/ops/values.ts`), and Update changes only the fields filled in ([contacts.md](contacts.md)).
 - **Unique keys make every step idempotent.** One event per trigger and event key, one run per event, one step run per run, node and item key; a retried run redoes only the step runs that did not complete.
@@ -101,6 +102,7 @@ See also [AGENTS.md](../AGENTS.md), [workflow-runtime.md](workflow-runtime.md), 
 ### Inbound HTTP
 
 - **One listener, `/api/inbound/<endpoint>`, serves webhooks and provider push.** `workflow_endpoint` holds each endpoint's kind (`webhook`, `graph`, `google-channel`), sealed secret, provider subscription id and expiry; `src/proxy.ts` exempts the route from sessions.
+- **A webhook body is never hydrated.** The executor turns `{hydrate: {kind: "mail", …}}` markers into the message they name only for runs whose source is not `inbound`, because a webhook body is outside data and a marker in it would load any message the principal can reach.
 - **A webhook checks, in order, the allowed IPs, the required headers, then the secret header or the HMAC signature**, compares in constant time, caps the body at 256 KB, rate-limits per endpoint and fires its trigger with `{ body, headers, receivedAt }`.
 - **The webhook's client address is the last `X-Forwarded-For` hop that is not one of the runner's trusted proxies** (`handleWebhook` calls `forwardedClient` from `src/services/client-ip.ts` with `workflowRunner.trustedProxies`), the same walk as [auth.md](auth.md)'s client IP over the runner's own list.
   - Without trusted proxies only the nearest hop counts; with no `X-Forwarded-For` there is no address and an IP-restricted webhook refuses.
@@ -146,6 +148,7 @@ See also [AGENTS.md](../AGENTS.md), [workflow-runtime.md](workflow-runtime.md), 
 - **Built-ins are ordinary workflows with the graphs below**, and preflight's `ensureSystemWorkflows` upserts the system ones once per deployment, one at a time, because the `local` driver fails two overlapping writes in one process ([database.md](database.md)).
   - A graph that changed in a release is revised on the next deploy; a database migrated without preflight (`bun run db:migrate` alone) has no system workflows until `bun run preflight` runs.
 - **Before-send runs the executor in `policy` mode on every enabled `trigger.mail.beforeSend` graph**: such a graph holds only steps marked `beforeSend` (logic and `mail.addBcc`), touches no provider and schedules nothing; the Bcc addresses it emits are added to the draft.
+  - `prepareOutgoing` returns the added addresses beside the payload; `mail.messages.send` and `mail.scheduledSend.create` return them as `addedBcc`, and the send toast tells the sender "A workflow added Bcc: …", since provider Sent copies do not show a Bcc.
 
 ## How it works
 

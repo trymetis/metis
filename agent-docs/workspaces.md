@@ -48,7 +48,9 @@ What a workspace is, how it borrows mailboxes, calendars, drives and address boo
   - `transferOwnership` promotes the new owner and demotes the old one to `admin`; its route requires TOTP.
   - `changeMemberRole` refuses to touch the owner role.
 - **Listing and revoking invites, removing members and changing the theme need an owner or admin.** The check lives in `src/workspace/admin.ts`, which takes the caller's role, so `workspaces.*` and the agent/MCP tools enforce the same rule.
-- **A `workspace_invite` grants membership when a signed-in account accepts it**; a `signup_invite` only creates an account ([auth.md](auth.md)).
+- **A `workspace_invite` grants membership when the account it was sent to accepts it**; a `signup_invite` only creates an account ([auth.md](auth.md)).
+  - `acceptInvite` compares the signed-in account's email with `invite.email` (case-insensitive), so a forwarded or leaked link joins nobody else, and the `memberJoined` event names the right person.
+  - The error does not repeat the invited address, so a stray link holder learns nothing from it.
 
 ### Navigation and preferences
 

@@ -529,6 +529,9 @@ export const workflowRevision = sqliteTable(
     revision: integer("revision").notNull(),
     graph: text("graph", { mode: "json" }).$type<WorkflowGraph>().notNull(),
     createdAt: timestamp("created_at").notNull(),
+    createdByUserId: text("created_by_user_id").references(() => authSchemas.user.id, {
+      onDelete: "set null",
+    }),
   },
   (table) => [uniqueIndex("workflow_revision_number_idx").on(table.workflowId, table.revision)],
 );
@@ -980,6 +983,7 @@ export const mcpClient = sqliteTable(
       .notNull()
       .$defaultFn(() => new Date()),
     lastUsedAt: timestamp("last_used_at"),
+    tokensRevokedAt: timestamp("tokens_revoked_at"),
   },
   (table) => [
     index("mcp_client_user_idx").on(table.userId),

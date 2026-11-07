@@ -1,5 +1,6 @@
 import { sanitizeEmailHtml } from "@/lib/sanitize-html";
 
+import { rewriteDeclarations, rewriteStylesheet, rewriteValue, type StyleFacts } from "./css";
 import {
   clickTracker,
   declaresLargeSize,
@@ -12,17 +13,7 @@ import {
 import { cleanLink, type LinkRules } from "./links";
 import { BLOCKED_SRC_ATTR, declaredSize, placeholderImage } from "./placeholder";
 import type { RemoteImages, TrackerHit, TrackerKind } from "./types";
-import {
-  absoluteRemote,
-  isInlineUrl,
-  mapCssUrls,
-  parseSrcset,
-  pinColorScheme,
-  serializeSrcset,
-  stripCssImports,
-  stripRemoteFonts,
-  stripUnclosedUrl,
-} from "./urls";
+import { absoluteRemote, isInlineUrl, parseSrcset, serializeSrcset, type UrlMapper } from "./urls";
 
 export interface RenderOptions {
   purpose: "view" | "quote";
@@ -43,15 +34,26 @@ export interface RenderedEmail {
 
 type Classified = { kind: "keep" } | { kind: "drop" } | { kind: "remote"; url: string };
 
-const DECLARES_DARK =
-  /prefers-color-scheme\s*:\s*dark|color-scheme[^;>]*\bdark\b|supported-color-schemes/i;
-const SETS_COLORS =
-  /(?:^|[\s;"'{])(?:color|background(?:-color|-image)?)\s*:|\b(?:bgcolor|color|text|link|vlink|alink|background)\s*=/i;
+const META_TAG = /<meta\b[^>]*>/gi;
+const COLOR_ATTRIBUTES = ["bgcolor", "color", "text", "link", "vlink", "alink", "background"];
+const SVG_URL_ATTRIBUTES = [
+  "fill",
+  "stroke",
+  "filter",
+  "mask",
+  "clip-path",
+  "marker-start",
+  "marker-mid",
+  "marker-end",
+  "cursor",
+];
 
 const SVG_RESOURCE = new Set(["image", "feimage", "use"]);
 
-export function isAdaptive(raw: string): boolean {
-  return DECLARES_DARK.test(raw) || !SETS_COLORS.test(raw);
+function metaDeclaresDark(raw: string): boolean {
+  return (raw.match(META_TAG) ?? []).some(
+    (tag) => /(?:supported-)?color-scheme/i.test(tag) && /\bdark\b/i.test(tag),
+  );
 }
 
 function pictureOf(el: Element): Element | null {
@@ -116,19 +118,17 @@ export function renderEmailHtml(raw: string, options: RenderOptions): RenderedEm
     return proxy ? proxy(url) : url;
   };
 
-  const mapCss = (css: string) =>
-    stripUnclosedUrl(
-      mapCssUrls(css, (u) => {
-        const c = classify(u, "css");
-        if (c.kind === "keep") return u;
-        if (c.kind === "drop") return null;
-        if (blocked) {
-          remote.add(c.url);
-          return null;
-        }
-        return loadable(c.url);
-      }),
-    );
+  const facts: StyleFacts = { declaresDark: false, setsColors: false };
+  const mapCssUrl: UrlMapper = (u) => {
+    const c = classify(u, "css");
+    if (c.kind === "keep") return u;
+    if (c.kind === "drop") return null;
+    if (blocked) {
+      remote.add(c.url);
+      return null;
+    }
+    return loadable(c.url);
+  };
 
   const visit = (el: Element) => {
     const tag = el.localName.toLowerCase();
@@ -139,17 +139,25 @@ export function renderEmailHtml(raw: string, options: RenderOptions): RenderedEm
         el.remove();
         return;
       }
-      let css = stripRemoteFonts(stripCssImports(el.textContent ?? ""));
-      if (options.theme) css = pinColorScheme(css, options.theme);
-      el.textContent = mapCss(css);
+      el.textContent = rewriteStylesheet(el.textContent ?? "", {
+        map: mapCssUrl,
+        theme: options.theme,
+        facts,
+      });
       return;
     }
 
-    for (const attr of el.attributes) {
-      if (attr.value.toLowerCase().includes("url(")) {
-        el.setAttribute(attr.name, mapCss(attr.value));
-      }
+    const style = el.getAttribute("style");
+    if (style !== null) {
+      const rewritten = rewriteDeclarations(style, { map: mapCssUrl, facts });
+      if (rewritten) el.setAttribute("style", rewritten);
+      else el.removeAttribute("style");
     }
+    for (const name of SVG_URL_ATTRIBUTES) {
+      const value = el.getAttribute(name);
+      if (value !== null) el.setAttribute(name, rewriteValue(value, mapCssUrl));
+    }
+    if (COLOR_ATTRIBUTES.some((name) => el.hasAttribute(name))) facts.setsColors = true;
 
     const counted =
       !(tag === "img" && inPictureWithSources(el)) && !(tag === "source" && hasEarlierSource(el));
@@ -287,7 +295,7 @@ export function renderEmailHtml(raw: string, options: RenderOptions): RenderedEm
     html,
     trackers: [...hits.values()],
     remoteImages: remote.size,
-    adaptive: isAdaptive(raw),
+    adaptive: facts.declaresDark || metaDeclaresDark(raw) || !facts.setsColors,
   };
 }
 

@@ -64,13 +64,19 @@ export function sectionForm(rpc: Rpc, section: string): Promise<ConfigForm> {
   return rpc<ConfigForm>("dashboard.system.form", { section });
 }
 
-export function setSection(rpc: Rpc, section: string, values: Values): Promise<Saved> {
+export function setSection(
+  rpc: Rpc,
+  section: string,
+  values: Values,
+  options: { force?: boolean } = {},
+): Promise<Saved> {
   return withTotp(async (code) => {
     const form = await sectionForm(rpc, section);
     const saved = await rpc<Saved>("dashboard.system.update", {
       expectedVersion: form.version,
       sections: [{ section, values: { ...form.values, ...values }, entries: null }],
       code,
+      force: options.force ?? false,
     });
     expect(saved.saved, `${section} was not saved: ${JSON.stringify(saved.check)}`).toBe(true);
     return saved;
