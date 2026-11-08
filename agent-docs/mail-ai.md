@@ -67,6 +67,9 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [mail.md](mail
 
 - **Decision classifier (`decisionEnabled("classifier")`).** `classifyByDecision` asks one `choice` question per message (state `{ from, subject, snippet }`, options through `neutralCriteria`), `decisionClassifierBatch()` calls at a time.
 - **Summary cache.** `mail_thread_summary` caches per `(mailboxId, threadKey)`.
+  - A cached row is current while the thread's message count and last message's key match it. A message's key is its `Message-ID` header, falling back to its message id (Zoho, and threadless messages).
+  - Moving mail between folders changes IMAP and Microsoft message ids but not the `Message-ID`, so archive, delete and restore reuse the cached cards instead of calling the summarizer mid-move, when the label row may not have followed the message yet.
+  - `loadConversation` keeps one copy per `Message-ID`, preferring a labelled copy, so a thread listed mid-move with both copies never counts as a new message.
   - New messages `refine()` the cards in place, with a full rebuild after `REBUILD_AFTER` refinements.
   - A failed generation is cached too (`failedAt`, previous cards kept) and retried only after `FAILURE_RETRY_MS` or when the thread changes.
 - **Summary gate (`decisionEnabled("summaryGate")`).** After the cache check, `gateSummary` makes one decision call over the messages about to be sent (each capped at `GATE_TEXT_MAX` chars): `worth`, plus one `card:<type>` question per card type other than `Summary`, worded from `CARD_DEFINITIONS`.

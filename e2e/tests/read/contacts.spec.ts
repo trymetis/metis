@@ -5,7 +5,7 @@ import { SEEDED_CONTACTS } from "@metis/e2e/lib/contacts";
 import { expect, test } from "../fixtures";
 import { mailPath, workspacePath } from "../harness";
 import { mailRow, openMail, rowLabel } from "../mail";
-import { openSearch, result, typeQuery } from "../search";
+import { openSearch, typeQuery } from "../search";
 
 function contactList(page: import("@playwright/test").Page) {
   return page.getByRole("list", { name: "Contacts" });
@@ -116,7 +116,9 @@ test("a search hit for a saved contact offers Open contact", async ({ page, acco
   await page.goto(mailPath(account));
   const dialog = await openSearch(page);
   await typeQuery(page, "type:contact kenji");
-  const row = result(page, /Kenji Watanabe/);
+  const row = dialog
+    .getByRole("group", { name: "Contacts" })
+    .getByRole("option", { name: /Kenji Watanabe/ });
   await expect(row).toBeVisible();
   await row.getByRole("button", { name: /^Actions for/ }).click();
   await expect(dialog.getByText("Open contact", { exact: true })).toBeVisible();

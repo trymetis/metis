@@ -271,7 +271,7 @@ export async function buildThreadSummary(
   }
 
   const currentCount = msgs.length;
-  const currentLastId = lastMsg.bareId;
+  const currentLastId = lastMsg.key;
   const existing = await getThreadSummary(scopedThread);
 
   const current =
@@ -294,7 +294,7 @@ export async function buildThreadSummary(
   }
 
   try {
-    const lastIdx = current ? msgs.findIndex((m) => m.bareId === current.lastMessageId) : -1;
+    const lastIdx = current ? msgs.findIndex((m) => m.key === current.lastMessageId) : -1;
     if (
       current &&
       !current.summary.failedAt &&

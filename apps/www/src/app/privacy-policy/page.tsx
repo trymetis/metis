@@ -9,7 +9,7 @@ export default function PrivacyPage() {
     <LegalLayout
       path="/privacy-policy"
       title="Privacy Policy"
-      lastUpdated="November 6, 2026"
+      lastUpdated="November 8, 2026"
       intro={`${SITE_NAME} lets you connect accounts you already have (mail, calendars, drives and contacts from Google, Microsoft and Zoho, and IMAP, CalDAV, CardDAV, S3, WebDAV, FTP and SFTP servers) and work with them in one suite, with optional AI features. This policy explains what data we collect, how we use it, who we share it with, and the choices you have. It applies to ${SITE_NAME} as we run it on Metis Cloud: the web application, the desktop and Android apps, the MCP server, and their associated APIs. ${SITE_NAME} is also open-source software that anyone can run on their own server; on a self-hosted instance, the person or organization running it decides how your data is handled and is responsible for it, and this policy does not apply.`}
     >
       <h2>1. Who we are</h2>
@@ -87,6 +87,13 @@ export default function PrivacyPage() {
           authentication, approving an MCP client, disconnecting an account, or changing a
           member&apos;s role, with the time, who made the change, and the IP address and browser it
           came from. It never records reading mail, events, or files.
+        </li>
+        <li>
+          The desktop and Android apps check downloads.trymetis.email for a newer version at most
+          once a day, unless you turn off &quot;Check for updates&quot; in the app&apos;s settings.
+          The check only downloads the latest version number. It carries your IP address and the
+          standard details of any web request, and nothing about your account, your mail, or the
+          server you use.
         </li>
       </ul>
       <h3>Cookies and browser storage</h3>

@@ -48,6 +48,7 @@ export interface ConvImage {
 export interface ConvMsg {
   id: string;
   bareId: string;
+  key: string;
   from?: string;
   date?: string;
   subject?: string;
@@ -68,10 +69,27 @@ export interface Conversation {
 
 interface ConvMeta {
   id: string;
+  key?: string;
   from?: string;
   date?: string;
   subject?: string;
   attachments?: Attachment[];
+}
+
+function oneCopyEach(metas: ConvMeta[], labelled: (meta: ConvMeta) => boolean): ConvMeta[] {
+  const chosen = new Map<string, ConvMeta>();
+  for (const meta of metas) {
+    if (!meta.key) continue;
+    const seen = chosen.get(meta.key);
+    if (!seen || (!labelled(seen) && labelled(meta))) chosen.set(meta.key, meta);
+  }
+  const placed = new Set<string>();
+  return metas.flatMap((meta) => {
+    if (!meta.key) return [meta];
+    if (placed.has(meta.key)) return [];
+    placed.add(meta.key);
+    return [chosen.get(meta.key) ?? meta];
+  });
 }
 
 function visionEnabled(): boolean {
@@ -161,25 +179,28 @@ export async function loadConversation(
   threadId?: string,
 ): Promise<Conversation> {
   const adapter = session.adapter;
-  const metas: ConvMeta[] = threadId
+  const listed: ConvMeta[] = threadId
     ? (await adapter.getThread(threadId)).map((m) => ({
         id: m.id,
+        key: m.messageIdHeader?.trim() || undefined,
         from: m.fromName ? `${m.fromName} <${m.from}>` : m.from,
         date: m.date,
         subject: m.subject,
         attachments: m.attachments,
       }))
     : [{ id: messageId }];
-  const scanFrom = Math.max(0, metas.length - ATTACHMENT_SCAN_MESSAGES);
-  const lastIndex = metas.length - 1;
 
-  const scopedAnchor = scopeMessage(session, metas.at(-1)?.id ?? messageId);
+  const scopedAnchor = scopeMessage(session, listed.at(-1)?.id ?? messageId);
   const owner =
     session.mailboxes.find((m) => m.mailboxId === scopedAnchor.mailboxId)?.mailboxEmail ?? null;
   const labels = await messageLabels(
     scopedAnchor.mailboxId,
-    metas.map((m) => scopeMessage(session, m.id).messageId),
+    listed.map((m) => scopeMessage(session, m.id).messageId),
   ).catch(() => new Map<string, string>());
+
+  const metas = oneCopyEach(listed, (meta) => labels.has(scopeMessage(session, meta.id).messageId));
+  const scanFrom = Math.max(0, metas.length - ATTACHMENT_SCAN_MESSAGES);
+  const lastIndex = metas.length - 1;
 
   const messages = await Promise.all(
     metas.map(async (meta, i) => {
@@ -202,6 +223,7 @@ export async function loadConversation(
       return {
         id: resolved.id,
         bareId,
+        key: meta.key ?? bareId,
         from: resolved.from,
         date: resolved.date,
         subject: resolved.subject,

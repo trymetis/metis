@@ -131,6 +131,11 @@ test("Go to members opens Settings → Members, which lists the workspace's memb
   await page.goto(mailPath(account));
   await openSearch(page);
   await typeQuery(page, "Go to members");
+  await expect(
+    searchDialog(page)
+      .getByRole("group", { name: "Commands" })
+      .getByRole("option", { name: /Go to members/ }),
+  ).toHaveAttribute("aria-selected", "true");
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(new RegExp(`/w/${account.workspaceSlug}/settings/members$`));
   await expect(page.getByRole("heading", { level: 1, name: "Members" })).toBeVisible();

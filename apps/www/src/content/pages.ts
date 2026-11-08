@@ -128,7 +128,7 @@ const FIXED: Record<string, PageInfo> = {
     title: "Privacy Policy",
     description:
       "How Metis Suite collects, uses, stores and protects your data, including Google user data, with two-factor authentication required on every account.",
-    updated: "2026-11-06",
+    updated: "2026-11-08",
   },
   "/terms-of-service": {
     label: "Terms of Service",
