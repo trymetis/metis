@@ -28,7 +28,8 @@
 - **Never hand-edit generated output** (`shadcn add` primitives, `packages/ui/src/components/svgs/`, `packages/updater-proto/src/gen/`, `apps/updater/gen/`, `src/db/auth-schema.ts` beyond its `$type` pass, the drive icons, the privacy rules, the www models and HDRI), not even to satisfy lint. Report what the generator did and ask.
 - **A schema change ships a hand-written, data-preserving migration in `apps/web/migrations/` and passes `bun run db:check`** ([database.md](agent-docs/database.md)).
 - **Migrations reach a database only through preflight or `bun run db:migrate`, which the project owner runs**, never an agent.
-- **A user-visible change adds a line under `## Unreleased` in its release track's changelog**: the root `CHANGELOG.md` for the server (app, images, `compose.yml`, `bootstrap.sh`), `apps/desktop/CHANGELOG.md`, `apps/mobile/CHANGELOG.md`.
+- **A user-visible change adds a line under `## Unreleased` in its release track's changelog**: the root `CHANGELOG.md` for the server (app, images, `compose.yml`, `bootstrap.sh`), `apps/desktop/CHANGELOG.md`, `apps/mobile/CHANGELOG.md`; a release is cut with `bun run release`, never by hand.
+  - Each release's notes are one file in the root `releases/` folder, named after its tag (`app-v0.3.1.md`), and are never edited once published ([deployment.md](agent-docs/deployment.md)).
 - **Never commit secrets.** `.env*` is gitignored except `apps/web/.env.example` and `e2e/.env.fixture`.
 - **Source copied into the repo gets a `NOTICE` entry.** Dependencies need no license bookkeeping: `apps/web/scripts/licenses.ts` writes `THIRD_PARTY_LICENSES.txt` at image build.
 

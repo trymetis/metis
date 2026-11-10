@@ -6,18 +6,19 @@ See also [AGENTS.md](../AGENTS.md), [updater.md](updater.md), [self-host.md](sel
 
 ## Code map
 
-| Concern                         | Where                                                                                                                                                |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The deployment                  | `compose.yml`                                                                                                                                        |
-| Driving it                      | `bootstrap.sh` → `cmd_deploy` · release pins `pin_release`, `latest_release` · the compose download `fetch_compose`                                  |
-| Health endpoints                | `apps/web/src/app/api/livez/route.ts`, `apps/web/src/app/api/readyz/route.ts` · the database probe `apps/web/src/db/readiness.ts` → `databasesReady` |
-| Images                          | `Dockerfile` (`runner`, `worker`, `updater`) · `preflight.Dockerfile` (the preflight image)                                                          |
-| Publishing                      | `.github/workflows/docker.yml` → jobs `release`, `build`, `publish` · tags `.github/scripts/image-tags.sh`                                           |
-| Standalone output and tracing   | `apps/web/next.config.ts` → `output` (when `NEXT_BUILD_OUTPUT=standalone`), `outputFileTracingIncludes`                                              |
-| One-shot preflight              | `apps/web/scripts/preflight.ts`                                                                                                                      |
-| Worker entry                    | `apps/web/scripts/workflow-worker.ts`                                                                                                                |
-| License file                    | `apps/web/scripts/licenses.ts` (run by the `tools` stage)                                                                                            |
-| Other images built the same way | `e2e/Dockerfile`, `apps/gateway-resend/Dockerfile`                                                                                                   |
+| Concern                         | Where                                                                                                                                                                                             |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The deployment                  | `compose.yml`                                                                                                                                                                                     |
+| Driving it                      | `bootstrap.sh` → `cmd_deploy` · release pins `pin_release`, `latest_release` · the compose download `fetch_compose`                                                                               |
+| Health endpoints                | `apps/web/src/app/api/livez/route.ts`, `apps/web/src/app/api/readyz/route.ts` · the database probe `apps/web/src/db/readiness.ts` → `databasesReady`                                              |
+| Images                          | `Dockerfile` (`runner`, `worker`, `updater`) · `preflight.Dockerfile` (the preflight image)                                                                                                       |
+| Publishing                      | `.github/workflows/docker.yml` → jobs `release`, `build`, `publish` · tags `.github/scripts/image-tags.sh`                                                                                        |
+| Release notes                   | `releases/` · each track's `CHANGELOG.md` · `packages/releases/src/index.ts` (`releaseFieldsSchema`, `readReleases`, `publishedNotes`) · `packages/releases/src/cli.ts` (`cut`, `check`, `notes`) |
+| Standalone output and tracing   | `apps/web/next.config.ts` → `output` (when `NEXT_BUILD_OUTPUT=standalone`), `outputFileTracingIncludes`                                                                                           |
+| One-shot preflight              | `apps/web/scripts/preflight.ts`                                                                                                                                                                   |
+| Worker entry                    | `apps/web/scripts/workflow-worker.ts`                                                                                                                                                             |
+| License file                    | `apps/web/scripts/licenses.ts` (run by the `tools` stage)                                                                                                                                         |
+| Other images built the same way | `e2e/Dockerfile`, `apps/gateway-resend/Dockerfile`                                                                                                                                                |
 
 ## Rules
 
@@ -46,10 +47,17 @@ See also [AGENTS.md](../AGENTS.md), [updater.md](updater.md), [self-host.md](sel
   - A run by hand (`workflow_dispatch`) pushes `latest*` and `<sha>*` only, and skips `publish`.
   - Releases tagged `desktop-v*` or `mobile-v*` build no images ([downloads.md](downloads.md)).
 - **A pre-release image is reachable only by pinning it.** `latest_release` and the updater's `fetchReleases` accept only `X.Y.Z` tags.
-- **An `app-v*` tag must match `apps/web/package.json` → `version`, and the root `CHANGELOG.md` must hold a `## <version> - <date>` section with entries; `docker.yml` fails the run before building otherwise.**
-  - `.github/scripts/changelog-section.sh` checks the section and prints it, which is also how the release body is written (`gh release create app-v<version> --verify-tag --notes-file …`).
+- **An `app-v*` tag must match `apps/web/package.json` → `version`, and `releases/app-v<version>.md` must exist with notes; `docker.yml` fails the run before building otherwise.**
+  - `bun run release:notes <tag>` checks the file and prints its published notes, which is also how the release body is written (`gh release create app-v<version> --verify-tag --notes-file …`).
   - The updater shows that body as the release's notes on Dashboard → Updates ([updater.md](updater.md)).
   - That field is the version the app shows beside its source link on every platform, including hosts no tag reaches ([ui.md](ui.md)).
+- **Every release's notes are one file in the root `releases/` folder, `<track>-v<version>.md` for the `app`, `desktop` and `mobile` tracks; the track and version come from the file name, and the YAML frontmatter holds the fields `releaseFieldsSchema` allows (`date` is required).**
+  - Each track's `CHANGELOG.md` holds `## Unreleased`, then `## Releases`, a list of that track's files, newest first.
+  - `@metis/releases` is the only reader: the docs changelog page, the CLI and CI all parse files through `readReleases`, so a new field is one schema line.
+  - `bun run release <tag>` moves `## Unreleased` into the new file and adds its list line; it never bumps versions, commits or tags.
+  - `bun run release:check` runs in CI and fails on a misnamed file, frontmatter the schema rejects, empty notes, or a list that differs from the files.
+- **What a release publishes is `publishedNotes(release)`, never the raw file.** The GitHub release body and every `v<version>/release.md` come from `bun run release:notes <tag>`, so fields reach published notes only through that function.
+  - The `release` and `publish` jobs install only this package (`bun install --filter @metis/releases`).
   - Bump it in the commit the tag points at.
 - **The updater is the only container with the Docker socket**, and the app reaches it only through its socket ([updater.md](updater.md)).
 - **Preflight is its own image and a one-shot service.** The app and worker wait on it with `service_completed_successfully`.

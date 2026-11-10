@@ -62,6 +62,9 @@
     "db:push": "bun run --cwd apps/web db:push",
     "db:migrate": "bun run --cwd apps/web db:migrate",
     "db:check": "bun run --cwd apps/web db:check",
+    "release": "bun packages/releases/src/cli.ts cut",
+    "release:check": "bun packages/releases/src/cli.ts check",
+    "release:notes": "bun packages/releases/src/cli.ts notes",
     "proto:generate": "buf generate proto --template proto/buf.gen.yaml",
     "build:desktop": "bun run --cwd apps/desktop dist",
     "dev:mobile": "bun run --cwd apps/mobile dev"

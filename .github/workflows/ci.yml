@@ -29,6 +29,9 @@ jobs:
       - name: Lint
         run: bun run lint
 
+      - name: Release files match the changelogs
+        run: bun run release:check
+
       - name: Shell core tests
         run: bun run --cwd packages/shell-core test
 

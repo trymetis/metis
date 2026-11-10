@@ -11,6 +11,7 @@
     "screenshots": "node scripts/screenshots.ts"
   },
   "dependencies": {
+    "@metis/releases": "workspace:*",
     "blume": "^2.2.6",
     "marked": "catalog:"
   },

@@ -40,7 +40,7 @@ const (
 
 var (
 	releasePattern  = regexp.MustCompile(`^[0-9]+\.[0-9]+\.[0-9]+$`)
-	releaseHeading  = regexp.MustCompile(`(?m)^## ([0-9]+\.[0-9]+\.[0-9]+)\b`)
+	releaseFile     = regexp.MustCompile(`^app-v([0-9]+\.[0-9]+\.[0-9]+)\.md$`)
 	releaseDefaults updaterSettings
 )
 
@@ -69,12 +69,16 @@ func loadReleaseDefaults(dir string) (updaterSettings, error) {
 	if !releasePattern.MatchString(current) {
 		return updaterSettings{}, fmt.Errorf("package.json version %q is not a release version", current)
 	}
-	changelog, err := os.ReadFile(filepath.Join(dir, "CHANGELOG.md"))
+	entries, err := os.ReadDir(filepath.Join(dir, "releases"))
 	if err != nil {
 		return updaterSettings{}, err
 	}
 	history := []string{current}
-	for _, match := range releaseHeading.FindAllStringSubmatch(string(changelog), -1) {
+	for _, entry := range entries {
+		match := releaseFile.FindStringSubmatch(entry.Name())
+		if match == nil {
+			continue
+		}
 		if version := match[1]; !slices.Contains(history, version) && olderRelease(version, current) {
 			history = append(history, version)
 		}

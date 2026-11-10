@@ -42,6 +42,7 @@
     "apps/docs": {
       "name": "@metis/docs",
       "dependencies": {
+        "@metis/releases": "workspace:*",
         "blume": "^2.2.6",
         "marked": "catalog:",
       },
@@ -357,6 +358,20 @@
         "metis-gateway-token": "./src/token-cli.ts",
       },
       "dependencies": {
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "oxfmt": "catalog:",
+        "oxlint": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
+    "packages/releases": {
+      "name": "@metis/releases",
+      "version": "0.1.0",
+      "dependencies": {
+        "yaml": "^2.9.1",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -1231,6 +1246,8 @@
     "@metis/gateway-resend": ["@metis/gateway-resend@workspace:apps/gateway-resend"],
 
     "@metis/mobile": ["@metis/mobile@workspace:apps/mobile"],
+
+    "@metis/releases": ["@metis/releases@workspace:packages/releases"],
 
     "@metis/shell-core": ["@metis/shell-core@workspace:packages/shell-core"],
 

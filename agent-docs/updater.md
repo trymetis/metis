@@ -84,7 +84,7 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [configurati
   - `Manager.switchTo` writes the three pins into `.env` (`EnvFile.Set`, an atomic rename keeping the file's mode), then `Stack.Switch` recreates the preflight container without starting it and runs `docker compose up -d --no-deps app`, leaving sqld, Caddy and the updater untouched.
   - Restoring calls `switchTo` with the previous images, removing a key that was unset before.
 - **State** lives in `<install>/.updater-state.json`: the images before the last successful upgrade, when its snapshot was taken, and the last record. A record still `RUNNING` when the updater starts becomes `ROLLBACK_FAILED`, because the process died mid-upgrade.
-- **Release notes** are `https://sh.trymetis.email/v<version>/release.md`, the release's changelog section, fetched directly by version for each listed release newer than the running one (all while the running version is unknown).
+- **Release notes** are `https://sh.trymetis.email/v<version>/release.md`, the release's published notes (`releases/app-v<version>.md` through `publishedNotes`), fetched directly by version for each listed release newer than the running one (all while the running version is unknown).
   - A version's notes never change, so fetched notes are kept for the life of the process; a version with none yet (404, or a release older than the file) is asked again once per TTL.
   - The fetches share a 10 s budget per pass, and a failed one only leaves that release without notes.
 

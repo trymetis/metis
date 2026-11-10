@@ -10,7 +10,7 @@ files=("$@")
 endpoint="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
 export AWS_DEFAULT_REGION=auto
 
-notes=$("$(dirname "$0")/changelog-section.sh" "$CHANGELOG" "$VERSION")
+notes=$(bun run --silent release:notes "${TRACK}-v${VERSION}")
 
 cd "$directory"
 

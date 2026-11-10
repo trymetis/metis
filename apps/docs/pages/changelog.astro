@@ -1,26 +1,24 @@
 ---
+import { TRACKS } from "@metis/releases";
 import PageLayout from "blume/components/layout/PageLayout.astro";
 import data from "blume:data";
 
-import { loadReleases, PLATFORMS } from "./_changelog/releases";
+import { loadReleases, TRACK_LABELS } from "./_changelog/releases";
 
 const { config } = data;
 const product = config.logo?.text || config.title;
 const releases = loadReleases();
 const description = `Every ${product} release, newest first: the app, the desktop app and the mobile app.`;
 const counts = Object.fromEntries(
-  PLATFORMS.map((platform) => [
-    platform.id,
-    releases.filter((release) => release.platform === platform.id).length,
-  ]),
+  TRACKS.map((track) => [track, releases.filter((release) => release.track === track).length]),
 );
 
 const tabs = [
   { id: "all", label: "All", count: releases.length },
-  ...PLATFORMS.map((platform) => ({
-    id: platform.id,
-    label: platform.label,
-    count: counts[platform.id],
+  ...TRACKS.map((track) => ({
+    id: track,
+    label: TRACK_LABELS[track],
+    count: counts[track],
   })),
 ];
 
@@ -82,7 +80,7 @@ const tab =
       {releases.map((release) => (
         <li
           id={release.id}
-          data-platform={release.platform}
+          data-track={release.track}
           class="grid scroll-mt-32 gap-4 border-b border-border py-10 last:border-b-0 md:grid-cols-[12rem_minmax(0,1fr)] md:gap-10"
         >
           <div class="self-start md:sticky md:top-32">
@@ -120,7 +118,7 @@ const tab =
 
     const tabs = [...root.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
     const panel = root.querySelector<HTMLElement>('[role="tabpanel"]');
-    const releases = [...root.querySelectorAll<HTMLElement>("[data-platform]")];
+    const releases = [...root.querySelectorAll<HTMLElement>("[data-track]")];
     const count = root.querySelector<HTMLElement>("[data-count]");
     const empty = root.querySelector<HTMLElement>("[data-empty]");
 
@@ -134,7 +132,7 @@ const tab =
       panel?.setAttribute("aria-labelledby", current.id);
       let shown = 0;
       for (const release of releases) {
-        const visible = filter === "all" || release.dataset.platform === filter;
+        const visible = filter === "all" || release.dataset.track === filter;
         release.hidden = !visible;
         if (visible) shown += 1;
       }
