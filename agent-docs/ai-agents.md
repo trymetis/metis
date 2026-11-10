@@ -21,7 +21,7 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [mcp.md](
 | Chat step budget                          | `src/mastra/step-budget.ts` → `chatStopWhen`, `finalAnswerStep`, `searchBudget` and the limits                                                                                                                                                                                                           |
 | Assistant threads                         | `src/mastra/memory.ts` → `workspaceMemory` · procedures `src/server/routes/assistant.ts` · UI `src/app/w/[slug]/assistant/`                                                                                                                                                                              |
 | Inline references                         | `src/ai/references.ts` → `REFERENCE_TYPES` · `src/ai/reference-directory.ts` → `suggestReferences`, `resolveReferences` · `src/mastra/reference-legend.ts` → `referenceLegend` · composer node `src/components/agent/references/reference-node.tsx` · procedures `src/server/routes/agent-references.ts` |
-| Approval UI                               | `src/components/agent/agent-tool-call.tsx` · `sendAutomaticallyWhen` in each chat panel                                                                                                                                                                                                                  |
+| Approval UI                               | `src/components/agent/agent-tool-call.tsx` → `AgentToolGroup`, `pendingApproval` · `src/components/agent/agent-approval-bar.tsx` → `AgentApprovalBar` · `sendAutomaticallyWhen` in each chat panel                                                                                                       |
 | Usage accounting                          | `src/ai/usage.ts` → `recordAiUsage` · `src/ai/usage-features.ts` → `AI_USAGE_FEATURES`                                                                                                                                                                                                                   |
 | Stream errors                             | `src/mastra/stream-error.ts` → `mapStreamError`                                                                                                                                                                                                                                                          |
 
@@ -105,6 +105,15 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [mcp.md](
   - Workspace-agent writes that send, retry a send, cancel, delete, unsubscribe or change the workspace take it, as does every workflow, calendar, drive and contact write.
   - Reversible personal writes run without it: snooze, mute, read later, labels, `archiveEmail`.
 - **Every approval-gated tool takes a `summary` and has its own label and approval text in `agent-tool-call.tsx`.**
+- **At most one approval is ever pending.** Mastra runs a step's tool calls one at a time whenever any registered tool needs approval, as every chat agent's roster does, and the first gated call suspends the run before the rest of the step starts; answering resumes the step, so a later gated call asks next.
+- **A pending approval shows above the chat composer, never in the transcript** (`AgentApprovalBar`, mounted by all five chat panels, fed by `pendingApproval`).
+  - It is attached to the top of the composer, so the composer's top corners go square while it shows.
+  - It shows the approval text, the summary and the call's arguments as labelled fields (`describeFields`); Enter approves and Escape declines while focus is outside a text field.
+  - Ids never show raw: `mailboxId` and `driveId` resolve to the mailbox address and drive name (`src/components/agent/resource-names.ts` → `useResourceNames`), a path-like id shows as its path, a list of ids (`ids` included) or of records as a count, and any other id is left out.
+  - Text sent while an approval waits declines it with that text as the reason, which reaches the model.
+- **Consecutive tool calls show as one collapsed row group** (`AgentToolGroup`): the latest call stays visible, and each row opens to its arguments and result.
+  - Tool search's own calls (`search_tools`, `load_tool`) never show; they are how the agent finds tools, not actions on the user's data (`isInternalTool`).
+- **Suggestion chips show only before a chat's first message**; once a thread has started, the composer stands alone.
 
 ### References
 

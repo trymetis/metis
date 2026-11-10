@@ -67,7 +67,7 @@ There are four instance roles. Three of them open the dashboard:
 
 Everyone else has the instance role **User**, which is the default. A user works in Metis Suite as usual, but has no access to the dashboard.
 
-People with the owner, admin or observer role see **Dashboard** in their user menu and in search. Users do not see it.
+People with the owner, admin or observer role see **Dashboard** in their account menu and in search. Users do not see it.
 
 Managing someone means changing their instance role, banning or unbanning them, or removing their account. All of these ask for your authenticator code. Nobody can ban themselves. An account invite can also make the new account an admin or observer. If it does, sending it asks for your code too. An account invite with no role needs no code. See [How invites work](/guide/account/invite-people).
 

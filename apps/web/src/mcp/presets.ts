@@ -12,6 +12,11 @@ export type McpPresetId = (typeof MCP_PRESET_IDS)[number];
 
 type RedirectInput = { port?: number; callbackId: string; origin: string };
 
+export type McpGuide =
+  | { kind: "command"; text: string }
+  | { kind: "config"; file: string; text: string }
+  | { kind: "steps"; text: string; values?: { label: string; value: string }[] };
+
 export type McpPreset = {
   id: McpPresetId;
   label: string;
@@ -20,8 +25,13 @@ export type McpPreset = {
   defaultPort?: number;
   hint: string;
   redirectUris: (input: RedirectInput) => string[];
-  instructions: (input: { clientId: string; port?: number; mcpUrl: string }) => string;
-  removal: string;
+  instructions: (input: { clientId: string; port?: number; mcpUrl: string }) => McpGuide;
+  removal: McpGuide;
+};
+
+export const SELF_REGISTERED_REMOVAL: McpGuide = {
+  kind: "steps",
+  text: "Remove the Metis Suite server from your client's MCP settings.",
 };
 
 export const MCP_PRESETS: Record<McpPresetId, McpPreset> = {
@@ -33,9 +43,11 @@ export const MCP_PRESETS: Record<McpPresetId, McpPreset> = {
     defaultPort: 8791,
     hint: "Claude Code needs a fixed port number so it can receive the sign-in response.",
     redirectUris: ({ port }) => [`http://localhost:${port}/callback`, "http://127.0.0.1/callback"],
-    instructions: ({ clientId, port, mcpUrl }) =>
-      `claude mcp add --transport http \\\n  --client-id ${clientId} \\\n  --callback-port ${port} \\\n  metis-suite ${mcpUrl}`,
-    removal: "claude mcp remove metis-suite",
+    instructions: ({ clientId, port, mcpUrl }) => ({
+      kind: "command",
+      text: `claude mcp add --transport http \\\n  --client-id ${clientId} \\\n  --callback-port ${port} \\\n  metis-suite ${mcpUrl}`,
+    }),
+    removal: { kind: "command", text: "claude mcp remove metis-suite" },
   },
   "claude-desktop": {
     id: "claude-desktop",
@@ -47,9 +59,15 @@ export const MCP_PRESETS: Record<McpPresetId, McpPreset> = {
       "https://claude.ai/api/mcp/auth_callback",
       "https://claude.com/api/mcp/auth_callback",
     ],
-    instructions: ({ clientId, mcpUrl }) =>
-      `Settings → Connectors → Add custom connector\nURL: ${mcpUrl}\nAdvanced settings → OAuth Client ID: ${clientId}\nLeave the client secret empty.`,
-    removal: "Settings → Connectors → remove the Metis Suite connector",
+    instructions: ({ mcpUrl }) => ({
+      kind: "steps",
+      text: "In Settings → Connectors, add a custom connector with this URL. Under Advanced settings, paste the client ID as the OAuth Client ID and leave the client secret empty.",
+      values: [{ label: "URL", value: mcpUrl }],
+    }),
+    removal: {
+      kind: "steps",
+      text: "In Settings → Connectors, remove the Metis Suite connector.",
+    },
   },
   codex: {
     id: "codex",
@@ -58,9 +76,11 @@ export const MCP_PRESETS: Record<McpPresetId, McpPreset> = {
     needsPinnedPort: false,
     hint: "Codex handles sign-in automatically — nothing to configure here.",
     redirectUris: ({ callbackId }) => [`http://127.0.0.1/callback/${callbackId}`],
-    instructions: ({ clientId, mcpUrl }) =>
-      `codex mcp add metis-suite \\\n  --url ${mcpUrl} \\\n  --oauth-client-id ${clientId}`,
-    removal: "codex mcp remove metis-suite",
+    instructions: ({ clientId, mcpUrl }) => ({
+      kind: "command",
+      text: `codex mcp add metis-suite \\\n  --url ${mcpUrl} \\\n  --oauth-client-id ${clientId}`,
+    }),
+    removal: { kind: "command", text: "codex mcp remove metis-suite" },
   },
   "cursor-desktop": {
     id: "cursor-desktop",
@@ -69,9 +89,15 @@ export const MCP_PRESETS: Record<McpPresetId, McpPreset> = {
     needsPinnedPort: false,
     hint: "Cursor handles sign-in automatically — nothing to configure here.",
     redirectUris: () => ["http://localhost:8787/callback"],
-    instructions: ({ clientId, mcpUrl }) =>
-      `Add to mcp.json:\n{\n  "mcpServers": {\n    "metis-suite": {\n      "url": "${mcpUrl}",\n      "auth": { "CLIENT_ID": "${clientId}" }\n    }\n  }\n}`,
-    removal: 'Remove the "metis-suite" entry from Cursor\'s mcp.json',
+    instructions: ({ clientId, mcpUrl }) => ({
+      kind: "config",
+      file: "Cursor's mcp.json",
+      text: `{\n  "mcpServers": {\n    "metis-suite": {\n      "url": "${mcpUrl}",\n      "auth": { "CLIENT_ID": "${clientId}" }\n    }\n  }\n}`,
+    }),
+    removal: {
+      kind: "steps",
+      text: 'Open Cursor\'s mcp.json and delete the "metis-suite" entry.',
+    },
   },
   "cursor-web": {
     id: "cursor-web",
@@ -80,9 +106,15 @@ export const MCP_PRESETS: Record<McpPresetId, McpPreset> = {
     needsPinnedPort: false,
     hint: "Add this alongside the desktop client if you sign in from both.",
     redirectUris: () => ["https://www.cursor.com/agents/mcp/oauth/callback"],
-    instructions: ({ clientId, mcpUrl }) =>
-      `Add to mcp.json:\n{\n  "mcpServers": {\n    "metis-suite": {\n      "url": "${mcpUrl}",\n      "auth": { "CLIENT_ID": "${clientId}" }\n    }\n  }\n}`,
-    removal: 'Remove the "metis-suite" entry from Cursor\'s mcp.json',
+    instructions: ({ clientId, mcpUrl }) => ({
+      kind: "config",
+      file: "Cursor's mcp.json",
+      text: `{\n  "mcpServers": {\n    "metis-suite": {\n      "url": "${mcpUrl}",\n      "auth": { "CLIENT_ID": "${clientId}" }\n    }\n  }\n}`,
+    }),
+    removal: {
+      kind: "steps",
+      text: 'Open Cursor\'s mcp.json and delete the "metis-suite" entry.',
+    },
   },
   vscode: {
     id: "vscode",
@@ -91,9 +123,15 @@ export const MCP_PRESETS: Record<McpPresetId, McpPreset> = {
     needsPinnedPort: false,
     hint: "VS Code handles sign-in automatically — nothing to configure here.",
     redirectUris: () => ["https://vscode.dev/redirect"],
-    instructions: ({ clientId, mcpUrl }) =>
-      `Add to mcp.json:\n{\n  "servers": {\n    "metis-suite": {\n      "type": "http",\n      "url": "${mcpUrl}",\n      "oauth": { "clientId": "${clientId}" }\n    }\n  }\n}`,
-    removal: 'Remove the "metis-suite" entry from VS Code\'s mcp.json',
+    instructions: ({ clientId, mcpUrl }) => ({
+      kind: "config",
+      file: "VS Code's mcp.json",
+      text: `{\n  "servers": {\n    "metis-suite": {\n      "type": "http",\n      "url": "${mcpUrl}",\n      "oauth": { "clientId": "${clientId}" }\n    }\n  }\n}`,
+    }),
+    removal: {
+      kind: "steps",
+      text: 'Open VS Code\'s mcp.json and delete the "metis-suite" entry.',
+    },
   },
   custom: {
     id: "custom",
@@ -102,14 +140,15 @@ export const MCP_PRESETS: Record<McpPresetId, McpPreset> = {
     needsPinnedPort: false,
     hint: "Enter the exact URL your client returns to after sign-in — check its docs if you're unsure.",
     redirectUris: () => [],
-    instructions: ({ clientId, mcpUrl }) =>
-      `Server URL: ${mcpUrl}\nClient ID: ${clientId}\nThere is no secret key — the client ID is all you need.`,
-    removal: "Remove the Metis Suite server from your client's MCP config",
+    instructions: ({ mcpUrl }) => ({
+      kind: "steps",
+      text: "Add a server to your client with this URL and the client ID above. There is no secret key — the client ID is all you need.",
+      values: [{ label: "Server URL", value: mcpUrl }],
+    }),
+    removal: SELF_REGISTERED_REMOVAL,
   },
 };
 
 export const MCP_PRESET_LIST = MCP_PRESET_IDS.map((id) => MCP_PRESETS[id]);
 
 export const SELF_REGISTERED_LABEL = "Self-identified client";
-export const SELF_REGISTERED_REMOVAL =
-  "Remove the Metis Suite server from your client's MCP config";

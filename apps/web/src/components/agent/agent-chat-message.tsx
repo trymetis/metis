@@ -7,7 +7,7 @@ import { hasReferences } from "@/ai/references";
 import { TURN_PART_TYPE, turnEnvelopeSchema } from "@/ai/turn";
 
 import { Message, MessageContent, MessageResponse } from "../ai-elements/message";
-import { AgentToolCall, type ApprovalResponder } from "./agent-tool-call";
+import { AgentToolGroup, type AnyToolPart, isInternalTool } from "./agent-tool-call";
 import { ReferenceText } from "./references/reference-text";
 import { AttachmentChips } from "./turn-attachments";
 
@@ -36,17 +36,37 @@ function turnChips(data: unknown) {
   return null;
 }
 
-export function AgentChatMessage({
-  message,
-  onApproval,
-}: {
-  message: UIMessage;
-  onApproval: ApprovalResponder;
-}) {
+type Block =
+  | { kind: "part"; part: UIMessage["parts"][number]; index: number }
+  | { kind: "tools"; parts: AnyToolPart[] };
+
+function toBlocks(parts: UIMessage["parts"]): Block[] {
+  const blocks: Block[] = [];
+  parts.forEach((part, index) => {
+    if (isToolUIPart(part)) {
+      if (isInternalTool(part)) return;
+      const prev = blocks.at(-1);
+      if (prev?.kind === "tools") prev.parts.push(part);
+      else blocks.push({ kind: "tools", parts: [part] });
+      return;
+    }
+    if (part.type === "step-start") return;
+    blocks.push({ kind: "part", part, index });
+  });
+  return blocks;
+}
+
+export function AgentChatMessage({ message }: { message: UIMessage }) {
   return (
     <Message from={message.role}>
       <MessageContent>
-        {message.parts.map((part, index) => {
+        {toBlocks(message.parts).map((block) => {
+          if (block.kind === "tools") {
+            // oxlint-disable-next-line typescript/no-non-null-assertion --a tools block always holds at least one part
+            const first = block.parts[0]!;
+            return <AgentToolGroup key={first.toolCallId} parts={block.parts} />;
+          }
+          const { part, index } = block;
           if (part.type === TURN_PART_TYPE) {
             const turn = turnChips("data" in part ? part.data : undefined);
             if (!turn) return null;
@@ -55,7 +75,6 @@ export function AgentChatMessage({
                 chips={turn.chips}
                 className="mb-1.5"
                 icon={turn.icon}
-                // oxlint-disable-next-line react/no-array-index-key --message parts are append-only and stable in order
                 key={`${message.id}-turn${index}`}
                 variant="transcript"
               />
@@ -63,21 +82,9 @@ export function AgentChatMessage({
           }
           if (part.type === "text") {
             if (message.role === "user" && hasReferences(part.text)) {
-              return (
-                <ReferenceText
-                  // oxlint-disable-next-line react/no-array-index-key --message parts are append-only and stable in order
-                  key={`${message.id}-t${index}`}
-                  text={part.text}
-                />
-              );
+              return <ReferenceText key={`${message.id}-t${index}`} text={part.text} />;
             }
-            return (
-              // oxlint-disable-next-line react/no-array-index-key --message parts are append-only and stable in order
-              <MessageResponse key={`${message.id}-t${index}`}>{part.text}</MessageResponse>
-            );
-          }
-          if (isToolUIPart(part)) {
-            return <AgentToolCall key={part.toolCallId} onApproval={onApproval} part={part} />;
+            return <MessageResponse key={`${message.id}-t${index}`}>{part.text}</MessageResponse>;
           }
           return null;
         })}

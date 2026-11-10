@@ -109,6 +109,7 @@ import {
   listLabels,
   setLabel,
   setLabels,
+  updateLabel,
 } from "./tools/labels";
 import { getAttachmentText, getRawEmail, listAttachments, summarizeThread } from "./tools/mail";
 import {
@@ -235,6 +236,7 @@ const MCP_TOOLS = {
   listSubscriptions,
   unsubscribe,
   createLabel,
+  updateLabel,
   deleteLabel,
   setLabels,
   searchContacts,

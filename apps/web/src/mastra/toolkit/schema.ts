@@ -3,7 +3,12 @@ import { z } from "zod";
 import { SIGNATURE_HTML_MAX, SIGNATURE_NAME_MAX } from "@/mail/signature-markup";
 import { THEME_BRAND_IDS } from "@/theme/brand";
 import { WRITABLE_ATTENDEE_RESPONSES } from "@/types/calendar";
-import { CUSTOM_LABEL_COLORS, MAIL_FOLDERS, MAIL_SIGNATURE_SCOPES } from "@/types/mail";
+import {
+  CUSTOM_LABEL_COLORS,
+  HEX_COLOR_PATTERN,
+  MAIL_FOLDERS,
+  MAIL_SIGNATURE_SCOPES,
+} from "@/types/mail";
 import { nodeSchema } from "@/workflow/schema";
 
 export const folderEnum = z.enum(MAIL_FOLDERS);
@@ -144,15 +149,25 @@ export const unsubscribeFields = {
     .max(25),
 };
 
+const labelColor = z
+  .union([z.enum(CUSTOM_LABEL_COLORS), z.string().trim().toLowerCase().regex(HEX_COLOR_PATTERN)])
+  .describe("A palette color name, or any color as #rrggbb");
+
 export const createLabelFields = {
   ...mailboxTarget,
   name: z.string().trim().min(1).max(40),
-  color: z.enum(CUSTOM_LABEL_COLORS).optional(),
+  color: labelColor.optional(),
 };
 
 export const labelKeyTarget = {
   ...mailboxTarget,
   label: z.string().describe("A custom label key from listLabels"),
+};
+
+export const updateLabelFields = {
+  ...labelKeyTarget,
+  name: z.string().trim().min(1).max(40).optional().describe("New display name; the key stays"),
+  color: labelColor.optional(),
 };
 
 export const setLabelsFields = {

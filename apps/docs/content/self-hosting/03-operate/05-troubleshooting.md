@@ -85,7 +85,7 @@ Open **Dashboard**, **System**, **Updates**. The **Last upgrade** or **Last undo
 
 ### The owner dashboard is missing
 
-Only the owner (the account whose email matches `METIS_OWNER_EMAIL`), admins and observers see **Dashboard** in the user menu. Check that `METIS_OWNER_EMAIL` is exactly your sign-in address. To give someone else access, the owner or an admin opens **Dashboard**, **Accounts**, **Users**, opens the person's actions menu and picks a role under **Change role**. See [Instance roles](/self-hosting/operate/owner-dashboard#instance-roles).
+Only the owner (the account whose email matches `METIS_OWNER_EMAIL`), admins and observers see **Dashboard** in the account menu. Check that `METIS_OWNER_EMAIL` is exactly your sign-in address. To give someone else access, the owner or an admin opens **Dashboard**, **Accounts**, **Users**, opens the person's actions menu and picks a role under **Change role**. See [Instance roles](/self-hosting/operate/owner-dashboard#instance-roles).
 
 ### Someone sees "This account is banned. Ask the instance owner or an admin."
 

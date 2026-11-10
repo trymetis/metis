@@ -37,6 +37,9 @@ See also [AGENTS.md](../AGENTS.md), [drive.md](drive.md), [drive-providers.md](d
 - **Opening a file** (double-click, Enter, the drive `p` chord, the drive agent, or a `<@file:…>` chip in the workspace assistant's transcript) opens the shared side pane.
 - **Pane Download** saves the same blob through `<a download>` with no second transfer.
 - **Chips.** A chip is clickable only where its page passes `onOpen` to `AgentReferenceProvider` ([ai-agents.md](ai-agents.md)). The assistant resolves the chip's `driveId|fileId` to the workspace's drive slug and a fresh `drive.get` entry before opening the pane, so the same caps and cache freshness apply.
+- **Grid thumbnails** (`src/components/drive/use-drive-thumbnail.ts` → `useDriveThumbnail`) read through the same Download route: an image up to 10 MB with a known `modifiedAt` is fetched once its tile nears the viewport, at most three at a time, shrunk to a 256px WebP and cached under its own key (`previewCacheKey` over the drive id and `thumbnail` plus the file id).
+  - A drive whose download the browser cannot read (Google Drive) shows icons; its first failed fetch stops further tries for the session.
+  - Thumbnail fetches count toward the `drive-download` rate limit.
 - **Cache.** OPFS, LRU within `BUDGET_BYTES`, keyed by a hash of drive id + provider file id (`previewCacheKey`), so `/d/<slug>` and `/d/all` share an entry.
 
 ## Deliberate limits

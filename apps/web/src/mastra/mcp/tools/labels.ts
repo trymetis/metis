@@ -8,6 +8,7 @@ import {
   labelKeyTarget,
   messageTarget,
   setLabelsFields,
+  updateLabelFields,
 } from "@/mastra/toolkit/schema";
 import * as labels from "@/ops/labels";
 
@@ -80,6 +81,20 @@ export const createLabel = createTool({
         name,
         color,
       });
+    }),
+});
+
+export const updateLabel = createTool({
+  id: "updateLabel",
+  description:
+    "Rename or recolor a custom label in a specific mailbox. Its key stays the same, so labelled emails and workflows keep it.",
+  inputSchema: inWorkspace(updateLabelFields),
+  execute: async ({ workspaceId, mailboxId, label, name, color }, { requestContext }) =>
+    withToolErrors(async () => {
+      const ctx = await mcpScopeFromCall(requestContext, workspaceId);
+      const r = requireMailbox(ctx, mailboxId);
+      if ("error" in r) return r;
+      return labels.updateLabel({ mailbox: r.mailbox, key: label, name, color });
     }),
 });
 

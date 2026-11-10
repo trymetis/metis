@@ -88,7 +88,13 @@ If the instance owner or an instance admin bans your account, all your clients s
 ## Remove a client
 
 1. Click the trash button (**Remove client**) in the list or on the client's page.
-2. Read the dialog. It shows the client ID and, under **Also remove it locally**, the command or step that removes Metis Suite from your app (for example `claude mcp remove metis-suite`). Click **Copy removal command** if you want it.
+2. Read the dialog. It shows the client ID and, under **Also remove it locally**, how to remove Metis Suite from your app:
+   - For Claude Code and Codex CLI, "Run this in your terminal" shows a command with a copy button: `claude mcp remove metis-suite` or `codex mcp remove metis-suite`.
+   - For Claude Desktop or claude.ai, "Do this in the client" says "In Settings → Connectors, remove the Metis Suite connector."
+   - For Cursor and VS Code, "Do this in the client" says, for example, "Open Cursor's mcp.json and delete the "metis-suite" entry."
+   - For other clients, it says "Remove the Metis Suite server from your client's MCP settings."
+
+   Steps you do in the client have no copy button.
 
    <img
      src="/images/assistant/remove-mcp-client.webp"

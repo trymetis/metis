@@ -7,7 +7,9 @@ import { AlertTriangle, Bot, File, X } from "lucide-react";
 import { useMemo } from "react";
 
 import { type AgentFile, TURN_PART_TYPE, toAgentFile, viewerTimeZone } from "@/ai/turn";
+import { AgentApprovalBar } from "@/components/agent/agent-approval-bar";
 import { AgentChatMessage } from "@/components/agent/agent-chat-message";
+import { pendingApproval } from "@/components/agent/agent-tool-call";
 import {
   AttachmentChips,
   AttachmentPicker,
@@ -26,7 +28,7 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
-import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
+import { Suggestion } from "@/components/ai-elements/suggestion";
 import { useWorkspaceScope } from "@/hooks/use-workspace-path";
 import { formatBytes } from "@/lib/utils";
 import type { DriveEntryRow } from "@/server/schema";
@@ -106,6 +108,7 @@ export function DriveAgentPanel({
       onError: (err) => console.error("[drive-agent] chat error:", err),
       onFinish: () => onRefresh(),
     });
+  const pending = pendingApproval(messages);
 
   function sendText(text: string) {
     void sendMessage({
@@ -160,13 +163,7 @@ export function DriveAgentPanel({
               </div>
             </ConversationEmptyState>
           ) : (
-            messages.map((message) => (
-              <AgentChatMessage
-                key={message.id}
-                message={message}
-                onApproval={addToolApprovalResponse}
-              />
-            ))
+            messages.map((message) => <AgentChatMessage key={message.id} message={message} />)
           )}
 
           {error && (
@@ -202,17 +199,17 @@ export function DriveAgentPanel({
           onRemove={remove}
         />
 
-        {messages.length > 0 && (
-          <Suggestions className="mb-2">
-            {SUGGESTIONS.map((s) => (
-              <Suggestion key={s} onClick={sendText} suggestion={s} />
-            ))}
-          </Suggestions>
-        )}
+        <AgentApprovalBar onApproval={addToolApprovalResponse} pending={pending} />
         <PromptInput
+          className={pending ? "[&_[data-slot=input-group]]:rounded-t-none" : undefined}
           onSubmit={(message) => {
             const text = message.text.trim();
-            if (text) sendText(text);
+            if (!text) return;
+            if (pending) {
+              addToolApprovalResponse({ id: pending.approval.id, approved: false, reason: text });
+              return;
+            }
+            sendText(text);
           }}
         >
           <PromptInputBody>

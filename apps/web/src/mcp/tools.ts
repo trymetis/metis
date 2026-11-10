@@ -374,6 +374,12 @@ export const MCP_TOOL_MANIFEST = [
     group: "Labels",
   },
   {
+    key: "updateLabel",
+    label: "Edit label",
+    description: "Rename or recolor a custom label in a mailbox",
+    group: "Labels",
+  },
+  {
     key: "deleteLabel",
     label: "Delete label",
     description: "Delete a custom label from a mailbox",

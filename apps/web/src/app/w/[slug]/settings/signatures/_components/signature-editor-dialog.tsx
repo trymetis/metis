@@ -21,7 +21,7 @@ import { StarterKit } from "@tiptap/starter-kit";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
-import { SIGNATURE_NAME_MAX } from "@/mail/signature-markup";
+import { SIGNATURE_NAME_MAX, type SignatureVariables } from "@/mail/signature-markup";
 
 import { SignaturePreview } from "./signature-preview";
 
@@ -39,12 +39,14 @@ export function SignatureEditorDialog({
   initial,
   kind = "signature",
   title,
+  previewVars,
   onClose,
   onSave,
 }: {
   initial: SignatureDraft;
   kind?: "signature" | "footer";
   title: string;
+  previewVars: SignatureVariables;
   onClose: () => void;
   onSave: (draft: SignatureDraft) => Promise<void>;
 }) {
@@ -109,7 +111,7 @@ export function SignatureEditorDialog({
             <DialogDescription>
               {isSignature
                 ? 'Use "{{name}}" and "{{email}}" to fill in the sender. Images must be https links.'
-                : "Added after the signature and any quoted text on every message sent from this workspace. Images must be https links."}
+                : 'Added after the signature and any quoted text on every message sent from this workspace. Use "{{name}}" and "{{email}}" to fill in the sender. Images must be https links.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -156,7 +158,7 @@ export function SignatureEditorDialog({
             <p className="mb-1 text-[10px] font-medium uppercase tracking-[1.5px] text-faint">
               Preview
             </p>
-            <SignaturePreview html={html} />
+            <SignaturePreview html={html} vars={previewVars} />
           </div>
 
           {isSignature && (

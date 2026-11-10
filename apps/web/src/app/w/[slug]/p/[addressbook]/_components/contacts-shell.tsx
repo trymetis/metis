@@ -2,11 +2,10 @@
 
 import { Button } from "@metis/ui/components/button";
 import { cn } from "@metis/ui/lib/utils";
-import { Bot } from "lucide-react";
+import { Bot, Plus } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { AgentDisabled } from "@/components/agent/agent-disabled";
-import { MobileAsideTrigger, ResponsiveAside } from "@/components/mobile-aside";
 import { usePlatformPolicy } from "@/components/platform-policy-context";
 import { useScopePolicy } from "@/components/scope-policy-context";
 
@@ -14,30 +13,36 @@ import { ContactCard } from "./contact-card";
 import { ContactDialog } from "./contact-dialog";
 import { ContactList } from "./contact-list";
 import { ContactsAgentPanel } from "./contacts-agent-panel";
+import { ContactsColumnHeader } from "./contacts-column-header";
 import { ContactsProvider, useContacts } from "./contacts-context";
-import { ContactsSidebar } from "./contacts-sidebar";
 
 function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAgent: () => void }) {
   const platformAi = usePlatformPolicy().ai;
   const policy = useScopePolicy();
-  const { scope, selected, selectedLoading, errors, book, bookName } = useContacts();
+  const { scope, selected, selectedLoading, errors, book, bookName, setEditor } = useContacts();
   const hasSelection = selected !== null || selectedLoading;
 
   return (
     <>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-3">
-          <MobileAsideTrigger className="-ml-1.5 size-8 shrink-0" />
-          <h1 className="font-serif text-[20px] font-medium tracking-tight text-foreground">
+          <h1 className="min-w-0 truncate font-serif text-[20px] font-medium tracking-tight text-foreground">
             {book ? bookName(book) : "All contacts"}
           </h1>
+          <Button
+            size="sm"
+            className="ml-auto gap-1.5 rounded-full"
+            onClick={() => setEditor({ mode: "create" })}
+          >
+            <Plus className="h-4 w-4" />
+            New contact
+          </Button>
           {platformAi && (
             <Button
               variant={agentOpen ? "secondary" : "ghost"}
               size="icon"
               aria-label="Contacts AI"
               aria-pressed={agentOpen}
-              className="ml-auto"
               onClick={onToggleAgent}
             >
               <Bot className="h-4 w-4" />
@@ -58,6 +63,7 @@ function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAge
               hasSelection && "max-md:hidden",
             )}
           >
+            <ContactsColumnHeader />
             <ContactList />
           </div>
           <div className={cn("min-w-0 flex-1", !hasSelection && "max-md:hidden")}>
@@ -94,9 +100,6 @@ export function ContactsShell() {
   return (
     <ContactsProvider>
       <div className="flex h-full min-h-0">
-        <ResponsiveAside label="Address books">
-          <ContactsSidebar />
-        </ResponsiveAside>
         <Surface agentOpen={agentOpen} onToggleAgent={toggleAgent} />
       </div>
     </ContactsProvider>

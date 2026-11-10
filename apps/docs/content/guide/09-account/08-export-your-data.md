@@ -11,8 +11,8 @@ It is also not a mailbox archive. Your mail, calendar events, files and contacts
 
 ## Download your data
 
-1. Open your user menu (the round button with your initials at the bottom of the left rail).
-2. Click **Settings**. The **Account** page opens.
+1. Open your account menu (the round button with your initials at the bottom of the left rail).
+2. Click **Account**. The **Account** page opens.
 3. Scroll down to the **Export your data** card, below **Where you're signed in**.
 
    <img src="/images/account/data-export.webp" alt="The Export your data card with its Download export button" class="dark:hidden" />

@@ -36,10 +36,11 @@ async function discardDrafts(rpc: Rpc, account: Account, subject: string) {
   }
 }
 
-function mineIn(page: Page, account: Account) {
-  return page
-    .getByRole("region", { name: `Signatures for ${account.email}` })
-    .getByRole("region", { name: "Your signatures" });
+async function openMine(page: Page, account: Account) {
+  const section = page.getByRole("region", { name: `Signatures for ${account.email}` });
+  const trigger = section.getByRole("button", { name: account.email });
+  if ((await trigger.getAttribute("aria-expanded")) !== "true") await trigger.click();
+  return section.getByRole("region", { name: "Your signatures" });
 }
 
 function occurrences(text: string, needle: string): number {
@@ -62,7 +63,7 @@ export default function signatureSpecs() {
         page.getByRole("main").getByRole("heading", { level: 1, name: "Signatures" }),
       ).toBeVisible();
 
-      const mine = mineIn(page, account);
+      const mine = await openMine(page, account);
       await mine.getByRole("button", { name: "Add" }).click();
       const dialog = page.getByRole("dialog", { name: "New signature" });
       await dialog.getByRole("textbox", { name: "Signature name" }).fill(name);
@@ -70,14 +71,16 @@ export default function signatureSpecs() {
       await dialog
         .getByRole("textbox", { name: "Signature HTML" })
         .fill('<p>Signed {{name}}</p><script>alert("x")</script>');
-      await expect(dialog.getByText("Signed {{name}}", { exact: true })).toBeVisible();
+      await expect(dialog.getByText(signed, { exact: true })).toBeVisible();
       await dialog.getByRole("checkbox", { name: "Default for new messages" }).click();
       await dialog.getByRole("button", { name: "Save" }).click();
       await expect(dialog).toHaveCount(0);
 
-      const card = mine.getByRole("listitem").filter({ hasText: name });
+      const card = mine.getByRole("button").filter({ hasText: name });
       await expect(card.getByText("New messages", { exact: true })).toBeVisible();
-      await expect(card).not.toContainText("alert");
+      await card.click();
+      await expect(mine.getByText(signed, { exact: true })).toBeVisible();
+      await expect(mine).not.toContainText("alert");
 
       await goToFolder(page, account, "inbox");
       await folders(page).getByRole("button", { name: "Compose", exact: true }).click();

@@ -1,39 +1,15 @@
 "use client";
 
 import { cn } from "@metis/ui/lib/utils";
-import {
-  BookUser,
-  CalendarDays,
-  EyeOff,
-  HardDrive,
-  Link2,
-  Mail,
-  Plug,
-  ShieldCheck,
-  UserRound,
-  Users,
-} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { ResponsiveAside } from "@/components/mobile-aside";
 import { usePlatformPolicy } from "@/components/platform-policy-context";
+import { accountSettingsNav } from "@/components/settings-nav";
 import { SourceLink } from "@/components/source-link";
 import type { SourceInfo } from "@/source-info";
 import { workspaceRootPath } from "@/workspace/path";
-
-const SETTINGS_NAV = [
-  { href: "/settings/account", label: "Account", icon: UserRound },
-  { href: "/settings/privacy", label: "Privacy", icon: EyeOff },
-  { href: "/settings/workspaces", label: "Workspaces", icon: Users },
-  { href: "/settings/connections", label: "Connections", icon: Link2 },
-  { href: "/settings/mailboxes", label: "Mailboxes", icon: Mail },
-  { href: "/settings/calendars", label: "Calendars", icon: CalendarDays },
-  { href: "/settings/drives", label: "Drives", icon: HardDrive },
-  { href: "/settings/address-books", label: "Address books", icon: BookUser },
-  { href: "/settings/mcp", label: "MCP clients", icon: Plug, ai: true },
-  { href: "/settings/security", label: "Security", icon: ShieldCheck },
-] as const;
 
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -41,8 +17,7 @@ function isActive(pathname: string, href: string) {
 
 export function SettingsSidebar({ source }: { source: SourceInfo }) {
   const pathname = usePathname();
-  const aiEnabled = usePlatformPolicy().ai;
-  const nav = SETTINGS_NAV.filter((item) => aiEnabled || !("ai" in item));
+  const nav = accountSettingsNav({ ai: usePlatformPolicy().ai });
 
   return (
     <ResponsiveAside label="Settings">

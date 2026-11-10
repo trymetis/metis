@@ -34,7 +34,7 @@ When a reply fails, the chat shows a box titled "Workspace Assistant hit a probl
 | "The assistant is busy right now. Wait a moment and try again." | The AI service your server uses has too many requests right now                                                                                                                                                | Wait a moment, then click **Retry**.  |
 | "The assistant is unavailable right now. Try again later."      | The AI service your server uses refused the request. This usually needs a fix on the server.                                                                                                                   | Tell the person who runs your server. |
 
-If one step in a reply fails but the rest work, that step shows the reason, or "That step didn't work".
+If one step in a reply fails but the rest work, that step shows the reason, or "That step didn't work". When the steps are grouped, the group's line also says how many failed, such as "· 1 failed". See [Tool calls in the chat](/guide/assistant/approve-or-decline-actions#tool-calls-in-the-chat).
 
 ## Other things to know
 

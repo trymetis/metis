@@ -31,7 +31,7 @@ If no default exists at any level, no signature is added. You can still pick one
 
 ## Open the Signatures page
 
-1. Open the workspace menu at the top of the left rail and choose **General**.
+1. Click **Workspace settings** (the gear at the top of the left rail). The **General** page opens.
 2. In the list on the left, click **Signatures**. It is between **Mailboxes** and **Calendars**.
 
 For a workspace called Design, the page address looks like `/w/design/settings/signatures`. Every member of the workspace can open it.
@@ -40,26 +40,28 @@ The page says "Your own signature wins over the mailbox's, which wins over the w
 
 It has these parts:
 
-- **Workspace**, at the top. It holds the **Workspace signatures** list ("Used for anyone sending from this workspace who has no mailbox or personal default.") and the [**Footer**](#the-workspace-mail-footer). Members also see "Only owners and admins can change them."
-- **One part for each mailbox** in the workspace, headed by the mailbox's email address. Each has two lists:
+- **Workspace**, at the top. It holds the **Workspace signatures** list ("Used for anyone sending from this workspace who has no mailbox or personal default.") and the [**Footer**](#the-workspace-mail-footer). Members also see "Only owners and admins can change them." On the right of the **Workspace** heading, **Preview as** lists the workspace's mailboxes by email address. The first one is chosen to start with. It sets which address the previews in this part use. See [Fill in the sender's name and address](#fill-in-the-senders-name-and-address). **Preview as** does not show when the workspace has no mailboxes.
+- **Mailboxes**, below it. Each mailbox in the workspace has its own section, headed by the mailbox's email address and a count such as "1 mailbox · 2 yours" (one mailbox signature and two of your own). The sections start closed. Click a section to open it. It has two lists:
   - **Mailbox signatures**: "Used by everyone who sends from this mailbox, in every workspace it is in." If you did not connect the mailbox, you also see "Only the person who connected it can change them."
   - **Your signatures**: "Only for you when you send from this mailbox."
 
-Each signature shows as a card with its name and a preview on a white background. A badge shows what it is the default for:
+Each signature shows as a row with its name. A badge shows what it is the default for:
 
 - **New messages**: the default for new messages.
 - **Replies**: the default for replies and forwards.
+
+Click a row to show the signature's preview under it. When you can change the signature, the row also has a pencil button to edit it and a trash button to delete it.
 
 A list with no signatures says "None yet."
 
 <img
   src="/images/mail/signatures-page.webp"
-  alt="The Signatures page with the Workspace part and a mailbox part, where Your signatures holds a signature named Work with the New messages and Replies badges"
+  alt="The Signatures page with the Workspace part and an open mailbox section, where Your signatures holds a signature named Work with the New messages and Replies badges"
   class="dark:hidden"
 />
 <img
   src="/images/mail/signatures-page-dark.webp"
-  alt="The Signatures page with the Workspace part and a mailbox part, where Your signatures holds a signature named Work with the New messages and Replies badges"
+  alt="The Signatures page with the Workspace part and an open mailbox section, where Your signatures holds a signature named Work with the New messages and Replies badges"
   class="hidden dark:block"
 />
 
@@ -68,10 +70,11 @@ A list with no signatures says "None yet."
 <Steps>
   <Step title="Open the list">
     On the **Signatures** page, find the list you want, for example **Your signatures** under the
-    mailbox you send from.
+    mailbox you send from. To reach a mailbox's lists, click its section under **Mailboxes** to open
+    it.
   </Step>
   <Step title="Click Add">
-    To change a signature instead, click the pencil button on its card. The **New signature** or
+    To change a signature instead, click the pencil button on its row. The **New signature** or
     **Edit signature** window opens. If you do not see **Add** or the pencil, you cannot change that
     list.
   </Step>
@@ -87,8 +90,8 @@ A list with no signatures says "None yet."
     Tick **Default for new messages**, **Default for replies and forwards**, both or neither.
   </Step>
   <Step title="Click Save">
-    The window closes and the card shows in the list. Click **Cancel** to close the window without
-    saving.
+    The window closes and the signature shows in the list. Click **Cancel** to close the window
+    without saving.
   </Step>
 </Steps>
 
@@ -114,7 +117,13 @@ The window reminds you that you can use `{{name}}` and `{{email}}` to fill in th
 - `{{name}}` becomes the name on the sender's Metis Suite account.
 - `{{email}}` becomes the address the message is sent from.
 
-They are filled in when the signature is added to a message. The preview on the **Signatures** page shows them as you typed them. Spaces and capital letters inside the braces are fine, so `{{ Name }}` works too.
+They are filled in when the signature is added to a message. Spaces and capital letters inside the braces are fine, so `{{ Name }}` works too.
+
+The previews fill them in too, so you see what a message will look like:
+
+- In a mailbox's section, `{{name}}` shows your name and `{{email}}` shows that mailbox's address.
+- Under **Workspace**, `{{name}}` shows your name and `{{email}}` shows the address of the mailbox chosen in **Preview as**.
+- The preview in the **New signature**, **Edit signature** and **Mail footer** windows fills them in the same way.
 
 This is useful for a mailbox or workspace signature that many people use. For example, a workspace signature of `{{name}}, Design team` reads "Ana Lopez, Design team" when Ana sends a message.
 
@@ -151,7 +160,7 @@ If nothing is left after this cleanup, the signature is never offered in the com
 
 ### Delete a signature
 
-Click the trash button on the signature's card. It is deleted at once, without asking you to confirm.
+Click the trash button on the signature's row. It is deleted at once, without asking you to confirm.
 
 ## Signatures in the composer
 
@@ -219,12 +228,14 @@ Only workspace owners and admins can change the footer. Members see it, read-onl
 1. Open the [**Signatures** page](#open-the-signatures-page).
 2. Under **Workspace**, find **Footer**. It says "Added to the end of every message sent through Metis from this workspace. Senders cannot remove it."
 3. Click **Edit**. The **Mail footer** window opens.
-4. Write the footer in **Rich text** or **HTML**, and check it under **Preview**.
+4. Write the footer in **Rich text** or **HTML**, and check it under **Preview**. The window says "Added after the signature and any quoted text on every message sent from this workspace. Use "{{name}}" and "{{email}}" to fill in the sender. Images must be https links."
 5. Click **Save**.
 
-The footer follows the same cleanup rules and the same 20,000-character limit as signatures. See [What is removed when you save](#what-is-removed-when-you-save). It has no name and no defaults. `{{name}}` and `{{email}}` are not filled in: they stay in the footer exactly as you typed them.
+The footer follows the same cleanup rules and the same 20,000-character limit as signatures. See [What is removed when you save](#what-is-removed-when-you-save). It has no name and no defaults.
 
-A preview of the current footer shows under **Footer**.
+You can use `{{name}}` and `{{email}}` in the footer. When a message is sent, `{{name}}` becomes the name on the sender's Metis Suite account and `{{email}}` becomes the address of the mailbox it is sent from. For a scheduled message, they are filled in when you schedule it. For mail a workflow sends, the sender is the person the workflow runs as.
+
+A preview of the current footer shows under **Footer**. It fills in `{{name}}` and `{{email}}` with your name and the address of the mailbox chosen in **Preview as**.
 
 <img
   src="/images/mail/signatures-footer.webp"

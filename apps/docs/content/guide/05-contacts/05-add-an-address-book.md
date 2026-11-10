@@ -7,7 +7,7 @@ To see contacts in a workspace, add an address book account in the workspace's c
 
 ## Open the contacts settings
 
-Click the workspace tile at the top of the left rail and choose **Contacts**. You can also click **Add address book** in the **Switch address book** menu, or **Go to contacts settings** on the Contacts page of a workspace with no address book.
+Click **Workspace settings** (the gear at the top of the left rail), then click **Contacts** in the list on the left. You can also click **Add address book** in the **Switch address book** menu, or **Go to contacts settings** on the Contacts page of a workspace with no address book.
 
 The page lists the section **Address books in this workspace**. If it is empty, it says "No address books here yet. Use Add address book to pick an account you've already connected, or connect a new one."
 

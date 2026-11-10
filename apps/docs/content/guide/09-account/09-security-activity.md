@@ -16,9 +16,8 @@ To find out each time someone signs in to your account, use [sign-in alerts](/gu
 
 ## Open Security activity
 
-1. Open your user menu (the round button with your initials at the bottom of the left rail) and click **Settings**.
-2. Click **Security**.
-3. Scroll down to the **Security activity** card. It is below **Disable two-factor authentication** and above **Delete account**.
+1. Open your account menu (the round button with your initials at the bottom of the left rail) and click **Security**.
+2. Scroll down to the **Security activity** card. It is below **Disable two-factor authentication** and above **Delete account**.
 
 The card says "Security-relevant changes you made, and changes other people made to your membership. Your server’s operator decides how long these are kept." If nothing has been recorded yet, it says "No security activity yet."
 

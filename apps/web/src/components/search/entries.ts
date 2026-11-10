@@ -6,26 +6,20 @@ import {
   BookUser,
   CalendarDays,
   CalendarPlus,
-  EyeOff,
   FolderPlus,
   HardDrive,
-  History,
   LayoutDashboard,
-  Link2,
   Mail,
   Moon,
   PenSquare,
-  Plug,
-  Settings,
-  ShieldCheck,
   Sparkles,
   Upload,
-  UserRound,
   Users,
   Workflow,
 } from "lucide-react";
 import type { Route } from "next";
 
+import { accountSettingsNav, workspaceSettingsNav } from "@/components/settings-nav";
 import type { ParserAst } from "@/search/ast";
 import type { SearchKind } from "@/search/fields";
 import { pruneFor } from "@/search/kinds";
@@ -177,62 +171,22 @@ export function clientEntries(ctx: EntryContext): ClientEntry[] {
     },
   ];
 
-  const settings: [string, Route, LucideIcon, string[]][] = [
-    ["Account", "/settings/account", UserRound, ["profile", "name"]],
-    ["Privacy", "/settings/privacy", EyeOff, ["images", "tracking"]],
-    ["Workspaces", "/settings/workspaces", Users, []],
-    ["Connections", "/settings/connections", Link2, ["accounts"]],
-    ["Mailboxes", "/settings/mailboxes", Mail, ["accounts"]],
-    ["Calendars", "/settings/calendars", CalendarDays, ["accounts"]],
-    ["Drives", "/settings/drives", HardDrive, ["storage"]],
-    ["Address books", "/settings/address-books", BookUser, ["contacts", "accounts"]],
-    ...(ctx.ai
-      ? ([["MCP clients", "/settings/mcp", Plug, ["mcp", "ai"]]] as [
-          string,
-          Route,
-          LucideIcon,
-          string[],
-        ][])
-      : []),
-    ["Security", "/settings/security", ShieldCheck, ["2fa", "password"]],
-    [
-      "Workspace settings: General",
-      workspaceSettingsPath(ws, "general"),
-      Settings,
-      ["appearance", "policy"],
-    ],
-    [
-      "Workspace settings: Members",
-      workspaceSettingsPath(ws, "members"),
-      Users,
-      ["people", "invite"],
-    ],
-    ["Workspace settings: Mailboxes", workspaceSettingsPath(ws, "mailboxes"), Mail, []],
-    ["Workspace settings: Calendars", workspaceSettingsPath(ws, "calendars"), CalendarDays, []],
-    ["Workspace settings: Drives", workspaceSettingsPath(ws, "drives"), HardDrive, []],
-    [
-      "Workspace settings: Contacts",
-      workspaceSettingsPath(ws, "contacts"),
-      BookUser,
-      ["address books"],
-    ],
-    ...(ctx.isAdmin
-      ? ([
-          [
-            "Workspace settings: Activity",
-            workspaceSettingsPath(ws, "activity"),
-            History,
-            ["audit", "log", "history"],
-          ],
-        ] as [string, Route, LucideIcon, string[]][])
-      : []),
+  type SettingEntry = [string, Route, LucideIcon, readonly string[]];
+  const settings: SettingEntry[] = [
+    ...accountSettingsNav({ ai: ctx.ai }).map((item): SettingEntry => [
+      item.label,
+      item.href,
+      item.icon,
+      item.keywords,
+    ]),
+    ...workspaceSettingsNav({ isAdmin: ctx.isAdmin }).map((item): SettingEntry => [
+      `Workspace settings: ${item.label}`,
+      workspaceSettingsPath(ws, item.slug),
+      item.icon,
+      item.keywords,
+    ]),
     ...(ctx.hasDashboard
-      ? ([["Dashboard", "/dashboard", LayoutDashboard, ["owner"]]] as [
-          string,
-          Route,
-          LucideIcon,
-          string[],
-        ][])
+      ? [["Dashboard", "/dashboard", LayoutDashboard, ["owner"]] satisfies SettingEntry]
       : []),
   ];
 

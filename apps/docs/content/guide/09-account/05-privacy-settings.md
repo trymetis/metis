@@ -9,8 +9,7 @@ These choices belong to you alone. They apply in every mailbox and every workspa
 
 ## Open the Privacy page
 
-1. Open your user menu (the round button with your initials at the bottom of the left rail) and click **Settings**.
-2. Click **Privacy**.
+1. Open your account menu (the round button with your initials at the bottom of the left rail) and click **Privacy**.
 
 <img src="/images/account/privacy.webp" alt="The Privacy settings page with switches for remote images and link cleaning" class="dark:hidden" />
 <img src="/images/account/privacy-dark.webp" alt="The Privacy settings page with switches for remote images and link cleaning" class="hidden dark:block" />

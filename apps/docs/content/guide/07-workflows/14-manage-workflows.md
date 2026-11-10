@@ -122,9 +122,9 @@ Deleting cannot be undone. To keep a workflow without it running, turn it off in
 
 ## Change workflows from the assistant
 
-The Workspace Assistant can list your workflows and their runs, open a run, and read the list of workflow triggers and steps with their settings. It can also change workflows for you. Changes do not happen straight away: the assistant first shows an approval card in the chat, and nothing happens until you click **Approve**. Click **Decline** to stop it.
+The Workspace Assistant can list your workflows and their runs, open a run, and read the list of workflow triggers and steps with their settings. It can also change workflows for you. Changes do not happen straight away: the assistant first shows an approval box above the chat's message box, and nothing happens until you click **Approve**. Click **Decline** to stop it.
 
-| You ask the assistant to    | The approval card says                                                                                |
+| You ask the assistant to    | The approval says                                                                                     |
 | --------------------------- | ----------------------------------------------------------------------------------------------------- |
 | Create or change a workflow | "Approve creating the workflow" or "Approve changing the workflow", with its name                     |
 | Turn a workflow on or off   | "Approve turning this workflow on" or "Approve turning this workflow off"                             |
@@ -133,8 +133,8 @@ The Workspace Assistant can list your workflows and their runs, open a run, and 
 | Cancel a run                | "Approve cancelling this workflow run", noting that a step already in progress can't be called back   |
 | Retry a run                 | "Approve retrying the failed steps of this workflow run", noting that completed steps won't run again |
 
-When you approve running a workflow now, the assistant queues one run of the workflow you asked about, and the card says "Workflow run queued". If the workflow's **Run by hand** trigger declares inputs, the assistant can fill them in for that run. The run then happens in the background, like any other.
+When you approve running a workflow now, the assistant queues one run of the workflow you asked about, and its step in the chat says "Workflow run queued". If the workflow's **Run by hand** trigger declares inputs, the assistant can fill them in for that run. The run then happens in the background, like any other.
 
 The assistant can also try an **Ask** step's questions on your recent mail without changing anything, and that needs no approval. See [AI assistant](/guide/assistant) for how approvals work in the chat.
 
-An outside AI client that you connect to Metis Suite (an MCP client) does not get approval cards. It can make these changes only if you have turned on its sensitive tools. See [What an MCP client can do](/guide/assistant/what-an-mcp-client-can-do).
+An outside AI client that you connect to Metis Suite (an MCP client) does not ask for approval. It can make these changes only if you have turned on its sensitive tools. See [What an MCP client can do](/guide/assistant/what-an-mcp-client-can-do).

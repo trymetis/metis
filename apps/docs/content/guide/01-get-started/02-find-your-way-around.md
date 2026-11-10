@@ -1,6 +1,6 @@
 ---
 title: Find your way around
-description: Learn the left rail, switch workspaces, use the user menu, and find your settings.
+description: Learn the left rail, switch workspaces, use the account menu, and find your settings.
 ---
 
 Every page in Metis Suite has the same frame: a narrow bar of icons down the left side, called the left rail, and your work in the rest of the screen. This page walks you through the rail from top to bottom, then shows you where your settings live.
@@ -12,15 +12,17 @@ Every page in Metis Suite has the same frame: a narrow bar of icons down the lef
 
 Hover over any icon in the rail to see its name.
 
-### The workspace tile
+### Workspace settings
 
-The tile at the top shows the workspace you are in. A workspace holds a set of mailboxes, calendars, drives and address books, and can be shared with other people. Click the tile to open its menu. The menu shows the workspace's name and your role in it. It also has shortcuts to the workspace's settings: **General**, **Members**, **Mailboxes**, **Calendars**, **Drives** and **Contacts**. Owners and admins of the workspace also see **Activity**, which lists security-relevant changes made in the workspace. See [Workspace activity](/guide/workspaces/workspace-activity). **All workspaces** opens the list of every workspace you belong to.
+The first button in the rail is a gear icon called **Workspace settings**. A workspace holds a set of mailboxes, calendars, drives and address books, and can be shared with other people. Click the gear to open the **General** settings page of the workspace you are in. The gear stays highlighted while you are anywhere in the workspace's settings.
+
+On the left of the settings page is a list headed **Workspace**: **General**, **Members**, **Mailboxes**, **Signatures**, **Calendars**, **Drives** and **Contacts**. Owners and admins of the workspace also see **Activity**, which lists security-relevant changes made in the workspace. See [Workspace activity](/guide/workspaces/workspace-activity).
 
 To learn more, see [Workspaces](/guide/workspaces).
 
 ### The main sections
 
-Below the workspace tile are the parts of Metis Suite you use every day:
+Below the gear are the parts of Metis Suite you use every day:
 
 | Icon             | What it opens                                                                                                                                                                                         |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -38,25 +40,22 @@ Under the main sections is one tile for each workspace you belong to. Click a ti
 
 The last tile, **New workspace**, creates a new workspace.
 
-### Your user menu
+### Your account menu
 
-Near the bottom of the rail is a round button with your initials. Click it to open your user menu.
+Near the bottom of the rail is a round button with your initials. Click it to open your account menu.
 
-<img src="/images/get-started/user-menu.webp" alt="The user menu open, showing your name, email and the menu items" class="dark:hidden" />
-<img src="/images/get-started/user-menu-dark.webp" alt="The user menu open, showing your name, email and the menu items" class="hidden dark:block" />
+<img src="/images/get-started/user-menu.webp" alt="The account menu open, showing your name, email and the menu items" class="dark:hidden" />
+<img src="/images/get-started/user-menu-dark.webp" alt="The account menu open, showing your name, email and the menu items" class="hidden dark:block" />
 
-The top of the menu shows your name and email address. Below that:
+The top of the menu shows your name and email address. Below that, the menu lists each page of your account settings, so one click takes you straight to it. They are described in [Settings](#settings) below.
 
-| Item                                                        | What it does                                                                                                                    |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **Settings**                                                | Opens your account settings.                                                                                                    |
-| **App settings**                                            | Opens the settings of the desktop or mobile app. You see it only inside those apps. See [Desktop and mobile apps](/guide/apps). |
-| **Workspaces**                                              | Lists every workspace you belong to.                                                                                            |
-| **Connections**                                             | Lists the accounts you have connected, such as Gmail or Outlook.                                                                |
-| **Mailboxes**, **Calendars**, **Drives**, **Address books** | List every mailbox, calendar, drive or address book you have connected.                                                         |
-| **Dashboard**                                               | Opens the instance dashboard. You see it only if you are the instance owner, an instance admin or an instance observer.         |
-| **Dark mode** or **Light mode**                             | Switches the color theme.                                                                                                       |
-| **Sign out**                                                | Signs you out of this browser.                                                                                                  |
+| Item                                                                                                                                                  | What it does                                                                                                                                                           |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Account**, **Privacy**, **Workspaces**, **Connections**, **Mailboxes**, **Calendars**, **Drives**, **Address books**, **MCP clients**, **Security** | Open that page of your account settings. **MCP clients** shows only when your instance has AI turned on.                                                               |
+| **App settings**                                                                                                                                      | Opens the settings of the desktop or mobile app. It comes right after **Security**, and you see it only inside those apps. See [Desktop and mobile apps](/guide/apps). |
+| **Dashboard**                                                                                                                                         | Opens the instance dashboard. You see it only if you are the instance owner, an instance admin or an instance observer.                                                |
+| **Dark mode** or **Light mode**                                                                                                                       | Switches the color theme.                                                                                                                                              |
+| **Sign out**                                                                                                                                          | Signs you out of this browser.                                                                                                                                         |
 
 ### The source code link
 
@@ -64,7 +63,7 @@ At the very bottom of the rail is a small branch icon with a version number. Hov
 
 ## Light and dark mode
 
-Metis Suite starts in dark mode. To change it, open your user menu and click **Light mode**. Click **Dark mode** to switch back.
+Metis Suite starts in dark mode. To change it, open your account menu and click **Light mode**. Click **Dark mode** to switch back.
 
 Your choice is remembered in the browser you used. Another browser or device starts in dark mode until you choose there too.
 
@@ -74,7 +73,7 @@ The accent color of a workspace is a workspace setting. See [Workspaces](/guide/
 
 ## Settings
 
-Open your user menu and click **Settings**. The settings page has a list of sections on the left. On a phone, the list is hidden. Tap the **Open sidebar** icon, beside **Settings** in the small bar at the top of the page, to open it. The list closes after you pick a section.
+Open your account menu and click any settings page, such as **Account**. The settings page has a list of sections on the left, headed **Settings**. On a phone, the list is hidden. Tap the **Open sidebar** icon, beside **Settings** in the small bar at the top of the page, to open it. The list closes after you pick a section.
 
 <img src="/images/get-started/settings.webp" alt="The settings sidebar with its list of sections" class="dark:hidden" />
 <img src="/images/get-started/settings-dark.webp" alt="The settings sidebar with its list of sections" class="hidden dark:block" />

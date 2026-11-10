@@ -24,6 +24,7 @@ import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { CopyButton } from "@/components/copy-button";
+import { McpGuideBlock } from "@/components/mcp-guide";
 import { McpPresetIcon } from "@/components/mcp-preset-icon";
 import { TwoFactorInput } from "@/components/two-factor-input";
 import { useTwoFactorCode } from "@/hooks/use-two-factor-code";
@@ -169,15 +170,7 @@ export function McpClientRemoveButton({
         </div>
 
         <div className="mt-3">
-          <span className="text-[10px] font-medium uppercase tracking-[1.5px] text-faint">
-            Also remove it locally
-          </span>
-          <div className="mt-1 flex items-center gap-2 rounded-lg bg-panel py-1 pr-1 pl-3">
-            <p className="min-w-0 flex-1 break-words font-mono text-[12px] text-foreground select-all">
-              {removal}
-            </p>
-            <CopyButton value={removal} label="Copy removal command" className="shrink-0" />
-          </div>
+          <McpGuideBlock guide={removal} heading="Also remove it locally" />
           <p className="mt-1.5 text-[12px] text-faint">
             Deleting here does not touch the client&rsquo;s own config — left behind, it will keep
             trying to reconnect and fail.

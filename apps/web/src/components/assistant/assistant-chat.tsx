@@ -13,7 +13,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { WORKSPACE_REFERENCE_TYPES } from "@/ai/references";
 import { TURN_PART_TYPE, type WorkspaceTurnEnvelope, workspaceTurn } from "@/ai/turn";
+import { AgentApprovalBar } from "@/components/agent/agent-approval-bar";
 import { AgentChatMessage } from "@/components/agent/agent-chat-message";
+import { pendingApproval } from "@/components/agent/agent-tool-call";
 import { ReferenceComposer } from "@/components/agent/references/reference-composer";
 import { AgentReferenceProvider } from "@/components/agent/references/reference-provider";
 import {
@@ -27,7 +29,7 @@ import {
   PromptInputFooter,
   PromptInputSubmit,
 } from "@/components/ai-elements/prompt-input";
-import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
+import { Suggestion } from "@/components/ai-elements/suggestion";
 import { DrivePreview } from "@/components/drive-preview/drive-preview";
 import { downloadDriveFile } from "@/components/drive-preview/use-drive-preview";
 import { MemberPreview } from "@/components/members/member-preview";
@@ -80,6 +82,7 @@ export function AssistantChat({
       sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
       onError: (err) => console.error("[assistant] chat error:", err),
     });
+  const pending = pendingApproval(messages);
 
   const [draftReferences] = useState(() =>
     threadId ? undefined : (takePendingDraft() ?? undefined),
@@ -146,13 +149,7 @@ export function AssistantChat({
                   </div>
                 </div>
               ) : (
-                messages.map((message) => (
-                  <AgentChatMessage
-                    key={message.id}
-                    message={message}
-                    onApproval={addToolApprovalResponse}
-                  />
-                ))
+                messages.map((message) => <AgentChatMessage key={message.id} message={message} />)
               )}
 
               {error && (
@@ -184,17 +181,21 @@ export function AssistantChat({
 
           <div className="border-border-soft border-t px-6 py-4">
             <div className="mx-auto w-full max-w-3xl">
-              {messages.length > 0 && (
-                <Suggestions className="mb-2">
-                  {SUGGESTIONS.map((s) => (
-                    <Suggestion key={s} onClick={sendText} suggestion={s} />
-                  ))}
-                </Suggestions>
-              )}
+              <AgentApprovalBar onApproval={addToolApprovalResponse} pending={pending} />
               <PromptInput
+                className={pending ? "[&_[data-slot=input-group]]:rounded-t-none" : undefined}
                 onSubmit={(message) => {
                   const text = message.text.trim();
-                  if (text) void sendText(text);
+                  if (!text) return;
+                  if (pending) {
+                    addToolApprovalResponse({
+                      id: pending.approval.id,
+                      approved: false,
+                      reason: text,
+                    });
+                    return;
+                  }
+                  void sendText(text);
                 }}
               >
                 <PromptInputBody>

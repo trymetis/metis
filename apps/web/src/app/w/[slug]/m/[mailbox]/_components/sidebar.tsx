@@ -20,6 +20,7 @@ import {
   FileText,
   Inbox,
   MailX,
+  Pencil,
   Moon,
   Plus,
   Send,
@@ -34,15 +35,21 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-import { addCustomLabel, removeCustomLabel, useCustomLabels } from "@/hooks/use-custom-labels";
+import {
+  addCustomLabel,
+  removeCustomLabel,
+  replaceCustomLabel,
+  useCustomLabels,
+} from "@/hooks/use-custom-labels";
 import { useMailboxScope, useWorkspacePath } from "@/hooks/use-workspace-path";
 import { orpc, rpc } from "@/lib/orpc";
 import { customLabelMark, LABEL_OPTIONS } from "@/mail/label-meta";
 import type { ScheduledSendItem } from "@/server/schema";
 import { useMailStore } from "@/store/mail-store";
-import { CUSTOM_LABEL_COLORS, type CustomLabelColor, type MailFolder } from "@/types/mail";
+import type { LabelColor, MailFolder } from "@/types/mail";
 import { mailPath, workspaceRootPath } from "@/workspace/path";
 
+import { LabelForm } from "./label-form";
 import { MailboxSwitcher } from "./mailbox-switcher";
 
 const MAILBOXES: {
@@ -92,8 +99,7 @@ export function Sidebar() {
       }),
     ).data ?? null;
   const [addingLabel, setAddingLabel] = useState(false);
-  const [newName, setNewName] = useState("");
-  const [newColor, setNewColor] = useState<CustomLabelColor>(CUSTOM_LABEL_COLORS[0]);
+  const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
   const [pendingDeleteLabel, setPendingDeleteLabel] = useState<{
     id: string;
     name: string;
@@ -101,17 +107,19 @@ export function Sidebar() {
 
   const currentFolder = folder ?? pathname.split("/").pop();
 
-  async function createLabel() {
-    if (!newName.trim()) return;
+  async function createLabel(label: { name: string; color: LabelColor }) {
     try {
-      const data = await orpc.mail.customLabels.create({
-        ...scope,
-        name: newName.trim(),
-        color: newColor,
-      });
+      const data = await orpc.mail.customLabels.create({ ...scope, ...label });
       addCustomLabel(scope, data);
-      setNewName("");
       setAddingLabel(false);
+    } catch {}
+  }
+
+  async function updateLabel(id: string, label: { name: string; color: LabelColor }) {
+    try {
+      const data = await orpc.mail.customLabels.update({ ...scope, id, ...label });
+      replaceCustomLabel(scope, data);
+      setEditingLabelId(null);
     } catch {}
   }
 
@@ -194,7 +202,10 @@ export function Sidebar() {
           </div>
           <button
             type="button"
-            onClick={() => setAddingLabel((v) => !v)}
+            onClick={() => {
+              setEditingLabelId(null);
+              setAddingLabel((v) => !v);
+            }}
             className="flex h-4 w-4 items-center justify-center rounded transition-colors hover:bg-hover text-faint"
             title={addingLabel ? "Cancel" : "Add custom label"}
           >
@@ -213,58 +224,38 @@ export function Sidebar() {
             />
           ))}
 
-          {customLabels.map((l) => (
-            <LabelButton
-              key={l.id}
-              name={l.name}
-              color={customLabelMark(l.color)}
-              active={activeLabel === l.key}
-              href={leafHref("inbox", `?label=${encodeURIComponent(l.key)}`)}
-              onDelete={() => setPendingDeleteLabel({ id: l.id, name: l.name })}
-              custom
-            />
-          ))}
+          {customLabels.map((l) =>
+            editingLabelId === l.id ? (
+              <LabelForm
+                key={l.id}
+                initialName={l.name}
+                initialColor={l.color}
+                submitLabel="Save"
+                onSubmit={(label) => updateLabel(l.id, label)}
+                onCancel={() => setEditingLabelId(null)}
+              />
+            ) : (
+              <LabelButton
+                key={l.id}
+                name={l.name}
+                color={customLabelMark(l.color)}
+                active={activeLabel === l.key}
+                href={leafHref("inbox", `?label=${encodeURIComponent(l.key)}`)}
+                onEdit={() => {
+                  setAddingLabel(false);
+                  setEditingLabelId(l.id);
+                }}
+                onDelete={() => setPendingDeleteLabel({ id: l.id, name: l.name })}
+              />
+            ),
+          )}
 
           {addingLabel && (
-            <div className="mt-2 space-y-2 rounded-md border p-2 bg-surface border-border">
-              <input
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") void createLabel();
-                  if (e.key === "Escape") setAddingLabel(false);
-                }}
-                placeholder="Label name"
-                autoFocus
-                className="w-full rounded border border-border bg-panel px-2 py-1 text-[12px] text-foreground outline-none"
-              />
-              <div className="flex flex-wrap gap-1">
-                {CUSTOM_LABEL_COLORS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setNewColor(c)}
-                    className={cn(
-                      "h-5 w-5 rounded-full ring-offset-1 transition-all",
-                      newColor === c && "ring-2",
-                    )}
-                    style={{
-                      background: customLabelMark(c),
-                      "--tw-ring-color": customLabelMark(c),
-                    }}
-                    aria-label={`Color ${c}`}
-                  />
-                ))}
-              </div>
-              <button
-                type="button"
-                onClick={createLabel}
-                disabled={!newName.trim()}
-                className="w-full rounded-md bg-primary py-1 text-[11px] font-medium text-primary-foreground transition-opacity disabled:opacity-50"
-              >
-                Add label
-              </button>
-            </div>
+            <LabelForm
+              submitLabel="Add label"
+              onSubmit={createLabel}
+              onCancel={() => setAddingLabel(false)}
+            />
           )}
         </div>
       </div>
@@ -354,15 +345,15 @@ function LabelButton({
   color,
   active,
   href,
+  onEdit,
   onDelete,
-  custom,
 }: {
   name: string;
   color: string;
   active?: boolean;
   href: Route;
+  onEdit?: () => void;
   onDelete?: () => void;
-  custom?: boolean;
 }) {
   return (
     <div className="group relative">
@@ -378,18 +369,25 @@ function LabelButton({
         <Tag className="h-3.75 w-3.75 opacity-90" strokeWidth={1.8} style={{ color }} />
         <span className="flex-1 truncate">{name}</span>
       </Link>
-      {custom && onDelete && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="absolute right-1 top-1/2 hidden h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-faint transition-colors hover:bg-hover group-hover:flex pointer-coarse:flex"
-          aria-label={`Delete label ${name}`}
-        >
-          <X className="h-3 w-3" />
-        </button>
+      {onEdit && onDelete && (
+        <div className="absolute right-1 top-1/2 hidden -translate-y-1/2 items-center gap-0.5 group-hover:flex group-focus-within:flex pointer-coarse:flex">
+          <button
+            type="button"
+            onClick={onEdit}
+            className="flex h-5 w-5 items-center justify-center rounded text-faint transition-colors hover:bg-hover"
+            aria-label={`Edit label ${name}`}
+          >
+            <Pencil className="h-3 w-3" />
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            className="flex h-5 w-5 items-center justify-center rounded text-faint transition-colors hover:bg-hover"
+            aria-label={`Delete label ${name}`}
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
       )}
     </div>
   );

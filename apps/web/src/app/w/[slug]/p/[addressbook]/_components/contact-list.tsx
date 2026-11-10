@@ -46,7 +46,7 @@ export function ContactList() {
   const showBook = book === null;
 
   return (
-    <div className="flex min-h-0 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="relative border-b border-border px-3 py-2">
         <Search className="pointer-events-none absolute top-1/2 left-5.5 size-3.5 -translate-y-1/2 text-faint" />
         <Input

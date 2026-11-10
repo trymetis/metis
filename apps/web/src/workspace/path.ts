@@ -1,6 +1,9 @@
 import type { Route } from "next";
 
+import { isOneOf } from "@/lib/guards";
 import { route } from "@/lib/route";
+
+import { WORKSPACE_SETTINGS_PAGES, type WorkspaceSettingsPage } from "./settings-pages";
 
 export const ALL_MAILBOXES_SLUG = "all";
 export const ALL_CALENDARS_SLUG = "all";
@@ -174,7 +177,7 @@ export function workflowEditPath(workspaceSlug: string, workflowId: string): Rou
 
 export function workspaceSettingsPath(
   workspaceSlug: string,
-  page = "mailboxes",
+  page: WorkspaceSettingsPage = "mailboxes",
   search = "",
 ): Route {
   return route(`/w/${workspaceSlug}/settings/${page}${search}`);
@@ -192,7 +195,11 @@ export function switchWorkspacePath(pathname: string, target: { slug: string }):
     return workflowPath(target.slug, parts.slice(3).join("/"));
   }
   if (parsed.section === "settings") {
-    return workspaceSettingsPath(target.slug, parts[3] ?? "mailboxes");
+    const page = parts[3];
+    return workspaceSettingsPath(
+      target.slug,
+      isOneOf(WORKSPACE_SETTINGS_PAGES, page) ? page : "mailboxes",
+    );
   }
   if (parsed.section === "calendar") return calendarRootPath(target.slug);
   if (parsed.section === "drive") return driveRootPath(target.slug);

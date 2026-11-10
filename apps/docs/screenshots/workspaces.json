@@ -18,38 +18,20 @@
     "element": "role=dialog"
   },
   {
-    "name": "workspaces/workspace-menu",
-    "viewport": { "width": 960, "height": 480 },
-    "path": "{workspace}/settings/general",
-    "steps": [
-      {
-        "waitFor": "role=navigation[name=\"App navigation\"] >> button[aria-label$=\" menu\"]"
-      },
-      {
-        "click": "role=navigation[name=\"App navigation\"] >> button[aria-label$=\" menu\"]"
-      },
-      { "waitFor": "role=menuitem[name=/^All workspaces$/]" }
-    ],
-    "element": [
-      "role=navigation[name=\"App navigation\"] >> button[aria-label$=\" menu\"]",
-      "role=menu"
-    ]
-  },
-  {
     "name": "workspaces/account-menu",
-    "viewport": { "width": 960, "height": 480 },
+    "viewport": { "width": 960, "height": 720 },
     "path": "{workspace}/settings/general",
     "steps": [
       {
-        "waitFor": "role=navigation[name=\"App navigation\"] >> button[aria-haspopup=\"menu\"]:not([aria-label$=\" menu\"])"
+        "waitFor": "role=navigation[name=\"App navigation\"] >> button[aria-haspopup=\"menu\"]"
       },
       {
-        "click": "role=navigation[name=\"App navigation\"] >> button[aria-haspopup=\"menu\"]:not([aria-label$=\" menu\"])"
+        "click": "role=navigation[name=\"App navigation\"] >> button[aria-haspopup=\"menu\"]"
       },
       { "waitFor": "role=menuitem[name=/^Connections$/]" }
     ],
     "element": [
-      "role=navigation[name=\"App navigation\"] >> button[aria-haspopup=\"menu\"]:not([aria-label$=\" menu\"])",
+      "role=navigation[name=\"App navigation\"] >> button[aria-haspopup=\"menu\"]",
       "role=menu"
     ]
   },

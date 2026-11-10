@@ -7,7 +7,7 @@ The drive sidebar keeps two short lists of folders so you can get back to them q
 
 ## Pin a folder
 
-1. Click the **...** button on a folder, or right-click it.
+1. Right-click a folder, or click its **...** button (in grid view, the button shows only on touch screens).
 2. Choose **Pin to sidebar**.
 
 <img src="/images/drive/folder-menu.webp" alt="The actions menu for a folder, with Pin to sidebar, Rename and Delete" class="dark:hidden" />

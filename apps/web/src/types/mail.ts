@@ -4,16 +4,30 @@ import { isOneOf } from "@/lib/guards";
 export const CUSTOM_LABEL_COLORS = [
   "red",
   "orange",
+  "amber",
   "yellow",
   "green",
   "teal",
+  "cyan",
   "blue",
+  "indigo",
   "purple",
+  "pink",
   "navy",
   "gray",
-  "amber",
 ] as const;
 export type CustomLabelColor = (typeof CUSTOM_LABEL_COLORS)[number];
+
+export const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/;
+
+export type LabelColor = CustomLabelColor | (string & {});
+
+export function isLabelColor(value: unknown): value is LabelColor {
+  return (
+    isOneOf(CUSTOM_LABEL_COLORS, value) ||
+    (typeof value === "string" && HEX_COLOR_PATTERN.test(value))
+  );
+}
 
 export const MAIL_LABEL_SOURCES = ["ai", "user", "provider"] as const;
 export type MailLabelSource = (typeof MAIL_LABEL_SOURCES)[number];

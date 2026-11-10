@@ -153,7 +153,7 @@
   },
   {
     "name": "assistant/approval-card",
-    "element": ["text=/^Operating across/", "role=log"],
+    "element": ["role=log", "role=region[name=\"Approval needed\"]"],
     "path": "{workspace}/assistant",
     "steps": [
       { "waitFor": "role=textbox[name=\"Ask across your workspace\"s]" },
@@ -162,7 +162,7 @@
         "value": "Make a folder called Final artwork in Team on my WebDAV drive."
       },
       { "press": "Enter" },
-      { "waitFor": "role=log >> role=button[name=\"Approve\"s]" },
+      { "waitFor": "role=region[name=\"Approval needed\"] >> role=button[name=\"Approve\"s]" },
       { "wait": 600 }
     ]
   }

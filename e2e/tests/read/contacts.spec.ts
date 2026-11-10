@@ -77,12 +77,10 @@ test("a contact without an email cannot be emailed or invited", async ({ page, a
   await expect(card.getByRole("button", { name: "Edit", exact: true })).toBeEnabled();
 });
 
-test("the book in the sidebar shows only that book", async ({ page, account }) => {
+test("picking a book in Show lists only that book", async ({ page, account }) => {
   await page.goto(workspacePath(account, "/p/all/all"));
-  await page
-    .getByRole("navigation", { name: "Books" })
-    .getByRole("button", { name: "Studio contacts" })
-    .click();
+  await page.getByRole("combobox", { name: "Show" }).click();
+  await page.getByRole("option", { name: "Studio contacts" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Studio contacts" })).toBeVisible();
   await expect(contactList(page).getByRole("button")).toHaveCount(SEEDED_CONTACTS.length);
 });

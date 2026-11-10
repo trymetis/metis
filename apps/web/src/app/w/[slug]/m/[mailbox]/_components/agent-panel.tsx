@@ -15,8 +15,10 @@ import {
   toAgentEmail,
   viewerTimeZone,
 } from "@/ai/turn";
+import { AgentApprovalBar } from "@/components/agent/agent-approval-bar";
 import { AgentChatMessage } from "@/components/agent/agent-chat-message";
 import { AgentDisabled } from "@/components/agent/agent-disabled";
+import { pendingApproval } from "@/components/agent/agent-tool-call";
 import {
   AttachmentChips,
   AttachmentDropZone,
@@ -36,7 +38,7 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
-import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
+import { Suggestion } from "@/components/ai-elements/suggestion";
 import { useScopePolicy } from "@/components/scope-policy-context";
 import { useCurrentEmails } from "@/hooks/use-current-emails";
 import { useMailboxScope } from "@/hooks/use-workspace-path";
@@ -128,6 +130,7 @@ export function AgentPanel() {
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
     onError: (err) => console.error("[agent-panel] chat error:", err),
   });
+  const pending = pendingApproval(messages);
 
   function sendText(text: string) {
     void sendMessage({
@@ -234,13 +237,7 @@ export function AgentPanel() {
               </div>
             </ConversationEmptyState>
           ) : (
-            messages.map((message) => (
-              <AgentChatMessage
-                key={message.id}
-                message={message}
-                onApproval={addToolApprovalResponse}
-              />
-            ))
+            messages.map((message) => <AgentChatMessage key={message.id} message={message} />)
           )}
 
           {error && (
@@ -281,17 +278,17 @@ export function AgentPanel() {
           onRemove={remove}
         />
 
-        {messages.length > 0 && (
-          <Suggestions className="mb-2">
-            {suggestions.map((s) => (
-              <Suggestion key={s} onClick={sendText} suggestion={s} />
-            ))}
-          </Suggestions>
-        )}
+        <AgentApprovalBar onApproval={addToolApprovalResponse} pending={pending} />
         <PromptInput
+          className={pending ? "[&_[data-slot=input-group]]:rounded-t-none" : undefined}
           onSubmit={(message) => {
             const text = message.text.trim();
-            if (text) sendText(text);
+            if (!text) return;
+            if (pending) {
+              addToolApprovalResponse({ id: pending.approval.id, approved: false, reason: text });
+              return;
+            }
+            sendText(text);
           }}
         >
           <PromptInputBody>

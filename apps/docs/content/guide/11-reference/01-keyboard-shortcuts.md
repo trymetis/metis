@@ -116,10 +116,11 @@ Press **d**, then:
 
 Without a prefix:
 
-| Keys           | Action                                         |
-| -------------- | ---------------------------------------------- |
-| **j** or **n** | Go forward to the next folder in your history  |
-| **k** or **p** | Go back to the previous folder in your history |
+| Keys                    | Action                                                                  |
+| ----------------------- | ----------------------------------------------------------------------- |
+| **j** or **n**          | Go forward to the next folder in your history                           |
+| **k** or **p**          | Go back to the previous folder in your history                          |
+| **↑** **↓** **←** **→** | Move the selection: **↑** and **↓** in list view, all four in grid view |
 
 In drive, **j** and **k** move through the folders you have visited, like a browser's back and forward buttons. They do not move a selection. Your history is kept when you switch between drives.
 

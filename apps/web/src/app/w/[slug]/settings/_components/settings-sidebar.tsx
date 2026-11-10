@@ -1,20 +1,11 @@
 "use client";
 
 import { cn } from "@metis/ui/lib/utils";
-import {
-  BookUser,
-  CalendarDays,
-  HardDrive,
-  History,
-  Inbox,
-  Signature,
-  SlidersHorizontal,
-  Users,
-} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { ResponsiveAside } from "@/components/mobile-aside";
+import { workspaceSettingsNav } from "@/components/settings-nav";
 import { useWorkspaceAccess } from "@/components/workspace-access";
 import { useWorkspaceSlug } from "@/hooks/use-workspace-path";
 import { workspaceSettingsPath } from "@/workspace/path";
@@ -23,54 +14,14 @@ export function SettingsSidebar() {
   const pathname = usePathname();
   const slug = useWorkspaceSlug();
   const { role } = useWorkspaceAccess();
-  const canSeeActivity = role === "owner" || role === "admin";
 
-  const nav = [
-    {
-      href: workspaceSettingsPath(slug, "general"),
-      label: "General",
-      icon: SlidersHorizontal,
-    },
-    {
-      href: workspaceSettingsPath(slug, "members"),
-      label: "Members",
-      icon: Users,
-    },
-    {
-      href: workspaceSettingsPath(slug, "mailboxes"),
-      label: "Mailboxes",
-      icon: Inbox,
-    },
-    {
-      href: workspaceSettingsPath(slug, "signatures"),
-      label: "Signatures",
-      icon: Signature,
-    },
-    {
-      href: workspaceSettingsPath(slug, "calendars"),
-      label: "Calendars",
-      icon: CalendarDays,
-    },
-    {
-      href: workspaceSettingsPath(slug, "drives"),
-      label: "Drives",
-      icon: HardDrive,
-    },
-    {
-      href: workspaceSettingsPath(slug, "contacts"),
-      label: "Contacts",
-      icon: BookUser,
-    },
-    ...(canSeeActivity
-      ? [
-          {
-            href: workspaceSettingsPath(slug, "activity"),
-            label: "Activity",
-            icon: History,
-          },
-        ]
-      : []),
-  ];
+  const nav = workspaceSettingsNav({ isAdmin: role === "owner" || role === "admin" }).map(
+    (item) => ({
+      href: workspaceSettingsPath(slug, item.slug),
+      label: item.label,
+      icon: item.icon,
+    }),
+  );
 
   return (
     <ResponsiveAside label="Workspace settings">

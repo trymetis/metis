@@ -12,14 +12,20 @@
     ]
   },
   {
-    "name": "contacts/sidebar",
+    "name": "contacts/show-menu",
     "path": "{workspace}/p/all/all",
     "steps": [
       {
-        "waitFor": "role=navigation[name=\"Books\"] >> role=button[name=\"Studio contacts\"]"
+        "waitFor": "role=combobox[name=\"Show\"]"
+      },
+      {
+        "click": "role=combobox[name=\"Show\"]"
+      },
+      {
+        "waitFor": "role=option[name=\"Studio contacts\"]"
       }
     ],
-    "element": "aside[aria-label=\"Address books\"]"
+    "element": ["role=combobox[name=\"Show\"]", "role=listbox"]
   },
   {
     "name": "contacts/switcher",

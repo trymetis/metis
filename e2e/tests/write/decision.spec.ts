@@ -2,7 +2,7 @@ import { APPROVAL_CHAT, GATED_SUBJECTS } from "@metis/e2e/lib/llm-scenarios";
 import type { Page } from "@playwright/test";
 import { z } from "zod";
 
-import { ask, chatResponse, conversation, failure } from "../chat";
+import { ask, chatResponse, failure } from "../chat";
 import { expect, test } from "../fixtures";
 import { type Account, harness, mailPath, workspacePath } from "../harness";
 import { mailList, mailRow, searchAndOpen, setMailboxAi, showTab } from "../mail";
@@ -210,7 +210,10 @@ export default function decisionSpecs() {
       expect(await failure(page)).toBeNull();
 
       const continued = chatResponse(page, "workspace-chat");
-      await conversation(page).getByRole("button", { name: "Approve", exact: true }).click();
+      await page
+        .getByRole("region", { name: "Approval needed" })
+        .getByRole("button", { name: "Approve", exact: true })
+        .click();
       await (await continued).body();
 
       expect(await approvalFolder()).toBeDefined();

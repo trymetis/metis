@@ -17,13 +17,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@metis/ui/components/select";
-import { Check, Copy, Loader2, Plus } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { useState } from "react";
 
+import { CopyButton } from "@/components/copy-button";
+import { McpGuideBlock } from "@/components/mcp-guide";
 import { McpPresetIcon } from "@/components/mcp-preset-icon";
 import { isOneOf } from "@/lib/guards";
 import { orpc } from "@/lib/orpc";
-import { MCP_PRESET_IDS, MCP_PRESET_LIST, MCP_PRESETS, type McpPresetId } from "@/mcp/presets";
+import {
+  MCP_PRESET_IDS,
+  MCP_PRESET_LIST,
+  MCP_PRESETS,
+  type McpGuide,
+  type McpPresetId,
+} from "@/mcp/presets";
 
 const DEFAULT_PRESET: McpPresetId = "claude-code";
 
@@ -50,9 +58,8 @@ export function AddClientDialog({ onCreated }: { onCreated: () => void }) {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{
     clientId: string;
-    instructions: string;
+    instructions: McpGuide;
   } | null>(null);
-  const [copied, setCopied] = useState(false);
 
   const active = MCP_PRESETS[preset];
 
@@ -64,7 +71,6 @@ export function AddClientDialog({ onCreated }: { onCreated: () => void }) {
     setRedirectUri("");
     setError(null);
     setResult(null);
-    setCopied(false);
   }
 
   function close() {
@@ -102,13 +108,6 @@ export function AddClientDialog({ onCreated }: { onCreated: () => void }) {
     }
   }
 
-  async function copyInstructions() {
-    if (!result) return;
-    await navigator.clipboard.writeText(result.instructions);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }
-
   return (
     <Dialog
       open={open}
@@ -131,7 +130,7 @@ export function AddClientDialog({ onCreated }: { onCreated: () => void }) {
             <DialogHeader>
               <DialogTitle>{label.trim()} is ready</DialogTitle>
               <DialogDescription>
-                Paste this into your client. There is no secret key — the client ID is all you need.
+                Set it up in your client. There is no secret key — the client ID is all you need.
               </DialogDescription>
             </DialogHeader>
 
@@ -139,25 +138,19 @@ export function AddClientDialog({ onCreated }: { onCreated: () => void }) {
               <span className="text-[10px] font-medium uppercase tracking-[1.5px] text-faint">
                 Client ID
               </span>
-              <p className="mt-1 break-all rounded-lg bg-panel px-3 py-2 font-mono text-[12px] text-foreground">
-                {result.clientId}
-              </p>
+              <div className="mt-1 flex items-center gap-2 rounded-lg bg-panel py-1 pr-1 pl-3">
+                <p className="min-w-0 flex-1 break-all font-mono text-[12px] text-foreground select-all">
+                  {result.clientId}
+                </p>
+                <CopyButton value={result.clientId} label="Copy client ID" className="shrink-0" />
+              </div>
             </div>
 
             <div className="mt-3">
-              <span className="text-[10px] font-medium uppercase tracking-[1.5px] text-faint">
-                Setup
-              </span>
-              <pre className="mt-1 overflow-x-auto rounded-lg bg-panel px-3 py-2 font-mono text-[12px] text-foreground">
-                {result.instructions}
-              </pre>
+              <McpGuideBlock guide={result.instructions} heading="Setup" />
             </div>
 
             <div className="mt-4 flex justify-end gap-2">
-              <Button variant="outline" onClick={copyInstructions}>
-                {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                {copied ? "Copied" : "Copy"}
-              </Button>
               <Button onClick={close}>Done</Button>
             </div>
           </>

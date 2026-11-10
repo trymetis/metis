@@ -1,12 +1,17 @@
 "use client";
 
-import { Button } from "@metis/ui/components/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@metis/ui/components/collapsible";
 import { Spinner } from "@metis/ui/components/spinner";
 import { cn } from "@metis/ui/lib/utils";
-import type { DynamicToolUIPart, ToolUIPart } from "ai";
+import { type DynamicToolUIPart, isToolUIPart, type ToolUIPart, type UIMessage } from "ai";
 import {
   AlertTriangle,
   CalendarPlus,
+  ChevronRight,
   CircleSlash,
   Clock3,
   FolderInput,
@@ -24,6 +29,7 @@ import {
   Send,
   ShieldAlert,
   ShieldCheck,
+  Signature,
   Star,
   Tag,
   Trash2,
@@ -34,18 +40,17 @@ import {
   Wrench,
   XCircle,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode, useState } from "react";
 
-import { type MailboxEmailMap, useMailboxEmails } from "@/hooks/use-mailbox-emails";
-import { isRecord } from "@/lib/guards";
+import type { MailboxEmailMap } from "@/hooks/use-mailbox-emails";
+import { isOneOf, isRecord, keysOf } from "@/lib/guards";
 
-export type ApprovalResponder = (args: { id: string; approved: boolean; reason?: string }) => void;
+import { type ResourceNames, useResourceNames } from "./resource-names";
 
-type AnyToolPart = ToolUIPart | DynamicToolUIPart;
-type ToolState = AnyToolPart["state"];
+export type AnyToolPart = ToolUIPart | DynamicToolUIPart;
 type JsonRecord = Record<string, unknown>;
 
-type ToolCopy = {
+export type ToolCopy = {
   icon: LucideIcon;
   loading: ReactNode;
   success: ReactNode;
@@ -111,7 +116,7 @@ function recipients(value: unknown) {
   return plural(list.length, "recipient");
 }
 
-function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): ToolCopy {
+export function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): ToolCopy {
   const name = getToolName(part);
   const input = asRecord(part.input);
   const output = asRecord(part.output);
@@ -447,6 +452,14 @@ function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): ToolCopy {
         success: `Unsubscribe handled for ${plural(count, "sender")}`,
       };
     }
+    case "updateLabel": {
+      const label = asString(input?.label);
+      return {
+        icon: Tag,
+        loading: "Updating the label...",
+        success: label ? `Updated the label "${label}"` : "Updated the label",
+      };
+    }
     case "deleteLabel": {
       const label = asString(input?.label);
       return {
@@ -454,6 +467,46 @@ function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): ToolCopy {
         loading: "Deleting the label...",
         approval: label ? `Approve deleting the label "${label}"` : "Approve deleting this label",
         success: label ? `Deleted the label "${label}"` : "Deleted the label",
+      };
+    }
+    case "saveSignature":
+    case "deleteSignature": {
+      const scope = asString(input?.scope);
+      const owner =
+        scope === "workspace"
+          ? "workspace signature"
+          : scope === "personal"
+            ? "personal signature"
+            : "mailbox signature";
+      const where = scope !== "workspace" && mailboxEmail ? ` for ${mailboxEmail}` : "";
+      if (name === "deleteSignature") {
+        return {
+          icon: Signature,
+          loading: "Deleting the signature...",
+          approval: `Approve deleting a ${owner}${where}`,
+          success: "Deleted the signature",
+        };
+      }
+      const label = asString(input?.name);
+      const verb = asString(input?.signatureId) ? "editing" : "adding";
+      return {
+        icon: Signature,
+        loading: "Saving the signature...",
+        approval: label
+          ? `Approve ${verb} the ${owner} "${label}"${where}`
+          : `Approve ${verb} a ${owner}${where}`,
+        success: label ? `Saved the signature "${label}"` : "Saved the signature",
+      };
+    }
+    case "setMailFooter": {
+      const off = input?.enabled === false;
+      return {
+        icon: Signature,
+        loading: "Updating the mail footer...",
+        approval: off
+          ? "Approve turning off the workspace mail footer"
+          : "Approve changing the workspace mail footer",
+        success: off ? "Turned off the mail footer" : "Updated the mail footer",
       };
     }
     case "deleteDraft": {
@@ -579,117 +632,229 @@ function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): ToolCopy {
   }
 }
 
-function ToolIndication({
-  state,
-  icon: Icon,
-  loading,
-  success,
-  approval,
-  errorText,
-}: ToolCopy & {
-  state: ToolState;
-  errorText?: string;
-}) {
-  const isLoading =
-    state === "input-streaming" || state === "input-available" || state === "approval-responded";
-  const isApproval = state === "approval-requested";
-  const isDenied = state === "output-denied";
-  const isError = state === "output-error" || !!errorText;
+type RowStatus = "running" | "approval" | "error" | "denied" | "done";
+
+function rowStatus(part: AnyToolPart): RowStatus {
+  if (part.state === "approval-requested") return "approval";
+  if (part.state === "output-denied") return "denied";
+  if (part.state === "output-error" || getErrorText(part)) return "error";
+  if (part.state === "output-available") return "done";
+  return "running";
+}
+
+const HIDDEN_FIELDS = /^(summary|workspaceId)$/;
+const HTML_FIELD = /html/i;
+
+function humanizeKey(key: string): string {
+  const spaced = key.replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase();
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+function clip(text: string, max = 160): string {
+  const flat = text.replace(/\s+/g, " ").trim();
+  return flat.length > max ? `${flat.slice(0, max - 1)}…` : flat;
+}
+
+function describeValue(key: string, value: unknown): string | null {
+  if (value === null || value === undefined || value === "") return null;
+  if (typeof value === "string") {
+    return clip(HTML_FIELD.test(key) ? value.replace(/<[^>]*>/g, " ") : value);
+  }
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (Array.isArray(value)) {
+    if (value.length === 0) return null;
+    if (value.some((item) => typeof item === "object" && item !== null)) {
+      return plural(value.length, "item");
+    }
+    const shown = value
+      .slice(0, 3)
+      .map((item) =>
+        typeof item === "string" || typeof item === "number"
+          ? String(item)
+          : clip(JSON.stringify(item), 60),
+      );
+    const more = value.length > 3 ? ` +${value.length - 3} more` : "";
+    return `${shown.join(", ")}${more}`;
+  }
+  return clip(JSON.stringify(value));
+}
+
+const RESOLVED_IDS = {
+  mailboxId: { label: "Mailbox", names: "mailboxes" },
+  driveId: { label: "Drive", names: "drives" },
+} as const satisfies Record<string, { label: string; names: keyof ResourceNames }>;
+
+const RESOLVED_ID_KEYS = keysOf(RESOLVED_IDS);
+
+const ID_KEY = /(^ids?|Ids?)$/;
+
+function describeId(key: string, raw: unknown): { label: string; value: string } | null {
+  const label = humanizeKey(key.replace(ID_KEY, "")) || "Items";
+  if (Array.isArray(raw))
+    return raw.length > 0 ? { label, value: plural(raw.length, "item") } : null;
+  if (typeof raw === "string" && raw.includes("/") && !raw.includes("://")) {
+    return { label, value: raw.replace(/\/+$/, "") || "Top level" };
+  }
+  return null;
+}
+
+export function describeFields(
+  value: unknown,
+  names: ResourceNames,
+): { label: string; value: string }[] {
+  const record = asRecord(value);
+  if (!record) return [];
+  const fields: { label: string; value: string }[] = [];
+  for (const [key, raw] of Object.entries(record)) {
+    if (HIDDEN_FIELDS.test(key)) continue;
+    if (isOneOf(RESOLVED_ID_KEYS, key)) {
+      const { label, names: kind } = RESOLVED_IDS[key];
+      const name = typeof raw === "string" ? names[kind][raw] : undefined;
+      if (name) fields.push({ label, value: name });
+      continue;
+    }
+    if (ID_KEY.test(key)) {
+      const field = describeId(key, raw);
+      if (field) fields.push(field);
+      continue;
+    }
+    const text = describeValue(key, raw);
+    if (text) fields.push({ label: humanizeKey(key), value: text });
+  }
+  return fields;
+}
+
+export function FieldList({ fields }: { fields: { label: string; value: string }[] }) {
+  if (fields.length === 0) return null;
+  return (
+    <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 text-xs">
+      {fields.map((field) => (
+        <Fragment key={field.label}>
+          <dt className="text-faint">{field.label}</dt>
+          <dd className="wrap-anywhere text-foreground select-text">{field.value}</dd>
+        </Fragment>
+      ))}
+    </dl>
+  );
+}
+
+function StatusIcon({ status, icon: Icon }: { status: RowStatus; icon: LucideIcon }) {
+  if (status === "running") return <Spinner className="size-3.5 shrink-0" />;
+  if (status === "approval") return <ShieldCheck className="size-3.5 shrink-0" />;
+  if (status === "error") return <AlertTriangle className="size-3.5 shrink-0" />;
+  if (status === "denied") return <XCircle className="size-3.5 shrink-0" />;
+  return <Icon className="size-3.5 shrink-0" />;
+}
+
+function rowText(part: AnyToolPart, copy: ToolCopy, status: RowStatus): ReactNode {
+  if (status === "running") {
+    if (part.state !== "approval-responded") return copy.loading;
+    return part.approval.approved ? "Approved, running..." : "Declined, nothing changed";
+  }
+  if (status === "approval") return "Waiting for your approval";
+  if (status === "error") return getErrorText(part) ?? "That step didn't work";
+  if (status === "denied") return "Declined, nothing changed";
+  return copy.success;
+}
+
+function ToolRow({ part, names }: { part: AnyToolPart; names: ResourceNames }) {
+  const [open, setOpen] = useState(false);
+  const copy = toolCopy(part, names.mailboxes);
+  const status = rowStatus(part);
+  const input = describeFields(part.input, names);
+  const output = status === "done" ? describeFields(part.output, names) : [];
+  const hasDetail = input.length > 0 || output.length > 0;
 
   return (
-    <div
-      className={cn(
-        "my-1 flex items-center gap-2 font-mono text-muted-foreground text-xs",
-        (isError || isDenied) && "text-destructive-text",
-        isApproval && "text-amber-700 dark:text-amber-400",
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <CollapsibleTrigger
+        disabled={!hasDetail}
+        className={cn(
+          "group/row inline-flex max-w-full min-w-0 items-center gap-2 rounded-md px-1.5 py-1 text-left text-xs text-muted-foreground transition-colors enabled:hover:bg-hover",
+          (status === "error" || status === "denied") && "text-destructive-text",
+        )}
+      >
+        <StatusIcon icon={copy.icon} status={status} />
+        <span className={cn("min-w-0 truncate", status === "running" && "animate-pulse")}>
+          {rowText(part, copy, status)}
+        </span>
+        {hasDetail && (
+          <ChevronRight className="size-3 shrink-0 text-faint transition-transform group-data-panel-open/row:rotate-90" />
+        )}
+      </CollapsibleTrigger>
+      {hasDetail && (
+        <CollapsibleContent>
+          <div className="mt-0.5 mb-1 ml-6 flex max-h-64 flex-col gap-2 overflow-auto rounded-md border border-border-soft bg-panel px-2.5 py-2">
+            {input.length > 0 && <FieldList fields={input} />}
+            {output.length > 0 && (
+              <div className="border-border-soft border-t pt-2">
+                <FieldList fields={output} />
+              </div>
+            )}
+          </div>
+        </CollapsibleContent>
       )}
-    >
-      {isLoading ? (
-        <>
-          <Spinner className="size-3 shrink-0" />
-          <span className="min-w-0 animate-pulse">
-            {state === "approval-responded" ? "Approval submitted..." : loading}
-          </span>
-        </>
-      ) : isApproval ? (
-        <>
-          <Clock3 className="size-3 shrink-0" />
-          <span className="min-w-0">{approval ?? "Approve this before it runs"}</span>
-        </>
-      ) : isError ? (
-        <>
-          <AlertTriangle className="size-3 shrink-0" />
-          <span className="min-w-0">{errorText ?? "That step didn't work"}</span>
-        </>
-      ) : isDenied ? (
-        <>
-          <XCircle className="size-3 shrink-0" />
-          <span className="min-w-0">You declined — nothing changed</span>
-        </>
-      ) : (
-        <>
-          <Icon className="size-3 shrink-0" />
-          <span className="min-w-0">{success}</span>
-        </>
-      )}
+    </Collapsible>
+  );
+}
+
+const INTERNAL_TOOLS = new Set(["search_tools", "load_tool"]);
+
+export function isInternalTool(part: AnyToolPart): boolean {
+  return INTERNAL_TOOLS.has(getToolName(part));
+}
+
+export function AgentToolGroup({ parts }: { parts: AnyToolPart[] }) {
+  const names = useResourceNames();
+  const [open, setOpen] = useState(false);
+  const last = parts.at(-1);
+  if (!last) return null;
+  if (parts.length === 1) {
+    return (
+      <div className="not-prose my-1">
+        <ToolRow names={names} part={last} />
+      </div>
+    );
+  }
+  const running = parts.some((p) => rowStatus(p) === "running");
+  const failed = parts.filter((p) => rowStatus(p) === "error").length;
+
+  return (
+    <div className="not-prose my-1">
+      <Collapsible open={open} onOpenChange={setOpen}>
+        <CollapsibleTrigger className="group/group flex items-center gap-1.5 rounded-md px-1.5 py-0.5 text-[11px] text-faint transition-colors hover:bg-hover hover:text-muted-foreground">
+          <ChevronRight className="size-3 transition-transform group-data-panel-open/group:rotate-90" />
+          {plural(parts.length, "tool call")}
+          {failed > 0 && <span className="text-destructive-text">· {failed} failed</span>}
+          {running && <Spinner className="size-3" />}
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          {parts.slice(0, -1).map((part) => (
+            <ToolRow key={part.toolCallId} names={names} part={part} />
+          ))}
+        </CollapsibleContent>
+      </Collapsible>
+      <ToolRow names={names} part={last} />
     </div>
   );
 }
 
-function ApprovalActions({
-  part,
-  onApproval,
-  mailboxEmails,
-}: {
-  part: AnyToolPart;
-  onApproval: ApprovalResponder;
-  mailboxEmails: MailboxEmailMap;
-}) {
-  if (part.state !== "approval-requested" || !part.approval) return null;
-  const id = part.approval.id;
-  const summary = asString(asRecord(part.input)?.summary);
-  const copy = toolCopy(part, mailboxEmails);
+export type PendingApproval = AnyToolPart & {
+  state: "approval-requested";
+  approval: { id: string };
+};
 
-  return (
-    <div className="mt-2 flex max-w-xl flex-col gap-2.5 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3">
-      <div className="flex items-center gap-2 font-medium text-amber-700 text-sm dark:text-amber-400">
-        <AlertTriangle className="size-4 shrink-0" />
-        <span className="min-w-0">{copy.approval ?? "Approval required"}</span>
-      </div>
-      {summary && <p className="text-muted-foreground text-sm">{summary}</p>}
-      <div className="flex gap-2">
-        <Button onClick={() => onApproval({ id, approved: true })} size="sm" type="button">
-          <ShieldCheck data-icon="inline-start" />
-          Approve
-        </Button>
-        <Button
-          onClick={() => onApproval({ id, approved: false })}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          Decline
-        </Button>
-      </div>
-    </div>
-  );
+export function inputSummary(part: AnyToolPart): string | undefined {
+  return asString(asRecord(part.input)?.summary);
 }
 
-export function AgentToolCall({
-  part,
-  onApproval,
-}: {
-  part: AnyToolPart;
-  onApproval: ApprovalResponder;
-}) {
-  const mailboxEmails = useMailboxEmails();
-  const copy = toolCopy(part, mailboxEmails);
-  const errorText = getErrorText(part);
-
+export function pendingApproval(messages: readonly UIMessage[]): PendingApproval | null {
+  const last = messages.at(-1);
+  if (!last || last.role !== "assistant") return null;
   return (
-    <div className="not-prose">
-      <ToolIndication {...copy} errorText={errorText} state={part.state} />
-      <ApprovalActions mailboxEmails={mailboxEmails} onApproval={onApproval} part={part} />
-    </div>
+    last.parts.find(
+      (part): part is PendingApproval =>
+        isToolUIPart(part) && part.state === "approval-requested" && !!part.approval,
+    ) ?? null
   );
 }

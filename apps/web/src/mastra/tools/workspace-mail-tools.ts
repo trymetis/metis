@@ -14,6 +14,7 @@ import {
   draftFields,
   draftTarget,
   labelKeyTarget,
+  updateLabelFields,
   listEmailsFields,
   mailboxTarget,
   messageTarget,
@@ -368,6 +369,20 @@ const createLabelTool = createTool({
     }),
 });
 
+const updateLabelTool = createTool({
+  id: "updateLabel",
+  description:
+    "Rename or recolor a custom label in a specific mailbox. Its key stays the same, so labelled emails and workflows keep it.",
+  inputSchema: z.object(updateLabelFields),
+  execute: async ({ mailboxId, label, name, color }, { requestContext }) =>
+    withToolErrors(async () => {
+      const ctx = getWorkspaceCtx(requestContext);
+      const r = requireMailbox(ctx, mailboxId);
+      if ("error" in r) return r;
+      return labels.updateLabel({ mailbox: r.mailbox, key: label, name, color });
+    }),
+});
+
 const deleteLabelTool = createTool({
   id: "deleteLabel",
   description: "Delete a custom label from a specific mailbox. Built-in labels cannot be deleted.",
@@ -471,6 +486,7 @@ export const workspaceMailTools = {
   listAttachments: listAttachmentsTool,
   getAttachmentText: getAttachmentTextTool,
   createLabel: createLabelTool,
+  updateLabel: updateLabelTool,
   deleteLabel: deleteLabelTool,
   setLabels: setLabelsTool,
   deleteDraft: deleteDraftTool,

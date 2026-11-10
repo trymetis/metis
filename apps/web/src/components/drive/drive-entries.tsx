@@ -26,11 +26,20 @@ import {
   Pin,
   Trash2,
 } from "lucide-react";
-import { type ComponentType, Fragment, type KeyboardEvent, type ReactNode, useRef } from "react";
+import {
+  type ComponentType,
+  Fragment,
+  type KeyboardEvent,
+  type ReactNode,
+  useMemo,
+  useRef,
+} from "react";
 
 import { DriveIcon } from "@/components/drive-icon";
 import { formatBytes } from "@/lib/utils";
 import type { DriveEntryRow } from "@/server/schema";
+
+import { useDriveThumbnail } from "./use-drive-thumbnail";
 
 export type DriveView = "list" | "grid";
 
@@ -145,7 +154,7 @@ const entryVariants = cva(
     variants: {
       view: {
         list: "flex items-center gap-3 border-b border-border/60 px-4 py-2 has-[[data-entry-open]:focus-visible]:ring-inset",
-        grid: "flex h-44 w-38 flex-col rounded-lg border border-border bg-surface hover:border-ring/40 data-selected:border-ring/60",
+        grid: "flex flex-col rounded-lg p-1.5",
       },
     },
   },
@@ -155,24 +164,24 @@ const openButtonVariants = cva("outline-none", {
   variants: {
     view: {
       list: "flex min-w-0 flex-1 items-center gap-3 text-left",
-      grid: "flex min-h-0 w-full flex-1 flex-col items-center gap-2 px-3 pt-5 pb-3 text-center",
+      grid: "flex w-full flex-col items-center gap-1.5 text-center",
     },
   },
 });
 
 const iconFrameVariants = cva("flex shrink-0 items-center justify-center", {
-  variants: { view: { list: "", grid: "h-14" } },
+  variants: { view: { list: "", grid: "size-20" } },
 });
 
 const iconVariants = cva("", {
-  variants: { view: { list: "", grid: "size-12" } },
+  variants: { view: { list: "", grid: "size-16" } },
 });
 
 const nameVariants = cva("min-w-0 text-foreground", {
   variants: {
     view: {
       list: "flex-1 truncate text-[13px]",
-      grid: "line-clamp-2 h-8 w-full text-[12px] leading-4 wrap-anywhere",
+      grid: "line-clamp-2 w-full rounded px-1 text-[12px] leading-4 wrap-anywhere group-data-selected:line-clamp-none",
     },
   },
 });
@@ -181,7 +190,7 @@ const metaVariants = cva("text-[11px] text-faint", {
   variants: {
     view: {
       list: "contents",
-      grid: "mt-auto flex w-full justify-center gap-1",
+      grid: "hidden",
     },
   },
 });
@@ -208,7 +217,7 @@ const menuButtonVariants = cva("", {
   variants: {
     view: {
       list: "",
-      grid: "absolute top-1 right-1 opacity-0 group-hover:opacity-100 group-has-focus-visible:opacity-100 group-data-selected:opacity-100 pointer-coarse:opacity-100",
+      grid: "absolute top-1 right-1 hidden pointer-coarse:flex",
     },
   },
 });
@@ -237,6 +246,7 @@ function EntryItem({
   const touchTap = useRef(false);
   const size = formatSize(entry);
   const modified = formatDate(entry.modifiedAt);
+  const { ref: thumbnailRef, url: thumbnailUrl } = useDriveThumbnail(entry, view === "grid");
 
   return (
     <ContextMenu onOpenChange={selectOnOpen}>
@@ -264,8 +274,17 @@ function EntryItem({
           onKeyDown={onKeyDown}
           className={openButtonVariants({ view })}
         >
-          <span className={iconFrameVariants({ view })}>
-            <DriveIcon name={entry.name} kind={entry.kind} className={iconVariants({ view })} />
+          <span ref={thumbnailRef} className={iconFrameVariants({ view })}>
+            {thumbnailUrl ? (
+              // oxlint-disable-next-line nextjs/no-img-element --a local object URL of a thumbnail made in the browser
+              <img
+                src={thumbnailUrl}
+                alt=""
+                className="max-h-full max-w-full rounded-sm object-contain shadow-sm ring-1 ring-border"
+              />
+            ) : (
+              <DriveIcon name={entry.name} kind={entry.kind} className={iconVariants({ view })} />
+            )}
           </span>
           <span className={nameVariants({ view })}>{entry.name}</span>
           <span className={metaVariants({ view })}>
@@ -320,6 +339,24 @@ function EntryItem({
   );
 }
 
+function foldersFirst(entries: DriveEntryRow[]): DriveEntryRow[] {
+  return [
+    ...entries.filter((entry) => entry.kind === "folder"),
+    ...entries.filter((entry) => entry.kind !== "folder"),
+  ];
+}
+
+function gridColumns(container: HTMLElement): number {
+  return getComputedStyle(container).gridTemplateColumns.split(" ").filter(Boolean).length || 1;
+}
+
+const ARROW_STEP: Record<string, (columns: number) => number> = {
+  ArrowRight: () => 1,
+  ArrowLeft: () => -1,
+  ArrowDown: (columns) => columns,
+  ArrowUp: (columns) => -columns,
+};
+
 export function DriveEntries({
   entries,
   view,
@@ -333,7 +370,27 @@ export function DriveEntries({
   onSelectedChange: (id: string | null) => void;
   actions: EntryActions;
 }) {
-  const selected = entries.some((entry) => entry.id === selectedId) ? selectedId : null;
+  const ordered = useMemo(() => foldersFirst(entries), [entries]);
+  const selected = ordered.some((entry) => entry.id === selectedId) ? selectedId : null;
+
+  function moveFocus(event: KeyboardEvent<HTMLDivElement>) {
+    const step = ARROW_STEP[event.key];
+    if (!step) return false;
+    const container = event.currentTarget;
+    const buttons = [...container.querySelectorAll<HTMLButtonElement>("[data-entry-open]")];
+    const from = buttons.findIndex((button) => button === document.activeElement);
+    if (from === -1) return false;
+    const vertical = event.key === "ArrowUp" || event.key === "ArrowDown";
+    if (view === "list" && !vertical) return false;
+    const to = from + step(view === "grid" ? gridColumns(container) : 1);
+    const target = ordered[to];
+    const button = buttons[to];
+    if (!target || !button) return false;
+    event.preventDefault();
+    button.focus();
+    onSelectedChange(target.id);
+    return true;
+  }
 
   return (
     <div
@@ -342,6 +399,7 @@ export function DriveEntries({
         if (event.target === event.currentTarget) onSelectedChange(null);
       }}
       onKeyDown={(event) => {
+        if (moveFocus(event)) return;
         if (event.key === "Escape" && selected) {
           event.stopPropagation();
           onSelectedChange(null);
@@ -349,11 +407,11 @@ export function DriveEntries({
       }}
       className={cn(
         view === "grid"
-          ? "grid grid-cols-[repeat(auto-fill,--spacing(38))] justify-between gap-3 p-4"
+          ? "grid grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] content-start gap-1 p-3"
           : "flex flex-col",
       )}
     >
-      {entries.map((entry) => (
+      {ordered.map((entry) => (
         <EntryItem
           key={entry.id}
           entry={entry}

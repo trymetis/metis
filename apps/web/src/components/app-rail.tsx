@@ -23,15 +23,12 @@ import {
   HardDrive,
   Inbox,
   LayoutDashboard,
-  Link2,
   LogOut,
-  Mail,
   Moon,
   Search,
   Settings,
   Sparkles,
   Sun,
-  Users,
   Workflow,
 } from "lucide-react";
 import type { Route } from "next";
@@ -44,7 +41,6 @@ import { isNativeUserAgent, NATIVE_SETTINGS_PATH } from "@/auth/native-link";
 import { clearPreviewCache } from "@/drive/preview-cache";
 import { useHydrated } from "@/hooks/use-stored-item";
 import { useWorkspacePath, useWorkspaceSlug } from "@/hooks/use-workspace-path";
-import { useWorkspaces } from "@/hooks/use-workspaces";
 import { getInitials } from "@/lib/utils";
 import type { SourceInfo } from "@/source-info";
 import { useSearchStore } from "@/store/search-store";
@@ -59,10 +55,11 @@ import {
   mailPath,
   mailRootPath,
   workflowPath,
+  workspaceSettingsPath,
 } from "@/workspace/path";
 
 import { usePlatformPolicy } from "./platform-policy-context";
-import { WorkspaceMenuTile } from "./workspace-menu-tile";
+import { accountSettingsNav } from "./settings-nav";
 import { WorkspaceRailSwitcher } from "./workspace-rail-switcher";
 
 interface AppRailProps {
@@ -87,12 +84,10 @@ export function AppRail({ user, hasDashboard, source }: AppRailProps) {
   const pathname = usePathname();
   const { mailboxSlug, calendarSlug, driveSlug, addressBookSlug, section } = useWorkspacePath();
   const workspaceSlug = useWorkspaceSlug();
-  const { workspaces } = useWorkspaces();
   const { resolvedTheme, setTheme } = useTheme();
   const mounted = useHydrated();
 
   const openSearch = useSearchStore((s) => s.openSearch);
-  const current = workspaces.find((w) => w.slug === workspaceSlug);
   const isDark = mounted && resolvedTheme === "dark";
   const inNativeApp = mounted && isNativeUserAgent(navigator.userAgent);
 
@@ -115,9 +110,13 @@ export function AppRail({ user, hasDashboard, source }: AppRailProps) {
         className="flex w-16 shrink-0 flex-col items-center gap-1.5 border-r border-border bg-panel pt-4 pb-4"
         aria-label="App navigation"
       >
-        <WorkspaceMenuTile workspace={current} workspaceSlug={workspaceSlug} />
-
-        <Divider />
+        <IconLink
+          label="Workspace settings"
+          href={workspaceSettingsPath(workspaceSlug, "general")}
+          active={section === "settings"}
+        >
+          <Settings className="size-4.5" strokeWidth={1.8} />
+        </IconLink>
 
         <Tooltip>
           <TooltipTrigger
@@ -202,10 +201,12 @@ export function AppRail({ user, hasDashboard, source }: AppRailProps) {
               <p className="text-xs text-faint">{user.email}</p>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem render={<Link href="/settings/account" />}>
-              <Settings />
-              Settings
-            </DropdownMenuItem>
+            {accountSettingsNav({ ai: aiEnabled }).map(({ href, label, icon: Icon }) => (
+              <DropdownMenuItem key={href} render={<Link href={href} />}>
+                <Icon />
+                {label}
+              </DropdownMenuItem>
+            ))}
             {inNativeApp && (
               // oxlint-disable-next-line jsx-a11y/control-has-associated-label -- Base UI renders the item children inside this anchor; a full navigation lets the desktop shell intercept the path
               <DropdownMenuItem render={<a href={NATIVE_SETTINGS_PATH} />}>
@@ -213,30 +214,6 @@ export function AppRail({ user, hasDashboard, source }: AppRailProps) {
                 App settings
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem render={<Link href="/settings/workspaces" />}>
-              <Users />
-              Workspaces
-            </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/settings/connections" />}>
-              <Link2 />
-              Connections
-            </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/settings/mailboxes" />}>
-              <Mail />
-              Mailboxes
-            </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/settings/calendars" />}>
-              <CalendarDays />
-              Calendars
-            </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/settings/drives" />}>
-              <HardDrive />
-              Drives
-            </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/settings/address-books" />}>
-              <BookUser />
-              Address books
-            </DropdownMenuItem>
             {hasDashboard && (
               <DropdownMenuItem render={<Link href="/dashboard" />}>
                 <LayoutDashboard />

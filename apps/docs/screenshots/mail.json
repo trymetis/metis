@@ -519,6 +519,9 @@
     "path": "{workspace}/settings/signatures",
     "steps": [
       {
+        "click": "role=region[name=/^Signatures for ana@/] >> role=button[name=/^ana@/]"
+      },
+      {
         "click": "role=region[name=/^Signatures for ana@/] >> role=region[name=\"Your signatures\"] >> role=button[name=\"Add\"]"
       },
       {
@@ -556,6 +559,9 @@
     "name": "mail/signatures-editor",
     "path": "{workspace}/settings/signatures",
     "steps": [
+      {
+        "click": "role=region[name=/^Signatures for ana@/] >> role=button[name=/^ana@/]"
+      },
       {
         "click": "role=button[name=\"Edit Work\"]"
       },

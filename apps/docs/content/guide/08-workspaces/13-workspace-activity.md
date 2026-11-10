@@ -9,13 +9,12 @@ This page is part of the workspace's settings. It is not the **Activity** page o
 
 ## Open the Activity page
 
-There are three ways to open it:
+There are two ways to open it:
 
-- **From the workspace menu.** Click the workspace tile at the top of the left rail and choose **Activity**.
-- **From the workspace settings.** Open the workspace menu and choose **General**. In the list on the left, click **Activity**. It is the last item, below **Contacts**.
+- **From the workspace settings.** Click **Workspace settings** (the gear at the top of the left rail). In the list on the left, click **Activity**. It is the last item, below **Contacts**.
 - **From search.** Open [workspace search](/guide/search/search-your-workspace) and type "activity". The words "audit", "log" and "history" also work. Pick **Workspace settings: Activity**.
 
-Members do not see **Activity** in the workspace menu, in the settings list or in search. If a member opens the page's address, the page says "Only workspace owners and admins can see activity." They see no rows, no search box and no filter.
+Members do not see **Activity** in the settings list or in search. If a member opens the page's address, the page says "Only workspace owners and admins can see activity." They see no rows, no search box and no filter.
 
 The page says "Role changes, ownership transfers, removed members, invites, workflow changes and detached mailboxes, calendars, drives and address books in this workspace." If nothing has been recorded yet, it says "Nothing has happened in this workspace yet."
 

@@ -317,12 +317,16 @@ export async function withSignature(
 }
 
 export async function withFooter(
-  workspaceId: string,
+  sender: SenderContext,
   payload: DraftPayload,
 ): Promise<DraftPayload> {
-  const footer = await getMailFooter(workspaceId);
+  const footer = await getMailFooter(sender.workspaceId);
   if (!footer.enabled || !footer.html) return payload;
-  return appendHtml(payload, footerBlock(footer.html));
+  const html = fillSignatureVariables(footer.html, {
+    name: await userName(sender.userId),
+    email: sender.mailboxEmail,
+  });
+  return appendHtml(payload, footerBlock(html));
 }
 
 export async function finishOutgoing(
@@ -331,5 +335,5 @@ export async function finishOutgoing(
   opts: { signature: MailSignatureKind | null; footer: boolean },
 ): Promise<DraftPayload> {
   const signed = opts.signature ? await withSignature(sender, payload, opts.signature) : payload;
-  return opts.footer ? withFooter(sender.workspaceId, signed) : signed;
+  return opts.footer ? withFooter(sender, signed) : signed;
 }

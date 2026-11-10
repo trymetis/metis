@@ -11,8 +11,8 @@ The **Review your sessions** button in a [sign-in alert](/guide/account/sign-in-
 
 ## Open the Account page
 
-1. Open your user menu (the round button with your initials at the bottom of the left rail).
-2. Click **Settings**. The **Account** page opens.
+1. Open your account menu (the round button with your initials at the bottom of the left rail).
+2. Click **Account**. The **Account** page opens.
 
 <img src="/images/account/account.webp" alt="The Account settings page with your profile and the list of signed-in browsers" class="dark:hidden" />
 <img src="/images/account/account-dark.webp" alt="The Account settings page with your profile and the list of signed-in browsers" class="hidden dark:block" />
@@ -33,7 +33,7 @@ The section **Where you're signed in** lists "Every browser currently signed int
 
 Click **Sign out** on that browser's row. It is signed out right away. You do not need a code for this.
 
-You cannot sign out the browser you are using from this list. To do that, use **Sign out** in your user menu.
+You cannot sign out the browser you are using from this list. To do that, use **Sign out** in your account menu.
 
 ## Sign out every other browser
 

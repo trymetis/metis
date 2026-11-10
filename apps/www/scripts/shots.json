@@ -245,7 +245,7 @@
   },
   {
     "name": "contacts/sidebar",
-    "from": "contacts/sidebar"
+    "from": "contacts/show-menu"
   },
   {
     "name": "contacts/card",
@@ -455,8 +455,8 @@
   },
   {
     "name": "teams/switch",
-    "from": "workspaces/workspace-menu",
-    "focus": "role=menu"
+    "from": "get-started/app-rail",
+    "focus": "nav[aria-label='App navigation']"
   },
   {
     "name": "selfhost/checks",

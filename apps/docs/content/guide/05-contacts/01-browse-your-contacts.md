@@ -5,14 +5,18 @@ description: Open Contacts, switch between address books, filter the list and op
 
 This page shows you how to open your contacts, move between address books, find a person and read their details.
 
-<img src="/images/contacts/all-contacts.webp" alt="The Contacts section showing All contacts, with the sidebar on the left and the list of contacts" class="dark:hidden" />
-<img src="/images/contacts/all-contacts-dark.webp" alt="The Contacts section showing All contacts, with the sidebar on the left and the list of contacts" class="hidden dark:block" />
+<img src="/images/contacts/all-contacts.webp" alt="The Contacts section showing All contacts, with the list of contacts on the left and the New contact button at the top right" class="dark:hidden" />
+<img src="/images/contacts/all-contacts-dark.webp" alt="The Contacts section showing All contacts, with the list of contacts on the left and the New contact button at the top right" class="hidden dark:block" />
 
 ## Open Contacts
 
 Click the **Contacts** icon in the left rail. It sits between **Drive** and **Workspace AI**. You can also open workspace search and run the command **Go to contacts**.
 
 If your workspace has address books, you see **All contacts**: the contacts from every address book in the workspace in one list, sorted by name.
+
+The top of the page shows the title (**All contacts**, or the name of the address book you picked) and, on the right, the **New contact** button. See [Create, edit and delete contacts](/guide/contacts/create-edit-and-delete). When your instance has AI turned on, the **Contacts AI** button comes after it. See [Contacts AI](/guide/contacts/contacts-ai).
+
+Below the title, the list column has, from top to bottom: the **Switch address book** button, the **Show** menu, the filter box and the list of contacts.
 
 If the workspace has no address book yet, you see "No address book in this workspace" and a **Go to contacts settings** button. To add one, see [Add an address book](/guide/contacts/add-an-address-book). If the card says "No address book providers are set up yet. The instance owner adds them in the dashboard.", nobody on your instance can connect an address book yet. Ask your instance owner to add a provider.
 
@@ -22,7 +26,7 @@ Contacts has no keyboard shortcuts.
 
 ## Switch between address book accounts
 
-The button at the top of the sidebar shows which account you are looking at. It says **All address books** with the number of accounts, such as "2 accounts", or it shows one account's provider and email address.
+The **Switch address book** button at the top of the list column shows which account you are looking at. It says **All address books** with the number of accounts, such as "2 accounts", or it shows one account's provider and email address.
 
 <img src="/images/contacts/switcher.webp" alt="The Switch address book menu open, listing All address books, each account and Add address book" class="dark:hidden" />
 <img src="/images/contacts/switcher-dark.webp" alt="The Switch address book menu open, listing All address books, each account and Add address book" class="hidden dark:block" />
@@ -33,25 +37,31 @@ The button at the top of the sidebar shows which account you are looking at. It 
 
 **Add address book** at the bottom of the menu opens the workspace's contacts settings. If the workspace has no address book, the menu says "No address books in this workspace yet."
 
-## The sidebar
+## Choose what the list shows
 
-<img src="/images/contacts/sidebar.webp" alt="The contacts sidebar with the New contact button, All contacts and one address book" class="dark:hidden" />
-<img src="/images/contacts/sidebar-dark.webp" alt="The contacts sidebar with the New contact button, All contacts and one address book" class="hidden dark:block" />
+Use the **Show** menu, under the **Switch address book** button, to pick which contacts the list shows.
 
-From top to bottom, the sidebar has:
+<img src="/images/contacts/show-menu.webp" alt="The Show menu open, listing All contacts, the address books and the groups" class="dark:hidden" />
+<img src="/images/contacts/show-menu-dark.webp" alt="The Show menu open, listing All contacts, the address books and the groups" class="hidden dark:block" />
 
-- the account button described above;
-- the **New contact** button. See [Create, edit and delete contacts](/guide/contacts/create-edit-and-delete);
-- **All contacts**, which shows every contact in view;
-- one row for each address book the workspace shows. Click a row to see only that address book. When the workspace has more than one account, the address books are grouped under each account's email address;
-- **Groups**, when your address books have groups. Click a group to see only its members. Groups come from Google contact groups and Zoho categories. See [Address book types](/guide/contacts/address-book-types).
+1. Click **Show**.
+2. Choose one of these:
+   - **All contacts**, to see every contact in view.
+   - An address book, to see only that address book. The title at the top of the page changes to the address book's name. The address books are listed under the heading **Books**. When the workspace has more than one account, each account has its own heading instead: the account's email address.
+   - A group, under **Groups**, to see only its members. Groups come from Google contact groups and Zoho categories. While you look at one address book, **Groups** lists only that address book's groups. See [Address book types](/guide/contacts/address-book-types).
 
-On a phone, the sidebar is hidden. Tap **Open sidebar** to show it.
+**Show** appears only when at least one address book is showing in the workspace.
 
-### When the sidebar shows no address books
+### When no address books are showing
+
+If no address book is showing, a message appears under the **Switch address book** button instead of **Show**:
 
 - "None of your address books are showing in this workspace yet." means you added an account to this workspace, but none of its address books are switched on. Click **Choose which address books to show** to fix it. See [Show and hide address books](/guide/contacts/show-and-hide-address-books).
 - "No address books are showing in this workspace yet." means no address book is switched on for this workspace. The **Contacts settings** link opens the workspace's contacts settings.
+
+### On a phone
+
+On a phone, the list column fills the screen, with the **Switch address book** button and **Show** at the top. Contacts has no **Open sidebar** button.
 
 ## Filter the list
 

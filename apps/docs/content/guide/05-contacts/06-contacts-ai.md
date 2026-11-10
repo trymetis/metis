@@ -37,7 +37,7 @@ The chat is not saved. When you close the panel or leave the page, the next conv
 
 Contacts AI can list your address books and their groups, search your contacts and open one in full. It can also create a contact, change one or delete one.
 
-Before it changes anything, it asks you to approve the change. The card says, for example, "Approve saving" and the person's name, "Approve changing" and what changes, or "Approve deleting" and the contact, with a warning that it cannot be undone. While it works, you see a line such as "Saving" with the name, then "Saved" when it is done. See [Approve or decline actions](/guide/assistant/approve-or-decline-actions).
+Before it changes anything, it asks you to approve the change in a box above the message box. The approval says, for example, "Approve saving" and the person's name, "Approve changing" and what changes, or "Approve deleting" and the contact, with a warning that it cannot be undone. In the chat, the action's row says "Waiting for your approval". After you approve, it says "Approved, running...", then the result, such as "Saved Sam Lee". See [Approve or decline actions](/guide/assistant/approve-or-decline-actions).
 
 ## When Contacts AI is turned off
 

@@ -7,7 +7,9 @@ import { AlertTriangle, Bot, UserRound, X } from "lucide-react";
 import { useMemo } from "react";
 
 import { type AgentContact, TURN_PART_TYPE, viewerTimeZone } from "@/ai/turn";
+import { AgentApprovalBar } from "@/components/agent/agent-approval-bar";
 import { AgentChatMessage } from "@/components/agent/agent-chat-message";
+import { pendingApproval } from "@/components/agent/agent-tool-call";
 import {
   AttachmentChips,
   AttachmentPicker,
@@ -26,7 +28,7 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
-import { Suggestion, Suggestions } from "@/components/ai-elements/suggestion";
+import { Suggestion } from "@/components/ai-elements/suggestion";
 import { primaryEmail } from "@/contacts/fields";
 import type { ContactDto } from "@/server/schema";
 
@@ -110,6 +112,7 @@ export function ContactsAgentPanel({ onClose }: { onClose: () => void }) {
       onError: (err) => console.error("[contacts-agent] chat error:", err),
       onFinish: () => void refresh(),
     });
+  const pending = pendingApproval(messages);
 
   function sendText(text: string) {
     void sendMessage({
@@ -162,13 +165,7 @@ export function ContactsAgentPanel({ onClose }: { onClose: () => void }) {
               </div>
             </ConversationEmptyState>
           ) : (
-            messages.map((message) => (
-              <AgentChatMessage
-                key={message.id}
-                message={message}
-                onApproval={addToolApprovalResponse}
-              />
-            ))
+            messages.map((message) => <AgentChatMessage key={message.id} message={message} />)
           )}
 
           {error && (
@@ -203,17 +200,17 @@ export function ContactsAgentPanel({ onClose }: { onClose: () => void }) {
           onPin={pin}
           onRemove={remove}
         />
-        {messages.length > 0 && (
-          <Suggestions className="mb-2">
-            {SUGGESTIONS.map((s) => (
-              <Suggestion key={s} onClick={sendText} suggestion={s} />
-            ))}
-          </Suggestions>
-        )}
+        <AgentApprovalBar onApproval={addToolApprovalResponse} pending={pending} />
         <PromptInput
+          className={pending ? "[&_[data-slot=input-group]]:rounded-t-none" : undefined}
           onSubmit={(message) => {
             const text = message.text.trim();
-            if (text) sendText(text);
+            if (!text) return;
+            if (pending) {
+              addToolApprovalResponse({ id: pending.approval.id, approved: false, reason: text });
+              return;
+            }
+            sendText(text);
           }}
         >
           <PromptInputBody>

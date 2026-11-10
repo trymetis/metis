@@ -49,12 +49,16 @@ The switcher at the top of the sidebar shows the drive you are in: its type and 
 The toolbar has a button that switches between two views:
 
 - **List** shows one row per item, with its name, size and the date it last changed. Folders show no size.
-- **Grid** shows a card per item, with a large file icon, the name, the size (or "Folder"), and the date.
+- **Grid** shows the items as icons that share the width of each row. Each item has a large icon, or a small picture of the image for image files, with its name under it. A long name is cut after two lines. It shows in full when the item is selected. You can also point at an item to see its full name. Grid view does not show sizes or dates.
+
+In both views, folders come first, then files. This is the same for every type of drive, and in **All drives**.
+
+In grid view, an image file shows a small picture of itself instead of an icon when the file is 10 MB or smaller and the drive reports when it last changed. The pictures load as you scroll near them. Your browser has to read the file straight from the drive, as it does for a [file preview](/guide/drive/preview-files#which-drives-support-preview). When it cannot, the icon stays. This is why images on Google Drive always show an icon. Metis keeps these pictures in your browser and clears them when you sign out, like [file previews](/guide/drive/preview-files#safety-and-storage).
 
 Click **Switch to grid** or **Switch to list** to change the view. Metis remembers your choice in this browser, for every drive.
 
-<img src="/images/drive/explorer-grid.webp" alt="The same drive in grid view, with a card for each folder and file" class="dark:hidden" />
-<img src="/images/drive/explorer-grid-dark.webp" alt="The same drive in grid view, with a card for each folder and file" class="hidden dark:block" />
+<img src="/images/drive/explorer-grid.webp" alt="The same drive in grid view, with a large icon and the name of each folder and file" class="dark:hidden" />
+<img src="/images/drive/explorer-grid-dark.webp" alt="The same drive in grid view, with a large icon and the name of each folder and file" class="hidden dark:block" />
 
 ## Move through folders
 
@@ -69,8 +73,9 @@ You can also go back and forward through the folders you visited with the keyboa
 - **Select:** click an item once.
 - **Open:** double-click it, or press <kbd>Enter</kbd> when it is selected. A folder opens. A file opens in the [preview pane](/guide/drive/preview-files).
 - **On a touch screen:** one tap opens the item.
+- **Move the selection:** press the arrow keys to select the next item from the one that has focus. In list view, use <kbd>↑</kbd> and <kbd>↓</kbd>. In grid view, all four arrow keys work.
 - **Clear the selection:** press <kbd>Esc</kbd>.
-- **See the actions:** click the **...** button on an item, or right-click it. Both open the same menu, with actions such as **Download**, **Rename** and **Delete**.
+- **See the actions:** right-click an item. In list view, you can also click the **...** button on the item. In grid view, the **...** button shows only on touch screens. Both open the same menu, with actions such as **Download**, **Rename** and **Delete**.
 
 ## Long folders
 

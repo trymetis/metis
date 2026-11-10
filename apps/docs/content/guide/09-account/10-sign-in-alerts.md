@@ -55,10 +55,9 @@ Act quickly:
 
 ## Turn sign-in alerts off or on
 
-1. Open your user menu and click **Settings**.
-2. Click **Security**.
-3. Find the **Sign-in alerts** card. It is below **Change password** and above **Disable two-factor authentication**.
-4. Click the switch to turn alerts off or on.
+1. Open your account menu and click **Security**.
+2. Find the **Sign-in alerts** card. It is below **Change password** and above **Disable two-factor authentication**.
+3. Click the switch to turn alerts off or on.
 
 <img src="/images/account/sign-in-alerts.webp" alt="The Sign-in alerts card with its switch turned on" class="dark:hidden" />
 <img src="/images/account/sign-in-alerts-dark.webp" alt="The Sign-in alerts card with its switch turned on" class="hidden dark:block" />

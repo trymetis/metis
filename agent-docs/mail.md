@@ -62,6 +62,11 @@ See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mai
 
 - **Mute and read later are personal rows with no provider write**, keyed user × mailbox.
 - **The list's tab lives in `mail-store` (`listTabs`, keyed workspace/mailbox/folder).** `FolderView` mounts `EmailList` in a different tree with and without an open message, and the remount must keep the tab rather than fall back to Primary, which hides transactions.
+- **A custom label's color is a palette name or a `#rrggbb` hex** (`customLabelColorSchema`).
+  - A palette name resolves to the `--label-custom-*` tokens of the current theme; a hex is the mark as-is, and chip text takes its hue at the theme's `--label-custom-text-l` lightness (`customLabelColor`), so any pick stays readable in light and dark.
+  - Labels exist only in Metis, so no provider palette limits the colors.
+  - Mailbox colors hash over their own fixed eight-color list (`mailbox-color.ts`), so a new palette color never recolors a mailbox.
+- **Editing a custom label changes its name and color, never its key** (`updateCustomLabel`), because label rows and workflows store the key.
 - **The list, its search results, labels, mute and read later live in the TanStack Query cache** (`mail-cache.ts`); `mail-store` keeps only UI state and the `updateEmail` / `removeEmail(s)` actions, which write into every cached list and search result.
   - `useMailList` pages `messages.list` with `useInfiniteQuery` (staleTime `Infinity`); polling and re-entering a folder fetch the first page and merge it in (`refreshMailListHead`), so loaded pages stay.
   - Other readers of the list (shortcuts, agent panel, detail) observe the cache without fetching (`useCurrentEmails`); `selectedView` tells them whether the folder list or the read-later list is showing.
@@ -116,7 +121,8 @@ See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mai
   - It is added after the before-send Bcc policy runs, so policies match what the sender wrote.
   - The unsubscribe `mailto:` send calls the adapter directly and gets neither signature nor footer.
 - **Signature and footer HTML is sanitized on save and again when rendered** (`sanitizeSignatureHtml`): no script, style, form or media tags, no `id`, `class` or `data-` attributes, links only `http(s)`, `mailto` and `tel`, images only `https`.
-- **`{{name}}` and `{{email}}` are filled per sender** with the user's account name and the sending address; the footer has no variables.
+- **`{{name}}` and `{{email}}` are filled per sender** with the user's account name and the sending address, in signatures and in the footer (`withFooter`).
+  - The settings previews fill them too: a mailbox's lists with the signed-in user's name and that mailbox's address, the workspace signatures and the footer with the mailbox picked in **Preview as**.
 - **Changing the footer writes `workspace.mail_footer_changed`** in `setMailFooter` ([audit.md](audit.md)).
 
 ### Other rules

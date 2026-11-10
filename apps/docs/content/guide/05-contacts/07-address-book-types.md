@@ -19,7 +19,7 @@ A contacts server is also called a CardDAV server. Your administrator sets it up
 ## Notes by topic
 
 - **Connecting.** Your administrator decides which providers and servers you can pick. For a contacts server, you bring only your own login. See [Add an address book](/guide/contacts/add-an-address-book).
-- **Groups.** Google contact groups and Zoho categories show under **Groups** in the sidebar. Click one to see only its contacts. On Google, the **Groups** checkboxes in the contact dialog change which groups a contact belongs to. On Zoho, saving a contact never changes its categories. Outlook and contacts servers have no groups.
+- **Groups.** Google contact groups and Zoho categories show under **Groups** in the **Show** menu. Click one to see only its contacts. On Google, the **Groups** checkboxes in the contact dialog change which groups a contact belongs to. On Zoho, saving a contact never changes its categories. Outlook and contacts servers have no groups.
 - **Photos.** Google and Zoho contacts show the photo from your provider. Other contacts show their first letter. You cannot add or change a photo in Metis Suite.
 - **Read-only address books.** An address book is marked **Read-only** when the contacts server reports that your login can only read it. You can see its contacts, but you cannot add, edit or delete them. Google, Outlook and Zoho address books are never read-only.
 - **Which address books show.** Every account starts with no address books shown in a workspace. You switch them on yourself. See [Show and hide address books](/guide/contacts/show-and-hide-address-books).

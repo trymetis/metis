@@ -9,12 +9,11 @@ You can change your password while you are signed in, or reset it by email if yo
 
 You need your current password and a code from your authenticator app or a backup code.
 
-1. Open your user menu (the round button with your initials at the bottom of the left rail) and click **Settings**.
-2. Click **Security**.
-3. In the **Change password** card, type your **Current password** and your **New password**.
-4. Click **Change password**.
-5. In the **Confirm password change** box, enter the code from your authenticator app or a backup code.
-6. Click **Verify**.
+1. Open your account menu (the round button with your initials at the bottom of the left rail) and click **Security**.
+2. In the **Change password** card, type your **Current password** and your **New password**.
+3. Click **Change password**.
+4. In the **Confirm password change** box, enter the code from your authenticator app or a backup code.
+5. Click **Verify**.
 
 When it works, you see "Password changed. Other sessions were signed out." Every other browser where you were signed in is signed out. You stay signed in on this one.
 

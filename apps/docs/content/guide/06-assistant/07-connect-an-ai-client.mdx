@@ -17,7 +17,7 @@ If you do not see **MCP clients** in your settings, AI is not set up on your Met
 
 <Steps>
   <Step title="Open MCP clients">
-    Open your account **Settings** and choose **MCP clients**. The page lists the AI apps you have connected. If you have none yet, it shows "No clients connected".
+    Open your account menu (your initials at the bottom of the left rail) and click **MCP clients**. The page lists the AI apps you have connected. If you have none yet, it shows "No clients connected".
 
     <img src="/images/assistant/mcp-clients.webp" alt="The MCP clients settings page" class="dark:hidden" />
     <img src="/images/assistant/mcp-clients-dark.webp" alt="The MCP clients settings page" class="hidden dark:block" />
@@ -42,12 +42,15 @@ If you do not see **MCP clients** in your settings, AI is not set up on your Met
   </Step>
 
   <Step title="Copy the setup">
-    The dialog now says your client is ready. It shows two things:
+    The dialog now says your client is ready, and tells you to set it up in your client. It shows two things:
 
-    - **Client ID**: the ID your app uses to sign in. There is no secret key. The client ID is all your app needs.
-    - **Setup**: the exact instructions for your app, with your server address and client ID already filled in.
+    - **Client ID**: the ID your app uses to sign in, with a copy button. There is no secret key. The client ID is all your app needs.
+    - **Setup**: the exact instructions for your app, with your server address and client ID already filled in. They come in one of three forms:
+      - "Run this in your terminal" (Claude Code and Codex CLI): a command, with a copy button.
+      - "Add this to Cursor's mcp.json" or "Add this to VS Code's mcp.json" (Cursor and VS Code / Copilot): a piece of settings, with a copy button.
+      - "Do this in the client" (Claude Desktop or claude.ai, and other clients): steps to follow, with the address to paste in a **URL** row (**Server URL** for another client) that has its own copy button.
 
-    Click **Copy** to copy the setup, then click **Done**. You can find the client ID again later on the client's own page.
+    Copy what you need, then click **Done**. You can find the client ID again later on the client's own page.
 
   </Step>
 
@@ -135,7 +138,7 @@ If you do not see **MCP clients** in your settings, AI is not set up on your Met
 
 ## What the client can do at first
 
-A new client can use every **non-sensitive** tool: it can read and organize your mail, calendars, drives and contacts. **Sensitive** tools, such as sending email or deleting files, stay off until you switch them on. MCP clients never show an approval card, so turning a sensitive tool on lets the client use it without asking. See [What an MCP client can do](/guide/assistant/what-an-mcp-client-can-do).
+A new client can use every **non-sensitive** tool: it can read and organize your mail, calendars, drives and contacts. **Sensitive** tools, such as sending email or deleting files, stay off until you switch them on. MCP clients never ask for approval, so turning a sensitive tool on lets the client use it without asking. See [What an MCP client can do](/guide/assistant/what-an-mcp-client-can-do).
 
 To change the tools or workspaces, see [Manage MCP clients](/guide/assistant/manage-mcp-clients).
 

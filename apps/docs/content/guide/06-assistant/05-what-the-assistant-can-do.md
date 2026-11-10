@@ -19,7 +19,8 @@ The Workspace Assistant can do everything below, across all the mailboxes, calen
 - Check an email for phishing (when phishing detection is on for that mailbox in this workspace)
 - Mark as read or unread, star, archive and restore
 - Delete emails **(approval)**
-- List labels, set or clear a label on one or many emails, and create a label
+- List labels, set or clear a label on one or many emails, and create a label (a label it creates without a color is gray)
+- Rename or recolor a custom label, with one of the label colors or any hex color such as #1a7f5a. Built-in labels cannot be changed.
 - Delete a label **(approval)**
 - Create and update drafts
 - Delete a draft **(approval)**

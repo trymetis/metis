@@ -42,6 +42,7 @@ import {
 } from "@/types/instance-role";
 import {
   CUSTOM_LABEL_COLORS,
+  HEX_COLOR_PATTERN,
   MAIL_FOLDERS,
   MAIL_LABEL_SOURCES,
   MAIL_REMOTE_ALLOW_KINDS,
@@ -71,6 +72,11 @@ import {
   workflowDefinitionInputSchema,
   workflowSourceStateSchema,
 } from "@/workflow/schema";
+
+export const customLabelColorSchema = z.union([
+  z.enum(CUSTOM_LABEL_COLORS),
+  z.string().trim().toLowerCase().regex(HEX_COLOR_PATTERN),
+]);
 
 export const connectionProviderSchema = z.enum(CONNECTION_PROVIDERS);
 export const mailProviderSchema = z.enum(MAIL_PROVIDERS);
@@ -289,9 +295,19 @@ export const createMcpClientInputSchema = z.object({
   redirectUris: z.array(z.url()).max(5).optional(),
 });
 
+export const mcpGuideSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("command"), text: z.string() }),
+  z.object({ kind: z.literal("config"), file: z.string(), text: z.string() }),
+  z.object({
+    kind: z.literal("steps"),
+    text: z.string(),
+    values: z.array(z.object({ label: z.string(), value: z.string() })).optional(),
+  }),
+]);
+
 export const createMcpClientOutputSchema = z.object({
   client: mcpClientSchema,
-  instructions: z.string(),
+  instructions: mcpGuideSchema,
 });
 
 export const setMcpClientEnabledInputSchema = z.object({
@@ -523,7 +539,7 @@ export const dataExportSchema = z.object({
         z.object({
           key: z.string(),
           name: z.string(),
-          color: z.enum(CUSTOM_LABEL_COLORS),
+          color: customLabelColorSchema,
           createdAt: z.string(),
         }),
       ),
@@ -2537,8 +2553,6 @@ export const downloadAttachmentOutputSchema = z.object({
   size: z.number(),
 });
 
-export const customLabelColorSchema = z.enum(CUSTOM_LABEL_COLORS);
-
 export const customLabelSchema = z.object({
   id: z.string(),
   key: z.string(),
@@ -2552,6 +2566,12 @@ export const listCustomLabelsOutputSchema = z.object({
 
 export const createCustomLabelInputSchema = mailboxScopeSchema.extend({
   name: z.string().trim().min(1),
+  color: customLabelColorSchema.optional(),
+});
+
+export const updateCustomLabelInputSchema = mailboxScopeSchema.extend({
+  id: z.string().min(1),
+  name: z.string().trim().min(1).optional(),
   color: customLabelColorSchema.optional(),
 });
 
@@ -3678,7 +3698,7 @@ export const localSearchHitSchema = z.discriminatedUnion("kind", [
     ...localHitBase,
     key: z.string(),
     name: z.string(),
-    color: z.enum(CUSTOM_LABEL_COLORS).nullable(),
+    color: customLabelColorSchema.nullable(),
     custom: z.boolean(),
     labelId: z.string().nullable(),
     mailboxSlug: z.string().nullable(),

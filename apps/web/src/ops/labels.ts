@@ -1,7 +1,12 @@
 import "server-only";
 import { z } from "zod";
 
-import { createCustomLabel, deleteCustomLabel, listCustomLabels } from "@/mail/custom-labels";
+import {
+  createCustomLabel,
+  deleteCustomLabel,
+  listCustomLabels,
+  updateCustomLabel,
+} from "@/mail/custom-labels";
 import {
   clearUserLabel,
   labelTargets,
@@ -10,7 +15,7 @@ import {
   setUserLabel,
 } from "@/mail/labels";
 import { BUILT_IN_LABELS, customLabelColorSchema } from "@/server/schema";
-import type { CustomLabelColor } from "@/types/mail";
+import type { LabelColor } from "@/types/mail";
 
 import { orFailure, type Output } from "./output";
 import type { AgentMailbox } from "./scope";
@@ -36,6 +41,16 @@ export const setLabelsOutput = orFailure(
 export const createLabelOutput = orFailure(
   z.object({
     created: z.literal(true),
+    mailboxId: z.string(),
+    key: z.string(),
+    name: z.string(),
+    color: customLabelColorSchema,
+  }),
+);
+
+export const updateLabelOutput = orFailure(
+  z.object({
+    updated: z.literal(true),
     mailboxId: z.string(),
     key: z.string(),
     name: z.string(),
@@ -118,7 +133,7 @@ export async function createLabel(args: {
   userId: string;
   mailbox: AgentMailbox;
   name: string;
-  color?: CustomLabelColor;
+  color?: LabelColor;
 }): Promise<Output<typeof createLabelOutput>> {
   const created = await createCustomLabel({
     userId: args.userId,
@@ -133,6 +148,37 @@ export async function createLabel(args: {
     key: created.key,
     name: created.name,
     color: created.color,
+  };
+}
+
+export async function updateLabel(args: {
+  mailbox: AgentMailbox;
+  key: string;
+  name?: string;
+  color?: LabelColor;
+}): Promise<Output<typeof updateLabelOutput>> {
+  const custom = await listCustomLabels([args.mailbox.mailboxId]);
+  const label = custom.find((l) => l.key === args.key);
+  if (!label) {
+    return {
+      error: `"${args.key}" is not a custom label in this mailbox — built-in labels cannot be changed. Custom labels here: ${
+        custom.map((l) => l.key).join(", ") || "none"
+      }`,
+    };
+  }
+  const updated = await updateCustomLabel({
+    mailboxIds: [args.mailbox.mailboxId],
+    id: label.id,
+    name: args.name,
+    color: args.color,
+  });
+  if ("error" in updated) return updated;
+  return {
+    updated: true,
+    mailboxId: args.mailbox.mailboxId,
+    key: updated.key,
+    name: updated.name,
+    color: updated.color,
   };
 }
 

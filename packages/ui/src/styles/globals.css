@@ -20,16 +20,20 @@
   --label-promotional: #693091;
   --label-social: #205b5b;
 
-  --label-custom-red: #8f1d12;
-  --label-custom-orange: #743d0d;
-  --label-custom-yellow: #5a4905;
-  --label-custom-green: #135630;
-  --label-custom-teal: #0c5547;
-  --label-custom-blue: #154f76;
-  --label-custom-purple: #68377c;
-  --label-custom-navy: #384e65;
-  --label-custom-gray: #424e4f;
-  --label-custom-amber: #614714;
+  --label-custom-red: #b91c1c;
+  --label-custom-orange: #c2410c;
+  --label-custom-amber: #b45309;
+  --label-custom-yellow: #a16207;
+  --label-custom-green: #15803d;
+  --label-custom-teal: #0f766e;
+  --label-custom-cyan: #0e7490;
+  --label-custom-blue: #1d4ed8;
+  --label-custom-indigo: #4338ca;
+  --label-custom-purple: #7e22ce;
+  --label-custom-pink: #be185d;
+  --label-custom-navy: #1e3a8a;
+  --label-custom-gray: #3f3f46;
+  --label-custom-text-l: 0.45;
 
   --label-action-required-mark: #de2e1b;
   --label-work-mark: #2e7aaf;
@@ -39,16 +43,19 @@
   --label-promotional-mark: #9856c7;
   --label-social-mark: #2d8080;
 
-  --label-custom-red-mark: #de2e1b;
-  --label-custom-orange-mark: #b25e14;
-  --label-custom-yellow-mark: #8b7108;
-  --label-custom-green-mark: #1e8549;
-  --label-custom-teal-mark: #12836c;
-  --label-custom-blue-mark: #207ab6;
-  --label-custom-purple-mark: #9b59b6;
-  --label-custom-navy-mark: #34495e;
-  --label-custom-gray-mark: #657879;
-  --label-custom-amber-mark: #956d1f;
+  --label-custom-red-mark: #dc2626;
+  --label-custom-orange-mark: #ea580c;
+  --label-custom-amber-mark: #d97706;
+  --label-custom-yellow-mark: #ca8a04;
+  --label-custom-green-mark: #16a34a;
+  --label-custom-teal-mark: #0d9488;
+  --label-custom-cyan-mark: #0891b2;
+  --label-custom-blue-mark: #2563eb;
+  --label-custom-indigo-mark: #4f46e5;
+  --label-custom-purple-mark: #9333ea;
+  --label-custom-pink-mark: #db2777;
+  --label-custom-navy-mark: #1e40af;
+  --label-custom-gray-mark: #71717a;
 
   --destructive-muted: #6b4844;
   --destructive-disabled: #c7c4c0;
@@ -114,16 +121,20 @@ html.dark {
   --label-promotional: #c29cde;
   --label-social: #5bc6c6;
 
-  --label-custom-red: #f4aaa2;
-  --label-custom-orange: #efae74;
-  --label-custom-yellow: #e1b70d;
-  --label-custom-green: #40d47f;
-  --label-custom-teal: #1dd3af;
-  --label-custom-blue: #8cc5eb;
-  --label-custom-purple: #d1b3de;
-  --label-custom-navy: #aec0d2;
-  --label-custom-gray: #b5c0c1;
-  --label-custom-amber: #dfb768;
+  --label-custom-red: #fca5a5;
+  --label-custom-orange: #fdba74;
+  --label-custom-amber: #fcd34d;
+  --label-custom-yellow: #fde047;
+  --label-custom-green: #86efac;
+  --label-custom-teal: #5eead4;
+  --label-custom-cyan: #67e8f9;
+  --label-custom-blue: #93c5fd;
+  --label-custom-indigo: #a5b4fc;
+  --label-custom-purple: #d8b4fe;
+  --label-custom-pink: #f9a8d4;
+  --label-custom-navy: #bfdbfe;
+  --label-custom-gray: #d4d4d8;
+  --label-custom-text-l: 0.82;
 
   --label-action-required-mark: #e74c3c;
   --label-work-mark: #5ba3d4;
@@ -133,16 +144,19 @@ html.dark {
   --label-promotional-mark: #b07ed4;
   --label-social-mark: #3aa6a6;
 
-  --label-custom-red-mark: #e74c3c;
-  --label-custom-orange-mark: #e67e22;
-  --label-custom-yellow-mark: #f1c40f;
-  --label-custom-green-mark: #27ae60;
-  --label-custom-teal-mark: #1abc9c;
-  --label-custom-blue-mark: #3498db;
-  --label-custom-purple-mark: #a76cbe;
-  --label-custom-navy-mark: #6386a9;
-  --label-custom-gray-mark: #95a5a6;
-  --label-custom-amber-mark: #c8922a;
+  --label-custom-red-mark: #dc2626;
+  --label-custom-orange-mark: #ea580c;
+  --label-custom-amber-mark: #d97706;
+  --label-custom-yellow-mark: #ca8a04;
+  --label-custom-green-mark: #16a34a;
+  --label-custom-teal-mark: #0d9488;
+  --label-custom-cyan-mark: #0891b2;
+  --label-custom-blue-mark: #2563eb;
+  --label-custom-indigo-mark: #4f46e5;
+  --label-custom-purple-mark: #9333ea;
+  --label-custom-pink-mark: #db2777;
+  --label-custom-navy-mark: #3451b2;
+  --label-custom-gray-mark: #8b8b94;
 
   --destructive-muted: #be9d9a;
   --destructive-disabled: #393837;

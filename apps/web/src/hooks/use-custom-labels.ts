@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { rpc } from "@/lib/orpc";
 import { getQueryClient } from "@/lib/query-client";
 import type { MailboxScope } from "@/server/schema";
-import type { CustomLabelColor } from "@/types/mail";
+import type { LabelColor } from "@/types/mail";
 
 import { useMailboxScope } from "./use-workspace-path";
 
@@ -13,7 +13,7 @@ export interface CustomLabel {
   id: string;
   key: string;
   name: string;
-  color: CustomLabelColor;
+  color: LabelColor;
 }
 
 const NO_LABELS: CustomLabel[] = [];
@@ -35,6 +35,10 @@ function updateCustomLabels(scope: MailboxScope, update: (labels: CustomLabel[])
 
 export function addCustomLabel(scope: MailboxScope, label: CustomLabel) {
   updateCustomLabels(scope, (labels) => [...labels, label]);
+}
+
+export function replaceCustomLabel(scope: MailboxScope, label: CustomLabel) {
+  updateCustomLabels(scope, (labels) => labels.map((l) => (l.key === label.key ? label : l)));
 }
 
 export function removeCustomLabel(scope: MailboxScope, id: string) {

@@ -9,7 +9,7 @@ Anyone with an account can create a workspace. You become its owner.
 
 1. Open the **Create a workspace** dialog in one of two ways:
    - In the left rail, click the dashed **+** tile below your workspace tiles (**New workspace**).
-   - Or open **Settings**, choose **Workspaces** and click **New workspace**.
+   - Or open your account menu (your initials at the bottom of the left rail), choose **Workspaces** and click **New workspace**.
 2. Type a **Name**, for example "Acme Corp". It must be 2 to 60 characters long.
 
    <img src="/images/workspaces/create-workspace-dialog.webp" alt="The Create a workspace dialog with a name typed in" class="dark:hidden" />

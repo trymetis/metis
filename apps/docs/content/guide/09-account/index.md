@@ -3,7 +3,7 @@ title: Your account
 description: Sign in, keep your account secure, choose your privacy settings and learn how invites work.
 ---
 
-These pages cover your own Metis Suite account: how you sign in, how you keep it safe, and the choices that follow you into every workspace. Most of what they describe lives under **Settings**, which you open from your user menu (the round button with your initials at the bottom of the left rail).
+These pages cover your own Metis Suite account: how you sign in, how you keep it safe, and the choices that follow you into every workspace. Most of what they describe lives in your account settings. Open your account menu (the round button with your initials at the bottom of the left rail) and click the page you want, such as **Account** or **Security**.
 
 - [Sign in](/guide/account/sign-in): sign in with a password or a magic link, enter your two-factor code, create an account, and sign out.
 - [Two-factor authentication](/guide/account/two-factor-authentication): backup codes, adding another device, turning it off and on, and what to do if you lose your phone.

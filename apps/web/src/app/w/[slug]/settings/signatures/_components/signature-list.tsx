@@ -1,9 +1,17 @@
 "use client";
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@metis/ui/components/accordion";
 import { Badge } from "@metis/ui/components/badge";
 import { Button } from "@metis/ui/components/button";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+
+import type { SignatureVariables } from "@/mail/signature-markup";
 
 import { type SignatureDraft, SignatureEditorDialog } from "./signature-editor-dialog";
 import { SignaturePreview } from "./signature-preview";
@@ -24,6 +32,7 @@ export function SignatureList({
   signatures,
   canEdit,
   readOnlyNote,
+  previewVars,
   onSave,
   onDelete,
 }: {
@@ -32,6 +41,7 @@ export function SignatureList({
   signatures: ListedSignature[];
   canEdit: boolean;
   readOnlyNote?: string;
+  previewVars: SignatureVariables;
   onSave: (draft: SignatureDraft) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 }) {
@@ -68,15 +78,19 @@ export function SignatureList({
       {signatures.length === 0 ? (
         <p className="mt-2 text-[12px] text-faint">None yet.</p>
       ) : (
-        <ul className="mt-2 flex flex-col gap-2">
+        <Accordion multiple className="mt-2 rounded-lg border border-border-soft">
           {signatures.map((s) => (
-            <li key={s.id} className="rounded-lg border border-border-soft p-3">
-              <div className="flex items-center gap-2">
-                <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">
-                  {s.name}
-                </span>
-                {s.defaultNew && <Badge variant="secondary">New messages</Badge>}
-                {s.defaultReply && <Badge variant="secondary">Replies</Badge>}
+            <AccordionItem key={s.id} value={s.id} className="not-last:border-border-soft">
+              <div className="flex items-center gap-2 px-3">
+                <div className="min-w-0 flex-1">
+                  <AccordionTrigger className="items-center gap-2 py-2 font-normal hover:no-underline">
+                    <span className="min-w-0 flex-1 truncate text-[13px] text-foreground">
+                      {s.name}
+                    </span>
+                    {s.defaultNew && <Badge variant="secondary">New messages</Badge>}
+                    {s.defaultReply && <Badge variant="secondary">Replies</Badge>}
+                  </AccordionTrigger>
+                </div>
                 {canEdit && (
                   <>
                     <Button
@@ -98,12 +112,12 @@ export function SignatureList({
                   </>
                 )}
               </div>
-              <div className="mt-2">
-                <SignaturePreview html={s.html} />
-              </div>
-            </li>
+              <AccordionContent className="px-3 pb-3">
+                <SignaturePreview html={s.html} vars={previewVars} />
+              </AccordionContent>
+            </AccordionItem>
           ))}
-        </ul>
+        </Accordion>
       )}
 
       {error && <p className="mt-2 text-[12px] text-destructive-text">{error}</p>}
@@ -112,6 +126,7 @@ export function SignatureList({
         <SignatureEditorDialog
           initial={editing}
           title={editing.id ? "Edit signature" : "New signature"}
+          previewVars={previewVars}
           onClose={() => setEditing(null)}
           onSave={onSave}
         />

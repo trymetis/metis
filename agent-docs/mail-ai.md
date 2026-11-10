@@ -45,7 +45,7 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [mail.md](mail
 - **The decision classifier writes only confident labels.**
   - The top label at p ≥ `DECISION_LABEL_MIN` is written, with p as its confidence.
   - Below that, or on a refusal, nothing is written and the message is flagged in its mailbox's `classify-unsure:` cache hash (`markUnsure`, `UNSURE_TTL_SEC` from the hash's first flag), which stops it being asked again; flagged items are filtered out before any call, read in one `hmget` per mailbox.
-  - Creating or deleting a custom label drops the mailbox's unsure hash (`forgetUnsure` in `createCustomLabel` / `deleteCustomLabel`), because the new set of labels may fit a message the old one did not.
+  - Creating, renaming or deleting a custom label drops the mailbox's unsure hash (`forgetUnsure` in `createCustomLabel`, `updateCustomLabel` and `deleteCustomLabel`), because the new set of labels may fit a message the old one did not.
 - **A failed decision call leaves only its own message unlabeled**, asked again on the next render, with no LLM fallback; the other calls still write their labels, unsure keys and usage.
 - **The LLM prompt and the decision options render the label names and descriptions from one table**, `LABEL_DESCRIPTIONS`.
 

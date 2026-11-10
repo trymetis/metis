@@ -3,9 +3,13 @@
 import { useMemo } from "react";
 
 import { sanitizeSignatureHtml } from "@/lib/sanitize-html";
+import { fillSignatureVariables, type SignatureVariables } from "@/mail/signature-markup";
 
-export function SignaturePreview({ html }: { html: string }) {
-  const clean = useMemo(() => sanitizeSignatureHtml(html), [html]);
+export function SignaturePreview({ html, vars }: { html: string; vars: SignatureVariables }) {
+  const clean = useMemo(
+    () => sanitizeSignatureHtml(fillSignatureVariables(html, vars)),
+    [html, vars],
+  );
   if (!clean) return <p className="text-[12px] text-faint">Nothing yet.</p>;
   return (
     <div

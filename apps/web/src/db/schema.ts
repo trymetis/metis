@@ -17,9 +17,8 @@ import type { AnalysisResult } from "@/types/analysis";
 import { AUDIT_ACTIONS, AUDIT_RESOURCE_KINDS, AUDIT_VIAS, type AuditDetail } from "@/types/audit";
 import { INSTANCE_CONFIG_KINDS } from "@/types/instance-config";
 import { GRANTED_INSTANCE_ROLES } from "@/types/instance-role";
-import type { DraftPayload } from "@/types/mail";
+import type { DraftPayload, LabelColor } from "@/types/mail";
 import {
-  CUSTOM_LABEL_COLORS,
   MAIL_LABEL_SOURCES,
   MAIL_REMOTE_ALLOW_KINDS,
   MAIL_REMOTE_CONTENT_MODES,
@@ -827,7 +826,7 @@ export const mailboxLabel = sqliteTable(
     }),
     key: text("key").notNull(),
     name: text("name").notNull(),
-    color: text("color", { enum: CUSTOM_LABEL_COLORS }).notNull(),
+    color: text("color").$type<LabelColor>().notNull(),
     createdAt: timestamp("created_at").notNull(),
   },
   (table) => [

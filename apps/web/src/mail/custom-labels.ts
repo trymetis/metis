@@ -3,7 +3,7 @@ import { and, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
 import { mailboxLabel } from "@/db/schema";
-import type { CustomLabelColor } from "@/types/mail";
+import { isLabelColor, type LabelColor } from "@/types/mail";
 
 import { forgetUnsure } from "./classify-unsure";
 
@@ -11,7 +11,7 @@ export interface StoredCustomLabel {
   id: string;
   key: string;
   name: string;
-  color: CustomLabelColor;
+  color: LabelColor;
 }
 
 function slugify(name: string): string {
@@ -41,7 +41,7 @@ export async function listCustomLabels(mailboxIds: string[]): Promise<StoredCust
     id: r.id,
     key: r.key,
     name: r.name,
-    color: r.color,
+    color: isLabelColor(r.color) ? r.color : "gray",
   }));
 }
 
@@ -49,7 +49,7 @@ export async function createCustomLabel(opts: {
   userId: string;
   mailboxIds: string[];
   name: string;
-  color?: CustomLabelColor;
+  color?: LabelColor;
 }): Promise<StoredCustomLabel | { error: string; reason: "bad_request" | "conflict" }> {
   if (opts.mailboxIds.length === 0) {
     return { error: "No mailbox in scope", reason: "bad_request" };
@@ -57,7 +57,7 @@ export async function createCustomLabel(opts: {
 
   const key = `custom:${slugify(opts.name)}`;
   const name = opts.name.slice(0, 40);
-  const color: CustomLabelColor = opts.color ?? "gray";
+  const color: LabelColor = opts.color ?? "gray";
   const now = new Date();
 
   const inserted = await db
@@ -82,6 +82,30 @@ export async function createCustomLabel(opts: {
   if (!first) return { error: "Label already exists", reason: "conflict" };
   await forgetUnsure(opts.mailboxIds);
   return { id: first.id, key, name, color };
+}
+
+export async function updateCustomLabel(opts: {
+  mailboxIds: string[];
+  id: string;
+  name?: string;
+  color?: LabelColor;
+}): Promise<StoredCustomLabel | { error: string }> {
+  const [row] = await db
+    .select()
+    .from(mailboxLabel)
+    .where(and(eq(mailboxLabel.id, opts.id), inArray(mailboxLabel.mailboxId, opts.mailboxIds)))
+    .limit(1);
+  if (!row) return { error: "Label not found" };
+
+  const name = opts.name?.slice(0, 40) ?? row.name;
+  const color = opts.color ?? row.color;
+  await db
+    .update(mailboxLabel)
+    .set({ name, color })
+    .where(and(eq(mailboxLabel.key, row.key), inArray(mailboxLabel.mailboxId, opts.mailboxIds)));
+  if (name !== row.name) await forgetUnsure(opts.mailboxIds);
+
+  return { id: row.id, key: row.key, name, color };
 }
 
 export async function deleteCustomLabel(opts: {

@@ -1,11 +1,18 @@
 import { fnv1a } from "@/lib/utils";
-import { CUSTOM_LABEL_COLORS, type CustomLabelColor } from "@/types/mail";
+import type { CustomLabelColor } from "@/types/mail";
 
 import { customLabelColor, customLabelMark } from "./label-meta";
 
-const ACCOUNT_PALETTE: readonly CustomLabelColor[] = CUSTOM_LABEL_COLORS.filter(
-  (color) => color !== "amber" && color !== "yellow",
-);
+const ACCOUNT_PALETTE: readonly CustomLabelColor[] = [
+  "red",
+  "orange",
+  "green",
+  "teal",
+  "blue",
+  "purple",
+  "navy",
+  "gray",
+];
 
 function paletteKey(email: string): CustomLabelColor {
   // oxlint-disable-next-line typescript/no-non-null-assertion --modulo of a non-empty array

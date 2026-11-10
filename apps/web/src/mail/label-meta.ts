@@ -1,12 +1,13 @@
+import { isOneOf } from "@/lib/guards";
 import { BUILT_IN_LABELS, type BuiltInLabel } from "@/server/schema";
-import type { CustomLabelColor } from "@/types/mail";
+import { CUSTOM_LABEL_COLORS, isLabelColor, type LabelColor } from "@/types/mail";
 
 export type LabelKey = BuiltInLabel | "scheduled";
 
 export type CustomLabel = {
   key: string;
   name: string;
-  color: CustomLabelColor;
+  color: LabelColor;
 };
 
 export type LabelMeta = {
@@ -128,12 +129,15 @@ export const LABEL_SELECT_OPTIONS: { value: string; label: string }[] = ASSIGNAB
   ({ key, name }) => ({ value: key, label: name }),
 );
 
-export function customLabelColor(color: CustomLabelColor): string {
-  return `var(--label-custom-${color})`;
+export function customLabelColor(color: LabelColor): string {
+  if (isOneOf(CUSTOM_LABEL_COLORS, color)) return `var(--label-custom-${color})`;
+  if (!isLabelColor(color)) return "var(--label-custom-gray)";
+  return `oklch(from ${color} var(--label-custom-text-l) min(c, 0.2) h)`;
 }
 
-export function customLabelMark(color: CustomLabelColor): string {
-  return `var(--label-custom-${color}-mark)`;
+export function customLabelMark(color: LabelColor): string {
+  if (isOneOf(CUSTOM_LABEL_COLORS, color)) return `var(--label-custom-${color}-mark)`;
+  return isLabelColor(color) ? color : "var(--label-custom-gray-mark)";
 }
 
 export function resolveLabelName(key: string, custom: readonly CustomLabel[]): string {

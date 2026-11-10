@@ -1,7 +1,12 @@
 import "server-only";
 import { ORPCError } from "@orpc/server";
 
-import { createCustomLabel, deleteCustomLabel, listCustomLabels } from "@/mail/custom-labels";
+import {
+  createCustomLabel,
+  deleteCustomLabel,
+  listCustomLabels,
+  updateCustomLabel,
+} from "@/mail/custom-labels";
 import { mailboxIds } from "@/mail/session";
 import { mailSession } from "@/server/middlewares/mail-session";
 import {
@@ -11,6 +16,7 @@ import {
   deleteCustomLabelOutputSchema,
   listCustomLabelsOutputSchema,
   mailboxScopeSchema,
+  updateCustomLabelInputSchema,
 } from "@/server/schema";
 
 export const customLabelsRouter = {
@@ -36,6 +42,21 @@ export const customLabelsRouter = {
         });
       }
       return created;
+    }),
+
+  update: mailSession(updateCustomLabelInputSchema)
+    .output(customLabelSchema)
+    .handler(async ({ input, context }) => {
+      const updated = await updateCustomLabel({
+        mailboxIds: mailboxIds(context.mail),
+        id: input.id,
+        name: input.name,
+        color: input.color,
+      });
+      if ("error" in updated) {
+        throw new ORPCError("NOT_FOUND", { message: updated.error });
+      }
+      return updated;
     }),
 
   delete: mailSession(deleteCustomLabelInputSchema)

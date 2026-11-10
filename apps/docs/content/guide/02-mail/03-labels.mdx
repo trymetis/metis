@@ -1,6 +1,6 @@
 ---
 title: Labels
-description: How messages get their labels, how to change a label, label many messages at once, and create your own labels.
+description: How messages get their labels, how to change a label, label many messages at once, and create, edit and delete your own labels.
 ---
 
 A label tells you what kind of message you are looking at, such as **Work** or **Newsletter**. Each message has at most one label. The label shows as a chip on the message row and on the **Change label** button when the message is open.
@@ -28,7 +28,7 @@ A message that was sent from the **Scheduled** folder also gets a **Scheduled** 
 
 A label can come from three places:
 
-1. **AI labels.** When AI is on for the mailbox, Metis Suite reads new messages in your list and labels them for you. If it is not sure about a message, it leaves the message without a label. Depending on how your server is set up, it may not try that message again for up to 7 days. Adding or deleting a custom label in the mailbox ends that wait, so those messages are tried again the next time you open the mailbox.
+1. **AI labels.** When AI is on for the mailbox, Metis Suite reads new messages in your list and labels them for you. If it is not sure about a message, it leaves the message without a label. Depending on how your server is set up, it may not try that message again for up to 7 days. Adding, renaming or deleting a custom label in the mailbox ends that wait, so those messages are tried again the next time you open the mailbox.
 2. **Gmail categories.** For Gmail mailboxes, Gmail's own categories become labels: Promotions becomes **Promotional**, Updates becomes **Updates**, Social becomes **Social**, and Forums becomes **Newsletter**.
 3. **You.** A label you pick replaces the AI label, and the AI never changes it back.
 
@@ -75,11 +75,14 @@ Custom labels are your own names, such as a client or a project. They appear in 
     Type it in the **Label name** field. Names can be up to 40 characters long.
   </Step>
   <Step title="Pick a color">
-    Choose one of ten colors: red, orange, yellow, green, teal, blue, purple, navy, gray or amber.
+    Choose one of 13 colors: red, orange, amber, yellow, green, teal, cyan, blue, indigo, purple, pink, navy or gray.
     Red is picked first.
+
+    For any other color, click the last swatch, **Custom color** (a rainbow circle with a pipette). Your browser's color picker opens. Once you pick a color, the swatch shows it and a **Hex color** field appears. You can also type a color there as a hex code, such as #1a7f5a. Only a valid hex code is used.
+
   </Step>
   <Step title="Click Add label">
-    Or press Enter. Press Esc, or click the **X** that replaced the **+** (**Cancel**), to cancel.
+    Or press Enter. To cancel, click **Cancel**, press Esc, or click the **X** that replaced the **+**.
   </Step>
 </Steps>
 
@@ -99,8 +102,22 @@ Things to know about custom labels:
 - Everyone who can see the mailbox sees your custom labels and can use them.
 - If you create a label while in **All inboxes**, it is added to every mailbox.
 - If a label with the same name already exists, no new label is added.
+- Renaming a label does not free its first name. If you later create a label with that first name, no new label is added.
 - Custom labels appear in the **Change label** and **Label** menus under **Custom**.
-- Adding or deleting a custom label lets AI labels try again on messages they were not sure about before.
+- Adding, renaming or deleting a custom label lets AI labels try again on messages they were not sure about before.
+
+## Edit a custom label
+
+You can rename a custom label or change its color.
+
+1. Point at the label in the sidebar. A pencil button and an **X** appear next to it. On a touch screen, they always show.
+2. Click the pencil. The label's row turns into the same form you use to create a label, filled in with its name and color.
+3. Change the name, the color, or both. The name cannot be empty, and it can be up to 40 characters long.
+4. Click **Save**, or press Enter. To keep the label as it was, click **Cancel** or press Esc.
+
+The label stays the same label. Messages that have it keep it, and workflows that use it keep working. The change applies for everyone who can see the mailbox. If you edit a label while in **All inboxes**, the change applies to that label in every mailbox.
+
+Built-in labels cannot be renamed or recolored. They have no pencil button.
 
 ## Delete a custom label
 

@@ -1477,6 +1477,27 @@ const LABELS: Case[] = [
     },
   },
   {
+    tool: "updateLabel",
+    run: async (s, c) => {
+      const { key } = await s.ok<{ key: string }>("createLabel", {
+        ...box(c),
+        name: uniqueName(),
+        color: "teal",
+      });
+      try {
+        const renamed = uniqueName();
+        expect(
+          await s.ok("updateLabel", { ...box(c), label: key, name: renamed, color: "#1A2B3C" }),
+        ).toMatchObject({ updated: true, key, name: renamed, color: "#1a2b3c" });
+        expect(await s.refused("updateLabel", { ...box(c), label: "work", name: "x" })).toContain(
+          "built-in labels cannot be changed",
+        );
+      } finally {
+        await s.call("deleteLabel", { ...box(c), label: key });
+      }
+    },
+  },
+  {
     tool: "deleteLabel",
     run: async (s, c) => {
       const { key } = await s.ok<{ key: string }>("createLabel", {
