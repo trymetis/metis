@@ -61,7 +61,7 @@ Click your initials at the bottom of the rail to open the account menu. It shows
 
 - **Settings**, your account settings.
 - **Workspaces**, **Connections**, **Mailboxes**, **Calendars**, **Drives** and **Address books**, the pages where you manage your workspaces and connected accounts.
-- **Dashboard**, only for the owner of the Metis Suite instance.
+- **Dashboard**, only for the instance owner, instance admins and instance observers.
 - **Dark mode** or **Light mode**, to switch the theme for yourself.
 - **Sign out**.
 

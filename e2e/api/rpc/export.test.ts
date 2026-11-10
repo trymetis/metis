@@ -131,7 +131,7 @@ test("the export holds the account's own security activity", async () => {
   const { securityActivity } = await exportData(rpc);
   expect(securityActivity).toContainEqual(
     expect.objectContaining({
-      action: "workspace_invite.revoked",
+      action: "invite.revoked",
       actorEmail: account.email,
       targetLabel: email,
       at: expect.any(String),

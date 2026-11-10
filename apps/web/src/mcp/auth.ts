@@ -2,11 +2,13 @@ import "server-only";
 import { and, eq } from "drizzle-orm";
 import type { JWTPayload } from "jose";
 
-import { isOwnerEmail } from "@/auth/owner";
+import { isBanned } from "@/auth/ban";
+import { instanceRoleOf } from "@/auth/instance-role";
 import { config } from "@/config";
 import { db } from "@/db";
 import { user } from "@/db/auth-schema";
 import { mcpClient } from "@/db/schema";
+import type { InstanceRole } from "@/types/instance-role";
 
 import type { McpCapabilityPrefs } from "./tools";
 
@@ -18,7 +20,8 @@ export type ResolvedMcpClient = {
   clientId: string;
   userId: string;
   userName: string;
-  isOwner: boolean;
+  userEmail: string;
+  instanceRole: InstanceRole | null;
   hiddenWorkspaceIds: string[];
   capabilities: McpCapabilityPrefs;
 };
@@ -34,7 +37,7 @@ export const MCP_RESOURCE_METADATA = new URL(
 
 export async function resolveMcpClient(
   jwt: JWTPayload,
-): Promise<ResolvedMcpClient | "revoked" | null> {
+): Promise<ResolvedMcpClient | "revoked" | "banned" | null> {
   const clientId = typeof jwt.azp === "string" ? jwt.azp : undefined;
   const userId = typeof jwt.sub === "string" ? jwt.sub : undefined;
   if (!clientId || !userId) return null;
@@ -49,6 +52,8 @@ export async function resolveMcpClient(
       capabilities: mcpClient.capabilities,
       enabled: mcpClient.enabled,
       tokensRevokedAt: mcpClient.tokensRevokedAt,
+      banned: user.banned,
+      banExpires: user.banExpires,
     })
     .from(mcpClient)
     .innerJoin(user, eq(user.id, mcpClient.userId))
@@ -56,13 +61,15 @@ export async function resolveMcpClient(
     .limit(1);
 
   if (!row?.enabled) return null;
+  if (isBanned(row)) return "banned";
   if (row.tokensRevokedAt && !issuedAfter(jwt, row.tokensRevokedAt)) return "revoked";
 
   return {
     clientId: row.clientId,
     userId: row.userId,
     userName: row.name,
-    isOwner: isOwnerEmail(row.email),
+    userEmail: row.email,
+    instanceRole: await instanceRoleOf({ id: row.userId, email: row.email }),
     hiddenWorkspaceIds: row.hiddenWorkspaceIds,
     capabilities: row.capabilities,
   };

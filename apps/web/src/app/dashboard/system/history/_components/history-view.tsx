@@ -15,6 +15,7 @@ import { ArrowRight, Loader2, RotateCcw } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { useDashboardRole } from "@/components/dashboard/dashboard-role";
 import { ScrollTable } from "@/components/dashboard/scroll-table";
 import { CheckResults, Loading, useSystemResource } from "@/components/dashboard/system-client";
 import { Mono, Section, Sections, ToneBadge } from "@/components/dashboard/system-ui";
@@ -170,6 +171,7 @@ function DiffSection({
 }
 
 export function HistoryView() {
+  const { canOperate } = useDashboardRole();
   const [history, reload] = useSystemResource(load);
   const [pair, setPair] = useState<{ from: number; to: number } | null>(null);
   const [restoring, setRestoring] = useState<Version | null>(null);
@@ -310,10 +312,12 @@ export function HistoryView() {
                         >
                           Compare
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => setRestoring(entry)}>
-                          <RotateCcw strokeWidth={1.75} />
-                          Restore
-                        </Button>
+                        {canOperate && (
+                          <Button variant="outline" size="sm" onClick={() => setRestoring(entry)}>
+                            <RotateCcw strokeWidth={1.75} />
+                            Restore
+                          </Button>
+                        )}
                       </span>
                     )}
                   </TableCell>

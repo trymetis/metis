@@ -1,6 +1,8 @@
 import "server-only";
-import { count, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
+import { ownerEmail } from "@/auth/owner";
+import { ownerHasAccount } from "@/auth/signup";
 import { config } from "@/config";
 import { decisionEnabled, getInstanceConfig } from "@/config/runtime";
 import type { InstanceSection } from "@/config/schema";
@@ -9,7 +11,7 @@ import { connectionsCallbackUrl } from "@/connections/oauth-state";
 import { isProviderConfigured } from "@/connections/servers";
 import { CONNECTION_PROVIDERS, type ConnectionProvider } from "@/connections/types";
 import { db } from "@/db";
-import { connection, user } from "@/db/schema";
+import { connection } from "@/db/schema";
 import type {
   DashboardProviderEntry,
   DashboardSystemBadge,
@@ -314,8 +316,7 @@ export async function systemRunner(): Promise<DashboardSystemRunner> {
 
 async function setupCodeState(): Promise<DashboardSystemInstance["setupCode"]> {
   if (!config.app.setupCode) return "unset";
-  const [users] = await db.select({ total: count() }).from(user);
-  return (users?.total ?? 0) === 0 ? "live" : "spent";
+  return (await ownerHasAccount()) ? "spent" : "live";
 }
 
 export async function systemInstance(): Promise<DashboardSystemInstance> {
@@ -325,7 +326,7 @@ export async function systemInstance(): Promise<DashboardSystemInstance> {
     appUrl: config.auth.url,
     secureCookies: config.auth.secureCookies,
     signupDisabled: instance.signup.signupDisabled,
-    ownerEmail: config.app.ownerEmail ?? null,
+    ownerEmail: ownerEmail(),
     setupCode: await setupCodeState(),
     legal: {
       version: instance.legal.version,
@@ -608,7 +609,7 @@ export async function systemOverview(): Promise<DashboardSystemOverview> {
           : instance.signup.signupDisabled
             ? badge("Invite only", "neutral")
             : badge("Open sign-up", "warning"),
-      detail: config.app.ownerEmail ?? "no owner",
+      detail: ownerEmail(),
     },
   };
 }

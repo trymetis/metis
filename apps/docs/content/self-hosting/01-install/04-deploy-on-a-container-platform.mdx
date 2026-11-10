@@ -15,16 +15,16 @@ Without the bootstrap script and the Compose stack, a few jobs become yours:
 
 ## The images
 
-All images are public, on `ghcr.io/trymetis/metis`. Replace `<version>` with a release number, such as `1.2.3`.
+All images are public, on `ghcr.io/trymetis/metis`. This page uses release `1.2.3` as an example. Use the release number you want instead.
 
-| Image                                        | What it does                                                                                       | When you need it               |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------ |
-| `ghcr.io/trymetis/metis:<version>`           | The app. It listens on port 3000.                                                                  | Always.                        |
-| `ghcr.io/trymetis/metis:<version>-preflight` | Preflight: a one-time run that prepares the database for this version, then exits when it is done. | Once for every deploy.         |
-| `ghcr.io/trymetis/metis:<version>-worker`    | The background worker.                                                                             | Only with the `bullmq` runner. |
-| `ghcr.io/trymetis/metis:<version>-updater`   | The updater. It works only inside the Compose stack.                                               | Never on these platforms.      |
+| Image                                    | What it does                                                                                       | When you need it               |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------ |
+| `ghcr.io/trymetis/metis:1.2.3`           | The app. It listens on port 3000.                                                                  | Always.                        |
+| `ghcr.io/trymetis/metis:1.2.3-preflight` | Preflight: a one-time run that prepares the database for this version, then exits when it is done. | Once for every deploy.         |
+| `ghcr.io/trymetis/metis:1.2.3-worker`    | The background worker.                                                                             | Only with the `bullmq` runner. |
+| `ghcr.io/trymetis/metis:1.2.3-updater`   | The updater. It works only inside the Compose stack.                                               | Never on these platforms.      |
 
-Pin a release number. Do not use the `latest` tags, so that every image you run is the same version. Pre-releases have no `latest` tags. Releases are listed on the [Metis Suite releases page](https://github.com/trymetis/metis/releases), tagged `app-v<version>`.
+Pin a release number. Do not use the `latest` tags, so that every image you run is the same version. Pre-releases have no `latest` tags. Releases are listed on the [Metis Suite releases page](https://github.com/trymetis/metis/releases), tagged `app-v` and the release number, such as `app-v1.2.3`.
 
 Preflight runs only from the preflight image. The app image does not include it. So a "release command" or "pre-deploy command" that runs inside the app's own image cannot run preflight.
 
@@ -92,29 +92,31 @@ Do not use the `local` database driver on a platform, even with a persistent vol
 
     ```bash
     BETTER_AUTH_URL=https://mail.example.com
-    BETTER_AUTH_SECRET=<secret>
-    METIS_ENCRYPTION_KEY=<secret>
-    METIS_DRIVE_RELAY_SECRET=<secret>
+    BETTER_AUTH_SECRET=your-first-generated-secret
+    METIS_ENCRYPTION_KEY=your-second-generated-secret
+    METIS_DRIVE_RELAY_SECRET=your-third-generated-secret
     METIS_DB_DRIVER=turso
-    DATABASE_URL=<app database URL>
-    DATABASE_AUTH_TOKEN=<token>
-    MASTRA_DATABASE_URL=<AI memory database URL>
-    MASTRA_DATABASE_AUTH_TOKEN=<token>
-    METIS_SETUP_CODE=<setup code>
+    DATABASE_URL=libsql://metis-app-acme.turso.io
+    DATABASE_AUTH_TOKEN=your-app-database-token
+    MASTRA_DATABASE_URL=libsql://metis-memory-acme.turso.io
+    MASTRA_DATABASE_AUTH_TOKEN=your-memory-database-token
+    METIS_SETUP_CODE=K7QM-2HXP-9RTA
     METIS_OWNER_EMAIL=you@example.com
     ```
 
-    Use the URL that `turso db show <database> --url` prints for each
-    database. It starts with `libsql://`.
+    Replace every example value with your own. Use the URL that
+    `turso db show` prints for each database with `--url`, for example
+    `turso db show metis-app --url`. It starts with `libsql://`.
 
     - **`BETTER_AUTH_URL`** is the one address people use. It must start
       with `https://`, which turns on secure sign-in cookies. Sign-in works
       only at this address, not at any other address the platform gives the
       same app.
-    - **`METIS_SETUP_CODE`** opens the setup page for the first account.
+    - **`METIS_SETUP_CODE`** opens the setup page for the owner account.
       Without it, the setup page shows **Not available**.
-    - **`METIS_OWNER_EMAIL`** is the email of the owner. Without it, nobody
-      can open the owner dashboard.
+    - **`METIS_OWNER_EMAIL`** is the email of the owner, and it is required.
+      Without it, preflight and the app do not start. Only this address can
+      create the owner account on the setup page.
     - **`METIS_DRIVE_RELAY_SECRET`** is needed as soon as you list a WebDAV,
       FTP, FTPS, SFTP or relayed S3 server.
 
@@ -122,7 +124,7 @@ Do not use the `local` database driver on a platform, even with a persistent vol
 
     ```bash
     METIS_WORKFLOW_RUNNER_DRIVER=cron
-    CRON_SECRET=<secret>
+    CRON_SECRET=your-cron-secret
     ```
 
     If you run more than one app container, also set the cache to `redis`
@@ -157,7 +159,7 @@ Do not use the `local` database driver on a platform, even with a persistent vol
       must be reachable from there.
 
       ```bash
-      docker run --rm --env-file production.env ghcr.io/trymetis/metis:<version>-preflight
+      docker run --rm --env-file production.env ghcr.io/trymetis/metis:1.2.3-preflight
       ```
 
       `production.env` holds the same variables as the app, one
@@ -269,7 +271,7 @@ Do not use the `local` database driver on a platform, even with a persistent vol
 
   </Step>
 
-  <Step title="Create the first account">
+  <Step title="Create the owner account">
     Open `/setup` at your address and use your `METIS_SETUP_CODE`. Continue
     with [First run](/self-hosting/install/first-run).
 
@@ -327,7 +329,7 @@ Workflows can start from a webhook, or from a push message that Google Calendar,
   </Step>
 
   <Step title="Run the new version's preflight">
-    Run `ghcr.io/trymetis/metis:<new version>-preflight` once, with the same
+    Run the new version's preflight image once, for example `ghcr.io/trymetis/metis:1.2.4-preflight`, with the same
     variables as before. Roll out the new version as soon as it succeeds.
     After preflight has changed the database, your current version may not
     work fully on it. For example, background work and the **Workflows**
@@ -336,8 +338,9 @@ Workflows can start from a webhook, or from a push message that Google Calendar,
   </Step>
 
   <Step title="Roll out the new version">
-    Change the app image to `ghcr.io/trymetis/metis:<new version>`. If you
-    run the worker, change it to `<new version>-worker` at the same time.
+    Change the app image to the new version, for example
+    `ghcr.io/trymetis/metis:1.2.4`. If you run the worker, change it to the
+    same version, such as `1.2.4-worker`, at the same time.
   </Step>
 </Steps>
 

@@ -3,11 +3,6 @@ import { z } from "zod";
 
 import type { AuditActor } from "@/audit";
 import {
-  listSignupInvites as listInvites,
-  revokeSignupInvite as revokeInvite,
-  sendSignupInvite,
-} from "@/auth/signup";
-import {
   attachOwnedAddressBook,
   attachOwnedCalendar,
   attachOwnedDrive,
@@ -19,14 +14,18 @@ import {
   listAccountMailboxes,
   listUnavailableConnections,
 } from "@/connections";
+import { createInvite, listAccountInvites, revokeAccountInvite } from "@/invites";
 import type { McpWorkspace } from "@/mcp/workspaces";
 import {
   addressBookProviderSchema,
   calendarProviderSchema,
   connectionResourceSchema,
+  grantedInstanceRoleSchema,
   mailProviderSchema,
   workspaceRoleSchema,
+  type DashboardInvitesInput,
 } from "@/server/schema";
+import type { InstanceRole } from "@/types/instance-role";
 import { createWorkspace as createOwnedWorkspace } from "@/workspace";
 
 import { listDrives, listDrivesOutput } from "./drive";
@@ -115,18 +114,22 @@ export const attachResourceOutput = orFailure(
   }),
 );
 
-export const listSignupInvitesOutput = z.object({
-  count: z.number(),
-  invites: z.array(
-    z.object({
-      inviteId: z.string(),
-      email: z.string(),
-      expiresAt: z.string(),
-      acceptedAt: z.string().nullable(),
-      createdAt: z.string(),
-    }),
-  ),
-});
+export const listSignupInvitesOutput = orFailure(
+  z.object({
+    count: z.number(),
+    invites: z.array(
+      z.object({
+        inviteId: z.string(),
+        email: z.string(),
+        instanceRole: grantedInstanceRoleSchema.nullable(),
+        invitedBy: z.string().nullable(),
+        expiresAt: z.string(),
+        expired: z.boolean(),
+        createdAt: z.string(),
+      }),
+    ),
+  }),
+);
 
 export const createSignupInviteOutput = orFailure(
   z.object({
@@ -144,7 +147,8 @@ export const revokeSignupInviteOutput = orFailure(
 export interface AccountCtx {
   userId: string;
   userName: string;
-  isOwner: boolean;
+  userEmail: string;
+  instanceRole: InstanceRole | null;
   clientId: string;
   hiddenWorkspaceIds: string[];
 }
@@ -317,17 +321,13 @@ export async function attachResource(
 
 export async function listSignupInvites(
   account: AccountCtx,
+  filter: DashboardInvitesInput,
 ): Promise<Output<typeof listSignupInvitesOutput>> {
-  const rows = await listInvites(account.userId);
+  const rows = await listAccountInvites(account.instanceRole, filter);
+  if ("error" in rows) return { error: rows.error };
   return {
     count: rows.length,
-    invites: rows.map((r) => ({
-      inviteId: r.id,
-      email: r.email,
-      expiresAt: r.expiresAt.toISOString(),
-      acceptedAt: r.acceptedAt?.toISOString() ?? null,
-      createdAt: r.createdAt.toISOString(),
-    })),
+    invites: rows.map(({ id, ...row }) => ({ inviteId: id, ...row })),
   };
 }
 
@@ -335,12 +335,14 @@ export async function createSignupInvite(
   account: AccountCtx,
   email: string,
 ): Promise<Output<typeof createSignupInviteOutput>> {
-  const sent = await sendSignupInvite({
+  const sent = await createInvite({
     email,
-    inviter: { userId: account.userId, name: account.userName },
+    workspace: null,
+    instanceRole: null,
+    inviter: { userId: account.userId, name: account.userName, email: account.userEmail },
     by: mcpActor(account),
   });
-  if ("error" in sent) return sent;
+  if ("error" in sent) return { error: sent.error };
   return {
     invited: true,
     inviteId: sent.invite.id,
@@ -353,11 +355,11 @@ export async function revokeSignupInvite(
   account: AccountCtx,
   inviteId: string,
 ): Promise<Output<typeof revokeSignupInviteOutput>> {
-  const result = await revokeInvite({
+  const result = await revokeAccountInvite({
     inviteId,
-    invitedBy: account.userId,
+    actor: { userId: account.userId, email: account.userEmail },
     by: mcpActor(account),
   });
-  if ("error" in result) return result;
+  if ("error" in result) return { error: result.error };
   return { revoked: true, inviteId };
 }

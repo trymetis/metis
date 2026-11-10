@@ -8,14 +8,14 @@ export interface WorkspaceAccess {
   workspaceAi: boolean;
   role: WorkspaceRole;
   userId: string;
-  isOwner: boolean;
+  hasDashboard: boolean;
 }
 
 const WorkspaceAccessContext = createContext<WorkspaceAccess>({
   workspaceAi: false,
   role: "member",
   userId: "",
-  isOwner: false,
+  hasDashboard: false,
 });
 
 export function WorkspaceAccessProvider({

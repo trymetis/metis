@@ -1,14 +1,10 @@
 import "server-only";
 import { z } from "zod";
 
+import { listWorkspaceInvites, revokeWorkspaceInvite } from "@/invites";
 import { themeBrandSchema, workspaceRoleSchema } from "@/server/schema";
 import type { ThemeBrandId } from "@/theme/brand";
-import {
-  setWorkspaceTheme as changeTheme,
-  listWorkspaceInvites,
-  removeWorkspaceMember,
-  revokeWorkspaceInvite,
-} from "@/workspace/admin";
+import { setWorkspaceTheme as changeTheme, removeWorkspaceMember } from "@/workspace/admin";
 
 import { orFailure, type Output } from "./output";
 import { auditedBy, type WorkspaceCtx, type WorkspaceMember } from "./scope";
@@ -57,7 +53,7 @@ export async function listInvites(ctx: WorkspaceCtx): Promise<Output<typeof list
     invites: invites.map((i) => ({
       inviteId: i.id,
       email: i.email,
-      role: i.role,
+      role: i.workspaceRole ?? "member",
       expiresAt: i.expiresAt.toISOString(),
       createdAt: i.createdAt.toISOString(),
     })),

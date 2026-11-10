@@ -1,11 +1,10 @@
-import { consoleMailHitsSchema } from "@metis/e2e/lib/console-mail";
-import { env } from "@metis/e2e/lib/env";
+import { sentInviteLink } from "@metis/e2e/lib/invites";
 import type { Browser, BrowserContext, Page } from "@playwright/test";
 import * as OTPAuth from "otpauth";
 
 import { enterCode } from "./auth";
-import { type Rpc, RpcError, rpcFor } from "./fixtures";
-import { APP, HARNESS, harness, SIGNED_OUT } from "./harness";
+import { type Rpc, rpcFor } from "./fixtures";
+import { APP, HARNESS, SIGNED_OUT } from "./harness";
 
 export const SECOND_STATE = "tests/.auth/second.json";
 
@@ -33,57 +32,20 @@ export function newSecondUser(): Omit<SecondUser, "secret"> {
   };
 }
 
-const INVITE_LINK = /https?:\/\/\S+\/invite\/signup\?token=[A-Za-z0-9_-]+/;
-const INVITE_MAIL_TIMEOUT_MS = 30_000;
-const INVITE_MAIL_POLL_MS = 500;
-
-async function setMailer(rpc: Rpc, values: Record<string, unknown>): Promise<void> {
-  for (;;) {
-    try {
-      const form = await rpc<{ version: number; values: Record<string, unknown> }>(
-        "dashboard.system.form",
-        { section: "mailer" },
-      );
-      await rpc("dashboard.system.update", {
-        expectedVersion: form.version,
-        sections: [{ section: "mailer", values: { ...form.values, ...values }, entries: null }],
-        code: await harness.totp(),
-      });
-      return;
-    } catch (err) {
-      if (!(err instanceof RpcError) || err.status !== 429) throw err;
-      await new Promise((resolve) => setTimeout(resolve, 5_000));
-    }
-  }
-}
-
-async function inviteLinkFor(email: string): Promise<string> {
-  const deadline = Date.now() + INVITE_MAIL_TIMEOUT_MS;
-  while (Date.now() < deadline) {
-    const res = await fetch(`${HARNESS}/console-mail-hits`);
-    const hits = consoleMailHitsSchema.parse(await res.json());
-    const link = hits
-      .filter((hit) => hit.to === email)
-      .map((hit) => INVITE_LINK.exec(hit.text)?.[0])
-      .findLast((found) => found !== undefined);
-    if (link) return link;
-    await new Promise((resolve) => setTimeout(resolve, INVITE_MAIL_POLL_MS));
-  }
-  throw new Error(`no sign-up invite email reached the console endpoint for ${email}`);
-}
-
 export async function inviteToSignUp(anaRpc: Rpc, email: string): Promise<string> {
-  await setMailer(anaRpc, {
-    driver: "console",
-    endpoint: env.consoleMail.url,
-    token: env.consoleMail.token,
-  });
-  try {
-    await anaRpc("signupInvites.create", { email });
-    return await inviteLinkFor(email);
-  } finally {
-    await setMailer(anaRpc, { driver: "log" });
-  }
+  return sentInviteLink(HARNESS, email, () =>
+    anaRpc("dashboard.invites.create", { email, instanceRole: null }),
+  );
+}
+
+export async function inviteToWorkspace(
+  anaRpc: Rpc,
+  workspaceSlug: string,
+  email: string,
+): Promise<string> {
+  return sentInviteLink(HARNESS, email, () =>
+    anaRpc("workspaces.createInvite", { workspaceSlug, email }),
+  );
 }
 
 export async function signUpByInvite(

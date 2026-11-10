@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { listMcpWorkspaces, type McpWorkspace, visibleMcpWorkspaces } from "@/mcp/workspaces";
 import type { AccountCtx } from "@/ops/account";
+import { INSTANCE_ROLES } from "@/types/instance-role";
 
 import { resolveWorkspaceScope, type WorkspaceCtx } from "../runtime-context";
 import { ToolRefusal } from "../toolkit/resolve";
@@ -17,7 +18,8 @@ const mcpAuthInfoSchema = z.object({
     .object({
       userId: z.string().optional(),
       userName: z.string().optional(),
-      isOwner: z.boolean().optional(),
+      userEmail: z.string().optional(),
+      instanceRole: z.enum(INSTANCE_ROLES).nullable().optional(),
       hiddenWorkspaceIds: z.array(z.string()).optional(),
     })
     .optional(),
@@ -51,7 +53,8 @@ export function mcpAccountFromCall(requestContext: RequestContext | undefined): 
   return {
     userId,
     userName: authInfo.extra?.userName ?? "",
-    isOwner: authInfo.extra?.isOwner === true,
+    userEmail: authInfo.extra?.userEmail ?? "",
+    instanceRole: authInfo.extra?.instanceRole ?? null,
     clientId: authInfo.clientId,
     hiddenWorkspaceIds: authInfo.extra?.hiddenWorkspaceIds ?? [],
   };

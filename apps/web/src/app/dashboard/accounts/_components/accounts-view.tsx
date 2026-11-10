@@ -9,12 +9,14 @@ import {
   CardTitle,
 } from "@metis/ui/components/card";
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@metis/ui/components/table";
-import { Loader2 } from "lucide-react";
+import { ChevronRight, Loader2 } from "lucide-react";
+import Link from "next/link";
 
+import { ACCOUNTS_NAV } from "@/components/dashboard/accounts-nav";
 import { ScrollTable } from "@/components/dashboard/scroll-table";
 import { useSystemData } from "@/components/dashboard/system-client";
 import { rpc } from "@/lib/orpc";
-import type { DashboardPeople } from "@/server/schema";
+import type { DashboardAccounts } from "@/server/schema";
 
 const number = new Intl.NumberFormat("en-US");
 
@@ -24,10 +26,10 @@ const dateTime = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
 });
 
-export function PeopleView() {
-  const data: DashboardPeople | null = useSystemData(
-    rpc.dashboard.people.queryOptions(),
-    "Could not load people",
+export function AccountsView() {
+  const data: DashboardAccounts | null = useSystemData(
+    rpc.dashboard.accounts.queryOptions(),
+    "Could not load accounts",
   );
 
   const totalCards = [
@@ -37,8 +39,9 @@ export function PeopleView() {
       hint: "Second factor enabled",
       value: data?.withTwoFactor,
     },
+    { label: "Banned", hint: "Can't sign in", value: data?.banned },
     {
-      label: "Signup invites",
+      label: "Account invites",
       hint: "Pending, unexpired",
       value: data?.pendingSignupInvites,
     },
@@ -51,7 +54,29 @@ export function PeopleView() {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-2">
+        {ACCOUNTS_NAV.map(({ href, label, description, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            className="group flex items-center justify-between gap-3 rounded-xl border border-border bg-surface p-4 transition-colors hover:bg-hover"
+          >
+            <span className="flex min-w-0 flex-col gap-1">
+              <span className="flex items-center gap-2 text-[13px] font-medium text-foreground">
+                <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                {label}
+              </span>
+              <span className="text-[12px] text-muted-foreground">{description}</span>
+            </span>
+            <ChevronRight
+              className="h-4 w-4 shrink-0 text-faint transition-transform group-hover:translate-x-0.5"
+              strokeWidth={1.75}
+            />
+          </Link>
+        ))}
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
         {totalCards.map((card) => (
           <Card key={card.label} size="sm">
             <CardHeader>

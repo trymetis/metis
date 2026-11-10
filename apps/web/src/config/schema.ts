@@ -66,7 +66,15 @@ export const legalConfigSchema = z.object({
 
 export const appConfigSchema = z.object({
   setupCode: z.string().min(8).optional(),
-  ownerEmail: z.email().trim().toLowerCase().optional(),
+  ownerEmail: z
+    .email({
+      error: (issue) =>
+        issue.input === undefined
+          ? "METIS_OWNER_EMAIL is required: set it to the instance owner's email address"
+          : "METIS_OWNER_EMAIL must be an email address",
+    })
+    .trim()
+    .toLowerCase(),
   sourceUrl: z.url().default("https://github.com/trymetis/metis"),
 });
 

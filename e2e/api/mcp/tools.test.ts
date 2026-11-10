@@ -9,6 +9,7 @@ import { type Rpc, rpcWithCookie } from "../../clients/rpc";
 import { signIn } from "../../clients/sign-in";
 import { TOOL_GROUPS, type ToolGroup } from "../../lib/mcp-clients";
 import { anchorMessageId } from "../../seed/mailbox/anchors";
+import { inviteToWorkspace } from "../support/invites";
 import { type McpSession, session } from "../support/mcp";
 import { uniqueName, until } from "../support/poll";
 import { ana, totpCode } from "../support/session";
@@ -80,6 +81,13 @@ interface AuditPage {
 }
 
 type MailboxRef = Pick<Context, "workspaceId" | "mailboxId">;
+
+let signupInvite: { inviteId: string; email: string } | null = null;
+
+function sharedSignupInvite(): { inviteId: string; email: string } {
+  if (!signupInvite) throw new Error("createSignupInvite runs first in this group");
+  return signupInvite;
+}
 
 const ws = (c: Pick<Context, "workspaceId">) => ({
   workspaceId: c.workspaceId,
@@ -380,18 +388,6 @@ const READS: Case[] = [
     },
   },
   {
-    tool: "listSignupInvites",
-    run: async (s, c) => {
-      const out = await s.ok<{
-        count: number;
-        invites: { email: string; acceptedAt: string | null }[];
-      }>("listSignupInvites", {});
-      expect(out.count).toBe(out.invites.length);
-      const member = out.invites.find((i) => i.email === c.account.member.email);
-      expect(member?.acceptedAt).toBeTruthy();
-    },
-  },
-  {
     tool: "getInstanceStats",
     run: async (s, c) => {
       const out = await s.ok<Record<string, number>>("getInstanceStats", {});
@@ -454,15 +450,56 @@ const READS: Case[] = [
       const out = await s.ok<{
         users: number;
         withTwoFactor: number;
+        banned: number;
         recentUsers: { email: string; twoFactorEnabled: boolean }[];
       }>("getInstancePeople", {});
       expect(out.users).toBeGreaterThanOrEqual(2);
+      expect(out.banned).toBeGreaterThanOrEqual(0);
       expect(out.withTwoFactor).toBeGreaterThanOrEqual(2);
       for (const email of [c.account.email, c.account.member.email]) {
         expect(out.recentUsers).toContainEqual(
           expect.objectContaining({ email, twoFactorEnabled: true }),
         );
       }
+    },
+  },
+  {
+    tool: "getInstanceUsers",
+    run: async (s, c) => {
+      const out = await s.ok<{
+        users: {
+          email: string;
+          role: string;
+          banned: boolean;
+          twoFactorEnabled: boolean;
+          workspacesOwned: number;
+        }[];
+      }>("getInstanceUsers", {});
+      expect(out.users).toContainEqual(
+        expect.objectContaining({
+          email: c.account.email,
+          role: "owner",
+          banned: false,
+          twoFactorEnabled: true,
+        }),
+      );
+      expect(out.users).toContainEqual(
+        expect.objectContaining({ email: c.account.member.email, role: "user" }),
+      );
+      const { users } = await c.rpc<{ users: { email: string }[] }>("dashboard.users.list", {});
+      expect(out.users.map((u) => u.email).toSorted()).toEqual(
+        users.map((u) => u.email).toSorted(),
+      );
+      const owners = await s.ok<{ users: { email: string }[] }>("getInstanceUsers", {
+        role: "owner",
+      });
+      expect(owners.users.map((u) => u.email)).toEqual([c.account.email]);
+      const searched = await s.ok<{ users: { email: string }[] }>("getInstanceUsers", {
+        search: c.account.member.email.toUpperCase(),
+        status: "active",
+        twoFactor: "on",
+      });
+      expect(searched.users.map((u) => u.email)).toEqual([c.account.member.email]);
     },
   },
   {
@@ -572,7 +609,7 @@ const READS: Case[] = [
   {
     tool: "getSystemMail",
     run: async (s) => {
-      expect(await s.ok("getSystemMail", {})).toMatchObject({ driver: "log" });
+      expect(await s.ok("getSystemMail", {})).toMatchObject({ driver: "console" });
     },
   },
   {
@@ -2062,7 +2099,7 @@ const ACCOUNT: Case[] = [
       });
       expect(events).toContainEqual(
         expect.objectContaining({
-          action: "workspace_invite.revoked",
+          action: "invite.revoked",
           via: "mcp",
           targetLabel: email,
         }),
@@ -2074,14 +2111,9 @@ const ACCOUNT: Case[] = [
     run: async (s, c) => {
       const temp = await tempWorkspace(c);
       const { member } = c.account;
-      const { url } = await c.rpc<{ url: string }>("workspaces.createInvite", {
-        workspaceSlug: temp.slug,
-        email: member.email,
-      });
+      const { token } = await inviteToWorkspace(c.rpc, temp.slug, member.email);
       const cookie = await signIn(member.email, member.password, () => totpCode(member.totpURI));
-      await rpcWithCookie(cookie)("invites.accept", {
-        token: new URL(url).searchParams.get("token"),
-      });
+      await rpcWithCookie(cookie)("invites.accept", { token });
       const members = async () =>
         (
           await s.ok<{ members: { memberId: string; email: string }[] }>("listWorkspaceMembers", {
@@ -2118,36 +2150,66 @@ const ACCOUNT: Case[] = [
         inviteId: string;
         email: string;
       }>("createSignupInvite", { email });
-      try {
-        expect(out).toMatchObject({ invited: true, email });
-        const listed = (
-          await s.ok<{ invites: { inviteId: string }[] }>("listSignupInvites", {})
-        ).invites.map((i) => i.inviteId);
-        expect(listed).toContain(out.inviteId);
-        expect(await s.refused("createSignupInvite", { email })).toBe(
-          "That email already has a pending invite",
-        );
-      } finally {
-        await s.call("revokeSignupInvite", { inviteId: out.inviteId });
-      }
+      signupInvite = { inviteId: out.inviteId, email };
+      expect(out).toMatchObject({ invited: true, email });
+      expect(await s.refused("createSignupInvite", { email })).toBe(
+        "That email already has a pending invite",
+      );
+    },
+  },
+  {
+    tool: "listSignupInvites",
+    run: async (s, c) => {
+      const { inviteId, email } = sharedSignupInvite();
+      const out = await s.ok<{
+        count: number;
+        invites: {
+          inviteId: string;
+          email: string;
+          instanceRole: string | null;
+          invitedBy: string | null;
+          expired: boolean;
+        }[];
+      }>("listSignupInvites", {});
+      expect(out.count).toBe(out.invites.length);
+      expect(out.invites).toContainEqual(
+        expect.objectContaining({
+          inviteId,
+          email,
+          instanceRole: null,
+          invitedBy: c.account.email,
+          expired: false,
+        }),
+      );
+      expect(out.invites.map((i) => i.email)).not.toContain(c.account.member.email);
+      const searched = await s.ok<{ invites: { inviteId: string }[] }>("listSignupInvites", {
+        search: email,
+        role: "none",
+        status: "pending",
+      });
+      expect(searched.invites.map((i) => i.inviteId)).toEqual([inviteId]);
+      const admins = await s.ok<{ invites: { inviteId: string }[] }>("listSignupInvites", {
+        role: "admin",
+      });
+      expect(admins.invites.map((i) => i.inviteId)).not.toContain(inviteId);
     },
   },
   {
     tool: "revokeSignupInvite",
     run: async (s, c) => {
-      const email = `${uniqueName()}@${OUTSIDE_DOMAIN}`;
-      const { inviteId } = await s.ok<{ inviteId: string }>("createSignupInvite", { email });
+      const { inviteId, email } = sharedSignupInvite();
       expect(await s.ok("revokeSignupInvite", { inviteId })).toMatchObject({
         revoked: true,
         inviteId,
       });
+      signupInvite = null;
       const listed = (
         await s.ok<{ invites: { inviteId: string }[] }>("listSignupInvites", {})
       ).invites.map((i) => i.inviteId);
       expect(listed).not.toContain(inviteId);
       expect(await s.refused("revokeSignupInvite", { inviteId })).toBe("Invite not found");
       const { events } = await c.rpc<AuditPage>("audit.mine");
-      for (const action of ["signup_invite.created", "signup_invite.revoked"]) {
+      for (const action of ["invite.created", "invite.revoked"]) {
         expect(events).toContainEqual(
           expect.objectContaining({ action, via: "mcp", targetLabel: email }),
         );
@@ -2288,6 +2350,9 @@ beforeAll(async () => {
 }, 300_000);
 
 afterAll(async () => {
+  if (signupInvite) {
+    await seeded?.rpc("dashboard.invites.revoke", { inviteId: signupInvite.inviteId });
+  }
   if (!seeded?.temp) return;
   await seeded.rpc("workspaces.delete", {
     workspaceSlug: seeded.temp.slug,

@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import { APP } from "./harness";
 
+const RETRY_FALLBACK_SEC = 60;
+
 export async function signIn(
   email: string,
   password: string,
@@ -13,8 +15,8 @@ export async function signIn(
       .filter(([, value]) => value !== "")
       .map(([name, value]) => `${name}=${value}`)
       .join("; ");
-  const post = async (path: string, body: unknown) => {
-    const res = await fetch(`${APP}/api/auth${path}`, {
+  const send = (path: string, body: unknown) =>
+    fetch(`${APP}/api/auth${path}`, {
       method: "POST",
       headers: {
         "content-type": "application/json",
@@ -23,6 +25,13 @@ export async function signIn(
       },
       body: JSON.stringify(body),
     });
+  const post = async (path: string, body: unknown) => {
+    let res = await send(path, body);
+    while (res.status === 429) {
+      const wait = Number(res.headers.get("x-retry-after") ?? RETRY_FALLBACK_SEC);
+      await new Promise((done) => setTimeout(done, (wait + 1) * 1000));
+      res = await send(path, body);
+    }
     if (!res.ok) {
       throw new Error(`${path}: HTTP ${res.status} ${await res.text()}`);
     }

@@ -7,7 +7,7 @@ import { workspace } from "@/db/schema";
 import type { ThemeBrandId } from "@/theme/brand";
 import type { WorkspaceRole } from "@/types/workspace";
 
-import { isAdmin, listPendingInvites, removeMember, revokeInvite } from "./index";
+import { isAdmin, removeMember } from "./index";
 
 export type AdminRefusal = { error: string; forbidden?: true };
 
@@ -17,13 +17,6 @@ const ADMINS_ONLY: AdminRefusal = {
   error: "Only workspace owners and admins can do that",
   forbidden: true,
 };
-
-export async function listWorkspaceInvites(
-  args: AdminArgs,
-): Promise<Awaited<ReturnType<typeof listPendingInvites>> | AdminRefusal> {
-  if (!isAdmin(args.actorRole)) return ADMINS_ONLY;
-  return listPendingInvites(args.workspaceId);
-}
 
 export async function removeWorkspaceMember(
   args: AdminArgs & { memberId: string; by: AuditActor },
@@ -38,23 +31,6 @@ export async function removeWorkspaceMember(
     action: "member.removed",
     workspaceId: args.workspaceId,
     targetUserId: result.userId,
-  });
-  return { ok: true };
-}
-
-export async function revokeWorkspaceInvite(
-  args: AdminArgs & { inviteId: string; by: AuditActor },
-): Promise<{ ok: true } | AdminRefusal> {
-  if (!isAdmin(args.actorRole)) return ADMINS_ONLY;
-  const result = await revokeInvite({
-    workspaceId: args.workspaceId,
-    inviteId: args.inviteId,
-  });
-  if ("error" in result) return result;
-  await recordAuditEvent(args.by, {
-    action: "workspace_invite.revoked",
-    workspaceId: args.workspaceId,
-    targetLabel: result.email,
   });
   return { ok: true };
 }

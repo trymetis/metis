@@ -1,11 +1,9 @@
 import { type ConsoleMailHit, consoleMailHitsSchema } from "@metis/e2e/lib/console-mail";
-import { env } from "@metis/e2e/lib/env";
 import { expect, test } from "vitest";
 
 import { HARNESS } from "../../clients/harness";
 import { type Rpc, rpcWithCookie } from "../../clients/rpc";
 import { signIn } from "../../clients/sign-in";
-import { setSection } from "../support/config";
 import { until } from "../support/poll";
 import { ana, totpCode } from "../support/session";
 
@@ -19,18 +17,12 @@ async function alertsTo(address: string): Promise<ConsoleMailHit[]> {
 }
 
 test("a sign-in emails the member an alert, and none once they turn alerts off", async () => {
-  const { rpc, account } = await ana();
+  const { account } = await ana();
   const { member } = account;
   const signInMember = async (): Promise<Rpc> =>
     rpcWithCookie(await signIn(member.email, member.password, () => totpCode(member.totpURI)));
   let cy: Rpc | undefined;
   try {
-    await setSection(rpc, "mailer", {
-      driver: "console",
-      endpoint: env.consoleMail.url,
-      token: env.consoleMail.token,
-    });
-
     const before = (await alertsTo(member.email)).length;
     cy = await signInMember();
     const alerts = await until(
@@ -51,10 +43,6 @@ test("a sign-in emails the member an alert, and none once they turn alerts off",
     await new Promise((resolve) => setTimeout(resolve, QUIET_MS));
     expect(await alertsTo(member.email)).toHaveLength(quiet);
   } finally {
-    try {
-      await cy?.("user.updatePreferences", { signInAlerts: true });
-    } finally {
-      await setSection(rpc, "mailer", { driver: "log" });
-    }
+    await cy?.("user.updatePreferences", { signInAlerts: true });
   }
 });

@@ -1,6 +1,6 @@
 ---
 title: How configuration works
-description: Which settings live in the environment, which ones the owner changes in the dashboard, and how the optional config file fits in.
+description: Which settings live in the environment, which ones the owner or an admin changes in the dashboard, and how the optional config file fits in.
 ---
 
 Metis Suite has two kinds of settings. Knowing which is which tells you where to make a change.
@@ -23,9 +23,9 @@ To change one with the Compose stack, edit `/opt/metis-suite/.env` and run:
 sudo docker compose --project-directory /opt/metis-suite up -d
 ```
 
-## Settings the owner changes in the dashboard
+## Settings the owner or an admin changes in the dashboard
 
-Everything else is stored in the database and changed by the owner under **Dashboard**, **System**:
+Everything else is stored in the database and changed by the owner or an admin under **Dashboard**, **System**:
 
 - OAuth providers (Google, Microsoft and Zoho) and server lists.
 - The AI model (LLM), the decision model and phishing detection.

@@ -9,6 +9,66 @@
     ]
   },
   {
+    "name": "self-hosting/dashboard-accounts",
+    "path": "/dashboard/accounts",
+    "steps": [
+      { "waitFor": "role=heading[level=1][name=\"Accounts\"]" },
+      { "waitFor": "main >> text=Newest accounts" },
+      { "waitForHidden": "main >> .animate-spin" }
+    ]
+  },
+  {
+    "name": "self-hosting/dashboard-users",
+    "path": "/dashboard/accounts/users",
+    "steps": [
+      { "waitFor": "role=heading[level=1][name=\"Users\"]" },
+      { "waitFor": "role=button[name=/^Actions for /]" }
+    ]
+  },
+  {
+    "name": "self-hosting/dashboard-users-role",
+    "path": "/dashboard/accounts/users",
+    "steps": [
+      { "waitFor": "role=button[name=/^Actions for /]" },
+      { "click": "role=button[name=/^Actions for /]" },
+      { "click": "role=menuitem[name=\"Change role\"]" },
+      { "click": "role=menuitemradio[name=\"Observer\"]" },
+      { "waitFor": "role=alertdialog[name=\"Change instance role\"]" }
+    ],
+    "element": "role=alertdialog"
+  },
+  {
+    "name": "self-hosting/dashboard-users-ban",
+    "path": "/dashboard/accounts/users",
+    "steps": [
+      { "waitFor": "role=button[name=/^Actions for /]" },
+      { "click": "role=button[name=/^Actions for /]" },
+      { "click": "role=menuitem[name=\"Ban…\"]" },
+      { "waitFor": "role=alertdialog[name=\"Ban user\"]" }
+    ],
+    "element": "role=alertdialog"
+  },
+  {
+    "name": "self-hosting/dashboard-invites",
+    "path": "/dashboard/accounts/invites",
+    "steps": [
+      { "waitFor": "role=heading[level=1][name=\"Invites\"]" },
+      { "waitFor": "main >> text=Invite someone" },
+      { "waitFor": "main >> text=Pending account invites" },
+      { "waitForHidden": "main >> .animate-spin" }
+    ]
+  },
+  {
+    "name": "self-hosting/dashboard-observer",
+    "path": "/dashboard/system/drivers/llm",
+    "observer": true,
+    "steps": [
+      { "waitFor": "role=heading[level=1][name=\"LLM\"]" },
+      { "waitFor": "main >> text=The instance owner and admins can run checks." }
+    ],
+    "element": "main"
+  },
+  {
     "name": "self-hosting/dashboard-system",
     "path": "/dashboard/system",
     "steps": [

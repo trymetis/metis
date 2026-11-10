@@ -9,7 +9,7 @@ Start in the owner dashboard. The deploy check bar at the bottom of the sidebar 
 
 Every deploy runs preflight, which checks your settings, your servers and your AI models, and records what it found. Click the deploy check bar to open the **Deploy checks** page.
 
-- The **Last run** card says when preflight ran and against which configuration version. Its badge reads **No warnings**, or offers an **Acknowledge** button.
+- The **Last run** card says when preflight ran and against which configuration version. Its badge reads **No warnings**, or offers an **Acknowledge** button. Observers see a **Not acknowledged** badge instead of the button.
 - Clicking **Acknowledge** clears the highlight on the sidebar bar. It does not fix anything, and the next deploy records a new run.
 - If the configuration changed after that run, a note says that some warnings may no longer apply. The next deploy checks again.
 - Before the first deploy, the page shows **No preflight run yet**.
@@ -85,7 +85,19 @@ Open **Dashboard**, **System**, **Updates**. The **Last upgrade** or **Last undo
 
 ### The owner dashboard is missing
 
-Only the account whose email matches `METIS_OWNER_EMAIL` sees **Dashboard** in the user menu. If no owner email is set, nobody does. Set it in `.env` and restart the app. See [First run](/self-hosting/install/first-run).
+Only the owner (the account whose email matches `METIS_OWNER_EMAIL`), admins and observers see **Dashboard** in the user menu. Check that `METIS_OWNER_EMAIL` is exactly your sign-in address. To give someone else access, the owner or an admin opens **Dashboard**, **Accounts**, **Users**, opens the person's actions menu and picks a role under **Change role**. See [Instance roles](/self-hosting/operate/owner-dashboard#instance-roles).
+
+### Someone sees "This account is banned. Ask the instance owner or an admin."
+
+The owner or an admin banned their account. Open **Dashboard**, **Accounts**, **Users** and set the status filter (it shows **Any status**) to **Banned** to find it. A ban with an end date shows it in the **Status** column, and ends by itself. To lift the ban sooner, open the row's actions menu, click **Unban** and enter your authenticator code. The reason for the ban, if one was given, is in the **Audit log**. See [Ban an account](/self-hosting/operate/owner-dashboard#ban-an-account).
+
+### The app does not start: METIS_OWNER_EMAIL is required
+
+The preflight log shows "Invalid configuration" with the line "app.ownerEmail: METIS_OWNER_EMAIL is required: set it to the instance owner's email address". Every instance needs an owner email. Add a line such as `METIS_OWNER_EMAIL=you@example.com` to `.env`, then start the stack again with `sudo docker compose --project-directory /opt/metis-suite up -d`. Use the address of the account that should own the instance. If that account does not exist yet, create it at `/setup` with your setup code. See [First run](/self-hosting/install/first-run).
+
+### Invites fail with "The invite email couldn't be sent"
+
+Metis Suite could not send the invite email, so it created no invite. Check the **Mail** page under **System**, **Drivers**, and click **Run check**. See [Outgoing email](/self-hosting/configure/outgoing-email). When the owner sends an invite in the app and the email fails, the owner is shown the invite link to send by hand instead.
 
 ### Saving a setting fails
 

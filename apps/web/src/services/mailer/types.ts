@@ -4,7 +4,7 @@ export const NOOP_DISABLED_FLOWS = [
   "magic link",
   "email verification",
   "password reset",
-  "workspace invites",
+  "invites",
   "sign-in alerts",
 ] as const;
 

@@ -144,7 +144,7 @@ See also [AGENTS.md](../AGENTS.md), [workflow-runtime.md](workflow-runtime.md), 
 
 ### Principal and built-ins
 
-- **Background access carries its own principal.** `authorization.ts` re-checks membership, resource visibility, connection health and AI policy before every side effect, so a detached resource or a departed member blocks the run with a visible reason.
+- **Background access carries its own principal.** `authorization.ts` re-checks membership, resource visibility, connection health and AI policy before every side effect, so a detached resource, a departed member or a banned principal ([auth.md](auth.md)) blocks the run with a visible reason.
 - **Built-ins are ordinary workflows with the graphs below**, and preflight's `ensureSystemWorkflows` upserts the system ones once per deployment, one at a time, because the `local` driver fails two overlapping writes in one process ([database.md](database.md)).
   - A graph that changed in a release is revised on the next deploy; a database migrated without preflight (`bun run db:migrate` alone) has no system workflows until `bun run preflight` runs.
 - **Before-send runs the executor in `policy` mode on every enabled `trigger.mail.beforeSend` graph**: such a graph holds only steps marked `beforeSend` (logic and `mail.addBcc`), touches no provider and schedules nothing; the Bcc addresses it emits are added to the draft.

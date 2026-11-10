@@ -10,7 +10,7 @@ import {
   dashboardConnections,
   dashboardMcp,
   dashboardOverview,
-  dashboardPeople,
+  dashboardAccounts,
   dashboardStats,
   dashboardUsage,
   dashboardWorkspaces,
@@ -27,6 +27,7 @@ import {
   systemRunner,
 } from "@/dashboard/system";
 import { runSystemCheck } from "@/dashboard/system-checks";
+import { listInstanceUsers } from "@/dashboard/users";
 import {
   auditEventSchema,
   dashboardAuditOutputSchema,
@@ -34,7 +35,7 @@ import {
   dashboardConnectionsOutputSchema,
   dashboardMcpOutputSchema,
   dashboardOverviewOutputSchema,
-  dashboardPeopleOutputSchema,
+  dashboardAccountsOutputSchema,
   dashboardPreflightOutputSchema,
   dashboardStatsOutputSchema,
   dashboardSystemCacheOutputSchema,
@@ -50,6 +51,8 @@ import {
   type DashboardSystemCheckInput,
   dashboardUsageOutputSchema,
   type DashboardUsageRange,
+  type DashboardUsersInput,
+  dashboardUsersOutputSchema,
   dashboardWorkspacesOutputSchema,
 } from "@/server/schema";
 
@@ -59,7 +62,8 @@ export const instanceStatsOutput = dashboardStatsOutputSchema;
 export const instanceUsageOutput = dashboardUsageOutputSchema;
 export const instanceOverviewOutput = dashboardOverviewOutputSchema;
 export const instanceConnectionsOutput = dashboardConnectionsOutputSchema;
-export const instancePeopleOutput = dashboardPeopleOutputSchema;
+export const instancePeopleOutput = dashboardAccountsOutputSchema;
+export const instanceUsersOutput = dashboardUsersOutputSchema;
 export const instanceWorkspacesOutput = dashboardWorkspacesOutputSchema;
 export const instanceAutomationOutput = dashboardAutomationOutputSchema;
 export const instanceMcpClientsOutput = dashboardMcpOutputSchema;
@@ -79,7 +83,13 @@ export const instanceOverview = (): Promise<Output<typeof instanceOverviewOutput
   dashboardOverview();
 export const instanceConnections = (): Promise<Output<typeof instanceConnectionsOutput>> =>
   dashboardConnections();
-export const instancePeople = (): Promise<Output<typeof instancePeopleOutput>> => dashboardPeople();
+export const instancePeople = (): Promise<Output<typeof instancePeopleOutput>> =>
+  dashboardAccounts();
+export async function instanceUsers(
+  filter: DashboardUsersInput,
+): Promise<Output<typeof instanceUsersOutput>> {
+  return { users: await listInstanceUsers(filter) };
+}
 export const instanceWorkspaces = (): Promise<Output<typeof instanceWorkspacesOutput>> =>
   dashboardWorkspaces();
 export const instanceAutomation = (): Promise<Output<typeof instanceAutomationOutput>> =>

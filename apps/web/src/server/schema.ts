@@ -25,6 +25,7 @@ import {
   AUDIT_SEARCH_MAX_LENGTH,
   AUDIT_VIAS,
 } from "@/types/audit";
+import { BAN_DURATIONS, BAN_REASON_MAX } from "@/types/ban";
 import { ATTENDEE_RESPONSES, EVENT_STATUSES } from "@/types/calendar";
 import { DRIVE_ENTRY_KINDS, DRIVE_UPLOAD_STRATEGIES } from "@/types/drive";
 import {
@@ -32,6 +33,12 @@ import {
   CONFIG_SECTIONS,
   INSTANCE_CONFIG_KINDS,
 } from "@/types/instance-config";
+import {
+  ASSIGNABLE_USER_ROLES,
+  GRANTED_INSTANCE_ROLES,
+  INSTANCE_ROLES,
+  USER_ROLES,
+} from "@/types/instance-role";
 import {
   CUSTOM_LABEL_COLORS,
   MAIL_FOLDERS,
@@ -73,6 +80,10 @@ export const mailFolderSchema = z.enum(MAIL_FOLDERS);
 
 export const workspaceRoleSchema = z.enum(WORKSPACE_ROLES);
 export const inviteRoleSchema = z.enum(WORKSPACE_INVITE_ROLES);
+export const instanceRoleSchema = z.enum(INSTANCE_ROLES);
+export const grantedInstanceRoleSchema = z.enum(GRANTED_INSTANCE_ROLES);
+export const userRoleSchema = z.enum(USER_ROLES);
+export const assignableUserRoleSchema = z.enum(ASSIGNABLE_USER_ROLES);
 export const emailAddressSchema = z.email("Enter a valid email address").trim().toLowerCase();
 
 export const okSchema = z.object({ ok: z.literal(true) });
@@ -261,7 +272,7 @@ export const mcpWorkspaceSchema = z.object({
 });
 
 export const mcpAccessOutputSchema = z.object({
-  isOwner: z.boolean(),
+  instanceRole: instanceRoleSchema.nullable(),
   workspaces: z.array(mcpWorkspaceSchema),
 });
 
@@ -572,14 +583,27 @@ export const setWorkspacePolicyInputSchema = workspaceScopeSchema.extend({
   code: totpCodeSchema,
 });
 
-export const acceptInviteInputSchema = z.object({
+export const inviteTokenInputSchema = z.object({
   token: z.string().trim().min(1),
 });
+
 export const acceptInviteOutputSchema = z.object({
-  workspaceId: z.string(),
-  workspaceName: z.string(),
-  workspaceSlug: z.string(),
+  workspaceSlug: z.string().nullable(),
+  workspaceName: z.string().nullable(),
 });
+
+export const INVITE_PREVIEW_STATES = ["accept", "signIn", "signUp"] as const;
+
+export const invitePreviewOutputSchema = z.object({
+  state: z.enum(INVITE_PREVIEW_STATES),
+  email: z.string().nullable(),
+  workspaceName: z.string().nullable(),
+  workspaceRole: inviteRoleSchema.nullable(),
+  instanceRole: grantedInstanceRoleSchema.nullable(),
+  inviterName: z.string().nullable(),
+});
+
+export type InvitePreview = z.infer<typeof invitePreviewOutputSchema>;
 
 export const resolvedPolicySchema = z.object({
   ai: z.boolean(),
@@ -1426,7 +1450,7 @@ export const memberSchema = z.object({
 export const pendingInviteSchema = z.object({
   id: z.string(),
   email: z.string(),
-  role: workspaceRoleSchema,
+  role: inviteRoleSchema,
   expiresAt: z.date(),
   createdAt: z.date(),
 });
@@ -1491,7 +1515,7 @@ export const createInviteOutputSchema = z.object({
   email: z.string(),
   role: inviteRoleSchema,
   expiresAt: z.string(),
-  url: z.string(),
+  link: z.string().nullable(),
 });
 
 export const revokeInviteInputSchema = workspaceScopeSchema.extend({
@@ -1521,36 +1545,12 @@ export const firstSignupOutputSchema = z.object({
   workspaceSlug: z.string(),
 });
 
-export const signupInviteSchema = z.object({
-  id: z.string(),
-  email: z.string(),
-  expiresAt: z.string(),
-  acceptedAt: z.string().nullable(),
-  createdAt: z.string(),
-});
-
 export const createSignupInviteInputSchema = z.object({
   email: emailAddressSchema,
 });
 
-export const createSignupInviteOutputSchema = z.object({
-  invite: signupInviteSchema,
-});
-
-export const listSignupInvitesOutputSchema = z.object({
-  invites: z.array(signupInviteSchema),
-});
-
 export const revokeSignupInviteInputSchema = z.object({
   inviteId: z.string().min(1),
-});
-
-export const signupInviteTokenInputSchema = z.object({
-  token: z.string().trim().min(1),
-});
-
-export const signupInvitePreviewOutputSchema = z.object({
-  email: z.string(),
 });
 
 export const inviteSignupInputSchema = z.object({
@@ -1562,6 +1562,104 @@ export const inviteSignupInputSchema = z.object({
 export const inviteSignupOutputSchema = z.object({
   email: z.string(),
   workspaceSlug: z.string(),
+});
+
+export const dashboardMeOutputSchema = z.object({
+  role: instanceRoleSchema,
+});
+
+export const accountInviteSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  instanceRole: grantedInstanceRoleSchema.nullable(),
+  invitedBy: z.string().nullable(),
+  expiresAt: z.string(),
+  expired: z.boolean(),
+  createdAt: z.string(),
+});
+
+export type AccountInvite = z.infer<typeof accountInviteSchema>;
+
+export const dashboardUserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string(),
+  role: userRoleSchema,
+  banned: z.boolean(),
+  banReason: z.string().nullable(),
+  banExpiresAt: z.string().nullable(),
+  createdAt: z.string(),
+  lastSignInAt: z.string().nullable(),
+  twoFactorEnabled: z.boolean(),
+  workspacesOwned: z.number(),
+});
+
+export type DashboardUser = z.infer<typeof dashboardUserSchema>;
+
+const dashboardSearchSchema = z.string().trim().max(200).optional();
+
+export const DASHBOARD_USER_STATUSES = ["active", "banned"] as const;
+export const DASHBOARD_TWO_FACTOR_FILTERS = ["on", "off"] as const;
+
+export const dashboardUsersInputSchema = z.object({
+  search: dashboardSearchSchema,
+  role: userRoleSchema.optional(),
+  status: z.enum(DASHBOARD_USER_STATUSES).optional(),
+  twoFactor: z.enum(DASHBOARD_TWO_FACTOR_FILTERS).optional(),
+});
+
+export type DashboardUsersInput = z.infer<typeof dashboardUsersInputSchema>;
+
+export const dashboardUsersOutputSchema = z.object({
+  users: z.array(dashboardUserSchema),
+});
+
+export const dashboardSetRoleInputSchema = z.object({
+  userId: z.string().min(1),
+  role: assignableUserRoleSchema,
+  code: totpCodeSchema,
+});
+
+export const dashboardBanUserInputSchema = z.object({
+  userId: z.string().min(1),
+  reason: z.string().trim().max(BAN_REASON_MAX).optional(),
+  duration: z.enum(BAN_DURATIONS),
+  code: totpCodeSchema,
+});
+
+export const dashboardUserActionInputSchema = z.object({
+  userId: z.string().min(1),
+  code: totpCodeSchema,
+});
+
+export const DASHBOARD_INVITE_ROLES = ["none", "observer", "admin"] as const;
+export const DASHBOARD_INVITE_STATUSES = ["pending", "expired"] as const;
+
+export const dashboardInvitesInputSchema = z.object({
+  search: dashboardSearchSchema,
+  role: z.enum(DASHBOARD_INVITE_ROLES).optional(),
+  status: z.enum(DASHBOARD_INVITE_STATUSES).optional(),
+});
+
+export type DashboardInvitesInput = z.infer<typeof dashboardInvitesInputSchema>;
+
+export const dashboardInvitesOutputSchema = z.object({
+  invites: z.array(accountInviteSchema),
+});
+
+export const dashboardInviteInputSchema = z.object({
+  email: emailAddressSchema,
+  instanceRole: grantedInstanceRoleSchema.nullable().default(null),
+  code: totpCodeSchema.optional(),
+});
+
+export const dashboardInviteOutputSchema = z.object({
+  invite: accountInviteSchema,
+  link: z.string().nullable(),
+});
+
+export const dashboardRevokeInviteInputSchema = z.object({
+  inviteId: z.string().min(1),
 });
 
 export const dashboardStatsOutputSchema = z.object({
@@ -1675,9 +1773,10 @@ export const dashboardRecentUserSchema = z.object({
   twoFactorEnabled: z.boolean(),
 });
 
-export const dashboardPeopleOutputSchema = z.object({
+export const dashboardAccountsOutputSchema = z.object({
   users: z.number(),
   withTwoFactor: z.number(),
+  banned: z.number(),
   pendingSignupInvites: z.number(),
   pendingWorkspaceInvites: z.number(),
   recentUsers: z.array(dashboardRecentUserSchema),
@@ -1929,7 +2028,7 @@ export const dashboardSystemInstanceOutputSchema = z.object({
   appUrl: z.string(),
   secureCookies: z.boolean(),
   signupDisabled: z.boolean(),
-  ownerEmail: z.string().nullable(),
+  ownerEmail: z.string(),
   setupCode: z.enum(["unset", "live", "spent"]),
   legal: z.object({
     version: z.string(),
@@ -3591,9 +3690,8 @@ export type UserPreferences = z.infer<typeof preferencesSchema>;
 export type UpdateUserPreferencesInput = z.infer<typeof updatePreferencesInputSchema>;
 export type RemoteAllowEntry = z.infer<typeof remoteAllowEntrySchema>;
 export type RemoteAllowInput = z.infer<typeof remoteAllowInputSchema>;
-export type AcceptInviteInput = z.infer<typeof acceptInviteInputSchema>;
+export type InviteTokenInput = z.infer<typeof inviteTokenInputSchema>;
 export type AcceptInviteOutput = z.infer<typeof acceptInviteOutputSchema>;
-export type SignupInvite = z.infer<typeof signupInviteSchema>;
 export type DashboardStats = z.infer<typeof dashboardStatsOutputSchema>;
 export type DashboardUsageRange = z.infer<typeof dashboardUsageRangeSchema>;
 export type DashboardUsage = z.infer<typeof dashboardUsageOutputSchema>;
@@ -3604,7 +3702,7 @@ export type DashboardUsageDay = z.infer<typeof dashboardUsageDaySchema>;
 export type DashboardUsageCall = z.infer<typeof dashboardUsageCallSchema>;
 export type DashboardOverview = z.infer<typeof dashboardOverviewOutputSchema>;
 export type DashboardConnections = z.infer<typeof dashboardConnectionsOutputSchema>;
-export type DashboardPeople = z.infer<typeof dashboardPeopleOutputSchema>;
+export type DashboardAccounts = z.infer<typeof dashboardAccountsOutputSchema>;
 export type DashboardWorkspaces = z.infer<typeof dashboardWorkspacesOutputSchema>;
 export type DashboardAutomation = z.infer<typeof dashboardAutomationOutputSchema>;
 export type DashboardRunner = z.infer<typeof dashboardRunnerSchema>;

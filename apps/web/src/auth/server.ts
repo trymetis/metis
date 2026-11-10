@@ -18,8 +18,11 @@ import {
 import { rateLimit } from "@/services/rate-limit";
 import { createWorkspace, personalWorkspaceName, setDefaultWorkspaceSlug } from "@/workspace";
 
+import { BANNED_MESSAGE, userBanned } from "./ban";
 import { authOptions, twoFactorPlugin } from "./base";
+import { recordSignIn } from "./last-sign-in";
 import { attachLegalConsent, enforceLegalConsent } from "./legal-consent";
+import { isOwnerEmail } from "./owner";
 import { sendSignInAlert } from "./sign-in-alert";
 import {
   TWO_FACTOR_CALLBACK_COOKIE,
@@ -100,9 +103,21 @@ function buildAuth(cfg: InstanceConfig) {
       sendVerificationEmail: async ({ user, url }) => {
         await sendVerificationEmail({ to: user.email, url });
       },
-      onSignIn: sendSignInAlert,
+      onSignIn: async (signIn) => {
+        await recordSignIn(signIn);
+        await sendSignInAlert(signIn);
+      },
     }),
     databaseHooks: {
+      session: {
+        create: {
+          before: async (session) => {
+            if (await userBanned(session.userId)) {
+              throw APIError.from("FORBIDDEN", { code: "ACCOUNT_BANNED", message: BANNED_MESSAGE });
+            }
+          },
+        },
+      },
       user: {
         create: {
           after: async (user, context) => {
@@ -128,6 +143,13 @@ function buildAuth(cfg: InstanceConfig) {
     hooks: {
       before: createAuthMiddleware(async (ctx) => {
         if (ctx.path === "/sign-up/email") {
+          const email = isRecord(ctx.body) ? ctx.body.email : undefined;
+          if (typeof email === "string" && isOwnerEmail(email)) {
+            throw APIError.from("FORBIDDEN", {
+              code: "OWNER_ADDRESS_SETUP_ONLY",
+              message: "This address is the instance owner's. Create it at /setup.",
+            });
+          }
           enforceLegalConsent(ctx.headers);
           return;
         }

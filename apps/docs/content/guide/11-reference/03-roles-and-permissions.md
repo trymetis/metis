@@ -1,6 +1,6 @@
 ---
 title: Roles and permissions
-description: What the owner, admins and members of a workspace can see and do.
+description: What the owner, admins and members of a workspace can see and do, and what the instance roles owner, admin, observer and user allow.
 ---
 
 Every member of a workspace has one of three roles. Each workspace has exactly one **owner**. The person who creates a workspace is its first owner. You manage members on the workspace's **Members** settings page, or from search. See [Members and roles](/guide/workspaces/members-and-roles).
@@ -48,3 +48,27 @@ These actions ask for a code from your authenticator app before they take effect
 - Turning AI or phishing detection on for a resource (the person who connected it).
 
 Turning AI or phishing detection off for a resource, and changing an admin back to a member, need no code.
+
+## Instance roles
+
+Besides workspace roles, every account also has an instance role. An instance role is about running your Metis Suite instance from its dashboard. It is separate from workspace roles: you can be an instance admin and a plain member of a workspace, or the owner of a workspace and a plain instance user.
+
+Instance roles never open anyone's mail, calendars, drives or contacts. The dashboard shows counts, settings and the audit log, never the content of anyone's mailboxes, calendars, drives or address books.
+
+There are four instance roles. Three of them open the dashboard:
+
+| Role         | Who has it                                                                                             | What they can do in the dashboard                                                                                                                                                                       | Whom they manage                                                                                          |
+| ------------ | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **Owner**    | One account, chosen by whoever runs your server. Nobody can change, ban or remove it in the dashboard. | Everything: change settings, restore and reset them, run health checks, acknowledge deploy checks, upgrade and undo upgrades, read the audit log, invite people to create an account, and manage users. | Admins, observers and users. Only the owner can make someone an admin, or change, ban or remove an admin. |
+| **Admin**    | People the owner makes admins.                                                                         | Everything the owner can do.                                                                                                                                                                            | Observers and users. An admin cannot make anyone an admin, or change, ban or remove an admin.             |
+| **Observer** | People the owner or an admin makes observers.                                                          | See the whole dashboard, including its accounts and the audit log, but change nothing.                                                                                                                  | Nobody.                                                                                                   |
+
+Everyone else has the instance role **User**, which is the default. A user works in Metis Suite as usual, but has no access to the dashboard.
+
+People with the owner, admin or observer role see **Dashboard** in their user menu and in search. Users do not see it.
+
+Managing someone means changing their instance role, banning or unbanning them, or removing their account. All of these ask for your authenticator code. Nobody can ban themselves. An account invite can also make the new account an admin or observer. If it does, sending it asks for your code too. An account invite with no role needs no code. See [How invites work](/guide/account/invite-people).
+
+A ban signs the person out everywhere within 2 minutes and stops them signing in until the ban ends. It does not remove them from any workspace. See [If a member's account is banned](/guide/workspaces/members-and-roles#if-a-members-account-is-banned).
+
+For the dashboard itself, see [Owner dashboard](/self-hosting/operate/owner-dashboard#instance-roles).

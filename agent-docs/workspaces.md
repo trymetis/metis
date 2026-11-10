@@ -6,9 +6,9 @@ What a workspace is, how it borrows mailboxes, calendars, drives and address boo
 
 | Concern                                  | Where                                                                                                                                                                                                                                                                                       |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Tables                                   | `src/db/schema.ts` → `workspace`, `workspaceMember`, `workspaceInvite`, the link tables `mailboxWorkspace`, `calendarWorkspace`, `driveWorkspace`, `userPrefs`                                                                                                                              |
-| Workspace and membership ops             | `src/workspace/index.ts` → `createWorkspace`, `resolveDefaultWorkspaceSlug`, `changeMemberRole`, `transferOwnership`, `removeMember`, `createInvite`, `acceptInvite`                                                                                                                        |
-| Role-checked ops shared with agent tools | `src/workspace/admin.ts` → `listWorkspaceInvites`, `removeWorkspaceMember`, `revokeWorkspaceInvite`, `setWorkspaceTheme`                                                                                                                                                                    |
+| Tables                                   | `src/db/schema.ts` → `workspace`, `workspaceMember`, `invite` ([auth.md](auth.md)), the link tables `mailboxWorkspace`, `calendarWorkspace`, `driveWorkspace`, `userPrefs`                                                                                                                  |
+| Workspace and membership ops             | `src/workspace/index.ts` → `createWorkspace`, `resolveDefaultWorkspaceSlug`, `changeMemberRole`, `transferOwnership`, `removeMember` · invites `src/invites/index.ts` → `createInvite`, `acceptInvite`, `declineInvite`                                                                     |
+| Role-checked ops shared with agent tools | `src/workspace/admin.ts` → `removeWorkspaceMember`, `setWorkspaceTheme` · `src/invites/index.ts` → `listWorkspaceInvites`, `revokeWorkspaceInvite`                                                                                                                                          |
 | Attaching an owned resource              | `src/connections/attach.ts` → `attachOwnedMailbox`, `attachOwnedCalendar`, `attachOwnedDrive`                                                                                                                                                                                               |
 | AI and per-resource policy               | `src/workspace/policy.ts` → `workspaceAllowsAi`, `resolveMailboxPolicy`                                                                                                                                                                                                                     |
 | Typed routes and reserved slugs          | `src/workspace/path.ts` → `workspacePath`, `onboardingPath`, `RESERVED_MAILBOX_SLUGS`, `RESERVED_CALENDAR_SLUGS`, `RESERVED_DRIVE_SLUGS`                                                                                                                                                    |
@@ -47,10 +47,12 @@ What a workspace is, how it borrows mailboxes, calendars, drives and address boo
 - **One owner per workspace.** Roles are `owner` / `admin` / `member`.
   - `transferOwnership` promotes the new owner and demotes the old one to `admin`; its route requires TOTP.
   - `changeMemberRole` refuses to touch the owner role.
-- **Listing and revoking invites, removing members and changing the theme need an owner or admin.** The check lives in `src/workspace/admin.ts`, which takes the caller's role, so `workspaces.*` and the agent/MCP tools enforce the same rule.
-- **A `workspace_invite` grants membership when the account it was sent to accepts it**; a `signup_invite` only creates an account ([auth.md](auth.md)).
+- **Sending, listing and revoking invites, removing members and changing the theme need an owner or admin.** The checks take the caller's role (`src/workspace/admin.ts`, `src/invites/index.ts`), so `workspaces.*` and the agent/MCP tools enforce the same rule.
+- **Workspace roles stay owner, admin and member**, independent of instance roles ([dashboard.md](dashboard.md)).
+- **A workspace invite grants membership when the account it was sent to accepts it**, or when the invitee creates their account from it; who may invite an address with no account depends on the sign-up mode ([auth.md](auth.md)).
   - `acceptInvite` compares the signed-in account's email with `invite.email` (case-insensitive), so a forwarded or leaked link joins nobody else, and the `memberJoined` event names the right person.
   - The error does not repeat the invited address, so a stray link holder learns nothing from it.
+  - An invitee may decline instead; the invite then stays as a record and stops working.
 
 ### Navigation and preferences
 

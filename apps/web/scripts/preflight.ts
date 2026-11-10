@@ -1,3 +1,4 @@
+import { syncOwnerRole } from "@/auth/instance-role";
 import { decisionEnabled, loadInstanceConfig } from "@/config/runtime";
 import { seedInstanceConfig } from "@/config/seed";
 import { backfillServerIds, reconcileQuarantine } from "@/connections/quarantine";
@@ -49,6 +50,12 @@ if (seeded.kind === "seeded") {
     );
   }
 }
+
+const ownerRole = await syncOwnerRole();
+for (const email of ownerRole.demoted) {
+  console.log(`[preflight] ${email} is no longer METIS_OWNER_EMAIL and is now an admin`);
+}
+if (!ownerRole.owner) console.log("[preflight] the owner account is not set up yet");
 
 await ensureSystemWorkflows();
 console.log("[preflight] system workflows up to date");

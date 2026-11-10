@@ -8,31 +8,12 @@ import {
 } from "@metis/ui/components/collapsible";
 import { cn } from "@metis/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Cable,
-  ChartNoAxesColumn,
-  ChevronRight,
-  History,
-  LayoutDashboard,
-  Plug,
-  Settings2,
-  UserRound,
-  Users,
-  Workflow,
-} from "lucide-react";
-import type { Route } from "next";
+import { ChevronRight } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
+import { dashboardNav, type NavEntry } from "@/components/dashboard/dashboard-nav";
 import { GuardedLink } from "@/components/dashboard/guarded-link";
-import {
-  SYSTEM_DRIVERS_NAV,
-  SYSTEM_HISTORY_NAV,
-  SYSTEM_INSTANCE_NAV,
-  SYSTEM_PROVIDERS_NAV,
-  SYSTEM_ROOT,
-  SYSTEM_UPDATES_NAV,
-} from "@/components/dashboard/system-nav";
 import { ResponsiveAside } from "@/components/mobile-aside";
 import { SourceLink } from "@/components/source-link";
 import { rpc } from "@/lib/orpc";
@@ -41,87 +22,81 @@ import { workspaceRootPath } from "@/workspace/path";
 
 import { PreflightBar } from "./preflight-bar";
 
-const DASHBOARD_NAV = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/usage", label: "AI usage", icon: ChartNoAxesColumn },
-  { href: "/dashboard/connections", label: "Connections", icon: Cable },
-  { href: "/dashboard/people", label: "People", icon: UserRound },
-  { href: "/dashboard/workspaces", label: "Workspaces", icon: Users },
-  { href: "/dashboard/automation", label: "Automation", icon: Workflow },
-  { href: "/dashboard/mcp", label: "MCP clients", icon: Plug },
-  { href: "/dashboard/audit", label: "Audit log", icon: History },
-] as const;
-
-function navItemClass(active: boolean) {
+function navItemClass(active: boolean, nested: boolean) {
   return cn(
-    "flex items-center gap-2.5 rounded-md px-2.5 py-1.75 text-[13px] transition-colors",
+    "flex items-center rounded-md px-2.5 text-[13px] transition-colors",
+    nested ? "gap-2 py-1.25" : "gap-2.5 py-1.75",
     active
       ? "bg-brand-soft text-primary"
       : "text-muted-foreground hover:bg-hover hover:text-foreground",
   );
 }
 
-function GroupHeading({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="mt-2 mb-0.5 px-2.5 text-[10px] font-medium tracking-wide text-faint uppercase">
-      {children}
-    </p>
-  );
-}
-
-function SubItem({
+function NavLink({
+  entry,
   href,
-  label,
-  icon,
   pathname,
+  nested,
+  className,
 }: {
-  href: Route;
-  label: string;
-  icon: React.ReactNode;
+  entry: NavEntry;
+  href: NonNullable<NavEntry["href"]>;
   pathname: string;
+  nested: boolean;
+  className?: string;
 }) {
   const active = pathname === href;
+  const Icon = entry.icon;
   return (
     <GuardedLink
       href={href}
       aria-current={active ? "page" : undefined}
-      className={cn(navItemClass(active), "gap-2 py-1.25")}
+      className={cn(navItemClass(active, nested), className)}
     >
-      {icon}
-      <span className="truncate">{label}</span>
+      {Icon && (
+        <Icon className={cn("shrink-0", nested ? "h-3.5 w-3.5" : "h-4 w-4")} strokeWidth={1.75} />
+      )}
+      <span className="truncate">{entry.label}</span>
     </GuardedLink>
   );
 }
 
-function SystemNav({ pathname, updatesEnabled }: { pathname: string; updatesEnabled: boolean }) {
-  const inSystem = pathname === SYSTEM_ROOT || pathname.startsWith(`${SYSTEM_ROOT}/`);
-  const [open, setOpen] = useState(inSystem);
-  const [wasInSystem, setWasInSystem] = useState(inSystem);
+function NavSection({
+  entry,
+  href,
+  pathname,
+  nested,
+}: {
+  entry: NavEntry;
+  href: NonNullable<NavEntry["href"]>;
+  pathname: string;
+  nested: boolean;
+}) {
+  const inSection = pathname === href || pathname.startsWith(`${href}/`);
+  const [open, setOpen] = useState(inSection);
+  const [wasInSection, setWasInSection] = useState(inSection);
 
-  if (inSystem !== wasInSystem) {
-    setWasInSystem(inSystem);
-    if (inSystem) setOpen(true);
+  if (inSection !== wasInSection) {
+    setWasInSection(inSection);
+    if (inSection) setOpen(true);
   }
-
-  const rootActive = pathname === SYSTEM_ROOT;
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <div className="flex items-center gap-px">
-        <GuardedLink
-          href={SYSTEM_ROOT}
-          aria-current={rootActive ? "page" : undefined}
-          className={cn(navItemClass(rootActive), "min-w-0 flex-1")}
-        >
-          <Settings2 className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-          <span className="truncate">System</span>
-        </GuardedLink>
+        <NavLink
+          entry={entry}
+          href={href}
+          pathname={pathname}
+          nested={nested}
+          className="min-w-0 flex-1"
+        />
         <CollapsibleTrigger
           render={
             <Button
               variant="ghost"
               size="icon-sm"
-              aria-label={open ? "Collapse System" : "Expand System"}
+              aria-label={open ? `Collapse ${entry.label}` : `Expand ${entry.label}`}
               className="text-muted-foreground"
             />
           }
@@ -134,50 +109,43 @@ function SystemNav({ pathname, updatesEnabled }: { pathname: string; updatesEnab
       </div>
       <CollapsibleContent>
         <div className="mt-px ml-4.5 flex flex-col gap-px border-l border-border pl-2">
-          <SubItem
-            href={SYSTEM_INSTANCE_NAV.href}
-            label={SYSTEM_INSTANCE_NAV.label}
-            pathname={pathname}
-            icon={<SYSTEM_INSTANCE_NAV.icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />}
-          />
-          <SubItem
-            href={SYSTEM_HISTORY_NAV.href}
-            label={SYSTEM_HISTORY_NAV.label}
-            pathname={pathname}
-            icon={<SYSTEM_HISTORY_NAV.icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />}
-          />
-          {updatesEnabled && (
-            <SubItem
-              href={SYSTEM_UPDATES_NAV.href}
-              label={SYSTEM_UPDATES_NAV.label}
-              pathname={pathname}
-              icon={<SYSTEM_UPDATES_NAV.icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />}
-            />
-          )}
-          <GroupHeading>Drivers</GroupHeading>
-          {SYSTEM_DRIVERS_NAV.map(({ href, label, icon: Icon }) => (
-            <SubItem
-              key={href}
-              href={href}
-              label={label}
-              pathname={pathname}
-              icon={<Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />}
-            />
-          ))}
-          <GroupHeading>Providers</GroupHeading>
-          {SYSTEM_PROVIDERS_NAV.map(({ href, label, Mark }) => (
-            <SubItem
-              key={href}
-              href={href}
-              label={label}
-              pathname={pathname}
-              icon={<Mark className="h-3.5 w-3.5 shrink-0" />}
-            />
-          ))}
+          <NavEntries entries={entry.children ?? []} pathname={pathname} nested />
         </div>
       </CollapsibleContent>
     </Collapsible>
   );
+}
+
+function NavEntries({
+  entries,
+  pathname,
+  nested,
+}: {
+  entries: NavEntry[];
+  pathname: string;
+  nested: boolean;
+}) {
+  return entries.map((entry) => {
+    const key = entry.href ?? entry.label;
+    if (!entry.href) {
+      return (
+        <div key={key} className="flex flex-col gap-px">
+          <p className="mt-2 mb-0.5 px-2.5 text-[10px] font-medium tracking-wide text-faint uppercase">
+            {entry.label}
+          </p>
+          <NavEntries entries={entry.children ?? []} pathname={pathname} nested={nested} />
+        </div>
+      );
+    }
+    if (entry.children) {
+      return (
+        <NavSection key={key} entry={entry} href={entry.href} pathname={pathname} nested={nested} />
+      );
+    }
+    return (
+      <NavLink key={key} entry={entry} href={entry.href} pathname={pathname} nested={nested} />
+    );
+  });
 }
 
 export function DashboardSidebar({ source }: { source: SourceInfo }) {
@@ -204,21 +172,11 @@ export function DashboardSidebar({ source }: { source: SourceInfo }) {
           </h1>
 
           <nav className="flex flex-col gap-px">
-            {DASHBOARD_NAV.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href;
-              return (
-                <GuardedLink
-                  key={href}
-                  href={href}
-                  aria-current={active ? "page" : undefined}
-                  className={navItemClass(active)}
-                >
-                  <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  <span className="truncate">{label}</span>
-                </GuardedLink>
-              );
-            })}
-            <SystemNav pathname={pathname} updatesEnabled={updatesEnabled} />
+            <NavEntries
+              entries={dashboardNav({ updatesEnabled })}
+              pathname={pathname}
+              nested={false}
+            />
           </nav>
         </div>
         <PreflightBar />

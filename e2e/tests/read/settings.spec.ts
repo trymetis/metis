@@ -14,7 +14,6 @@ const ACCOUNT_PAGES = [
   ["calendars", "Calendars"],
   ["drives", "Drives"],
   ["mcp", "MCP clients"],
-  ["invites", "Invites"],
   ["security", "Security"],
 ] as const;
 
@@ -78,7 +77,9 @@ test("every workspace settings page loads", async ({ page, account }) => {
 test("every owner dashboard page loads", async ({ page }) => {
   for (const [path, heading] of [
     ["/dashboard/connections", "Connections"],
-    ["/dashboard/people", "People"],
+    ["/dashboard/accounts", "Accounts"],
+    ["/dashboard/accounts/users", "Users"],
+    ["/dashboard/accounts/invites", "Invites"],
     ["/dashboard/workspaces", "Workspaces"],
     ["/dashboard/automation", "Automation"],
     ["/dashboard/usage", "AI usage"],

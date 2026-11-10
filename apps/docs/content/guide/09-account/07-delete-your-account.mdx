@@ -27,7 +27,7 @@ Where the provider supports it, Metis Suite also takes back the access you gave 
 
 Some changes are recorded for security, such as removing a member or turning off two-factor authentication. See [Security activity](/guide/account/security-activity). The record of the changes you made stays after your account is gone. It is deleted when the time set by the person who runs your Metis Suite server runs out. Until then:
 
-- The server owner's audit log keeps every recorded change you made, with your email address. This includes the deletion of your account.
+- The instance's audit log keeps every recorded change you made, with your email address. This includes the deletion of your account. The instance owner, instance admins and instance observers can read this log in the dashboard.
 - Workspace owners and admins still see the changes you made in their workspace, on its **Activity** page.
 - People whose role you changed, whom you removed, or whose mailbox, calendar, drive or address book you detached still see that change in their own **Security activity**.
 
@@ -36,7 +36,7 @@ Some changes are recorded for security, such as removing a member or turning off
 - **Download a copy of your data.** On the **Account** settings page, click **Download export**. The file holds your preferences, workspaces, labels, workflows, Workspace Assistant chats and security activity. It does not hold your mail or your scheduled sends. See [Export your data](/guide/account/export-your-data).
 - **If you connected Outlook**, also remove Metis Suite from your Microsoft account. The **Delete account** card has links for a personal Microsoft account and for a work or school account.
 - **If you own a workspace that other people use**, make someone else its owner first. Click the workspace tile at the top of the left rail and choose **Members**. On the new owner's row, click **Transfer ownership** and enter your code. See [Transfer ownership](/guide/workspaces/members-and-roles#transfer-ownership). If you skip this, you see "You're the owner of" followed by the number of workspaces, and you are asked to transfer ownership first.
-- **If you are the owner of your Metis Suite instance** (the account that opens the owner dashboard), you cannot delete your account. You see "You're this instance's owner. Make another account the owner first, then come back." Whoever runs your server sets the owner. See [Owner dashboard](/self-hosting/operate/owner-dashboard).
+- **If you are the owner of your Metis Suite instance** (the account whose email the person who runs your server set as the owner), you cannot delete your account. You see "You're this instance's owner. Point METIS_OWNER_EMAIL at another account first, then come back." Whoever runs your server sets the owner, and can make another account the owner. See [Owner dashboard](/self-hosting/operate/owner-dashboard).
 - **Have your authenticator app ready**, or a backup code. The last step asks for a code.
 
 ## Delete your account

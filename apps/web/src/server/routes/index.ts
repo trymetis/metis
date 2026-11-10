@@ -17,7 +17,6 @@ import { mailboxesRouter } from "./mailboxes";
 import { mcpRouter } from "./mcp";
 import { searchRouter } from "./search";
 import { signupRouter } from "./signup";
-import { signupInvitesRouter } from "./signup-invites";
 import { userRouter } from "./user";
 import { workflowsRouter } from "./workflows";
 import { workspaceAddressBooksRouter } from "./workspace-address-books";
@@ -43,7 +42,6 @@ export const router = {
   workflows: workflowsRouter,
   invites: invitesRouter,
   signup: signupRouter,
-  signupInvites: signupInvitesRouter,
   user: userRouter,
   mcp: mcpRouter,
   mail: mailRouter,

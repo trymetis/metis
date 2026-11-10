@@ -16,6 +16,7 @@ import type { McpCapabilityPrefs } from "@/mcp/tools";
 import type { AnalysisResult } from "@/types/analysis";
 import { AUDIT_ACTIONS, AUDIT_RESOURCE_KINDS, AUDIT_VIAS, type AuditDetail } from "@/types/audit";
 import { INSTANCE_CONFIG_KINDS } from "@/types/instance-config";
+import { GRANTED_INSTANCE_ROLES } from "@/types/instance-role";
 import type { DraftPayload } from "@/types/mail";
 import {
   CUSTOM_LABEL_COLORS,
@@ -30,6 +31,7 @@ import type { ThreadSummary } from "@/types/thread-summary";
 import {
   WORKSPACE_AI_POLICIES,
   WORKSPACE_PHISHING_DETECTION_POLICIES,
+  WORKSPACE_INVITE_ROLES,
   WORKSPACE_ROLES,
 } from "@/types/workspace";
 import type {
@@ -81,28 +83,6 @@ export const workspace = sqliteTable(
       .notNull(),
   },
   (table) => [uniqueIndex("workspace_slug_idx").on(table.slug)],
-);
-
-export const workspaceInvite = sqliteTable(
-  "workspace_invite",
-  {
-    id: text("id").primaryKey(),
-    workspaceId: text("workspace_id")
-      .notNull()
-      .references(() => workspace.id, { onDelete: "cascade" }),
-    email: text("email").notNull(),
-    role: text("role", { enum: WORKSPACE_ROLES }).notNull().default("member"),
-    tokenHash: text("token_hash").notNull(),
-    invitedBy: text("invited_by").notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
-    acceptedAt: timestamp("accepted_at"),
-    createdAt: timestamp("created_at").notNull(),
-  },
-  (table) => [
-    uniqueIndex("workspace_invite_token_hash_idx").on(table.tokenHash),
-    index("workspace_invite_workspace_idx").on(table.workspaceId),
-    index("workspace_invite_email_idx").on(table.email),
-  ],
 );
 
 export const workspaceMember = sqliteTable(
@@ -991,12 +971,15 @@ export const mcpClient = sqliteTable(
   ],
 );
 
-export const signupInvite = sqliteTable(
-  "signup_invite",
+export const invite = sqliteTable(
+  "invite",
   {
     id: text("id").primaryKey(),
     email: text("email").notNull(),
     tokenHash: text("token_hash").notNull(),
+    workspaceId: text("workspace_id").references(() => workspace.id, { onDelete: "cascade" }),
+    workspaceRole: text("workspace_role", { enum: WORKSPACE_INVITE_ROLES }),
+    instanceRole: text("instance_role", { enum: GRANTED_INSTANCE_ROLES }),
     invitedBy: text("invited_by").references(() => authSchemas.user.id, {
       onDelete: "set null",
     }),
@@ -1005,17 +988,32 @@ export const signupInvite = sqliteTable(
     acceptedUserId: text("accepted_user_id").references(() => authSchemas.user.id, {
       onDelete: "set null",
     }),
+    declinedAt: timestamp("declined_at"),
     createdAt: timestamp("created_at").notNull(),
   },
   (table) => [
-    uniqueIndex("signup_invite_token_hash_idx").on(table.tokenHash),
-    uniqueIndex("signup_invite_pending_email_idx")
+    uniqueIndex("invite_token_hash_idx").on(table.tokenHash),
+    uniqueIndex("invite_pending_account_idx")
       .on(table.email)
-      .where(sql`${table.acceptedAt} is null`),
-    index("signup_invite_email_idx").on(table.email),
-    index("signup_invite_invited_by_idx").on(table.invitedBy),
+      .where(
+        sql`${table.workspaceId} is null and ${table.acceptedAt} is null and ${table.declinedAt} is null`,
+      ),
+    uniqueIndex("invite_pending_workspace_idx")
+      .on(table.email, table.workspaceId)
+      .where(
+        sql`${table.workspaceId} is not null and ${table.acceptedAt} is null and ${table.declinedAt} is null`,
+      ),
+    index("invite_workspace_idx").on(table.workspaceId),
+    index("invite_invited_by_idx").on(table.invitedBy),
   ],
 );
+
+export const lastSignIn = sqliteTable("last_sign_in", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => authSchemas.user.id, { onDelete: "cascade" }),
+  signedInAt: timestamp("signed_in_at").notNull(),
+});
 
 export const aiUsage = sqliteTable(
   "ai_usage",

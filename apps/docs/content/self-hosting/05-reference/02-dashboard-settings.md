@@ -72,7 +72,7 @@ The card has one optional field, **Trusted proxies**: "IP addresses or CIDR rang
 
 The address it finds is used for:
 
-- the limits on sign-up and on creating the first account;
+- the limits on sign-up and on creating the owner account;
 - the limits on sign-in, two-factor codes, magic links, password resets and verification emails;
 - the IP address in the [audit log](/self-hosting/operate/owner-dashboard#audit-log);
 - the address shown in [sign-in alerts](/guide/account/sign-in-alerts) and on the [signed-in devices](/guide/account/signed-in-devices) list.

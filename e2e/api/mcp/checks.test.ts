@@ -43,12 +43,19 @@ const SENSITIVE = [
 const FOREIGN_WORKSPACE = "00000000-0000-0000-0000-000000000000";
 const PATTERN_CANDIDATES = ["out", "q1", "o1", "l1", "in", "x"];
 
-function isOwnerOnly(name: string): boolean {
+const ACCOUNT_INVITE_TOOLS = new Set([
+  "listSignupInvites",
+  "createSignupInvite",
+  "revokeSignupInvite",
+]);
+
+function isInstanceOnly(name: string): boolean {
   return (
     name.startsWith("getInstance") ||
     name.startsWith("getSystem") ||
     name === "runSystemCheck" ||
-    name === "getPreflightWarnings"
+    name === "getPreflightWarnings" ||
+    ACCOUNT_INVITE_TOOLS.has(name)
   );
 }
 
@@ -132,11 +139,13 @@ describe("which tools a client sees", () => {
     expect(hidden).toEqual(SENSITIVE);
   });
 
-  test("a non-owner lists every tool except the owner-only ones", () => {
+  test("an account with no instance role lists every tool except the instance ones", () => {
     const names = allTools.map((t) => t.name);
-    const ownerOnly = names.filter(isOwnerOnly);
-    expect(ownerOnly.length).toBeGreaterThan(0);
-    expect(memberNames.toSorted()).toEqual(names.filter((name) => !isOwnerOnly(name)).toSorted());
+    const instanceOnly = names.filter(isInstanceOnly);
+    expect(instanceOnly.length).toBeGreaterThan(0);
+    expect(memberNames.toSorted()).toEqual(
+      names.filter((name) => !isInstanceOnly(name)).toSorted(),
+    );
   });
 
   test("calling a tool the client does not list is an error", async () => {

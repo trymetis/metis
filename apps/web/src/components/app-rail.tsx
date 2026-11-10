@@ -67,7 +67,7 @@ import { WorkspaceRailSwitcher } from "./workspace-rail-switcher";
 
 interface AppRailProps {
   user: { id: string; name: string; email: string; image?: string | null };
-  isOwner: boolean;
+  hasDashboard: boolean;
   source: SourceInfo;
 }
 
@@ -82,7 +82,7 @@ async function handleSignOut() {
   });
 }
 
-export function AppRail({ user, isOwner, source }: AppRailProps) {
+export function AppRail({ user, hasDashboard, source }: AppRailProps) {
   const aiEnabled = usePlatformPolicy().ai;
   const pathname = usePathname();
   const { mailboxSlug, calendarSlug, driveSlug, addressBookSlug, section } = useWorkspacePath();
@@ -237,7 +237,7 @@ export function AppRail({ user, isOwner, source }: AppRailProps) {
               <BookUser />
               Address books
             </DropdownMenuItem>
-            {isOwner && (
+            {hasDashboard && (
               <DropdownMenuItem render={<Link href="/dashboard" />}>
                 <LayoutDashboard />
                 Dashboard

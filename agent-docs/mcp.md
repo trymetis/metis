@@ -13,8 +13,8 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [auth.md](auth
 | Workspace visibility                                           | `src/mcp/workspaces.ts` → `listMcpWorkspaces`, `visibleMcpWorkspaces`                                                                                                                  |
 | Per-request server                                             | `src/mastra/mcp/server.ts` → `buildMcpServer` · tool definitions `src/mastra/mcp/tools/*`                                                                                              |
 | Call scoping and the `workspaceId` argument                    | `src/mastra/mcp/context.ts` → `mcpScopeFromCall`, `mcpWorkspaceFromCall`, `mcpAccountFromCall`, `mcpVisibleWorkspaces` · `src/mastra/mcp/schema.ts` → `workspaceTarget`, `inWorkspace` |
-| MCP-only tools                                                 | account and workspace navigation `src/mastra/mcp/tools/account.ts` (bodies `src/ops/account.ts`) · owner tools `src/mastra/mcp/tools/instance.ts` (bodies `src/ops/instance.ts`)       |
-| Tool manifest and per-client prefs                             | `src/mcp/tools.ts` → `MCP_TOOL_MANIFEST`, `isMcpToolEnabled`, `isSensitiveTool`, `isOwnerOnlyTool`, `mcpToolsFor`                                                                      |
+| MCP-only tools                                                 | account and workspace navigation `src/mastra/mcp/tools/account.ts` (bodies `src/ops/account.ts`) · instance tools `src/mastra/mcp/tools/instance.ts` (bodies `src/ops/instance.ts`)    |
+| Tool manifest and per-client prefs                             | `src/mcp/tools.ts` → `MCP_TOOL_MANIFEST`, `isMcpToolEnabled`, `isSensitiveTool`, `mcpToolAllowed`, `mcpToolsFor`                                                                       |
 | Presets (per-client redirect URIs, instructions, removal text) | `src/mcp/presets.ts` → `MCP_PRESETS`                                                                                                                                                   |
 | OAuth provider + CIMD plugin options                           | `src/auth/base.ts` → `authOptions` (`mcp({ … })`, `cimd({ … })`)                                                                                                                       |
 | Discovery                                                      | `src/app/.well-known/oauth-authorization-server/[[...path]]/route.ts`, `src/app/.well-known/oauth-protected-resource/[[...path]]/route.ts`                                             |
@@ -31,7 +31,7 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [auth.md](auth
 ### Clients and tokens
 
 - **One OAuth client per MCP client; clients arrive by hand at `/settings/mcp` or through CIMD.** `allowDynamicClientRegistration` and `allowUnauthenticatedClientRegistration` are both false.
-- **The `mcp_client` row is the kill switch**: a client with no row, or a disabled one, has no access.
+- **The `mcp_client` row is the kill switch**: a client with no row, or a disabled one, has no access; a client whose user is banned is treated the same ([auth.md](auth.md)).
 - **Every request is gated per client.** JWTs are verified offline with no client-existence check, so deleting or disabling the OAuth client leaves an issued token valid; the route resolves `mcp_client` from the JWT's `azp` claim and answers 403 when the row is missing or disabled.
 - **Revoking authorizations cuts issued access tokens on the next request.** `mcp.revokeGrants` deletes the refresh tokens and stamps `mcp_client.tokens_revoked_at`; `resolveMcpClient` refuses any token whose `iat` is not after that time.
   - The route answers 401 with a `WWW-Authenticate` bearer challenge (`MCP_RESOURCE_METADATA`), so a client refreshes or signs in again; a disabled or missing client still gets 403.
@@ -79,8 +79,12 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [auth.md](auth
 ### The server
 
 - **MCP exposes every operation the workspace agent has, plus MCP-only tools**; parity and the two switch-dependent tools are in [ai-agents.md](ai-agents.md). `src/mastra/mcp/tools/*` hold only ids, descriptions and MCP gating; every body is a call into `src/ops/`.
-- **Owner tools exist only for the owner.** `buildMcpServer` registers them only when the client's user is the owner (`isOwnerEmail`, read on each request), and each one checks again before running.
-- **Owner tools report a secret only as set or not set.** The System pages' `{ set, hint }` carries the last characters of the real value; `withoutSecretHints` in `src/ops/instance.ts` nulls the hint, so no part of a secret reaches a model.
+- **Instance tools follow the dashboard's role matrix** ([dashboard.md](dashboard.md)). A manifest entry's `instance` requirement (`read` or `operate`) decides who gets it: `buildMcpServer` registers it only when `mcpToolAllowed` passes for the client user's instance role (`instanceRoleOf`, read on each request), and each tool checks again before running.
+  - The stats, Users (`getInstanceUsers`, accounts only), System and audit tools and `listSignupInvites` are `read`; `runSystemCheck`, `createSignupInvite` and `revokeSignupInvite` are `operate`.
+  - `getInstanceUsers` and `listSignupInvites` take the dashboard tables' filter schemas and call the same listing functions ([dashboard.md](dashboard.md)).
+  - Pending account invites are read only through `listSignupInvites`, so one tool answers one question.
+  - An account invite created over MCP never shows a link; when its email fails it is deleted, as for every inviter but the Owner in the app ([auth.md](auth.md)).
+- **Instance tools report a secret only as set or not set.** The System pages' `{ set, hint }` carries the last characters of the real value; `withoutSecretHints` in `src/ops/instance.ts` nulls the hint, so no part of a secret reaches a model.
 - **The endpoint answers 404 while the stored LLM driver is disabled (`aiEnabled()` false), checked per request.**
 - **`/api/mcp` answers 403 to a request whose `Origin` is not the app's own** (`APP_ORIGIN`), before authentication, as the Streamable HTTP rules require; clients that send no `Origin` are unaffected.
 - **The route returns the `Response` as soon as headers are written.**
@@ -94,19 +98,19 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [auth.md](auth
 - **A request.**
   - `requireMcpAuth` verifies signature, issuer, audience and expiry against the JWKS and answers 401 with the RFC 9728 `WWW-Authenticate` challenge.
   - The route resolves the `mcp_client` row joined to its user (`resolveMcpClient`) and rate-limits per client (`rateLimit` in `route.ts`).
-  - It builds a fresh `MCPServer` with `buildMcpServer(capabilities.tools, { isOwner })` and bridges the Fetch request to Node with `fetch-to-node` in serverless mode.
+  - It builds a fresh `MCPServer` with `buildMcpServer(capabilities.tools, { instanceRole })` and bridges the Fetch request to Node with `fetch-to-node` in serverless mode.
 - **Both protocol eras from one endpoint.** `protocolVersion: "2026-07-28"` in `buildMcpServer` makes `@mastra/mcp` serve modern clients (a per-request envelope) natively and legacy clients (an `initialize` handshake) through the SDK's stateless fallback; the CIMD side uses `metadataProfile: "mcp-2026-07-28"` in `src/auth/base.ts`.
 - **Transport is stateless Streamable HTTP**, because a per-request server in serverless mode holds no cross-request state or long-lived connection.
 - **Scoping a call.**
-  - The route sets `req.auth` (`McpAuthInfo`, whose `extra` carries the user, owner flag and hidden list) on the bridged request; `@mastra/mcp` relays it as `authInfo`.
+  - The route sets `req.auth` (`McpAuthInfo`, whose `extra` carries the user, their instance role and hidden list) on the bridged request; `@mastra/mcp` relays it as `authInfo`.
   - `mcpScopeFromCall(requestContext, workspaceId)` checks the id against `mcpVisibleWorkspaces`, then the shared `resolveWorkspaceScope` resolves resources and fresh tokens, cookie-free.
   - The visible list and each workspace's scope are memoized per request (`WeakMap<RequestContext, …>`), so several calls in one HTTP request resolve each workspace once.
-- **Account and owner tools.** `listWorkspaces` and `getWorkspace` are how a model finds its `workspaceId`s.
+- **Account and instance tools.** `listWorkspaces` and `getWorkspace` are how a model finds its `workspaceId`s.
   - Account tools run on `mcpAccountFromCall`.
-  - Owner tools are one-line calls into `src/dashboard/stats.ts`, `system.ts`, `system-checks.ts` and `preflight.ts`; `getPreflightWarnings` reads the last deploy's warnings ([dashboard.md](dashboard.md)).
+  - Instance tools are one-line calls into `src/dashboard/stats.ts`, `system.ts`, `system-checks.ts` and `preflight.ts`; `getPreflightWarnings` reads the last deploy's warnings ([dashboard.md](dashboard.md)).
 - **Managing clients.** Every `mcp.*` procedure runs under `appSession` and finds a client by `(clientId, userId)`.
   - `mcp.getClient` takes the slug and answers `null` (the page's 404) for a slug the user does not own.
-  - `mcp.access` supplies the workspaces and the owner flag the settings and consent pages render.
+  - `mcp.access` supplies the workspaces and the instance role the settings and consent pages render.
 - **Abandoned CIMD clients.** A CIMD client with no `mcp_client` row, no consent and no tokens is deleted after `ABANDONED_AFTER_MS`, so an unfinished consent leaves nothing behind.
 - **End-to-end coverage** is in [e2e.md](e2e.md): the consent flow in Playwright, every tool in the Vitest suite on seeded clients.
 

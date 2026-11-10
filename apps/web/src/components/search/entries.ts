@@ -13,7 +13,6 @@ import {
   LayoutDashboard,
   Link2,
   Mail,
-  MailPlus,
   Moon,
   PenSquare,
   Plug,
@@ -66,7 +65,7 @@ export interface ClientEntry {
 export interface EntryContext {
   workspaceSlug: string;
   ai: boolean;
-  isOwner: boolean;
+  hasDashboard: boolean;
   isAdmin: boolean;
   dark: boolean;
   workspaces: { name: string; slug: string; href: Route; current: boolean }[];
@@ -195,7 +194,6 @@ export function clientEntries(ctx: EntryContext): ClientEntry[] {
           string[],
         ][])
       : []),
-    ["Invites", "/settings/invites", MailPlus, ["signup"]],
     ["Security", "/settings/security", ShieldCheck, ["2fa", "password"]],
     [
       "Workspace settings: General",
@@ -228,7 +226,7 @@ export function clientEntries(ctx: EntryContext): ClientEntry[] {
           ],
         ] as [string, Route, LucideIcon, string[]][])
       : []),
-    ...(ctx.isOwner
+    ...(ctx.hasDashboard
       ? ([["Dashboard", "/dashboard", LayoutDashboard, ["owner"]]] as [
           string,
           Route,

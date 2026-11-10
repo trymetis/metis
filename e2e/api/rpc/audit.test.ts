@@ -3,6 +3,7 @@ import { expect, test } from "vitest";
 import { harness } from "../../clients/harness";
 import { type Rpc, RpcError, rpcWithCookie } from "../../clients/rpc";
 import { signIn } from "../../clients/sign-in";
+import { inviteToWorkspace } from "../support/invites";
 import { uniqueName } from "../support/poll";
 import { ana, totpCode } from "../support/session";
 
@@ -51,13 +52,8 @@ test("membership changes in a workspace are recorded for its admins, the member 
   const created = await rpc<{ slug: string }>("workspaces.create", { name });
   const ws = { workspaceSlug: created.slug };
   try {
-    const { url } = await rpc<{ url: string }>("workspaces.createInvite", {
-      ...ws,
-      email: account.member.email,
-    });
-    await cy("invites.accept", {
-      token: new URL(url).searchParams.get("token"),
-    });
+    const { token } = await inviteToWorkspace(rpc, created.slug, account.member.email);
+    await cy("invites.accept", { token });
     const { members } = await rpc<{
       members: { memberId: string; email: string }[];
     }>("workspaces.listMembers", ws);
@@ -83,12 +79,11 @@ test("membership changes in a workspace are recorded for its admins, the member 
         userAgent: null,
       }),
     );
-    expect(adminView.events).toContainEqual(
-      expect.objectContaining({
-        action: "workspace_invite.created",
-        targetLabel: account.member.email,
-      }),
-    );
+    for (const action of ["invite.created", "invite.accepted"]) {
+      expect(adminView.events).toContainEqual(
+        expect.objectContaining({ action, targetLabel: account.member.email }),
+      );
+    }
 
     await rpc("workspaces.removeMember", { ...ws, memberId });
 
@@ -122,7 +117,7 @@ test("revoking a workspace invite is recorded with the invitee", async () => {
   await rpc("workspaces.revokeInvite", { ...ws, inviteId: id });
 
   const { events } = await rpc<AuditPage>("audit.workspace", ws);
-  for (const action of ["workspace_invite.created", "workspace_invite.revoked"]) {
+  for (const action of ["invite.created", "invite.revoked"]) {
     expect(events).toContainEqual(
       expect.objectContaining({ action, via: "app", targetLabel: email }),
     );
@@ -130,9 +125,9 @@ test("revoking a workspace invite is recorded with the invitee", async () => {
 
   const found = await rpc<AuditPage>("audit.workspace", { ...ws, q: "revoked the invite" });
   expect(found.events).toContainEqual(
-    expect.objectContaining({ action: "workspace_invite.revoked", targetLabel: email }),
+    expect.objectContaining({ action: "invite.revoked", targetLabel: email }),
   );
-  expect(found.events.every((event) => event.action === "workspace_invite.revoked")).toBe(true);
+  expect(found.events.every((event) => event.action === "invite.revoked")).toBe(true);
 });
 
 test("turning on a sensitive MCP tool is recorded with the tools", async () => {
@@ -196,6 +191,10 @@ test("only admins read workspace activity and only the owner reads the instance 
     "member.removed",
     "workspace.ownership_transferred",
     "resource.detached",
+    "instance_role.granted",
+    "instance_role.revoked",
+    "user.banned",
+    "user.unbanned",
   ];
   const own = await cy<AuditPage>("audit.mine");
   for (const event of own.events) {

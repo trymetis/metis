@@ -5,7 +5,13 @@ import { enterCode } from "../auth";
 import { expect, type Rpc, test, uniqueName } from "../fixtures";
 import { harness } from "../harness";
 import { authorize, beginAuthorization, clientIdFor, connect, MODERN } from "../mcp";
-import { ensureSecondUser, type SecondUser, secondUserContext, totpFor } from "../second-user";
+import {
+  ensureSecondUser,
+  inviteToWorkspace,
+  type SecondUser,
+  secondUserContext,
+  totpFor,
+} from "../second-user";
 
 interface Member {
   memberId: string;
@@ -21,11 +27,9 @@ async function memberId(rpc: Rpc, workspaceSlug: string, email: string): Promise
 }
 
 async function joinByInvite(anaRpc: Rpc, page: Page, workspaceSlug: string, user: SecondUser) {
-  const invite = await anaRpc<{ url: string }>("workspaces.createInvite", {
-    workspaceSlug,
-    email: user.email,
-  });
-  await page.goto(invite.url);
+  await page.goto(await inviteToWorkspace(anaRpc, workspaceSlug, user.email));
+  await expect(page.getByRole("heading", { name: /^Join .+ as a member$/ })).toBeVisible();
+  await page.getByRole("button", { name: "Accept" }).click();
   await page.waitForURL(new RegExp(`/w/${workspaceSlug}`));
 }
 

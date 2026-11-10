@@ -1,6 +1,7 @@
 import "server-only";
 import { ORPCError } from "@orpc/server";
 
+import { appActor } from "@/audit";
 import { acknowledgePreflightRun, latestPreflightRun } from "@/dashboard/preflight";
 import {
   dashboardAudit,
@@ -8,7 +9,7 @@ import {
   dashboardConnections,
   dashboardMcp,
   dashboardOverview,
-  dashboardPeople,
+  dashboardAccounts,
   dashboardStats,
   dashboardUsage,
   dashboardWorkspaces,
@@ -34,8 +35,10 @@ import {
   saveConfigSections,
 } from "@/dashboard/system-config";
 import { rollbackRelease, startUpgrade, updatesEnabled, updatesStatus } from "@/dashboard/updates";
+import { banUser, listInstanceUsers, removeUser, setUserRole, unbanUser } from "@/dashboard/users";
+import { createInvite, listAccountInvites, revokeAccountInvite } from "@/invites";
 
-import { ownerSession } from "../middlewares/owner-session";
+import { dashboardOperator, dashboardSession } from "../middlewares/dashboard-session";
 import { requireTotp } from "../require-totp";
 import {
   auditPageInputSchema,
@@ -53,8 +56,20 @@ import {
   dashboardConfigUpdateInputSchema,
   dashboardConnectionsOutputSchema,
   dashboardMcpOutputSchema,
+  dashboardMeOutputSchema,
+  dashboardInviteInputSchema,
+  dashboardInviteOutputSchema,
+  dashboardBanUserInputSchema,
+  dashboardInvitesInputSchema,
+  dashboardInvitesOutputSchema,
+  dashboardUserActionInputSchema,
+  dashboardUsersInputSchema,
+  dashboardRevokeInviteInputSchema,
+  dashboardSetRoleInputSchema,
+  dashboardUsersOutputSchema,
+  okSchema,
   dashboardOverviewOutputSchema,
-  dashboardPeopleOutputSchema,
+  dashboardAccountsOutputSchema,
   dashboardPreflightAcknowledgeInputSchema,
   dashboardPreflightOutputSchema,
   dashboardRollbackInputSchema,
@@ -81,81 +96,245 @@ import {
 } from "../schema";
 
 export const dashboardRouter = {
-  stats: ownerSession.output(dashboardStatsOutputSchema).handler(async () => dashboardStats()),
+  me: dashboardSession
+    .output(dashboardMeOutputSchema)
+    .handler(async ({ context }) => ({ role: context.instanceRole })),
 
-  usage: ownerSession
+  users: {
+    list: dashboardSession
+      .input(dashboardUsersInputSchema)
+      .output(dashboardUsersOutputSchema)
+      .handler(async ({ input }) => ({ users: await listInstanceUsers(input) })),
+
+    setRole: dashboardOperator
+      .input(dashboardSetRoleInputSchema)
+      .output(okSchema)
+      .handler(async ({ input, context }) => {
+        await requireTotp({
+          userId: context.appUser.userId,
+          code: input.code,
+          headers: context.headers,
+          scope: "instance-users",
+          message: "Enter your authenticator code to change this role",
+        });
+        const result = await setUserRole({
+          actor: { userId: context.appUser.userId, role: context.instanceRole },
+          userId: input.userId,
+          role: input.role,
+          by: appActor(context.appUser, context.headers),
+        });
+        if ("error" in result) refused(result);
+        return { ok: true as const };
+      }),
+
+    ban: dashboardOperator
+      .input(dashboardBanUserInputSchema)
+      .output(okSchema)
+      .handler(async ({ input, context }) => {
+        await requireTotp({
+          userId: context.appUser.userId,
+          code: input.code,
+          headers: context.headers,
+          scope: "instance-users",
+          message: "Enter your authenticator code to ban this user",
+        });
+        const result = await banUser({
+          actor: { userId: context.appUser.userId, role: context.instanceRole },
+          userId: input.userId,
+          reason: input.reason || null,
+          duration: input.duration,
+          by: appActor(context.appUser, context.headers),
+        });
+        if ("error" in result) refused(result);
+        return { ok: true as const };
+      }),
+
+    unban: dashboardOperator
+      .input(dashboardUserActionInputSchema)
+      .output(okSchema)
+      .handler(async ({ input, context }) => {
+        await requireTotp({
+          userId: context.appUser.userId,
+          code: input.code,
+          headers: context.headers,
+          scope: "instance-users",
+          message: "Enter your authenticator code to unban this user",
+        });
+        const result = await unbanUser({
+          actor: { userId: context.appUser.userId, role: context.instanceRole },
+          userId: input.userId,
+          by: appActor(context.appUser, context.headers),
+        });
+        if ("error" in result) refused(result);
+        return { ok: true as const };
+      }),
+
+    remove: dashboardOperator
+      .input(dashboardUserActionInputSchema)
+      .output(okSchema)
+      .handler(async ({ input, context }) => {
+        await requireTotp({
+          userId: context.appUser.userId,
+          code: input.code,
+          headers: context.headers,
+          scope: "instance-users",
+          message: "Enter your authenticator code to remove this user",
+        });
+        const result = await removeUser({
+          actor: { userId: context.appUser.userId, role: context.instanceRole },
+          userId: input.userId,
+          by: appActor(context.appUser, context.headers),
+        });
+        if ("error" in result) refused(result);
+        return { ok: true as const };
+      }),
+  },
+
+  invites: {
+    list: dashboardSession
+      .input(dashboardInvitesInputSchema)
+      .output(dashboardInvitesOutputSchema)
+      .handler(async ({ input, context }) => {
+        const invites = await listAccountInvites(context.instanceRole, input);
+        if ("error" in invites) refused(invites);
+        return { invites };
+      }),
+
+    create: dashboardOperator
+      .input(dashboardInviteInputSchema)
+      .output(dashboardInviteOutputSchema)
+      .handler(async ({ input, context }) => {
+        if (input.instanceRole) {
+          await requireTotp({
+            userId: context.appUser.userId,
+            code: input.code,
+            headers: context.headers,
+            scope: "instance-users",
+            message: "Enter your authenticator code to invite someone with an instance role",
+          });
+        }
+        const result = await createInvite({
+          email: input.email,
+          workspace: null,
+          instanceRole: input.instanceRole,
+          inviter: {
+            userId: context.appUser.userId,
+            name: context.appUser.user.name,
+            email: context.appUser.user.email,
+          },
+          by: appActor(context.appUser, context.headers),
+          linkOnFailure: true,
+        });
+        if ("error" in result) refused(result);
+        return {
+          invite: {
+            id: result.invite.id,
+            email: result.invite.email,
+            instanceRole: result.invite.instanceRole,
+            invitedBy: context.appUser.user.email,
+            expiresAt: result.invite.expiresAt.toISOString(),
+            expired: false,
+            createdAt: result.invite.createdAt.toISOString(),
+          },
+          link: result.link,
+        };
+      }),
+
+    revoke: dashboardOperator
+      .input(dashboardRevokeInviteInputSchema)
+      .output(okSchema)
+      .handler(async ({ input, context }) => {
+        const result = await revokeAccountInvite({
+          inviteId: input.inviteId,
+          actor: { userId: context.appUser.userId, email: context.appUser.user.email },
+          by: appActor(context.appUser, context.headers),
+        });
+        if ("error" in result) refused(result);
+        return { ok: true as const };
+      }),
+  },
+
+  stats: dashboardSession.output(dashboardStatsOutputSchema).handler(async () => dashboardStats()),
+
+  usage: dashboardSession
     .input(dashboardUsageInputSchema)
     .output(dashboardUsageOutputSchema)
     .handler(async ({ input }) => dashboardUsage(input.range)),
 
-  overview: ownerSession
+  overview: dashboardSession
     .output(dashboardOverviewOutputSchema)
     .handler(async () => dashboardOverview()),
 
-  connections: ownerSession
+  connections: dashboardSession
     .output(dashboardConnectionsOutputSchema)
     .handler(async () => dashboardConnections()),
 
-  people: ownerSession.output(dashboardPeopleOutputSchema).handler(async () => dashboardPeople()),
+  accounts: dashboardSession
+    .output(dashboardAccountsOutputSchema)
+    .handler(async () => dashboardAccounts()),
 
-  workspaces: ownerSession
+  workspaces: dashboardSession
     .output(dashboardWorkspacesOutputSchema)
     .handler(async () => dashboardWorkspaces()),
 
-  automation: ownerSession
+  automation: dashboardSession
     .output(dashboardAutomationOutputSchema)
     .handler(async () => dashboardAutomation()),
 
-  mcp: ownerSession.output(dashboardMcpOutputSchema).handler(async () => dashboardMcp()),
+  mcp: dashboardSession.output(dashboardMcpOutputSchema).handler(async () => dashboardMcp()),
 
-  audit: ownerSession
+  audit: dashboardSession
     .input(auditPageInputSchema)
     .output(dashboardAuditOutputSchema)
     .handler(async ({ input }) => dashboardAudit(input)),
 
   system: {
-    overview: ownerSession
+    overview: dashboardSession
       .output(dashboardSystemOverviewOutputSchema)
       .handler(async () => systemOverview()),
 
-    instance: ownerSession
+    instance: dashboardSession
       .output(dashboardSystemInstanceOutputSchema)
       .handler(async () => systemInstance()),
 
-    llm: ownerSession.output(dashboardSystemLlmOutputSchema).handler(async () => systemLlm()),
+    llm: dashboardSession.output(dashboardSystemLlmOutputSchema).handler(async () => systemLlm()),
 
-    phishing: ownerSession
+    phishing: dashboardSession
       .output(dashboardSystemPhishingOutputSchema)
       .handler(async () => systemPhishing()),
 
-    mail: ownerSession.output(dashboardSystemMailOutputSchema).handler(async () => systemMail()),
+    mail: dashboardSession
+      .output(dashboardSystemMailOutputSchema)
+      .handler(async () => systemMail()),
 
-    cache: ownerSession.output(dashboardSystemCacheOutputSchema).handler(async () => systemCache()),
+    cache: dashboardSession
+      .output(dashboardSystemCacheOutputSchema)
+      .handler(async () => systemCache()),
 
-    runner: ownerSession
+    runner: dashboardSession
       .output(dashboardSystemRunnerOutputSchema)
       .handler(async () => systemRunner()),
 
-    database: ownerSession
+    database: dashboardSession
       .output(dashboardSystemDatabaseOutputSchema)
       .handler(async () => systemDatabase()),
 
-    provider: ownerSession
+    provider: dashboardSession
       .input(dashboardSystemProviderInputSchema)
       .output(dashboardSystemProviderOutputSchema)
       .handler(async ({ input }) => systemProvider(input.provider)),
 
-    check: ownerSession
+    check: dashboardOperator
       .input(dashboardSystemCheckInputSchema)
       .output(dashboardSystemCheckOutputSchema)
       .handler(async ({ input }) => runSystemCheck(input)),
 
-    form: ownerSession
+    form: dashboardSession
       .input(dashboardConfigFormInputSchema)
       .output(dashboardConfigFormOutputSchema)
       .handler(async ({ input }) => configForm(input.section)),
 
-    update: ownerSession
+    update: dashboardOperator
       .input(dashboardConfigUpdateInputSchema)
       .output(dashboardConfigSaveOutputSchema)
       .handler(async ({ input, context }) => {
@@ -169,16 +348,16 @@ export const dashboardRouter = {
         return saveConfigSections(input, context.appUser.userId);
       }),
 
-    history: ownerSession
+    history: dashboardSession
       .output(dashboardConfigHistoryOutputSchema)
       .handler(async () => configHistory()),
 
-    diff: ownerSession
+    diff: dashboardSession
       .input(dashboardConfigDiffInputSchema)
       .output(dashboardConfigDiffOutputSchema)
       .handler(async ({ input }) => configDiff(input.from, input.to)),
 
-    revert: ownerSession
+    revert: dashboardOperator
       .input(dashboardConfigRevertInputSchema)
       .output(dashboardConfigSaveOutputSchema)
       .handler(async ({ input, context }) => {
@@ -192,7 +371,7 @@ export const dashboardRouter = {
         return revertConfig(input, context.appUser.userId);
       }),
 
-    reset: ownerSession
+    reset: dashboardOperator
       .input(dashboardConfigResetInputSchema)
       .output(dashboardConfigResetOutputSchema)
       .handler(async ({ input, context }) => {
@@ -216,24 +395,26 @@ export const dashboardRouter = {
         );
       }),
 
-    preflight: ownerSession
+    preflight: dashboardSession
       .output(dashboardPreflightOutputSchema)
       .handler(async () => latestPreflightRun()),
 
-    acknowledgePreflight: ownerSession
+    acknowledgePreflight: dashboardOperator
       .input(dashboardPreflightAcknowledgeInputSchema)
       .output(dashboardPreflightOutputSchema)
       .handler(async ({ input, context }) =>
         acknowledgePreflightRun(input.id, context.appUser.userId),
       ),
 
-    updatesEnabled: ownerSession
+    updatesEnabled: dashboardSession
       .output(dashboardUpdatesEnabledOutputSchema)
       .handler(async () => ({ enabled: updatesEnabled() })),
 
-    updates: ownerSession.output(dashboardUpdatesOutputSchema).handler(async () => updatesStatus()),
+    updates: dashboardSession
+      .output(dashboardUpdatesOutputSchema)
+      .handler(async () => updatesStatus()),
 
-    upgrade: ownerSession
+    upgrade: dashboardOperator
       .input(dashboardUpgradeInputSchema)
       .output(dashboardUpgradeSchema)
       .handler(async ({ input, context }) => {
@@ -248,7 +429,7 @@ export const dashboardRouter = {
         return startUpgrade(input.version, context.appUser.userId);
       }),
 
-    rollback: ownerSession
+    rollback: dashboardOperator
       .input(dashboardRollbackInputSchema)
       .output(dashboardUpgradeSchema)
       .handler(async ({ input, context }) => {
@@ -264,3 +445,7 @@ export const dashboardRouter = {
       }),
   },
 };
+
+function refused(result: { error: string; forbidden?: true }): never {
+  throw new ORPCError(result.forbidden ? "FORBIDDEN" : "BAD_REQUEST", { message: result.error });
+}

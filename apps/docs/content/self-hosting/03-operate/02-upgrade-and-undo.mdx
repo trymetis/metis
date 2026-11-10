@@ -16,6 +16,8 @@ Releases install forward only. The dashboard offers only releases that are newer
 
 The **Updates** page exists only when the updater is connected, which the Compose stack does for you. On hosts that build from source, the page does not appear: update by deploying the new version there.
 
+The instance owner and instance admins can upgrade and undo. Observers see the **Updates** page without the **Upgrade** and **Undo last upgrade** buttons. See [Instance roles](/self-hosting/operate/owner-dashboard#instance-roles).
+
 On a Metis Cloud instance, the **Updates** page works the same way, and a snapshot is always taken, so **Undo last upgrade** is offered after an upgrade. Unless the owner turns automatic updates off in the console, Metis Cloud also installs each new release on its own, in the hour the owner picks there. The server steps on this page (the snapshot folder, disk space, the `docker` commands, the bootstrap script and pinning releases) do not apply there, and steps that mention the server, the stack or the updater service are handled by Metis Cloud. See [Updates on Metis Cloud](/cloud/your-instance/updates).
 
 ## Snapshots need the bundled database
@@ -170,7 +172,7 @@ There is only ever one undo. Each successful upgrade replaces the snapshot, so y
 
 The snapshot is kept in `/opt/metis-suite/.updater-snapshot/` on the server. Leave that folder alone if you want to keep the undo. If you delete it, the undo is gone.
 
-The undo is recorded in the **Audit log**. Its row starts with the name of the owner who started it and reads "… undid the last upgrade (&lt;version it left&gt; → &lt;version it returned to&gt;)". Its event type, in the event type list, is **Instance upgrade undone**. It also shows in your own [Security activity](/guide/account/security-activity). The row is written once the undo has succeeded and the **Updates** page loads again. If you closed the page during the undo, it is written the next time you open **Updates**. See [Owner dashboard](/self-hosting/operate/owner-dashboard#audit-log).
+The undo is recorded in the **Audit log**. Its row starts with the name of the owner or admin who started it and reads, for example, "… undid the last upgrade (0.2.3 → 0.2.2)": the version it left, then the version it returned to. Its event type, in the event type list, is **Instance upgrade undone**. It also shows in your own [Security activity](/guide/account/security-activity). The row is written once the undo has succeeded and the **Updates** page loads again. If you closed the page during the undo, it is written the next time you open **Updates**. See [Owner dashboard](/self-hosting/operate/owner-dashboard#audit-log).
 
 ## When a step fails
 

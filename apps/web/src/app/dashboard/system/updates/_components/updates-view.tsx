@@ -13,6 +13,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
 
+import { useDashboardRole } from "@/components/dashboard/dashboard-role";
 import { Loading } from "@/components/dashboard/system-client";
 import {
   Mono,
@@ -170,7 +171,7 @@ function ReleaseRow({
   release: DashboardUpdates["releases"][number];
   latest: boolean;
   disabled: boolean;
-  onUpgrade: () => void;
+  onUpgrade: (() => void) | null;
 }) {
   return (
     <div className="py-1.5">
@@ -178,9 +179,11 @@ function ReleaseRow({
         <span className="text-[13px] text-muted-foreground">{release.version}</span>
         <span className="inline-flex items-center gap-2">
           {latest && <ToneBadge tone="neutral">Latest</ToneBadge>}
-          <Button size="sm" disabled={disabled} onClick={onUpgrade}>
-            Upgrade
-          </Button>
+          {onUpgrade && (
+            <Button size="sm" disabled={disabled} onClick={onUpgrade}>
+              Upgrade
+            </Button>
+          )}
         </span>
       </div>
       {release.notes && (
@@ -215,6 +218,7 @@ export function UpdatesView() {
   const offline = query.isError && query.data !== undefined;
   const loadError = query.isError && query.data === undefined ? query.error : null;
   const [pending, setPending] = useState<Pending | null>(null);
+  const { canOperate } = useDashboardRole();
   const lastState = useRef<DashboardUpgrade["state"] | null>(null);
 
   useEffect(() => {
@@ -295,7 +299,9 @@ export function UpdatesView() {
             )}
           </Row>
           <Row label="Undo">
-            {rollbackVersion ? (
+            {rollbackVersion && !canOperate ? (
+              <Mono>{rollbackVersion}</Mono>
+            ) : rollbackVersion ? (
               <Button
                 variant="outline"
                 size="sm"
@@ -351,7 +357,11 @@ export function UpdatesView() {
                 release={release}
                 latest={release.version === latest}
                 disabled={running}
-                onUpgrade={() => setPending({ kind: "upgrade", version: release.version })}
+                onUpgrade={
+                  canOperate
+                    ? () => setPending({ kind: "upgrade", version: release.version })
+                    : null
+                }
               />
             ))}
           </div>

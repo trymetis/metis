@@ -15,6 +15,7 @@ import type {
   SystemTone,
 } from "@/server/schema";
 
+import { useDashboardRole } from "./dashboard-role";
 import { Mono, Section, ToneBadge } from "./system-ui";
 
 function errorMessage(err: unknown, fallback: string): string {
@@ -111,6 +112,7 @@ export function HealthCheck({
 }) {
   const [check, setCheck] = useState<DashboardSystemCheck | null>(null);
   const [running, setRunning] = useState(false);
+  const { canOperate } = useDashboardRole();
 
   async function run() {
     setRunning(true);
@@ -132,10 +134,12 @@ export function HealthCheck({
       badge={
         <div className="flex shrink-0 items-center gap-2">
           {summary && <ToneBadge tone={summary.tone}>{summary.label}</ToneBadge>}
-          <Button variant="outline" size="sm" onClick={run} disabled={running}>
-            {running ? <Loader2 className="animate-spin" /> : <RefreshCw strokeWidth={1.75} />}
-            {check ? "Re-check" : "Run check"}
-          </Button>
+          {canOperate && (
+            <Button variant="outline" size="sm" onClick={run} disabled={running}>
+              {running ? <Loader2 className="animate-spin" /> : <RefreshCw strokeWidth={1.75} />}
+              {check ? "Re-check" : "Run check"}
+            </Button>
+          )}
         </div>
       }
     >
@@ -143,7 +147,9 @@ export function HealthCheck({
         <p className="py-1 text-[13px] text-faint">
           {running
             ? "Checking…"
-            : "Not checked yet. Checks contact the real service, so they run only when asked."}
+            : canOperate
+              ? "Not checked yet. Checks contact the real service, so they run only when asked."
+              : "Not checked yet. The instance owner and admins can run checks."}
         </p>
       ) : (
         <CheckResults check={check} />

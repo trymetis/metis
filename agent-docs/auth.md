@@ -1,8 +1,8 @@
 # Auth — accounts, sign-in, 2FA and the Better Auth schema
 
-How accounts are created, how sign-in and the second factor are enforced, how invite tokens are stored, and how Better Auth's own tables are regenerated.
+How accounts are created, how the instance owner is fixed, how invites work, how sign-in and the second factor are enforced, and how Better Auth's own tables are regenerated.
 Paths are relative to `apps/web/`.
-See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](connections.md), [configuration.md](configuration.md), [dashboard.md](dashboard.md), [database.md](database.md).
+See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](connections.md), [configuration.md](configuration.md), [dashboard.md](dashboard.md) (instance roles), [workspaces.md](workspaces.md) (workspace membership), [database.md](database.md).
 
 ## Code map
 
@@ -10,14 +10,16 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
 | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Better Auth options and plugin list           | `src/auth/base.ts` → `authOptions`                                                                                                                                                                                                                                                              |
 | The live instance, hooks, step-up             | `src/auth/server.ts` → `getAuth`, `Auth`, `verify2FA`                                                                                                                                                                                                                                           |
-| Account creation                              | `src/auth/signup.ts` → `firstUserSignup`, `sendSignupInvite` (also called by `src/ops/account.ts`), `hasAnyUser` · procedures in `src/server/routes/signup.ts`, `src/server/routes/signup-invites.ts` · pages `src/app/(auth)/setup/`, `src/app/(auth)/invite/signup/`                          |
+| Account creation                              | `src/auth/signup.ts` → `ownerSignup`, `createAccount`, `ownerHasAccount`, `hasAnyUser` · procedures in `src/server/routes/signup.ts` · page `src/app/(auth)/setup/`                                                                                                                             |
+| Invites                                       | `src/invites/index.ts` → `createInvite`, `previewInvite`, `acceptInvite`, `declineInvite`, `signUpFromInvite`, `revokeWorkspaceInvite`, `revokeAccountInvite` · `invites.*` and `signup.invitePreview`, `signup.invite` · page `src/app/(auth)/invite/accept/`                                  |
 | Setup code                                    | `src/auth/setup-code.ts` → `verifySetupCode`                                                                                                                                                                                                                                                    |
-| Invite tokens                                 | `src/auth/invite-token.ts` → `newInviteToken` · `src/db/schema.ts` → `signupInvite`                                                                                                                                                                                                             |
+| Invite tokens                                 | `src/auth/invite-token.ts` → `newInviteToken` · `src/db/schema.ts` → `invite`                                                                                                                                                                                                                   |
 | 2FA gates                                     | `src/proxy.ts` → `proxy`, `config.matcher` · `src/server/middlewares/app-session.ts` → `appSession`                                                                                                                                                                                             |
 | 2FA step-up in procedures                     | `src/server/require-totp.ts` → `requireTotp`                                                                                                                                                                                                                                                    |
 | Code classification                           | `src/auth/two-factor-code.ts` → `twoFactorCodeKind` · client hook `src/hooks/use-two-factor-code.ts` → `useTwoFactorCode`                                                                                                                                                                       |
 | Return-to after 2FA                           | `src/auth/two-factor-callback.ts` → `rememberTwoFactorCallback`, `consumeTwoFactorCallback`, `TWO_FACTOR_CALLBACK_COOKIE`                                                                                                                                                                       |
 | Native sign-in endpoints (Better Auth plugin) | `src/auth/native.ts` ([desktop.md](desktop.md))                                                                                                                                                                                                                                                 |
+| Bans                                          | `src/auth/ban.ts` → `isBanned`, `activeBan`, `userBanned`, `BANNED_MESSAGE` · columns `user.banned`, `ban_reason`, `ban_expires` (Better Auth `additionalFields` in `src/auth/base.ts`) · set in `src/dashboard/users.ts` → `banUser`, `unbanUser` ([dashboard.md](dashboard.md))               |
 | Session lookup for the app                    | `src/auth/session.ts` → `getAppUser`                                                                                                                                                                                                                                                            |
 | Legal consent                                 | `src/auth/legal-consent.ts` → `legalConfig`, `enforceLegalConsent`                                                                                                                                                                                                                              |
 | Rate limiting                                 | `src/services/rate-limit.ts` → `rateLimit` · client IP `src/services/client-ip.ts` → `clientIp`, `forwardedClient` · Better Auth rules in `authOptions` → `rateLimit.customRules`                                                                                                               |
@@ -30,28 +32,24 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
 
 - **Reach Better Auth only through `getAuth()`, resolved per request; types use `Auth`.** It caches one instance per version of the sections it depends on (`signup`, `cache`) and builds a new one on the first call after either changes; running requests finish on the instance they started with ([configuration.md](configuration.md)).
 - **`BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` are boot config.** Changing the secret breaks every session, TOTP secret, backup code and JWKS-signed token; the URL is baked into OAuth redirect URIs and the MCP issuer and audience.
-- **Sign-up mode and legal consent are database-backed and read per request** (`getInstanceConfig().signup.signupDisabled`, `legalConfig()`), so the sign-in page, `/setup`, the invite page and the consent check follow a dashboard edit without a redeploy.
+- **Sign-up mode and legal consent are database-backed and read per request** (`getInstanceConfig().signup.signupDisabled`, `legalConfig()`), so the sign-in page, `/setup`, invite creation, the invite page and the consent check follow a dashboard edit without a redeploy.
 - **Sessions and verification tokens are stored in the database** (`storeSessionInDatabase`, `verification: { storeInDatabase: true }`), so a cache driver change drops only rate-limit counters.
   - Keep `verification.storeInDatabase`: with `secondaryStorage`, `getAuthTables` drops the `verification` table unless it is set, which would move verification, reset and magic-link tokens into the cache driver, where `memory` loses them on restart.
 
 ### Accounts
 
 - **Accounts are created by writing their rows directly with Drizzle**, because `disableSignUp` blocks Better Auth's sign-up, `getAuth().api.signUpEmail()` included.
-  - Both paths in `signup.ts` write `user`, `account` (`providerId: "credential"`, hashed with Better Auth's `hashPassword`), `legal_consent`, the personal workspace and `defaultWorkspaceSlug`.
+  - `createAccount` in `signup.ts` writes `user`, `account` (`providerId: "credential"`, hashed with Better Auth's `hashPassword`), `legal_consent`, the personal workspace and `defaultWorkspaceSlug`; `ownerSignup` and `signUpFromInvite` both call it.
   - The workspace and default slug are written explicitly because `databaseHooks.user.create.after` in `server.ts` fires only on Better Auth's own inserts.
-  - Both paths then call `signIn.email` client-side and land on `/2fa/setup`.
-- **The first account needs `METIS_SETUP_CODE`.** `verifySetupCode` compares sha256 digests with `timingSafeEqual`.
-  - The code is single-use because `/setup` refuses once any `user` row exists (`hasAnyUser`).
-  - It lives only in the operator's environment, so it protects a deployment nobody watches boot.
-- **`/setup` fails shut and says only "not available".** With no env var it 403s; the variable name goes to a server-side `console.warn` only.
-- **When `METIS_OWNER_EMAIL` is set, the first account must use that address.** `/setup` pre-fills it read-only and `signup.first` refuses any other email, so whoever holds the setup code cannot claim the instance under a different owner ([dashboard.md](dashboard.md)).
-- **Every later account comes from a `signup_invite`, which creates an account and grants no membership.** Workspace membership comes from a separate `workspace_invite` ([workspaces.md](workspaces.md)).
-  - Any signed-in user may issue one.
-  - The email comes from the invite row, never the form.
-- **The invite link only ever reaches the invited address.** `sendSignupInvite` returns no URL; when the email cannot be sent it deletes the invite and fails, so nobody else can open a link that creates an already-verified account under that address.
-  - The e2e seed generator creates its member through `createSignupInvite` and `inviteSignup` directly, since the e2e mailer only logs.
-- **The `METIS_OWNER_EMAIL` address can never come from an invite.** `createSignupInvite`, `previewSignupInvite` and `inviteSignup` all refuse it, because ownership is that address and an invite would hand the instance to whoever opened the link.
-  - The owner cannot delete their own account (`assertCanDeleteAccount` in `src/server/routes/user.ts`), so the owner address never becomes free; handing over ownership means changing `METIS_OWNER_EMAIL` first.
+  - Both pages then call `signIn.email` client-side and land on `/2fa/setup`.
+- **`METIS_OWNER_EMAIL` is required and names the one instance owner.** Boot and preflight fail without it, naming the variable (`appConfigSchema` in `src/config/schema.ts`); `bootstrap.sh` will not write an `.env` without it.
+- **The owner account comes only from `/setup`, which needs `METIS_SETUP_CODE`.** `verifySetupCode` compares sha256 digests with `timingSafeEqual`; the code lives only in the operator's environment, so it protects a deployment nobody watches boot.
+  - `/setup` is open exactly while no account has the owner address (`ownerHasAccount`), and only for that address: the page shows it read-only and `signup.first` refuses any other.
+  - Handing over ownership is changing `METIS_OWNER_EMAIL` and restarting; the new owner signs in, or claims the address on `/setup` when it has no account yet. Preflight's `syncOwnerRole` makes the previous owner an Admin ([dashboard.md](dashboard.md)).
+- **`/setup` fails shut and says only "not available".** With no setup code it 403s; the variable name goes to a server-side `console.warn` only.
+- **The owner account can't be deleted, demoted, banned, removed or invited.** `assertCanDeleteAccount` in `src/server/routes/user.ts` refuses deletion, so the owner address never becomes free while it is the owner.
+- **Every other account comes from an invite, or from self sign-up while sign-up is open.** One `invite` table carries account invites and workspace invites alike; the rules are under Invites below.
+  - Self sign-up refuses the owner address (`hooks.before` on `/sign-up/email`, `OWNER_ADDRESS_SETUP_ONLY`), so the owner account only ever comes from `/setup`, and an unverified row can never close `/setup`.
 - **The `signup.*` procedures are public and IP rate-limited** ([orpc.md](orpc.md)).
 - **One rule finds the client IP: the rightmost `X-Forwarded-For` hop that is not in the `proxies` section's trusted list** (`clientIp`), with any `:port` stripped; the signup limits, Better Auth and the audit log all use it.
   - `cf-connecting-ip` counts only when every `X-Forwarded-For` hop is trusted, so Cloudflare's address is believed only when it arrived through a listed proxy; `x-real-ip` is never read, because Caddy passes it through from the caller.
@@ -59,7 +57,42 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
   - Behind Caddy or one appending load balancer the nearest hop is the caller, so nothing needs configuring.
   - The bundled Caddy (`caddy reverse-proxy`, no trusted proxies) replaces `X-Forwarded-For` with whatever connected to it, so behind a CDN the only hop is the edge: listing Cloudflare's ranges lets `cf-connecting-ip` through, and any other CDN's callers share the edge's bucket because no other CDN header is read.
 - **Every account signs in with a password; a seeded account gets its first one through password reset.** Reset owns 0 → 1 passwords and `changePassword` owns 1 → 1′, so `POST /reset-password` stays unguarded.
+
+### Invites
+
+- **An invite is a fixed bundle set by the inviter:** the bound email, an optional workspace and workspace role, and for an account invite an optional instance role. The invitee supplies only name, password and two-factor; nothing on the acceptance page changes the bundle.
+- **`createInvite` is the one creation function**, used by the dashboard Invites page, workspace Members, the Workspace Assistant and MCP, with a `by: AuditActor`. It checks in this order:
+  - the inviter's permission: workspace invites need a workspace owner or admin; account invites need the instance Owner or an Admin, and an Admin role in the bundle needs the Owner (`canGrantInstanceRole`);
+  - the owner address is refused, except a workspace invite once the owner has an account;
+  - an account invite to an address with an account is refused; existing users are invited only into workspaces;
+  - a workspace invite to an address with no account needs open sign-up or an inviter who is instance Owner or Admin, otherwise "Ask the instance owner or an instance admin to invite this person.";
+  - the rate limit, one bucket per inviter and workspace (account invites share one), then the email.
+- **Invite links travel only by email.** When delivery fails the invite is deleted and the inviter gets an error; only the instance Owner, and only from the app (`linkOnFailure`), keeps the invite and is shown the link, audited `invite.link_shown`.
+  - The `noop` mailer counts as a failed delivery, because nothing would ever arrive; `log` counts as sent, since it is a development driver.
+- **An invite is checked again when it creates an account** (`signUpRefusal`, in `previewInvite` and `signUpFromInvite`): an account invite needs a sender who still is instance Owner or Admin and may still grant its role, and a workspace invite needs open sign-up or such a sender.
+  - So invites copied from the old tables, invites sent before sign-up turned invite-only, and invites whose sender lost their role or was deleted stop creating accounts.
+- **Any instance role reads the pending account invites; only the Owner and Admins create or revoke them** (`listAccountInvites` takes the viewer's role, `createInvite` and `revokeAccountInvite` check `canManageAccountInvites`).
+- **One pending invite per address and workspace** (`invite_pending_account_idx`, `invite_pending_workspace_idx`); an expired pending invite is replaced by a new one, a live one refuses it.
+- **Invites are single-use, expire after 7 days and are revocable.** Accepting stamps `accepted_at` and `accepted_user_id`, declining `declined_at`; revoking deletes the row.
+- **The acceptance page (`/invite/accept`) serves every state from `signup.invitePreview`:**
+  - signed in as the invited address: Accept and Decline;
+  - signed in as another address: refused without naming the invited address;
+  - signed out with an account: Sign in to accept, which returns to the page;
+  - no account: the sign-up form with the email locked (`signup.invite`); the account is created verified with its personal workspace, joins the invited workspace (made its default) and takes any instance role in the bundle, then goes to `/2fa/setup`.
 - **Invite tokens are stored as sha256 hashes (`token_hash`, unique)**, because they are looked up by value and randomized GCM ciphertext is not searchable.
+- **The e2e seed generator creates its member with `createAccount` directly**, since the e2e mailer only logs.
+
+### Bans
+
+- **A banned account can't hold a session, so it can't sign in on any path.** `databaseHooks.session.create.before` refuses with `ACCOUNT_BANNED` and `BANNED_MESSAGE`, which covers password, magic link, the 2FA step and native sign-in, since each creates its session through Better Auth.
+  - Only the password form shows the message; requesting a magic link still answers as usual, and opening it ends in Better Auth's plain 403, because its verify endpoint does not catch the hook's error.
+- **Banning deletes the user's sessions** (`internalAdapter.deleteUserSessions`, which clears the secondary storage too); nothing checks the ban per request.
+  - The cookie cache (`session.cookieCache.maxAge` in `authOptions`) keeps a deleted session readable until it expires, so a ban reaches open tabs within that window, and the dashboard's ban dialog and toast say so.
+  - The window is kept short instead of adding a lookup to every request, because sessions can't be recreated once the ban is in place.
+- **A ban also stops what acts as the user without a session:** `resolveMcpClient` returns `banned`, so MCP answers 403 with `BANNED_MESSAGE`, and `resolvePrincipal` blocks every run whose principal is banned.
+  - A `user` run ends `blocked` and stays so after an unban; a `scheduled-send` or `snooze` run is put back with its attempt restored (`runOne` in `src/workflow/tick.ts`), so it goes out once the ban ends.
+- **The owner is never banned.** `banUser` refuses the owner, and `syncOwnerRole` clears any ban on the `METIS_OWNER_EMAIL` account at preflight, so a handover to a banned account does not lock the instance out.
+- **A ban touches nothing else.** Memberships, workspaces, connections and the resources the user linked stay as they are and stay usable by the other members; system workflows run with no principal and are unaffected.
 
 ### Sign-in
 
@@ -122,7 +155,8 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
 
 ## Deliberate limits
 
-- **There is no instance-admin role.** Any signed-in user may invite another account; the owner only observes ([dashboard.md](dashboard.md)).
+- **A ban reaches an open browser tab only when its cookie cache expires**, up to two minutes later, and a workflow run already executing a step finishes that step.
+- **Removing a user deletes the account** through the same deletion path a user takes ([dashboard.md](dashboard.md)).
 - **Magic link is sign-in only**; it never creates an account.
 - **Sign-in alerts are sent for every sign-in, not only from new devices**, and the first sign-in of a new account sends one too. Sessions are long-lived, so sign-ins are rare, and a per-device memory would be a second record of devices beside the session table.
 - **Sign-in alerts need a mailer that delivers**; under `noop` or `log` the switch still saves but nothing arrives (`NOOP_DISABLED_FLOWS`, [configuration.md](configuration.md)).

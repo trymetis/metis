@@ -1,4 +1,4 @@
-import { consoleMailHitsSchema } from "@metis/e2e/lib/console-mail";
+import { consoleMailHitsSchema, INVITE_LINK } from "@metis/e2e/lib/console-mail";
 import { env } from "@metis/e2e/lib/env";
 import { ImapFlow } from "imapflow";
 import { expect, test } from "vitest";
@@ -51,12 +51,12 @@ async function resendMail(address: string) {
   return sent.find((mail) => mail.to.includes(address));
 }
 
-async function invite(rpc: Rpc, workspaceSlug: string, address: string): Promise<string> {
-  const { url } = await rpc<{ url: string }>("workspaces.createInvite", {
+async function invite(rpc: Rpc, workspaceSlug: string, address: string): Promise<string | null> {
+  const created = await rpc<{ link: string | null }>("workspaces.createInvite", {
     workspaceSlug,
     email: address,
   });
-  return url;
+  return created.link;
 }
 
 async function nowhere(address: string): Promise<void> {
@@ -67,15 +67,33 @@ async function nowhere(address: string): Promise<void> {
 }
 
 test(
-  "the mailer moves from log to smtp, console, resend and noop and back to log, and mail lands only where the driver sends it",
+  "the mailer moves from console to smtp, resend, noop and log and back to console, and mail lands only where the driver sends it",
   async () => {
     const { rpc } = await ana();
     const name = uniqueName();
     const address = (driver: string) => `${name}-${driver}@${env.systemMail.domain}`;
+    const consoleDriver = {
+      driver: "console",
+      endpoint: env.consoleMail.url,
+      token: env.consoleMail.token,
+    };
+    const reachesConsole = async (to: string) => {
+      expect(await invite(rpc, workspace.slug, to)).toBeNull();
+      const posted = await until(
+        () => consoleMail(to),
+        (hit) => hit !== undefined,
+        { timeout: 30_000, what: "the invite at the console endpoint" },
+      );
+      expect(posted?.text).toMatch(INVITE_LINK);
+    };
     const workspace = await rpc<{ slug: string }>("workspaces.create", {
       name,
     });
     try {
+      const { driver: starting } = await rpc<{ driver: string }>("dashboard.system.mail");
+      expect(starting).toBe("console");
+      await reachesConsole(address("console"));
+
       await setSection(rpc, "mailer", {
         driver: "smtp",
         mailFrom: "Metis Suite <noreply@notify.demo.trymetis.email>",
@@ -87,28 +105,13 @@ test(
         plain: true,
       });
       allOk(await checkDriver(rpc, "mail"));
-      const smtpUrl = await invite(rpc, workspace.slug, address("smtp"));
+      expect(await invite(rpc, workspace.slug, address("smtp"))).toBeNull();
       const delivered = await until(
         () => systemMailbox(address("smtp")),
         (source) => source !== null,
         { timeout: 60_000, interval: 2_000, what: "the invite over smtp" },
       );
-      expect(delivered?.replace(/=\r?\n/g, "")).toContain(
-        new URL(smtpUrl).searchParams.get("token"),
-      );
-
-      await setSection(rpc, "mailer", {
-        driver: "console",
-        endpoint: env.consoleMail.url,
-        token: env.consoleMail.token,
-      });
-      const consoleUrl = await invite(rpc, workspace.slug, address("console"));
-      const posted = await until(
-        () => consoleMail(address("console")),
-        (hit) => hit !== undefined,
-        { timeout: 30_000, what: "the invite at the console endpoint" },
-      );
-      expect(posted?.text).toContain(consoleUrl);
+      expect(delivered?.replace(/=\r?\n/g, "").replace(/=3D/g, "=")).toMatch(INVITE_LINK);
 
       await setSection(rpc, "mailer", {
         driver: "resend",
@@ -116,25 +119,28 @@ test(
         mailFrom: `Metis Suite <noreply@${env.resend.domain}>`,
       });
       allOk(await checkDriver(rpc, "mail"));
-      const resendUrl = await invite(rpc, workspace.slug, address("resend"));
+      expect(await invite(rpc, workspace.slug, address("resend"))).toBeNull();
       const sent = await until(
         () => resendMail(address("resend")),
         (mail) => mail !== undefined,
         { timeout: 30_000, what: "the invite at Resend" },
       );
-      expect(sent?.text).toContain(resendUrl);
+      expect(sent?.text).toMatch(INVITE_LINK);
 
       await setSection(rpc, "mailer", { driver: "noop" });
-      await invite(rpc, workspace.slug, address("noop"));
+      expect(await invite(rpc, workspace.slug, address("noop"))).toMatch(INVITE_LINK);
       await nowhere(address("noop"));
 
       await setSection(rpc, "mailer", { driver: "log" });
-      await invite(rpc, workspace.slug, address("log"));
+      expect(await invite(rpc, workspace.slug, address("log"))).toBeNull();
       await nowhere(address("log"));
+
+      await setSection(rpc, "mailer", consoleDriver);
+      await reachesConsole(address("console-again"));
     } finally {
       try {
         const { driver } = await rpc<{ driver: string }>("dashboard.system.mail");
-        if (driver !== "log") await setSection(rpc, "mailer", { driver: "log" });
+        if (driver !== "console") await setSection(rpc, "mailer", consoleDriver);
       } finally {
         await rpc("workspaces.delete", {
           workspaceSlug: workspace.slug,

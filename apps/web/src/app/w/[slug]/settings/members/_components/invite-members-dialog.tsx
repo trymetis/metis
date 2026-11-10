@@ -15,6 +15,8 @@ import { useState } from "react";
 import { validateEmailRows } from "@/components/email-rows";
 import {
   EMPTY_INVITE_ROW,
+  InviteLinks,
+  type InviteResults,
   type InviteRow,
   InviteRows,
   sendInvites,
@@ -33,12 +35,14 @@ export function InviteMembersDialog({
   const [rows, setRows] = useState<InviteRow[]>([EMPTY_INVITE_ROW]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [links, setLinks] = useState<InviteResults["links"]>([]);
 
   const filledCount = rows.filter((r) => r.email.trim().length > 0).length;
 
   function reset() {
     setRows([EMPTY_INVITE_ROW]);
     setError(null);
+    setLinks([]);
   }
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
@@ -51,13 +55,16 @@ export function InviteMembersDialog({
 
     setBusy(true);
     try {
-      const failed = await sendInvites(workspaceSlug, invites);
+      const sent = await sendInvites(workspaceSlug, invites);
       await onInvited();
-      if (failed.length > 0) {
-        setRows(failed);
-        setError(`These invites failed: ${failed.map((f) => f.email).join(", ")}. Retry or close.`);
+      setLinks(sent.links);
+      if (sent.failed.length > 0) {
+        setRows(sent.failed);
+        setError(`These invites failed. ${sent.errors.join(" ")} Retry or close.`);
         return;
       }
+      setRows([EMPTY_INVITE_ROW]);
+      if (sent.links.length > 0) return;
       setOpen(false);
       reset();
     } finally {
@@ -91,6 +98,7 @@ export function InviteMembersDialog({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <InviteRows rows={rows} onChange={setRows} disabled={busy} />
           {error && <p className="text-xs text-destructive-text">{error}</p>}
+          <InviteLinks links={links} />
           <Button type="submit" disabled={busy} className="w-full">
             {busy ? (
               <Loader2 className="size-4 animate-spin" />

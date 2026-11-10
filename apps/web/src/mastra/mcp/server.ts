@@ -3,8 +3,9 @@ import { MCPServer } from "@mastra/mcp";
 
 import { decisionEnabled } from "@/config/runtime";
 import type { McpToolPrefs } from "@/mcp/tools";
-import { isMcpToolEnabled, isMcpToolKey, isOwnerOnlyTool } from "@/mcp/tools";
+import { isMcpToolEnabled, isMcpToolKey, mcpToolAllowed } from "@/mcp/tools";
 import { phishingDetectionEnabled } from "@/services/phishing-detection";
+import type { InstanceRole } from "@/types/instance-role";
 
 import type { McpOnlyToolKey, ToolKey } from "../toolkit/keys";
 import {
@@ -86,6 +87,7 @@ import {
   getInstanceOverview,
   getInstancePeople,
   getInstanceStats,
+  getInstanceUsers,
   getInstanceUsage,
   getInstanceWorkspaces,
   getPreflightWarnings,
@@ -148,6 +150,7 @@ const MCP_TOOLS = {
   getInstanceOverview,
   getInstanceConnections,
   getInstancePeople,
+  getInstanceUsers,
   getInstanceWorkspaces,
   getInstanceAutomation,
   getInstanceMcpClients,
@@ -255,7 +258,7 @@ const MCP_TOOLS = {
 
 export function buildMcpServer(
   prefs: McpToolPrefs | null | undefined,
-  viewer: { isOwner: boolean },
+  viewer: { instanceRole: InstanceRole | null },
 ) {
   const phishingDetection = phishingDetectionEnabled();
   const decisionSteps = decisionEnabled("workflowNode");
@@ -269,7 +272,7 @@ export function buildMcpServer(
         return false;
       }
       if (key === "previewDecision" && !decisionSteps) return false;
-      if (isOwnerOnlyTool(key) && !viewer.isOwner) return false;
+      if (!mcpToolAllowed(key, viewer.instanceRole)) return false;
       return isMcpToolEnabled(prefs, key);
     }),
   );

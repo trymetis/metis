@@ -19,7 +19,7 @@ Other serverless hosts, such as Netlify, AWS Lambda, Azure Functions and Google 
 - **OpenSSL**, on your own computer, to generate the secrets.
 - **On Vercel, an external scheduler** for background work (see below).
 
-To run a released version, build from its release tag, `app-v<version>`. Releases are listed on the [releases page](https://github.com/trymetis/metis/releases).
+To run a released version, build from its release tag: `app-v` and the release number, such as `app-v1.2.3`. Releases are listed on the [releases page](https://github.com/trymetis/metis/releases).
 
 If you change the code and let other people use it, set `METIS_SOURCE_URL` to your published source. See [Source code link](/self-hosting/configure/source-code-link).
 
@@ -83,29 +83,31 @@ Read this first, to check that Vercel fits what your users need.
 
     ```bash
     BETTER_AUTH_URL=https://mail.example.com
-    BETTER_AUTH_SECRET=<secret>
-    METIS_ENCRYPTION_KEY=<secret>
+    BETTER_AUTH_SECRET=your-first-generated-secret
+    METIS_ENCRYPTION_KEY=your-second-generated-secret
     METIS_DB_DRIVER=turso
-    DATABASE_URL=<app database URL>
-    DATABASE_AUTH_TOKEN=<token>
-    MASTRA_DATABASE_URL=<AI memory database URL>
-    MASTRA_DATABASE_AUTH_TOKEN=<token>
-    METIS_SETUP_CODE=<setup code>
+    DATABASE_URL=libsql://metis-app-acme.turso.io
+    DATABASE_AUTH_TOKEN=your-app-database-token
+    MASTRA_DATABASE_URL=libsql://metis-memory-acme.turso.io
+    MASTRA_DATABASE_AUTH_TOKEN=your-memory-database-token
+    METIS_SETUP_CODE=K7QM-2HXP-9RTA
     METIS_OWNER_EMAIL=you@example.com
     METIS_WORKFLOW_RUNNER_DRIVER=cron
-    CRON_SECRET=<secret>
+    CRON_SECRET=your-cron-secret
     NODE_OPTIONS=--experimental-require-module
     ```
 
-    Use the URL that `turso db show <database> --url` prints for each
-    database. It starts with `libsql://`.
+    Replace every example value with your own. Use the URL that
+    `turso db show` prints for each database with `--url`, for example
+    `turso db show metis-app --url`. It starts with `libsql://`.
 
     - **`BETTER_AUTH_URL`** is the one address people use, starting with
       `https://`. Use your production domain.
-    - **`METIS_SETUP_CODE`** opens the setup page for the first account.
+    - **`METIS_SETUP_CODE`** opens the setup page for the owner account.
       Without it, the setup page shows **Not available**.
-    - **`METIS_OWNER_EMAIL`** is the email of the owner. Without it, nobody
-      can open the owner dashboard.
+    - **`METIS_OWNER_EMAIL`** is the email of the owner, and it is required.
+      Without it, preflight and the app do not start. Only this address can
+      create the owner account on the setup page.
     - **`METIS_WORKFLOW_RUNNER_DRIVER`** and **`CRON_SECRET`** pick the
       `cron` runner. They are starting values, read only by the first
       preflight, so set them before it runs. To use `bullmq` instead, set
@@ -170,7 +172,7 @@ Read this first, to check that Vercel fits what your users need.
         then run the preflight image of the same version you deploy:
 
         ```bash
-        docker run --rm --env-file production.env ghcr.io/trymetis/metis:<version>-preflight
+        docker run --rm --env-file production.env ghcr.io/trymetis/metis:1.2.3-preflight
         ```
       </Tab>
       <Tab title="In the build command">
@@ -219,7 +221,7 @@ Read this first, to check that Vercel fits what your users need.
 
   </Step>
 
-  <Step title="Create the first account">
+  <Step title="Create the owner account">
     Open `/setup` at your address and use your `METIS_SETUP_CODE`. Continue
     with [First run](/self-hosting/install/first-run).
   </Step>

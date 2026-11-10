@@ -1,9 +1,9 @@
 ---
 title: First run
-description: Use the setup code to create the first account, set up two-factor authentication and open the owner dashboard.
+description: Use the setup code to create the owner account, set up two-factor authentication and open the owner dashboard.
 ---
 
-A new instance has no accounts, and nobody can sign up on their own. You create the first account on the setup page, with the setup code from the install. In this tutorial you create that account, secure it, and open the owner dashboard.
+A new instance has no accounts, and nobody can sign up on their own. You create the owner account on the setup page, with the setup code from the install. Only the address in `METIS_OWNER_EMAIL` can be used there. In this tutorial you create that account, secure it, and open the owner dashboard.
 
 :::note[Deployed on a container platform or Vercel?]
 Use the `METIS_SETUP_CODE` you set, and open the instance at your `BETTER_AUTH_URL`. Where this page says to edit `.env`, change the variable in your platform's settings instead, then redeploy.
@@ -15,7 +15,7 @@ Use the `METIS_SETUP_CODE` you set, and open the instance at your `BETTER_AUTH_U
     `https://mail.example.com/setup`. Without a domain, open
     `http://localhost:3000/setup` through the SSH tunnel from the install.
 
-    The page shows **Set up Metis Suite** and "Create the first account on
+    The page shows **Set up Metis Suite** and "Create the owner account for
     this instance."
 
   </Step>
@@ -24,8 +24,8 @@ Use the `METIS_SETUP_CODE` you set, and open the instance at your `BETTER_AUTH_U
     - **Setup code**: paste the code the bootstrap script printed. It is also
       `METIS_SETUP_CODE` in `/opt/metis-suite/.env`.
     - **Name**: your name.
-    - **Email address**: if you set an owner email during the install, this
-      field is already filled in and cannot be changed.
+    - **Email address**: already filled in with your `METIS_OWNER_EMAIL`.
+      You cannot change it.
     - **Password**: at least 8 characters.
 
     If you set a terms or privacy link, tick the "I agree to the" checkbox.
@@ -43,7 +43,7 @@ Use the `METIS_SETUP_CODE` you set, and open the instance at your `BETTER_AUTH_U
 </Step>
 
   <Step title="Open the owner dashboard">
-    If your email matches the owner email, you are the owner. Click your
+    Your account is the owner account. Click your
     initials at the bottom of the left rail and choose **Dashboard**. Start
     with **System**, where you add the providers people can connect to. Until
     you add one, nobody can connect a mailbox, calendar, drive or address book. See
@@ -62,11 +62,13 @@ Use the `METIS_SETUP_CODE` you set, and open the instance at your `BETTER_AUTH_U
   class="hidden dark:block"
 />
 
-## After the first account
+## After the owner account
 
-The setup page stops working as soon as any account exists. Opening it then takes you to the sign-in page. You can remove `METIS_SETUP_CODE` from `.env` once the first account exists.
+The setup page works only while no account has the owner email. Once the owner account exists, opening it takes you to the sign-in page.
 
-Everyone else joins by invitation. Any signed-in user can invite someone from their account settings; see [Account](/guide/account). To let people create accounts on their own, see [Sign-up](/self-hosting/configure/sign-up).
+You can remove `METIS_SETUP_CODE` from `.env` now. Keep it if you may later hand the instance to an address that has no account yet: the new owner creates their account at `/setup` with the same code. See [Hand the instance to a new owner](/self-hosting/operate/owner-dashboard#hand-the-instance-to-a-new-owner).
+
+Everyone else joins by invitation. As the owner, you invite people from **Dashboard**, **Accounts**, **Invites**, and you can make them an admin or observer there. Workspace owners and admins invite people to their workspaces. See [How invites work](/guide/account/invite-people). To let people create accounts on their own, see [Sign-up](/self-hosting/configure/sign-up).
 
 ## If the setup page does not work
 
@@ -74,10 +76,9 @@ Everyone else joins by invitation. Any signed-in user can invite someone from th
 | ------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
 | **Not available**, "This page isn't available."                           | No setup code is set. Add `METIS_SETUP_CODE` to `.env` and restart the app. |
 | "That setup code isn't valid"                                             | The code does not match. Copy it again from `.env`.                         |
-| "This instance only allows its configured owner email"                    | An owner email is set, and you typed a different one.                       |
 | "Too many requests. Please slow down."                                    | Too many attempts in a short time. Wait a few minutes.                      |
 | "Account created, but sign-in failed. Try signing in from the home page." | The account exists. Sign in from the home page.                             |
 
-:::note[Forgot to set the owner email?]
-Without `METIS_OWNER_EMAIL`, the owner dashboard is turned off for everyone. Add the line `METIS_OWNER_EMAIL=you@example.com` to `.env`, then restart the app with `sudo docker compose --project-directory /opt/metis-suite up -d`.
+:::note[Need a different owner email?]
+`METIS_OWNER_EMAIL` decides which address the setup page accepts. To use another address, change the line in `.env`, for example `METIS_OWNER_EMAIL=you@example.com`, then restart the app with `sudo docker compose --project-directory /opt/metis-suite up -d`.
 :::

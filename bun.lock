@@ -48,8 +48,10 @@
       },
       "devDependencies": {
         "@astrojs/compiler-rs": "^0.5.2",
+        "@metis/e2e": "workspace:*",
         "@playwright/test": "catalog:",
         "astro": "^7.4.2",
+        "otpauth": "catalog:",
         "oxfmt": "catalog:",
         "oxlint": "catalog:",
         "sharp": "catalog:",

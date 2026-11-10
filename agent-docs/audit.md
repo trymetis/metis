@@ -14,7 +14,7 @@ See also [AGENTS.md](../AGENTS.md), [workspaces.md](workspaces.md) (the data exp
 | Writing and reading       | `src/audit/index.ts` → `recordAuditEvent`, `appActor`, `AuditActor`, `listUserAuditEvents`, `listWorkspaceAuditEvents`, `listInstanceAuditEvents`, `exportUserAuditEvents`                                                |
 | Retention                 | `src/audit/prune.ts` → `pruneAuditEvents` · run by the `system:audit-prune` workflow (`src/workflow/builtins/system.ts`) · `METIS_AUDIT_RETENTION_DAYS` in `src/config/schema.ts` → `auditConfigSchema`                   |
 | Procedures                | `src/server/routes/audit.ts` → `audit.mine`, `audit.workspace` · `src/server/routes/dashboard.ts` → `dashboard.audit` (`src/dashboard/stats.ts` → `dashboardAudit`)                                                       |
-| Owner MCP tool            | `getInstanceAuditLog` in `src/mastra/mcp/tools/instance.ts` (body `src/ops/instance.ts` → `instanceAuditLog`)                                                                                                             |
+| Instance MCP tool         | `getInstanceAuditLog` in `src/mastra/mcp/tools/instance.ts` (body `src/ops/instance.ts` → `instanceAuditLog`)                                                                                                             |
 | Sentences                 | `src/audit/format.ts` → `formatAuditEvent` (one sentence per event), `auditPhrase` (its fixed wording, for search) · names looked up in `src/audit/index.ts` → `memberNames`                                              |
 | UI                        | shared list `src/components/audit-event-list.tsx` → `AuditEventList` · `src/app/settings/security/_components/security-activity-section.tsx` · `src/app/w/[slug]/settings/activity/page.tsx` · `src/app/dashboard/audit/` |
 | Export                    | `src/account/export.ts` → `securityActivity` ([workspaces.md](workspaces.md))                                                                                                                                             |
@@ -27,12 +27,14 @@ See also [AGENTS.md](../AGENTS.md), [workspaces.md](workspaces.md) (the data exp
   - Account: two-factor disabled, sign-in alerts turned off ([auth.md](auth.md)), account deleted.
   - MCP: a client added by hand, a CIMD client approved at consent, a disabled client re-enabled, a sensitive tool switched on (`sensitiveToolsTurnedOn` in `src/mcp/tools.ts`).
   - Resources: a grant revoked (`connection.deleted`), a mailbox, calendar, drive or address book deleted or detached from a workspace, for all four kinds alike.
-  - Workspaces: role changes, ownership transfers, member removals, workspace invites sent and revoked, workspace deletion.
-  - Sign-up invites sent and revoked.
+  - Workspaces: role changes, ownership transfers, member removals, workspace deletion.
+  - Invites, account and workspace alike: sent, accepted, declined and revoked, and the Owner being shown a link whose email failed (`invite.*`); a workspace invite's events carry its `workspace_id`.
+  - Instance: an instance role granted or revoked (`instance_role.*`), a user banned or unbanned (`user.banned`, `user.unbanned`) and a user removed (`user.removed`) on the Users page ([dashboard.md](dashboard.md)).
+  - Rows written before the single invite table keep their `workspace_invite.*` and `signup_invite.*` actions, which still read as sentences.
   - Workflows: created, edited, turned on, turned off and deleted (`recordWorkflowEvent` in `src/workflow/index.ts`), with `detail.runsAs` when the person acting is not the one the workflow runs as and `detail.sendPolicy` when it starts with **Before mail is sent**.
   - Instance: an upgrade undone from Dashboard → Updates (`instance.upgrade_undone`), which discards every write since that upgrade ([updater.md](updater.md)).
 - **An event is written after the change succeeds, in the function every caller shares.**
-  - `removeWorkspaceMember`, `revokeWorkspaceInvite` (`src/workspace/admin.ts`), `sendSignupInvite` and `revokeSignupInvite` (`src/auth/signup.ts`), and `createUserWorkflow`, `updateUserWorkflow`, `toggleUserWorkflow` and `deleteUserWorkflow` (`src/workflow/index.ts`) take a `by: AuditActor`, so the app, the Workspace Assistant and MCP write the same event.
+  - `removeWorkspaceMember` (`src/workspace/admin.ts`), `createInvite`, `acceptInvite`, `declineInvite`, `revokeWorkspaceInvite` and `revokeAccountInvite` (`src/invites/index.ts`), `setUserRole`, `banUser`, `unbanUser` and `removeUser` (`src/dashboard/users.ts`), and `signUpFromInvite` (the new account as actor), and `createUserWorkflow`, `updateUserWorkflow`, `toggleUserWorkflow` and `deleteUserWorkflow` (`src/workflow/index.ts`) take a `by: AuditActor`, so the app, the Workspace Assistant and MCP write the same event.
   - The ops layer builds the assistant and MCP actor with `auditedBy` (`src/ops/scope.ts`).
   - An undone upgrade is the exception: restoring the snapshot would erase an event written before it, so `recordUndo` in `src/dashboard/updates.ts` writes it once the restored release first reports the finished undo, keyed by `detail.upgradeId`, with the requester the updater kept (`requested_by`) as actor and no network details.
   - Route-only changes record in their procedure (sign-in alerts in `user.updatePreferences`, only when the stored value goes from on to off); two-factor disable records in `hooks.after` on `/two-factor/disable` in `src/auth/server.ts`, because the client calls Better Auth directly.
@@ -51,9 +53,9 @@ See also [AGENTS.md](../AGENTS.md), [workspaces.md](workspaces.md) (the data exp
 
 - **A user reads every event they did or that targeted them** (`audit.mine`, actor or target is the user), with IP and user agent.
 - **Owners and admins read their workspace's events** (`audit.workspace`, keyed by `workspace_id`), without IP or user agent; members get `FORBIDDEN`.
-- **The instance owner reads every event** (`dashboard.audit`, `ownerSession`), the only place account deletions stay visible; a deleted workspace stays visible there and in the deleter's own feed.
+- **Every instance role reads every event** (`dashboard.audit`, `dashboardSession`), Observers included, with IP and user agent; it is the only place account deletions stay visible, and a deleted workspace stays visible there and in the deleter's own feed.
 - **Events with no workspace never reach a workspace's view**: deleting a resource from account settings and revoking a grant are account-level, even when the resource was linked to workspaces.
-- **The owner MCP tool drops IP and user agent**, so no network detail reaches a model.
+- **The instance MCP tool drops IP and user agent**, so no network detail reaches a model.
 - **The data export carries the user's own events** as `securityActivity`, without row ids or the top-level `mcpClientId`; an MCP event's `detail.clientId` stays, because it names the user's own client ([workspaces.md](workspaces.md)).
 
 ### Search and filter
@@ -87,4 +89,4 @@ See also [AGENTS.md](../AGENTS.md), [workspaces.md](workspaces.md) (the data exp
 - **Search skips `detail` and the user agent.** Role names, sensitive tools and the browser a row shows are not matched.
 - **Search is case-insensitive for ASCII only**, as SQLite `LIKE` is.
 - **No date range filter**; the views page back from the newest event.
-- **The owner MCP tool `getInstanceAuditLog` takes only a cursor** (`auditCursorInputSchema`), so its schema never advertises filters it does not apply.
+- **The instance MCP tool `getInstanceAuditLog` takes only a cursor** (`auditCursorInputSchema`), so its schema never advertises filters it does not apply.

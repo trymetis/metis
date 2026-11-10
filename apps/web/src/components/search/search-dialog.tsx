@@ -288,7 +288,7 @@ export function SearchDialog() {
       clientEntries({
         workspaceSlug,
         ai,
-        isOwner: access.isOwner,
+        hasDashboard: access.hasDashboard,
         isAdmin: access.role === "owner" || access.role === "admin",
         dark: resolvedTheme === "dark",
         saved: saved.map((s) => ({ id: s.id, name: s.name, query: s.query })),
@@ -299,7 +299,16 @@ export function SearchDialog() {
           current: w.slug === workspaceSlug,
         })),
       }),
-    [workspaceSlug, ai, access.isOwner, access.role, resolvedTheme, saved, workspaces, pathname],
+    [
+      workspaceSlug,
+      ai,
+      access.hasDashboard,
+      access.role,
+      resolvedTheme,
+      saved,
+      workspaces,
+      pathname,
+    ],
   );
 
   const trimmed = query.trim();

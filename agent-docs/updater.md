@@ -101,11 +101,11 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [configurati
 
 - **Only images move.** A release that changes `compose.yml` needs `bootstrap.sh` run again, which downloads the compose file ([self-host.md](self-host.md)). The updater image moves only that way too, so a change to the updater reaches an install when bootstrap runs.
 - **One snapshot, one undo.** The snapshot costs a full copy of the sqld volume on the host and a short downtime on every upgrade; older states need the operator's own backups.
-- **An undo is audited only once an owner opens Updates on the restored release**, since nothing else runs `updatesStatus`.
+- **An undo is audited only once an instance role holder opens Updates on the restored release**, since nothing else runs `updatesStatus`.
 - **An undo replays scheduled work that already ran after the upgrade.** The snapshot holds the scheduled sends, snoozes, workflow triggers, events and waits as they were before the upgrade, so the runtime finds them due again on its first tick after the restore ([workflow-runtime.md](workflow-runtime.md)).
   - A scheduled message sent after the upgrade is sent a second time; nothing checks the provider for an earlier send.
   - A scheduled workflow that ran since then runs once more (missed slots collapse into one run), and a snooze whose time passed wakes again.
   - Changes already made at the providers (mail sent, labels, moves) are not reversed. The customer page `apps/docs/content/self-hosting/03-operate/02-upgrade-and-undo.mdx` warns operators.
 - **The worker image is pinned, never pulled or restarted**, because the root stack does not run it ([deployment.md](deployment.md)).
-- **No MCP tool reaches the updater.** The owner's MCP tools cover the stats and System pages only ([mcp.md](mcp.md)).
+- **No MCP tool reaches the updater.** The instance MCP tools cover the stats and System pages only ([mcp.md](mcp.md)).
 - **The Go updater itself has no e2e coverage** (`e2e/E2E_MISSES.md`).

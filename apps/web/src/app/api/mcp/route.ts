@@ -4,6 +4,7 @@ import { requireMcpAuth } from "@better-auth/mcp";
 import { toFetchResponse, toReqRes } from "fetch-to-node";
 import type { JWTPayload } from "jose";
 
+import { BANNED_MESSAGE } from "@/auth/ban";
 import { getAuth } from "@/auth/server";
 import { sectionCached } from "@/config/runtime";
 import type { McpAuthInfo } from "@/mastra/mcp/context";
@@ -37,6 +38,12 @@ const handle = async (request: Request, jwt: JWTPayload) => {
       },
     );
   }
+  if (client === "banned") {
+    return Response.json(
+      { jsonrpc: "2.0", error: { code: -32001, message: BANNED_MESSAGE }, id: null },
+      { status: 403 },
+    );
+  }
   if (!client) {
     return Response.json(
       {
@@ -61,7 +68,7 @@ const handle = async (request: Request, jwt: JWTPayload) => {
 
   touchMcpClient(client.clientId);
   const mcpServer = buildMcpServer(client.capabilities.tools, {
-    isOwner: client.isOwner,
+    instanceRole: client.instanceRole,
   });
 
   const authorization = request.headers.get("authorization") ?? "";
@@ -74,7 +81,8 @@ const handle = async (request: Request, jwt: JWTPayload) => {
     extra: {
       userId: client.userId,
       userName: client.userName,
-      isOwner: client.isOwner,
+      userEmail: client.userEmail,
+      instanceRole: client.instanceRole,
       hiddenWorkspaceIds: client.hiddenWorkspaceIds,
     },
   };

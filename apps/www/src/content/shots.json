@@ -84,7 +84,7 @@
   "screens/mail-ai": null,
   "security/account": [456, 0, 759, 900],
   "security/ai": [484, 120, 759, 209],
-  "security/invites": [456, 23, 759, 254],
+  "security/invites": [456, 23, 759, 581],
   "security/magic-link": [530, 270, 380, 320],
   "security/servers": [456, 0, 759, 900],
   "security/two-factor": [520, 290, 400, 320],

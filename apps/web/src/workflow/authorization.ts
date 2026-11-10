@@ -1,6 +1,7 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
 
+import { userBanned } from "@/auth/ban";
 import type { ResolvedCalendar } from "@/calendar/aggregate";
 import { workspaceCalendarAccounts } from "@/calendar/session";
 import { isMailProvider, resolveConnectionAuth } from "@/connections";
@@ -59,6 +60,9 @@ export async function resolvePrincipal(
   }
   if (!definition.principalUserId) {
     return blocked("This workflow has no execution principal");
+  }
+  if (await userBanned(definition.principalUserId)) {
+    return blocked("The workflow's owner is banned from this instance");
   }
   if (!definition.workspaceId) {
     return {

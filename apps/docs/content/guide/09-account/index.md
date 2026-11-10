@@ -1,6 +1,6 @@
 ---
 title: Your account
-description: Sign in, keep your account secure, choose your privacy settings and invite people.
+description: Sign in, keep your account secure, choose your privacy settings and learn how invites work.
 ---
 
 These pages cover your own Metis Suite account: how you sign in, how you keep it safe, and the choices that follow you into every workspace. Most of what they describe lives under **Settings**, which you open from your user menu (the round button with your initials at the bottom of the left rail).
@@ -12,6 +12,6 @@ These pages cover your own Metis Suite account: how you sign in, how you keep it
 - [Sign-in alerts](/guide/account/sign-in-alerts): get an email each time someone signs in to your account, and turn these emails off or on.
 - [Security activity](/guide/account/security-activity): see the security-relevant changes you made, and the changes other people made to your place in a workspace.
 - [Privacy settings](/guide/account/privacy-settings): remote images, link cleaning and trusted senders.
-- [Invite people to Metis Suite](/guide/account/invite-people): let someone create an account on your instance.
+- [How invites work](/guide/account/invite-people): who can send account and workspace invites, and how to accept, decline or create your account from one.
 - [Export your data](/guide/account/export-your-data): download a file with your preferences, workspaces, labels, workflows, assistant chats and security activity.
 - [Delete your account](/guide/account/delete-your-account): remove your account and what Metis Suite stores for you.

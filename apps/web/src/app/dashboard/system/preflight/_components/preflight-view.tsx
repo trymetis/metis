@@ -6,6 +6,7 @@ import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { useDashboardRole } from "@/components/dashboard/dashboard-role";
 import { Loading } from "@/components/dashboard/system-client";
 import { Count, Note, Section, Sections, ToneBadge } from "@/components/dashboard/system-ui";
 import { acknowledgePreflight, preflightQuery } from "@/store/preflight-store";
@@ -22,6 +23,7 @@ export function PreflightView() {
   const query = useQuery(preflightQuery);
   const data = query.data;
   const acknowledge = acknowledgePreflight;
+  const { canOperate } = useDashboardRole();
   const [acknowledging, setAcknowledging] = useState(false);
 
   const loadError = query.error;
@@ -74,6 +76,8 @@ export function PreflightView() {
               Acknowledged
               {run.acknowledgedBy ? ` by ${run.acknowledgedBy.name}` : ""}
             </ToneBadge>
+          ) : !canOperate ? (
+            <ToneBadge tone="warning">Not acknowledged</ToneBadge>
           ) : (
             <Button
               variant="outline"

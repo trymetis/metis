@@ -1,5 +1,10 @@
 import { isOneOf } from "@/lib/guards";
 import type { McpOnlyToolKey, ToolKey } from "@/mastra/toolkit/keys";
+import {
+  type DashboardRequirement,
+  type InstanceRole,
+  meetsRequirement,
+} from "@/types/instance-role";
 
 export const MCP_TOOL_MANIFEST = [
   {
@@ -45,163 +50,175 @@ export const MCP_TOOL_MANIFEST = [
   {
     key: "listSignupInvites",
     label: "List sign-up invites",
-    description: "List the account invitations you sent",
+    description: "List the pending account invitations (instance owner, admins and observers)",
     group: "Account",
+    instance: "read",
   },
   {
     key: "createSignupInvite",
     label: "Send sign-up invite",
-    description: "Email someone an invitation to create an account",
+    description: "Email someone an invitation to create an account (instance owner and admins)",
     group: "Account",
     sensitive: true,
+    instance: "operate",
   },
   {
     key: "revokeSignupInvite",
     label: "Revoke sign-up invite",
-    description: "Revoke an account invitation that was not accepted yet",
+    description:
+      "Revoke an account invitation that was not accepted yet (instance owner and admins)",
     group: "Account",
     sensitive: true,
+    instance: "operate",
   },
   {
     key: "getInstanceStats",
     label: "Instance totals",
     description: "Count users, workspaces and connected accounts on the server",
-    group: "Instance (owner)",
-    ownerOnly: true,
+    group: "Instance (dashboard)",
+    instance: "read",
   },
   {
     key: "getInstanceUsage",
     label: "AI usage",
     description: "Read AI calls, tokens and cost across the server",
-    group: "Instance (owner)",
-    ownerOnly: true,
+    group: "Instance (dashboard)",
+    instance: "read",
   },
   {
     key: "getInstanceOverview",
     label: "Instance overview",
     description: "Read the server's health, backlog and recent failures",
-    group: "Instance (owner)",
-    ownerOnly: true,
+    group: "Instance (dashboard)",
+    instance: "read",
   },
   {
     key: "getInstanceConnections",
     label: "Instance connections",
     description: "Read connected accounts by provider across the server",
-    group: "Instance (owner)",
-    ownerOnly: true,
+    group: "Instance (dashboard)",
+    instance: "read",
   },
   {
     key: "getInstancePeople",
     label: "Instance people",
-    description: "Read users, two-factor adoption and pending invites",
-    group: "Instance (owner)",
-    ownerOnly: true,
+    description: "Read accounts, two-factor adoption, bans and pending invites",
+    group: "Instance (dashboard)",
+    instance: "read",
+  },
+  {
+    key: "getInstanceUsers",
+    label: "Instance users",
+    description:
+      "List accounts with their role and ban, filtered like Dashboard → Accounts → Users",
+    group: "Instance (dashboard)",
+    instance: "read",
   },
   {
     key: "getInstanceWorkspaces",
     label: "Instance workspaces",
     description: "Read every workspace with its members and resources",
-    group: "Instance (owner)",
-    ownerOnly: true,
+    group: "Instance (dashboard)",
+    instance: "read",
   },
   {
     key: "getInstanceAutomation",
     label: "Instance automation",
     description: "Read the workflow runner's state and recent runs",
-    group: "Instance (owner)",
-    ownerOnly: true,
+    group: "Instance (dashboard)",
+    instance: "read",
   },
   {
     key: "getInstanceMcpClients",
     label: "Instance MCP clients",
     description: "List every MCP client registered on the server",
-    group: "Instance (owner)",
-    ownerOnly: true,
+    group: "Instance (dashboard)",
+    instance: "read",
   },
   {
     key: "getInstanceAuditLog",
     label: "Audit log",
     description: "Read security-relevant changes across the server",
-    group: "Instance (owner)",
-    ownerOnly: true,
+    group: "Instance (dashboard)",
+    instance: "read",
   },
   {
     key: "getSystemOverview",
     label: "System overview",
     description: "Read how every driver and provider is configured",
-    group: "System (owner)",
-    ownerOnly: true,
+    group: "System (dashboard)",
+    instance: "read",
   },
   {
     key: "getSystemInstance",
     label: "Instance settings",
     description: "Read the app URL, sign-up mode, legal links and relay limits",
-    group: "System (owner)",
-    ownerOnly: true,
+    group: "System (dashboard)",
+    instance: "read",
   },
   {
     key: "getSystemLlm",
     label: "LLM settings",
     description: "Read the LLM and decision-model configuration",
-    group: "System (owner)",
-    ownerOnly: true,
+    group: "System (dashboard)",
+    instance: "read",
   },
   {
     key: "getSystemPhishing",
     label: "Phishing settings",
     description: "Read the phishing-detection configuration",
-    group: "System (owner)",
-    ownerOnly: true,
+    group: "System (dashboard)",
+    instance: "read",
   },
   {
     key: "getSystemMail",
     label: "Mail settings",
     description: "Read the transactional mail configuration",
-    group: "System (owner)",
-    ownerOnly: true,
+    group: "System (dashboard)",
+    instance: "read",
   },
   {
     key: "getSystemCache",
     label: "Cache settings",
     description: "Read the cache driver configuration",
-    group: "System (owner)",
-    ownerOnly: true,
+    group: "System (dashboard)",
+    instance: "read",
   },
   {
     key: "getSystemRunner",
     label: "Runner settings",
     description: "Read the workflow runner's configuration and health",
-    group: "System (owner)",
-    ownerOnly: true,
+    group: "System (dashboard)",
+    instance: "read",
   },
   {
     key: "getSystemDatabase",
     label: "Database settings",
     description: "Read the database configuration",
-    group: "System (owner)",
-    ownerOnly: true,
+    group: "System (dashboard)",
+    instance: "read",
   },
   {
     key: "getSystemProvider",
     label: "Provider settings",
     description: "Read one connection provider's configuration",
-    group: "System (owner)",
-    ownerOnly: true,
+    group: "System (dashboard)",
+    instance: "read",
   },
   {
     key: "runSystemCheck",
     label: "Run health check",
     description: "Connect to a driver or provider now and report the result",
-    group: "System (owner)",
-    ownerOnly: true,
+    group: "System (dashboard)",
+    instance: "operate",
     sensitive: true,
   },
   {
     key: "getPreflightWarnings",
     label: "Deploy warnings",
     description: "Read what the last deploy's preflight run warned about",
-    group: "System (owner)",
-    ownerOnly: true,
+    group: "System (dashboard)",
+    instance: "read",
   },
   {
     key: "listMailboxes",
@@ -769,7 +786,7 @@ export const MCP_TOOL_MANIFEST = [
   description: string;
   group: string;
   sensitive?: true;
-  ownerOnly?: true;
+  instance?: DashboardRequirement;
 }[];
 
 type ManifestEntry = (typeof MCP_TOOL_MANIFEST)[number];
@@ -782,16 +799,18 @@ export const MANIFEST_COVERS_EVERY_TOOL: Exclude<RosterKey, McpToolKey> extends 
   ? true
   : ["missing from MCP_TOOL_MANIFEST", Exclude<RosterKey, McpToolKey>] = true;
 
-const OWNER_ONLY = new Set<McpToolKey>(
-  MCP_TOOL_MANIFEST.filter((t) => "ownerOnly" in t).map((t) => t.key),
+const INSTANCE_REQUIREMENTS = new Map<McpToolKey, DashboardRequirement>(
+  MCP_TOOL_MANIFEST.flatMap((t) => ("instance" in t ? [[t.key, t.instance] as const] : [])),
 );
 
-export function isOwnerOnlyTool(key: McpToolKey): boolean {
-  return OWNER_ONLY.has(key);
+export function mcpToolAllowed(key: McpToolKey, instanceRole: InstanceRole | null): boolean {
+  const requirement = INSTANCE_REQUIREMENTS.get(key);
+  if (!requirement) return true;
+  return instanceRole !== null && meetsRequirement(instanceRole, requirement);
 }
 
-export function mcpToolsFor(viewer: { isOwner: boolean }) {
-  return MCP_TOOL_MANIFEST.filter((t) => viewer.isOwner || !isOwnerOnlyTool(t.key));
+export function mcpToolsFor(viewer: { instanceRole: InstanceRole | null }) {
+  return MCP_TOOL_MANIFEST.filter((t) => mcpToolAllowed(t.key, viewer.instanceRole));
 }
 
 export const MCP_TOOL_KEYS = MCP_TOOL_MANIFEST.map((t) => t.key);

@@ -53,12 +53,12 @@ export function SetupInner({
   pinnedEmail,
 }: {
   legal: LegalLinks | null;
-  pinnedEmail: string | undefined;
+  pinnedEmail: string;
 }) {
   const router = useRouter();
   const [setupCode, setSetupCode] = useState("");
   const [name, setName] = useState("");
-  const [email, setEmail] = useState(pinnedEmail ?? "");
+  const email = pinnedEmail;
   const [password, setPassword] = useState("");
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -108,7 +108,7 @@ export function SetupInner({
             Set up Metis Suite
           </h1>
           <p className="mt-1.5 text-sm text-neutral-500">
-            Create the first account on this instance.
+            Create the owner account for this instance.
           </p>
         </div>
 
@@ -139,16 +139,7 @@ export function SetupInner({
           </Field>
 
           <Field label="Email address">
-            <AuthInput
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              autoComplete="email"
-              readOnly={Boolean(pinnedEmail)}
-              disabled={submitting || Boolean(pinnedEmail)}
-              className={pinnedEmail ? "font-mono" : undefined}
-            />
+            <AuthInput type="email" value={email} readOnly disabled className="font-mono" />
           </Field>
 
           <Field label="Password">

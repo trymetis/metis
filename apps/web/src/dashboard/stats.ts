@@ -17,7 +17,8 @@ import {
 } from "drizzle-orm";
 
 import { listInstanceAuditEvents } from "@/audit";
-import { isOwnerEmail } from "@/auth/owner";
+import { activeBan } from "@/auth/ban";
+import { resolveInstanceRole } from "@/auth/instance-role";
 import { config } from "@/config";
 import { getInstanceConfig } from "@/config/runtime";
 import { CONNECTION_PROVIDERS } from "@/connections/types";
@@ -31,20 +32,20 @@ import {
   connection,
   drive,
   driveWorkspace,
+  invite,
   mailbox,
   mailboxWorkspace,
   mcpClient,
   oauthClient,
-  signupInvite,
   user,
   workflow,
   workflowStepRun,
   workflowRun,
   workflowTrigger,
   workspace,
-  workspaceInvite,
   workspaceMember,
 } from "@/db/schema";
+import { pendingInvite } from "@/invites";
 import { isMcpToolEnabled, mcpToolsFor } from "@/mcp/tools";
 import type {
   AuditPageInput,
@@ -53,7 +54,7 @@ import type {
   DashboardConnections,
   DashboardMcp,
   DashboardOverview,
-  DashboardPeople,
+  DashboardAccounts,
   DashboardRunner,
   DashboardRunnerStatus,
   DashboardStats,
@@ -368,36 +369,43 @@ export async function dashboardConnections(): Promise<DashboardConnections> {
 
 const RECENT_USERS = 10;
 
-export async function dashboardPeople(): Promise<DashboardPeople> {
+function unexpiredPendingInvite(now: Date) {
+  return and(pendingInvite(), gte(invite.expiresAt, now));
+}
+
+export async function dashboardAccounts(): Promise<DashboardAccounts> {
   const now = new Date();
 
-  const [[users], [withTwoFactor], [signupPending], [invitePending], recent] = await Promise.all([
-    db.select({ n: count() }).from(user),
-    db.select({ n: count() }).from(user).where(eq(user.twoFactorEnabled, true)),
-    db
-      .select({ n: count() })
-      .from(signupInvite)
-      .where(and(sql`${signupInvite.acceptedAt} is null`, gte(signupInvite.expiresAt, now))),
-    db
-      .select({ n: count() })
-      .from(workspaceInvite)
-      .where(and(sql`${workspaceInvite.acceptedAt} is null`, gte(workspaceInvite.expiresAt, now))),
-    db
-      .select({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        createdAt: user.createdAt,
-        twoFactorEnabled: user.twoFactorEnabled,
-      })
-      .from(user)
-      .orderBy(desc(user.createdAt))
-      .limit(RECENT_USERS),
-  ]);
+  const [[users], [withTwoFactor], [banned], [signupPending], [invitePending], recent] =
+    await Promise.all([
+      db.select({ n: count() }).from(user),
+      db.select({ n: count() }).from(user).where(eq(user.twoFactorEnabled, true)),
+      db.select({ n: count() }).from(user).where(activeBan(now)),
+      db
+        .select({ n: count() })
+        .from(invite)
+        .where(and(unexpiredPendingInvite(now), sql`${invite.workspaceId} is null`)),
+      db
+        .select({ n: count() })
+        .from(invite)
+        .where(and(unexpiredPendingInvite(now), sql`${invite.workspaceId} is not null`)),
+      db
+        .select({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          createdAt: user.createdAt,
+          twoFactorEnabled: user.twoFactorEnabled,
+        })
+        .from(user)
+        .orderBy(desc(user.createdAt))
+        .limit(RECENT_USERS),
+    ]);
 
   return {
     users: users?.n ?? 0,
     withTwoFactor: withTwoFactor?.n ?? 0,
+    banned: banned?.n ?? 0,
     pendingSignupInvites: signupPending?.n ?? 0,
     pendingWorkspaceInvites: invitePending?.n ?? 0,
     recentUsers: recent.map((row) => ({
@@ -679,6 +687,7 @@ export async function dashboardMcp(): Promise<DashboardMcp> {
       lastUsedAt: mcpClient.lastUsedAt,
       hiddenWorkspaceIds: mcpClient.hiddenWorkspaceIds,
       email: user.email,
+      grantedRole: user.role,
       clientDiscoveryId: oauthClient.clientDiscoveryId,
     })
     .from(mcpClient)
@@ -687,7 +696,9 @@ export async function dashboardMcp(): Promise<DashboardMcp> {
     .orderBy(desc(mcpClient.createdAt));
 
   const clients = rows.map((row) => {
-    const tools = mcpToolsFor({ isOwner: isOwnerEmail(row.email) });
+    const tools = mcpToolsFor({
+      instanceRole: resolveInstanceRole(row.email, row.grantedRole),
+    });
     return {
       clientId: row.clientId,
       label: row.label,

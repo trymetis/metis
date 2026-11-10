@@ -32,7 +32,7 @@ export function InstanceView() {
 
       <Section
         title="Accounts"
-        description="Who owns this dashboard, and the code that creates the first account."
+        description="Who owns this dashboard, and the code that creates the owner account."
       >
         <Rows>
           <Row label="Setup code">
@@ -45,18 +45,19 @@ export function InstanceView() {
             )}
           </Row>
           <Row label="Owner">
-            {instance.ownerEmail ? <Mono>{instance.ownerEmail}</Mono> : <NotSet />}
+            <Mono>{instance.ownerEmail}</Mono>
           </Row>
         </Rows>
         {instance.setupCode === "live" && (
           <Note>
-            No account exists yet, so anyone with the setup code can create the first one at /setup.
+            No account has the owner address yet, so anyone with the setup code can create it at
+            /setup.
           </Note>
         )}
         {instance.setupCode === "spent" && (
           <Note>
-            An account exists, so the setup code no longer works. It can be removed from the
-            environment.
+            The owner account exists, so the setup code no longer works. Keep it set if you may hand
+            the instance to an address that has no account yet; that new owner claims it at /setup.
           </Note>
         )}
       </Section>

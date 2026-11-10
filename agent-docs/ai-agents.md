@@ -43,7 +43,7 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [mcp.md](
   - An operation takes already-resolved primitives (an `AgentMailbox`, a `ResolvedCalendar`) plus args and returns JSON.
 - **Every operation's return type is its Zod output schema** (`<op>Output` beside it, typed through `Output<typeof schema>`, `orFailure` for an `{ error }` answer), so a body that drifts from its schema fails the build; shared shapes reuse `src/server/schema.ts`.
   - The schemas are compile-time contracts: no tool passes them as `outputSchema`, so nothing validates or advertises them at run time.
-  - The owner's System views are the exception: `instance.ts` parses them through the dashboard schemas after `withoutSecretHints`.
+  - The instance System views are the exception: `instance.ts` parses them through the dashboard schemas after `withoutSecretHints`.
   - A `createTool` definition is id + description + optional `requireApproval` + a one-line call into it.
   - `ops/workflow.ts` takes the whole `WorkspaceCtx`, because a graph may reference several resources; its tools take no `mailboxId`, except `previewDecision`, which runs an Ask step on one mailbox's inbox.
   - A body that needs a route's mail scope builds it with `mailScopeFor(ctx, mailbox)`; `AgentMailbox` carries `mailboxes` and `isAggregate` for that ([mail.md](mail.md)).
@@ -64,7 +64,7 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [mcp.md](
   - `src/mastra/tools/workspace-tools.ts` carries `satisfies Record<ToolKey, unknown>`.
   - `src/mastra/mcp/server.ts` carries `satisfies Record<ToolKey | McpOnlyToolKey, unknown>`.
   - `MCP_TOOL_MANIFEST` in `src/mcp/tools.ts` carries `satisfies readonly { key: ToolKey | McpOnlyToolKey; … }[]` plus `MANIFEST_COVERS_EVERY_TOOL`, a conditional type that refuses `true` the moment a key has no manifest entry.
-- **`MCP_ONLY_TOOL_KEYS` stay out of the workspace agent**, so it can neither see nor search them: workspace navigation, account tools and owner tools.
+- **`MCP_ONLY_TOOL_KEYS` stay out of the workspace agent**, so it can neither see nor search them: workspace navigation, account tools and instance tools.
 - **The map key is the model-facing tool name** (not `createTool({ id })`), so one roster forces one vocabulary.
 - **Every tool key is a read or a write, never both, and the build checks it.** `READ_TOOL_KEYS` and `WRITE_TOOL_KEYS` partition `ToolKey`; `TOOL_PARTITION_IS_COMPLETE` refuses `true` while a key is missing or on both sides. A new tool is a write until it is listed as a read.
 - **Never rename a tool key.** `searchContacts` kept its key when it moved from mail history to saved contacts (`src/ops/contacts.ts`): it takes no `mailboxId` and searches the visible books of AI-enabled address books. MCP names are on the wire to external clients and are the JSON keys inside `mcp_client.capabilities.tools`, so a rename strands stored prefs.

@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { isOwnerEmail } from "@/auth/owner";
+import { instanceRoleOf } from "@/auth/instance-role";
 import { getAppUser } from "@/auth/session";
 import { AppRail } from "@/components/app-rail";
 import { ConnectServersProvider } from "@/components/connect-servers-context";
@@ -23,7 +23,8 @@ export default async function WorkspaceLayout({ children, params }: LayoutProps<
   if (!appUser.workspaceId) redirect(workspaceRootPath());
 
   const policy = await getWorkspacePolicy(appUser.workspaceId);
-  const isOwner = isOwnerEmail(appUser.user.email);
+  const hasDashboard =
+    (await instanceRoleOf({ id: appUser.userId, email: appUser.user.email })) !== null;
 
   return (
     <WorkspaceScopeProvider workspaceSlug={slug}>
@@ -32,13 +33,13 @@ export default async function WorkspaceLayout({ children, params }: LayoutProps<
           workspaceAi: policy ? workspaceAllowsAi(policy) : false,
           role: appUser.workspaceRole ?? "member",
           userId: appUser.userId,
-          isOwner,
+          hasDashboard,
         }}
       >
         <ConnectServersProvider servers={connectServers()}>
           <MobileAsideProvider>
             <div className="flex h-dvh overflow-hidden bg-background text-foreground">
-              <AppRail user={appUser.user} isOwner={isOwner} source={sourceInfo()} />
+              <AppRail user={appUser.user} hasDashboard={hasDashboard} source={sourceInfo()} />
               <div className="flex min-w-0 flex-1 overflow-hidden">{children}</div>
             </div>
             <WorkspaceSearch />

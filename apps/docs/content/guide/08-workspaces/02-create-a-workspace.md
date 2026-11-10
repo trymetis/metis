@@ -28,13 +28,19 @@ Each invite row has an email field and a role picker.
 - Click **Add another**, or press Enter in a row, to add another row. Click the X on a row to remove it (it is unavailable when only one row is left).
 - You can paste several addresses at once, separated by commas, semicolons, spaces or new lines. Each address gets its own row.
 
-Each person gets an email with a link to join. To accept, the person needs an account on your Metis Suite instance. They can sign in, or create one, and then open the link within 7 days. For more about invites and roles, see [Members and roles](/guide/workspaces/members-and-roles).
+Each person gets an email with a link to join. They open the link within 7 days.
+
+- Someone who has an account signs in and clicks **Accept**.
+- Someone with no account yet creates one straight from the link. This works when your instance has open sign-up, or when you are the instance owner or an instance admin. Otherwise their invite fails with "Ask the instance owner or an instance admin to invite this person."
+
+For more about invites and roles, see [Members and roles](/guide/workspaces/members-and-roles) and [How invites work](/guide/account/invite-people).
 
 ## If something goes wrong
 
 - "Name must be at least 2 characters": type a longer name.
 - "Not a valid email: ..." or "Duplicate email: ...": fix or remove the address the message names.
-- "Workspace created, but these invites failed: ..." means the workspace exists, but some invites were not sent. Click **Retry invites** to try them again, or close the dialog and invite those people later.
+- "Workspace created, but these invites failed." means the workspace exists, but some invites were not sent. The message goes on with each failed address and its reason, such as "carol@example.com: That email already has a pending invite". The failed rows stay in the dialog. Fix them and click **Retry invites**, or close the dialog and invite those people later from the **Members** page.
+- If an invite email could not be sent, no invite is created for that person. If you are the instance owner, the invite is created anyway, and a box shows its link: "The invite email couldn't be sent. As the instance owner you can copy the link and send it yourself; it works only for the invited address." Copy the link and send it to the person yourself.
 
 ## The workspace's web address
 

@@ -432,8 +432,7 @@ export function SignInInner({
 
             {signupDisabled && (
               <p className="mt-4 text-center text-xs text-neutral-500">
-                Accounts are by invitation only. Ask someone who already uses this instance to
-                invite you.
+                Accounts are by invitation only. Ask the instance owner or an admin to invite you.
               </p>
             )}
           </>

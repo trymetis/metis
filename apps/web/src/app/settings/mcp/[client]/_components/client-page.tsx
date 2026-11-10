@@ -123,7 +123,7 @@ export function ClientPage({
         <ClientTools
           clientId={client.clientId}
           tools={client.tools}
-          isOwner={access.isOwner}
+          instanceRole={access.instanceRole}
           onSaved={refresh}
         />
       </Section>

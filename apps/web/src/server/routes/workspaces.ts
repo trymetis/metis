@@ -5,7 +5,6 @@ import sharp from "sharp";
 
 import { appActor, recordAuditEvent } from "@/audit";
 import { verify2FA } from "@/auth/server";
-import { config } from "@/config";
 import {
   listWorkspaceAddressBooks,
   listWorkspaceCalendars,
@@ -14,31 +13,28 @@ import {
 } from "@/connections";
 import { db } from "@/db";
 import { workspace } from "@/db/schema";
+import {
+  createInvite,
+  type InviteRow,
+  listWorkspaceInvites,
+  revokeWorkspaceInvite,
+} from "@/invites";
 import { deleteAssistantThreads } from "@/mastra/memory";
-import { sendWorkspaceInviteEmail } from "@/services/mailer";
 import { rateLimit } from "@/services/rate-limit";
 import type { WorkspaceAiPolicy, WorkspacePhishingDetectionPolicy } from "@/types/workspace";
 import {
   changeMemberRole,
-  createInvite,
   createWorkspace,
   getWorkspaceMember,
   getWorkspacePolicy,
   isAdmin,
   isOwner,
   listMyWorkspaces,
-  listPendingInvites,
   listWorkspaceMembers,
   resolveDefaultWorkspaceSlug,
   transferOwnership,
 } from "@/workspace";
-import {
-  type AdminRefusal,
-  listWorkspaceInvites,
-  removeWorkspaceMember,
-  revokeWorkspaceInvite,
-  setWorkspaceTheme,
-} from "@/workspace/admin";
+import { type AdminRefusal, removeWorkspaceMember, setWorkspaceTheme } from "@/workspace/admin";
 import { platformPolicy } from "@/workspace/policy";
 
 import { appSession } from "../middlewares/app-session";
@@ -296,9 +292,11 @@ export const workspacesRouter = {
       }
 
       const members = await listWorkspaceMembers(context.appUser.workspaceId);
-      const pendingInvites = isAdmin(member.role)
-        ? await listPendingInvites(context.appUser.workspaceId)
-        : [];
+      const invites = await listWorkspaceInvites({
+        workspaceId: context.appUser.workspaceId,
+        actorRole: member.role,
+      });
+      const pendingInvites = "error" in invites ? [] : invites.map(pendingInviteView);
 
       return { members, pendingInvites };
     }),
@@ -406,66 +404,32 @@ export const workspacesRouter = {
         actorRole: context.appUser.workspaceRole,
       });
       if ("error" in invites) refused(invites);
-      return { invites };
+      return { invites: invites.map(pendingInviteView) };
     }),
 
   createInvite: workspaceSession(createInviteInputSchema)
     .output(createInviteOutputSchema)
     .handler(async ({ input, context }) => {
-      const member = await getWorkspaceMember(context.appUser.workspaceId, context.appUser.userId);
-      if (!member || !isAdmin(member.role)) {
-        throw new ORPCError("FORBIDDEN");
-      }
-
-      const rl = await rateLimit(`${context.appUser.workspaceId}:${context.appUser.userId}`, {
-        scope: "invite-send",
-        limit: 10,
-        windowSec: 60 * 60,
-      });
-      if (!rl.ok) {
-        throw new ORPCError("TOO_MANY_REQUESTS", {
-          message: "Too many requests. Please slow down.",
-          data: { retryAfterSec: Math.ceil(rl.resetMs / 1000) },
-        });
-      }
-
-      const invite = await createInvite({
-        workspaceId: context.appUser.workspaceId,
+      const result = await createInvite({
         email: input.email,
-        role: input.role,
-        invitedBy: context.appUser.userId,
+        workspace: { id: context.appUser.workspaceId, role: input.role },
+        instanceRole: null,
+        linkOnFailure: true,
+        inviter: {
+          userId: context.appUser.userId,
+          name: context.appUser.user.name,
+          email: context.appUser.user.email,
+        },
+        by: appActor(context.appUser, context.headers),
       });
-      await recordAuditEvent(appActor(context.appUser, context.headers), {
-        action: "workspace_invite.created",
-        workspaceId: context.appUser.workspaceId,
-        targetLabel: input.email.toLowerCase(),
-        detail: { role: input.role },
-      });
-
-      const [w] = await db
-        .select({ name: workspace.name })
-        .from(workspace)
-        .where(eq(workspace.id, context.appUser.workspaceId))
-        .limit(1);
-
-      const url = `${config.auth.url}/invite/accept?token=${invite.token}`;
-      try {
-        await sendWorkspaceInviteEmail({
-          to: input.email,
-          url,
-          workspaceName: w?.name ?? "Workspace",
-          inviterName: context.appUser.user.name,
-        });
-      } catch (err) {
-        console.error("[invites] failed to send email", err);
-      }
+      if ("error" in result) refused(result);
 
       return {
-        id: invite.id,
-        email: input.email,
-        role: input.role,
-        expiresAt: invite.expiresAt.toISOString(),
-        url,
+        id: result.invite.id,
+        email: result.invite.email,
+        role: result.invite.workspaceRole ?? input.role,
+        expiresAt: result.invite.expiresAt.toISOString(),
+        link: result.link,
       };
     }),
 
@@ -484,8 +448,18 @@ export const workspacesRouter = {
     }),
 };
 
-function refused(result: AdminRefusal): never {
+function refused(result: AdminRefusal | { error: string; forbidden?: true }): never {
   throw new ORPCError(result.forbidden ? "FORBIDDEN" : "BAD_REQUEST", {
     message: result.error,
   });
+}
+
+function pendingInviteView(row: InviteRow) {
+  return {
+    id: row.id,
+    email: row.email,
+    role: row.workspaceRole ?? ("member" as const),
+    expiresAt: row.expiresAt,
+    createdAt: row.createdAt,
+  };
 }

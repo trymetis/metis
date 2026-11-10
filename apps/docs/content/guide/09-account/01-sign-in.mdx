@@ -93,11 +93,11 @@ Typed the wrong address? Click **Use a different email**.
 
 ## Create an account
 
-:::note[Most instances are invite-only]
-By default, a Metis Suite instance does not let people create their own accounts. The sign-in page then says "Accounts are by invitation only. Ask someone who already uses this instance to invite you." See [Invite people to Metis Suite](/guide/account/invite-people).
+:::note[New instances are invite-only]
+By default, a Metis Suite instance does not let people create their own accounts. The sign-in page then says "Accounts are by invitation only. Ask the instance owner or an admin to invite you." You create your account from the invite email instead. See [How invites work](/guide/account/invite-people).
 :::
 
-If the owner of your instance allows anyone to sign up, the sign-in page has two tabs: **Sign in** and **Create account**.
+If your instance allows anyone to sign up, the sign-in page has two tabs: **Sign in** and **Create account**.
 
 1. Click the **Create account** tab.
 2. Enter your **Name**, **Email address** and a **Password** (at least 8 characters).
@@ -111,9 +111,15 @@ If the owner of your instance allows anyone to sign up, the sign-in page has two
 
 If you try to sign in before you verify your email, you see "Verify your email before signing in." Click **Resend verification email** to get a new link. When you see "Verification email sent. Check your inbox.", open the email and click the link.
 
+## If your account is banned
+
+The instance owner or an instance admin can ban an account. While your account is banned, you cannot sign in. Within 2 minutes of the ban, you are signed out everywhere. When you sign in with your password, you see "This account is banned. Ask the instance owner or an admin." You can still ask for a magic link, but opening it does not sign you in.
+
+Some bans end by themselves after a set time. Otherwise, ask your instance owner or an instance admin to lift the ban. Nothing is deleted during the ban. Your workspaces, connected accounts and data stay as they were. Scheduled mail and snoozes you set up are held, and go ahead once the ban ends. Runs of your other workflows that come due during the ban are blocked, and stay blocked after it ends, until someone retries them. See [Cancel and retry runs](/guide/workflows/cancel-and-retry-runs#retry-a-run).
+
 ## Choose where signing in takes you
 
-Signing in always opens your default workspace. At first, that is your personal workspace. You can pick another one.
+Signing in always opens your default workspace. At first, that is your personal workspace. If you created your account from a workspace invite, it is the workspace you were invited to. You can pick another one.
 
 1. Open your user menu and click **Settings**.
 2. Click **Workspaces**. Your default workspace has a **Default** badge.

@@ -1,16 +1,14 @@
 import "server-only";
 import { ORPCError } from "@orpc/server";
-import { and, asc, desc, eq, gt, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, gt } from "drizzle-orm";
 
+import { deleteAccount, sharedWorkspacesBlockMessage } from "@/account/delete";
 import { buildDataExport } from "@/account/export";
 import { appActor, recordAuditEvent } from "@/audit";
 import { isOwnerEmail } from "@/auth/owner";
 import { getAuth, verify2FA } from "@/auth/server";
-import { refreshHasAnyUser } from "@/auth/signup";
-import { getDriver, listUserConnections } from "@/connections";
 import { db } from "@/db";
-import { mailRemoteAllow, session, userPrefs, workspace } from "@/db/schema";
-import { deleteAssistantThreads } from "@/mastra/memory";
+import { mailRemoteAllow, session, userPrefs } from "@/db/schema";
 import { rateLimit } from "@/services/rate-limit";
 import { getWorkspaceBySlug, planAccountDelete, setDefaultWorkspaceSlug } from "@/workspace";
 
@@ -105,17 +103,14 @@ async function assertCanDeleteAccount(
   if (isOwnerEmail(appUser.user.email)) {
     throw new ORPCError("BAD_REQUEST", {
       message:
-        "You're this instance's owner. Make another account the owner first, then come back.",
+        "You're this instance's owner. Point METIS_OWNER_EMAIL at another account first, then come back.",
     });
   }
 
   const plan = await planAccountDelete(appUser.userId);
   if (plan.blocking.length > 0) {
-    const n = plan.blocking.length;
     throw new ORPCError("BAD_REQUEST", {
-      message: `You're the owner of ${n} ${
-        n === 1 ? "workspace" : "workspaces"
-      }. Transfer ownership in Settings → Workspaces, then come back.`,
+      message: sharedWorkspacesBlockMessage(plan.blocking.length, "you"),
     });
   }
 
@@ -329,41 +324,11 @@ export const userRouter = {
         });
       }
 
-      const connections = await listUserConnections(appUser.userId);
-      await Promise.all(
-        connections.map(async (account) => {
-          try {
-            await getDriver(account.provider).revoke?.({
-              accessToken: account.accessToken,
-              refreshToken: account.refreshToken,
-            });
-          } catch (err) {
-            console.error("[user] token revoke failed on delete", err);
-          }
-        }),
-      );
-
-      if (plan.soleOwnedWorkspaceIds.length > 0) {
-        await db.delete(workspace).where(inArray(workspace.id, plan.soleOwnedWorkspaceIds));
-      }
-
-      const ctx = await getAuth().$context;
-      await ctx.internalAdapter.deleteUser(appUser.userId);
-      await refreshHasAnyUser();
+      const deleted = await deleteAccount(appUser.userId, plan);
       await recordAuditEvent(appActor(appUser, context.headers), {
         action: "account.deleted",
-        detail: {
-          workspacesDeleted: plan.soleOwnedWorkspaceIds.length,
-          accountsRevoked: connections.length,
-        },
+        detail: deleted,
       });
-
-      await deleteAssistantThreads({ resourceId: appUser.userId });
-      await Promise.all(
-        plan.soleOwnedWorkspaceIds.map((workspaceId) =>
-          deleteAssistantThreads({ metadata: { workspaceId } }),
-        ),
-      );
 
       return { success: true as const };
     }),

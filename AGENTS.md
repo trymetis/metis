@@ -64,6 +64,7 @@
 - **Tokens and credentials are sealed with `encryptedText`; anything not sealed `v1` is rejected** ([connections.md](agent-docs/connections.md)).
 - **The operator defines servers; users bring only their own login.** The server only connects to hosts a server entry names ([servers.md](agent-docs/servers.md)).
 - **Two config objects, never merged: the boot config `config` and the instance config `getInstanceConfig()`.** A setting that may change at runtime is read through the snapshot per use, never captured at module load ([configuration.md](agent-docs/configuration.md)).
+- **Instance roles (owner, admin, observer) run the server; workspace roles work with a workspace's data; neither reaches the other** ([dashboard.md](agent-docs/dashboard.md)).
 - **2FA is required everywhere past sign-in**; `src/proxy.ts` and `appSession` enforce it, because a session exists before 2FA does ([auth.md](agent-docs/auth.md)).
 - **A security-relevant change writes an audit event with `recordAuditEvent` in the function every caller shares; no copy calls the log tamper-proof** ([audit.md](agent-docs/audit.md)).
 - **There is one background runtime, `runWorkflowTick()`**; web requests only queue work, and the database owns all workflow state ([workflow-runtime.md](agent-docs/workflow-runtime.md)).
@@ -81,7 +82,7 @@
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | [configuration.md](agent-docs/configuration.md)       | boot config, the stored instance config and its snapshot, environment variables, the config file, driver notes      |
 | [orpc.md](agent-docs/orpc.md)                         | where oRPC procedures live, guards, errors, per-namespace rules                                                     |
-| [auth.md](agent-docs/auth.md)                         | account creation, sign-in, 2FA, invite tokens, rate limiting, regenerating the Better Auth schema                   |
+| [auth.md](agent-docs/auth.md)                         | the owner account, invites, sign-in, 2FA, rate limiting, regenerating the Better Auth schema                        |
 | [audit.md](agent-docs/audit.md)                       | the audit log: recorded events, who reads which slice, retention, what it may be claimed to prove                   |
 | [connections.md](agent-docs/connections.md)           | the grant, encryption at rest, connecting, scopes, `connectServers`, quarantine, token refresh, revoke              |
 | [workspaces.md](agent-docs/workspaces.md)             | workspaces, resource links, membership, data scopes, user prefs, AI and phishing policy, the data export            |
@@ -102,7 +103,7 @@
 | [workflow-runtime.md](agent-docs/workflow-runtime.md) | `runWorkflowTick()`, the three transports, claims, draining, tick budget, what each driver needs                    |
 | [workflow-graph.md](agent-docs/workflow-graph.md)     | workflow tables, graphs and expressions, the step registry, triggers and feeds, inbound, waits, AI steps, built-ins |
 | [workflow-runs.md](agent-docs/workflow-runs.md)       | cancel, resume, approvals, unconfirmed-send reconciliation, retention, run visibility and history                   |
-| [dashboard.md](agent-docs/dashboard.md)               | the owner dashboard, config editing, deploy checks                                                                  |
+| [dashboard.md](agent-docs/dashboard.md)               | instance roles, the dashboard and its Accounts section, bans, config editing, deploy checks                         |
 | [ui.md](agent-docs/ui.md)                             | `@metis/ui`, shadcn rules, theme and brands, the mail shell, the source link, brand marks                           |
 | [desktop.md](agent-docs/desktop.md)                   | the Electron shell and the `native` sign-in protocol                                                                |
 | [mobile.md](agent-docs/mobile.md)                     | the Expo shell                                                                                                      |

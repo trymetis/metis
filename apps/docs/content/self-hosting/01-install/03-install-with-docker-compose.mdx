@@ -43,21 +43,26 @@ This page assumes your two databases are hosted outside the stack, on [Turso](ht
 
     ```bash
     BETTER_AUTH_URL=http://localhost:3000
-    BETTER_AUTH_SECRET=<secret>
-    METIS_ENCRYPTION_KEY=<secret>
-    METIS_DRIVE_RELAY_SECRET=<secret>
+    BETTER_AUTH_SECRET=your-first-generated-secret
+    METIS_ENCRYPTION_KEY=your-second-generated-secret
+    METIS_DRIVE_RELAY_SECRET=your-third-generated-secret
     METIS_DB_DRIVER=turso
-    DATABASE_URL=<app database URL>
-    DATABASE_AUTH_TOKEN=<token>
-    MASTRA_DATABASE_URL=<AI memory database URL>
-    MASTRA_DATABASE_AUTH_TOKEN=<token>
-    METIS_SETUP_CODE=<setup code>
+    DATABASE_URL=libsql://metis-app-acme.turso.io
+    DATABASE_AUTH_TOKEN=your-app-database-token
+    MASTRA_DATABASE_URL=libsql://metis-memory-acme.turso.io
+    MASTRA_DATABASE_AUTH_TOKEN=your-memory-database-token
+    METIS_SETUP_CODE=K7QM-2HXP-9RTA
     METIS_OWNER_EMAIL=you@example.com
     ```
 
-    Use the URL that `turso db show <database> --url` prints for each
-    database. It starts with `libsql://`. To create the two Turso databases
-    and their tokens, see
+    Replace every example value with your own. `METIS_OWNER_EMAIL` is
+    required: it is the email of the instance owner, and only this address
+    can create the owner account on the setup page. Without it, preflight
+    and the app do not start.
+
+    Use the URL that `turso db show` prints for each database with
+    `--url`, for example `turso db show metis-app --url`. It starts with
+    `libsql://`. To create the two Turso databases and their tokens, see
     [Create the databases on Turso](/self-hosting/reference/environment-variables#create-the-databases-on-turso).
 
     For your own sqld server, set `METIS_DB_DRIVER=sqld` and use its

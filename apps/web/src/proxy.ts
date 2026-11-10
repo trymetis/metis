@@ -1,8 +1,8 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
 
+import { instanceRoleOf } from "@/auth/instance-role";
 import { NATIVE_TICKET_PARAM } from "@/auth/native";
-import { isOwnerEmail } from "@/auth/owner";
 import { getAuth } from "@/auth/server";
 import {
   sanitizeCallbackPath,
@@ -58,8 +58,8 @@ async function readSession(request: NextRequest) {
 
 async function guardDashboard(request: NextRequest) {
   const session = await readSession(request);
-  if (!isOwnerEmail(session?.user.email)) return notFound(request);
-  if (!session?.user.twoFactorEnabled) return twoFactorRequired(request);
+  if (!session || !(await instanceRoleOf(session.user))) return notFound(request);
+  if (!session.user.twoFactorEnabled) return twoFactorRequired(request);
 
   return NextResponse.next();
 }

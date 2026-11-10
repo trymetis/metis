@@ -39,6 +39,14 @@
     "steps": [{ "waitFor": "button:has-text('Send reset link')" }]
   },
   {
+    "name": "account/invite-sign-up",
+    "viewport": { "width": 800, "height": 700 },
+    "path": "{invite}",
+    "signedOut": true,
+    "invite": { "email": "jo@demo.trymetis.email" },
+    "steps": [{ "waitFor": "role=heading[name=\"Create your account\"]" }]
+  },
+  {
     "name": "account/workspaces",
     "viewport": { "width": 1060, "height": 540 },
     "path": "/settings/workspaces",
@@ -107,12 +115,6 @@
     "viewport": { "width": 1060, "height": 540 },
     "path": "/settings/privacy",
     "steps": [{ "waitFor": "main :text-is('Clean tracking from links')" }]
-  },
-  {
-    "name": "account/invites",
-    "viewport": { "width": 1060, "height": 540 },
-    "path": "/settings/invites",
-    "steps": [{ "waitFor": "main h2:has-text('Invite someone')" }]
   },
   {
     "name": "account/two-factor-code",

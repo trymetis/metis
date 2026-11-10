@@ -46,10 +46,14 @@ export function authOptions(deps: AuthDeps) {
     user: {
       additionalFields: {
         defaultWorkspaceSlug: { type: "string", input: false, required: false },
+        role: { type: "string", input: false, required: true, defaultValue: "user" },
+        banned: { type: "boolean", input: false, required: true, defaultValue: false },
+        banReason: { type: "string", input: false, required: false },
+        banExpires: { type: "date", input: false, required: false },
       },
     },
     session: {
-      cookieCache: { enabled: true, maxAge: 5 * 60 },
+      cookieCache: { enabled: true, maxAge: 2 * 60 },
       storeSessionInDatabase: true,
     },
     verification: { storeInDatabase: true },

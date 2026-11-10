@@ -73,7 +73,7 @@ See also [AGENTS.md](../AGENTS.md), [updater.md](updater.md), [self-host.md](sel
   - `/api/livez` answers 200 while the process serves requests.
   - `/api/readyz` answers 200 only when `config` resolved and `select 1` succeeds on both the app and Mastra connections within `PROBE_TIMEOUT_MS`; otherwise 503.
   - The readiness failure reason goes to the log once per distinct error (`[readyz]`).
-  - A verbose form sits behind `ownerSession`.
+  - A verbose form sits behind `dashboardSession`.
 
 ### Build traps
 
@@ -126,10 +126,10 @@ See also [AGENTS.md](../AGENTS.md), [updater.md](updater.md), [self-host.md](sel
   - checks the decision model when a decision feature is on;
   - runs `backfillServerIds` and `reconcileQuarantine` ([connections.md](connections.md));
   - records every warning for the dashboard's Deploy checks ([dashboard.md](dashboard.md)).
-  - It warns on a failed probe and exits non-zero only when the run itself fails (a failed or unknown migration, a database error), so one bad server never blocks a deploy.
+  - It warns on a failed probe and exits non-zero only when the run itself fails (invalid boot config such as a missing `METIS_OWNER_EMAIL`, a failed or unknown migration, a database error), so one bad server never blocks a deploy.
 - **Profiles from the `.env`** (`compose_profiles`): `sqld` when `METIS_DB_DRIVER=sqld` and `DATABASE_URL=http://app.sqld:8080`; `proxy` (`caddy`) when `METIS_DOMAIN` is set.
   - Bootstrap writes `METIS_DB_DRIVER=sqld` with the two namespace URLs unless `turso` is exported; `turso`, or `sqld` at an external URL, leaves the stack's sqld off.
-- **Bootstrap resolves only the env-only variables** (domain, auth URL and secret, encryption key, database variables, relay secret, setup code, owner), generating or prompting where needed.
+- **Bootstrap resolves only the env-only variables** (domain, auth URL and secret, encryption key, database variables, relay secret, setup code, owner), generating or prompting where needed; it stops without an owner email, which it never generates.
   - Every variable in `PASSTHROUGH_VARS` is copied into `.env` only when it is exported, so the first seed uses it ([configuration.md](configuration.md)).
 - **Namespaces.** With the `sqld` profile, `deploy_stack` runs `create_sqld_namespaces` first: `compose up -d --wait sqld`, then `POST /v1/namespaces/<ns>/create` on the admin port for `app` and `mastra`. A response saying `already exists` counts as success, so redeploys are idempotent.
 - **`bootstrap.sh domain <host>`** writes `METIS_DOMAIN` and `BETTER_AUTH_URL=https://<host>` and redeploys. Caddy obtains the certificate on the first request, so ports 80 and 443 must be reachable.

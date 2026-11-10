@@ -8,7 +8,6 @@ import {
   HardDrive,
   Link2,
   Mail,
-  MailPlus,
   Plug,
   ShieldCheck,
   UserRound,
@@ -33,7 +32,6 @@ const SETTINGS_NAV = [
   { href: "/settings/drives", label: "Drives", icon: HardDrive },
   { href: "/settings/address-books", label: "Address books", icon: BookUser },
   { href: "/settings/mcp", label: "MCP clients", icon: Plug, ai: true },
-  { href: "/settings/invites", label: "Invites", icon: MailPlus },
   { href: "/settings/security", label: "Security", icon: ShieldCheck },
 ] as const;
 

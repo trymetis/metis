@@ -41,13 +41,13 @@ See also [AGENTS.md](../AGENTS.md), [servers.md](servers.md), [database.md](data
   - the database variables (`METIS_DB_DRIVER`, `DATABASE_*`, `MASTRA_DATABASE_*`);
   - `METIS_ENCRYPTION_KEY`, which seals the stored config's secrets;
   - `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`: sessions, TOTP secrets, JWKS, OAuth redirect URIs and the MCP issuer depend on them;
-  - `METIS_OWNER_EMAIL`, never configurable from the dashboard it protects, and `METIS_SETUP_CODE`, used before any dashboard exists;
+  - `METIS_OWNER_EMAIL`, required and never configurable from the dashboard it protects, and `METIS_SETUP_CODE`, used before any dashboard exists ([auth.md](auth.md));
   - `METIS_DRIVE_RELAY_SECRET`: every relay signing key derives from it and the relay endpoint trusts the signature alone, so a dashboard-set value would let an owner forge relay URLs for any user's drive ([drive.md](drive.md));
   - `METIS_SOURCE_URL`: it describes the code the process runs, which changes only with a restart, and pages before sign-in need it ([ui.md](ui.md));
   - `METIS_UPDATER_SOCKET`: a dashboard-editable path could point the app at any socket on its filesystem ([updater.md](updater.md));
   - `METIS_AUDIT_RETENTION_DAYS`: a dashboard-editable retention would let a leaked owner session erase the audit log ([audit.md](audit.md)).
 - **Instance config, seeded once:** every section in `CONFIG_SECTIONS`. `SECTION_ENV_VARS` maps each to the variables that can seed it.
-- **Every seed is optional, with a default**, so a process needs only the database variables, `METIS_ENCRYPTION_KEY`, `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`. The defaults live on the section schemas, so a stored row and the environment share them.
+- **Every seed is optional, with a default**, so a process needs only the database variables, `METIS_ENCRYPTION_KEY`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` and `METIS_OWNER_EMAIL`. The defaults live on the section schemas, so a stored row and the environment share them.
 
 ### Sources and validation
 

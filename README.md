@@ -102,7 +102,7 @@ bun install
 cp apps/web/.env.example apps/web/.env.local
 ```
 
-In `apps/web/.env.local`, fill `BETTER_AUTH_SECRET` and `METIS_ENCRYPTION_KEY` with the output of `openssl rand -base64 32`, and set `METIS_SETUP_CODE` (plus `METIS_OWNER_EMAIL` if you want the owner dashboard). Then:
+In `apps/web/.env.local`, fill `BETTER_AUTH_SECRET` and `METIS_ENCRYPTION_KEY` with the output of `openssl rand -base64 32`, set `METIS_OWNER_EMAIL` to your email (required: it names the instance owner) and set `METIS_SETUP_CODE`. Then:
 
 ```bash
 bun run db:migrate

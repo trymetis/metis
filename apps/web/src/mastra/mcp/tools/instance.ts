@@ -11,18 +11,29 @@ import {
   dashboardSystemProviderInputSchema,
   dashboardUsageInputSchema,
   systemDriverSchema,
+  dashboardUsersInputSchema,
 } from "@/server/schema";
+import { type DashboardRequirement, meetsRequirement } from "@/types/instance-role";
 
 import { mcpAccountFromCall } from "../context";
 
-function requireOwner(requestContext: RequestContext | undefined): void {
-  if (!mcpAccountFromCall(requestContext).isOwner) {
-    throw new ToolRefusal("Only the instance owner can read instance stats.");
+function requireInstance(
+  requestContext: RequestContext | undefined,
+  requirement: DashboardRequirement,
+): void {
+  const role = mcpAccountFromCall(requestContext).instanceRole;
+  if (!role) {
+    throw new ToolRefusal(
+      "Only the instance owner, instance admins and observers can read instance stats.",
+    );
+  }
+  if (!meetsRequirement(role, requirement)) {
+    throw new ToolRefusal("Observers can only read the instance, not run checks.");
   }
 }
 
 const OWNER_NOTE =
-  "Instance-wide and owner only: it covers every user and workspace on this Metis Suite server, not one workspace.";
+  "Instance-wide and for the instance owner, admins and observers only: it covers every user and workspace on this Metis Suite server, not one workspace.";
 
 export const getInstanceStats = createTool({
   id: "getInstanceStats",
@@ -30,7 +41,7 @@ export const getInstanceStats = createTool({
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.instanceStats();
     }),
 });
@@ -41,7 +52,7 @@ export const getInstanceUsage = createTool({
   inputSchema: dashboardUsageInputSchema,
   execute: async ({ range }, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.instanceUsage(range);
     }),
 });
@@ -52,7 +63,7 @@ export const getInstanceOverview = createTool({
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.instanceOverview();
     }),
 });
@@ -63,19 +74,30 @@ export const getInstanceConnections = createTool({
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.instanceConnections();
     }),
 });
 
 export const getInstancePeople = createTool({
   id: "getInstancePeople",
-  description: `Read the people on this server — user counts, two-factor adoption, pending invites and recent sign-ups. ${OWNER_NOTE}`,
+  description: `Read the accounts on this server — user counts, two-factor adoption, banned accounts, pending invites and recent sign-ups. ${OWNER_NOTE}`,
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.instancePeople();
+    }),
+});
+
+export const getInstanceUsers = createTool({
+  id: "getInstanceUsers",
+  description: `List the accounts on this server with their role (owner, admin, observer or user), whether and until when each is banned, when it was created, its last sign-in, whether two-factor is on and how many workspaces it owns. Filter by a name or email search, role, status (active or banned) and two-factor. Read-only: changing roles, banning and removing users happen in the dashboard. Pending account invites are listed by listSignupInvites. ${OWNER_NOTE}`,
+  inputSchema: dashboardUsersInputSchema,
+  execute: async (input, { requestContext }) =>
+    withToolErrors(async () => {
+      requireInstance(requestContext, "read");
+      return instance.instanceUsers(input);
     }),
 });
 
@@ -85,7 +107,7 @@ export const getInstanceWorkspaces = createTool({
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.instanceWorkspaces();
     }),
 });
@@ -96,7 +118,7 @@ export const getInstanceAutomation = createTool({
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.instanceAutomation();
     }),
 });
@@ -107,7 +129,7 @@ export const getInstanceMcpClients = createTool({
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.instanceMcpClients();
     }),
 });
@@ -118,7 +140,7 @@ export const getInstanceAuditLog = createTool({
   inputSchema: auditCursorInputSchema,
   execute: async ({ cursor }, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.instanceAuditLog(cursor);
     }),
 });
@@ -131,7 +153,7 @@ export const getSystemOverview = createTool({
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.systemOverviewView();
     }),
 });
@@ -142,7 +164,7 @@ export const getSystemInstance = createTool({
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.systemInstanceView();
     }),
 });
@@ -153,7 +175,7 @@ export const getSystemLlm = createTool({
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.systemLlmView();
     }),
 });
@@ -164,7 +186,7 @@ export const getSystemPhishing = createTool({
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.systemPhishingView();
     }),
 });
@@ -175,7 +197,7 @@ export const getSystemMail = createTool({
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.systemMailView();
     }),
 });
@@ -186,7 +208,7 @@ export const getSystemCache = createTool({
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.systemCacheView();
     }),
 });
@@ -197,7 +219,7 @@ export const getSystemRunner = createTool({
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.systemRunnerView();
     }),
 });
@@ -208,7 +230,7 @@ export const getSystemDatabase = createTool({
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.systemDatabaseView();
     }),
 });
@@ -219,7 +241,7 @@ export const getSystemProvider = createTool({
   inputSchema: dashboardSystemProviderInputSchema,
   execute: async ({ provider }, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.systemProviderView(provider);
     }),
 });
@@ -237,7 +259,7 @@ export const runSystemCheck = createTool({
   }),
   execute: async ({ driver, provider }, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "operate");
       if (driver && !provider) {
         return instance.systemCheck({ kind: "driver", driver });
       }
@@ -254,7 +276,7 @@ export const getPreflightWarnings = createTool({
   inputSchema: z.object({}),
   execute: async (_input, { requestContext }) =>
     withToolErrors(async () => {
-      requireOwner(requestContext);
+      requireInstance(requestContext, "read");
       return instance.preflightWarningsView();
     }),
 });

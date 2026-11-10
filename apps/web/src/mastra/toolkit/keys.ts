@@ -215,6 +215,7 @@ export const MCP_ONLY_TOOL_KEYS = [
   "getInstanceOverview",
   "getInstanceConnections",
   "getInstancePeople",
+  "getInstanceUsers",
   "getInstanceWorkspaces",
   "getInstanceAutomation",
   "getInstanceMcpClients",

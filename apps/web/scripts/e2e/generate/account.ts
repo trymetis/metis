@@ -1,9 +1,13 @@
 import { env } from "@metis/e2e/lib/env";
 import * as OTPAuth from "otpauth";
 
-import { recordAuditEvent } from "../../../src/audit";
 import { getAuth } from "../../../src/auth/server";
-import { createSignupInvite, firstUserSignup, inviteSignup } from "../../../src/auth/signup";
+import {
+  createAccount as createAccountRows,
+  ownerSignup,
+  refreshHasAnyUser,
+} from "../../../src/auth/signup";
+import { db } from "../../../src/db";
 import { getWorkspaceBySlug } from "../../../src/workspace";
 
 export interface Account {
@@ -67,24 +71,18 @@ async function accountFor(
 export async function createAccount(): Promise<Account> {
   const { name, email, password } = env.user;
 
-  const created = await firstUserSignup({ name, email, password });
+  const created = await ownerSignup({ name, email, password });
   if ("error" in created) throw new Error(created.error);
   console.log(`[generate] account ${email} -> /w/${created.workspaceSlug}`);
 
   return accountFor(env.user, created);
 }
 
-export async function createMember(owner: Account): Promise<Account> {
+export async function createMember(): Promise<Account> {
   const { name, email, password } = env.member;
 
-  const invite = await createSignupInvite({ email, invitedBy: owner.userId });
-  if ("error" in invite) throw new Error(invite.error);
-  await recordAuditEvent(
-    { userId: owner.userId, email: owner.email, via: "app" },
-    { action: "signup_invite.created", targetLabel: email.toLowerCase() },
-  );
-  const created = await inviteSignup({ token: invite.token, name, password });
-  if ("error" in created) throw new Error(created.error);
+  const created = await db.transaction((tx) => createAccountRows(tx, { email, name, password }));
+  await refreshHasAnyUser();
   console.log(`[generate] member ${email} -> /w/${created.workspaceSlug}`);
 
   return accountFor(env.member, created);

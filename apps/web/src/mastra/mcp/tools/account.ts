@@ -9,6 +9,7 @@ import {
   createSignupInviteInputSchema,
   createWorkspaceInputSchema,
   revokeSignupInviteInputSchema,
+  dashboardInvitesInputSchema,
 } from "@/server/schema";
 
 import { mcpAccountFromCall, mcpVisibleWorkspaces, mcpWorkspaceFromCall } from "../context";
@@ -90,16 +91,18 @@ export const attachResource = createTool({
 export const listSignupInvites = createTool({
   id: "listSignupInvites",
   description:
-    "List the invitations you sent for people to create a Metis Suite account, with whether each was accepted.",
-  inputSchema: z.object({}),
-  execute: async (_input, { requestContext }) =>
-    withToolErrors(async () => account.listSignupInvites(mcpAccountFromCall(requestContext))),
+    "List the pending invitations for people to create a Metis Suite account on this server, with the instance role each gives, who sent it and whether it expired. Filter by an email search, role (admin, observer or none) and status (pending or expired). The instance owner, admins and observers can use it.",
+  inputSchema: dashboardInvitesInputSchema,
+  execute: async (input, { requestContext }) =>
+    withToolErrors(async () =>
+      account.listSignupInvites(mcpAccountFromCall(requestContext), input),
+    ),
 });
 
 export const createSignupInvite = createTool({
   id: "createSignupInvite",
   description:
-    "Invite someone to create a Metis Suite account on this server. It emails them a sign-up link that expires in 7 days.",
+    "Invite someone to create a Metis Suite account on this server. It emails them a sign-up link that expires in 7 days. Only the instance owner and instance admins can use it.",
   inputSchema: createSignupInviteInputSchema,
   execute: async ({ email }, { requestContext }) =>
     withToolErrors(async () =>
@@ -110,7 +113,7 @@ export const createSignupInvite = createTool({
 export const revokeSignupInvite = createTool({
   id: "revokeSignupInvite",
   description:
-    "Revoke a sign-up invitation you sent that has not been accepted yet. Get the inviteId from listSignupInvites.",
+    "Revoke a pending sign-up invitation. Get the inviteId from listSignupInvites. Only the instance owner and instance admins can use it.",
   inputSchema: revokeSignupInviteInputSchema,
   execute: async ({ inviteId }, { requestContext }) =>
     withToolErrors(async () =>

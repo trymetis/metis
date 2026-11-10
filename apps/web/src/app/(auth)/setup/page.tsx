@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 
 import { legalConfig } from "@/auth/legal-consent";
-import { hasAnyUser } from "@/auth/signup";
+import { ownerEmail } from "@/auth/owner";
+import { ownerHasAccount } from "@/auth/signup";
 import { config } from "@/config";
 
 import { SetupInner } from "./_components/setup-inner";
@@ -10,7 +11,7 @@ import { SetupUnavailable } from "./_components/setup-unavailable";
 export const dynamic = "force-dynamic";
 
 export default async function SetupPage() {
-  if (await hasAnyUser()) redirect("/");
+  if (await ownerHasAccount()) redirect("/");
 
   if (!config.app.setupCode) {
     console.warn(
@@ -19,5 +20,5 @@ export default async function SetupPage() {
     return <SetupUnavailable />;
   }
 
-  return <SetupInner legal={legalConfig()} pinnedEmail={config.app.ownerEmail} />;
+  return <SetupInner legal={legalConfig()} pinnedEmail={ownerEmail()} />;
 }

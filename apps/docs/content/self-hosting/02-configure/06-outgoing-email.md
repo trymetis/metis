@@ -17,9 +17,9 @@ Open **Dashboard**, **System**, **Mail** under **Drivers**.
 | `resend`        | Sent through [Resend](https://resend.com) with your API key.                                                                                                                                                                                                                | **Delivering**           |
 | `smtp`          | Sent through your SMTP server.                                                                                                                                                                                                                                              | **Delivering**           |
 | `console`       | Only for Metis Cloud instances. Each email goes to the instance's [**Mail**](https://console.trymetis.email/instances/~/mail) tab in the Metis Cloud console. A self-hosted instance cannot use it. This driver has nothing to do with the **Console only** badge of `log`. | **Delivering**           |
-| `noop`          | Nothing is sent or logged. Magic link sign-in, email verification, password reset, workspace invites and sign-in alerts are turned off.                                                                                                                                     | **Not delivered**        |
+| `noop`          | Nothing is sent or logged. Magic link sign-in, email verification, password reset, invites and sign-in alerts are turned off.                                                                                                                                               | **Not delivered**        |
 
-With `noop`, a sign-up invite is still created and the app says "Invite sent to" and the address, but no invite email goes out and nobody is shown the invite link.
+No invite is created when its email is not sent. This happens with `noop`, and when sending fails, for example because the SMTP server refuses it. The sender sees "The invite email couldn't be sent, so no invite was created. Ask the instance owner to check the mail settings, then try again." The one exception is the owner, sending from the app: the invite is created and the owner is shown its link to send by hand. The audit log records this as **Invite link shown**. See [How invites work](/guide/account/invite-people#if-the-invite-email-cannot-be-sent).
 
 With `log` or `noop`, your users get no sign-in alerts. They can still turn the **Sign-in alerts** switch on or off in their settings, and the app does not warn them that no alert will arrive.
 
@@ -54,7 +54,7 @@ If **Implicit TLS** and **Allow unencrypted** are both off and your SMTP server 
 
 If **Implicit TLS** and **Allow unencrypted** are both on when you click **Save changes**, nothing is saved, and the error ends with "Allow unencrypted applies only when implicit TLS is off".
 
-To check delivery end to end, send an invitation to an address you can read, from your account settings.
+To check delivery end to end, send an account invite to an address you can read, from **Dashboard**, **Accounts**, **Invites**. Then revoke it with its trash button under **Pending account invites**.
 
 ## Send through Resend
 

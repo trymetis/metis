@@ -14,6 +14,7 @@ import { ADDRESS_BOOK_PROVIDER_LABELS, addressBookName } from "@/connections/add
 import { CALENDAR_PROVIDER_LABELS, calendarName } from "@/connections/calendar-name";
 import { savedContactIndex, workspaceBookList } from "@/contacts/lookup";
 import { DRIVE_PROVIDER_LABELS, driveName } from "@/drive/name";
+import { listWorkspaceInvites } from "@/invites";
 import { listCustomLabels } from "@/mail/custom-labels";
 import { LABEL_OPTIONS } from "@/mail/label-meta";
 import { mailSessionFor } from "@/mail/session";
@@ -25,7 +26,6 @@ import { MAIL_FOLDERS } from "@/types/mail";
 import { listWorkspaceRuns, listWorkspaceWorkflows } from "@/workflow";
 import { workflowScopeFor } from "@/workflow/scope";
 import { listWorkspaceMembers } from "@/workspace";
-import { listWorkspaceInvites } from "@/workspace/admin";
 import { ALL_MAILBOXES_SLUG } from "@/workspace/path";
 
 import { type ParserAst, tagKey, tags } from "./ast";
@@ -152,7 +152,7 @@ async function members(ctx: LocalSearchContext) {
         email: i.email,
         name: "",
         image: null,
-        role: i.role,
+        role: i.workspaceRole ?? "member",
         invited: true,
         inviteId: i.id,
         joinedAt: null,
@@ -163,7 +163,7 @@ async function members(ctx: LocalSearchContext) {
         text: [i.email],
         name: "",
         email: i.email,
-        role: i.role,
+        role: i.workspaceRole ?? "member",
         is: ["invited"],
         date: ms(i.createdAt),
       },

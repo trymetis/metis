@@ -129,6 +129,25 @@ resolve_var() {
   if [[ -n "$default" ]]; then log_using "$name" "$default"; fi
 }
 
+resolve_owner_email() {
+  if [[ -n "${METIS_OWNER_EMAIL:-}" ]]; then
+    log_using METIS_OWNER_EMAIL "$METIS_OWNER_EMAIL"
+    return
+  fi
+
+  if [[ $INTERACTIVE -eq 1 ]]; then
+    local value=""
+    while [[ ! "$value" =~ ^[^@[:space:]]+@[^@[:space:]]+$ ]]; do
+      value=$(ask "METIS_OWNER_EMAIL (the instance owner's email, required)" "")
+    done
+    METIS_OWNER_EMAIL="$value"
+    log_using METIS_OWNER_EMAIL "$value"
+    return
+  fi
+
+  die "METIS_OWNER_EMAIL is required: export METIS_OWNER_EMAIL=you@example.com before running, or run with --interactive"
+}
+
 resolve_secret_var() {
   local name="$1" prompt="$2"
   local current="${!name:-}"
@@ -317,8 +336,7 @@ setup_env() {
 
   echo; info "--- First-run setup ---"
   resolve_setup_code
-  resolve_var METIS_OWNER_EMAIL \
-    "METIS_OWNER_EMAIL (blank = /setup accepts any email and /dashboard is off)" ""
+  resolve_owner_email
 
   cat > "$env_file" <<EOF
 METIS_DOMAIN=${METIS_DOMAIN}
@@ -525,9 +543,9 @@ print_status() {
   local setup_code; setup_code=$(read_env_value METIS_SETUP_CODE)
   if [[ -n "$setup_code" ]]; then
     echo
-    info "Create the first account at: ${url}/setup"
+    info "Create the owner account at: ${url}/setup"
     info "Setup code: ${setup_code}"
-    info "Kept in $INSTALL_DIR/.env; it stops working once an account exists."
+    info "Kept in $INSTALL_DIR/.env; it works while no account has the owner email."
   fi
 
   if [[ -z "$domain" ]]; then

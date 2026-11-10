@@ -10,7 +10,9 @@ import { signIn } from "@/auth/client";
 import { AuthInput } from "@/components/auth-input";
 import { Field } from "@/components/field";
 import { orpc } from "@/lib/orpc";
-import { inviteSignupInputSchema } from "@/server/schema";
+import { type InvitePreview, inviteSignupInputSchema } from "@/server/schema";
+
+import { inviteDetail, inviteHeading } from "./invite-copy";
 
 type LegalLinks = {
   termsUrl: string | null;
@@ -51,10 +53,12 @@ function LegalLabel({ legal }: { legal: LegalLinks }) {
 export function InviteSignupInner({
   token,
   invitedEmail,
+  preview,
   legal,
 }: {
   token: string;
   invitedEmail: string;
+  preview: InvitePreview;
   legal: LegalLinks | null;
 }) {
   const router = useRouter();
@@ -104,10 +108,10 @@ export function InviteSignupInner({
         <div className="mb-8 text-center">
           <MetisMark className="mx-auto mb-4" />
           <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-            Create your account
+            {inviteHeading(preview)}
           </h1>
           <p className="mt-1.5 text-sm text-neutral-500">
-            You were invited to Metis Suite. Pick a password to finish.
+            {inviteDetail(preview)} Pick a password to create your account.
           </p>
         </div>
 

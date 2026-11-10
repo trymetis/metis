@@ -1,8 +1,12 @@
+import { sentInviteLink } from "@metis/e2e/lib/invites";
 import type { Page } from "@playwright/test";
 
 import { enterCode } from "../auth";
 import { expect, test } from "../fixtures";
-import { harness } from "../harness";
+import { APP, HARNESS, harness, SIGNED_OUT } from "../harness";
+import { newSecondUser, signUpByInvite } from "../second-user";
+
+const BANNED = "This account is banned. Ask the instance owner or an admin.";
 
 function main(page: Page) {
   return page.getByRole("main");
@@ -229,11 +233,11 @@ export default function dashboardSpecs() {
     await expect(main(page).getByText("Nowhere", { exact: true })).toHaveCount(0);
   });
 
-  test("the people, workspaces, connections and MCP pages list the seeded instance", async ({
+  test("the accounts, workspaces, connections and MCP pages list the seeded instance", async ({
     page,
     account,
   }) => {
-    await page.goto("/dashboard/people");
+    await page.goto("/dashboard/accounts");
     await expect(
       main(page)
         .getByRole("row")
@@ -266,5 +270,84 @@ export default function dashboardSpecs() {
 
     await page.goto("/dashboard/mcp");
     await expect(main(page).getByRole("heading", { level: 2, name: "All clients" })).toBeVisible();
+  });
+
+  test("an account invite sent from the Invites page is filtered and accepted, and the Users page bans, unbans and removes the new account", async ({
+    page,
+    browser,
+  }) => {
+    const user = newSecondUser();
+    await page.goto("/dashboard/accounts/invites");
+    const link = await sentInviteLink(HARNESS, user.email, async () => {
+      await main(page).getByRole("textbox", { name: "Invite email" }).fill(user.email);
+      await main(page).getByRole("button", { name: "Invite", exact: true }).click();
+      await expect(toasts(page).getByText(`Invite sent to ${user.email}`)).toBeVisible();
+    });
+
+    const inviteRow = main(page)
+      .getByRole("row")
+      .filter({ has: page.getByRole("cell", { name: user.email, exact: true }) });
+    await main(page).getByRole("searchbox", { name: "Search invites" }).fill(user.email);
+    await expect(main(page).getByRole("row")).toHaveCount(2);
+    await expect(inviteRow).toContainText("No role");
+    await main(page).getByRole("combobox", { name: "Role", exact: true }).click();
+    await page.getByRole("option", { name: "Admin", exact: true }).click();
+    await expect(main(page).getByText("No invites match.")).toBeVisible();
+
+    const context = await browser.newContext({ baseURL: APP, storageState: SIGNED_OUT });
+    try {
+      const joiner = await context.newPage();
+      await signUpByInvite(joiner, link, user);
+
+      await page.goto("/dashboard/accounts/users");
+      await main(page).getByRole("searchbox", { name: "Search users" }).fill(user.email);
+      const row = main(page)
+        .getByRole("row")
+        .filter({ has: page.getByRole("cell", { name: user.email, exact: true }) });
+      await expect(row).toContainText("Active");
+      await expect(row).toContainText("No 2FA");
+
+      await row.getByRole("button", { name: `Actions for ${user.email}` }).click();
+      await page.getByRole("menuitem", { name: "Ban…" }).click();
+      const dialog = page.getByRole("alertdialog", { name: "Ban user" });
+      await dialog.getByRole("textbox", { name: "Reason (optional)" }).fill("e2e ban");
+      await enterCode(page, await harness.totp());
+      await dialog.getByRole("button", { name: "Ban user", exact: true }).click();
+      await expect(dialog).toBeHidden();
+      await expect(row).toContainText("Banned");
+
+      await main(page).getByRole("combobox", { name: "Status", exact: true }).click();
+      await page.getByRole("option", { name: "Active", exact: true }).click();
+      await expect(main(page).getByText("No users match.")).toBeVisible();
+      await main(page).getByRole("combobox", { name: "Status", exact: true }).click();
+      await page.getByRole("option", { name: "Banned", exact: true }).click();
+      await expect(row).toBeVisible();
+
+      const fresh = await browser.newContext({ baseURL: APP, storageState: SIGNED_OUT });
+      const signInPage = await fresh.newPage();
+      const blocked = signInPage.getByRole("main");
+      await signInPage.goto("/");
+      await blocked.getByRole("textbox", { name: "Email address" }).fill(user.email);
+      await blocked.getByRole("textbox", { name: "Password" }).fill(user.password);
+      await blocked.getByRole("button", { name: "Sign in", exact: true }).click();
+      await expect(blocked.getByText(BANNED)).toBeVisible();
+      await fresh.close();
+
+      await row.getByRole("button", { name: `Actions for ${user.email}` }).click();
+      await page.getByRole("menuitem", { name: "Unban" }).click();
+      await confirmTotp(page, "Unban user", "Unban user");
+      await expect(main(page).getByText("No users match.")).toBeVisible();
+
+      await main(page).getByRole("combobox", { name: "Status", exact: true }).click();
+      await page.getByRole("option", { name: "Any status", exact: true }).click();
+      await expect(row).toContainText("Active");
+      await row.getByRole("button", { name: `Actions for ${user.email}` }).click();
+      await page.getByRole("menuitem", { name: "Remove…" }).click();
+      await confirmTotp(page, "Remove user", "Remove user");
+      await expect(toasts(page).getByText(`Removed ${user.email}`)).toBeVisible();
+      await expect(row).toHaveCount(0);
+    } finally {
+      await context.close();
+    }
   });
 }

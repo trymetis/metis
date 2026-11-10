@@ -1,9 +1,12 @@
 import "server-only";
 import { ORPCError } from "@orpc/server";
 
+import { isOwnerEmail } from "@/auth/owner";
+import { getAuth } from "@/auth/server";
 import { verifySetupCode } from "@/auth/setup-code";
-import { firstUserSignup, inviteSignup, previewSignupInvite } from "@/auth/signup";
+import { ownerSignup } from "@/auth/signup";
 import { config } from "@/config";
+import { previewInvite, signUpFromInvite } from "@/invites";
 import { clientIp } from "@/services/client-ip";
 import { rateLimit } from "@/services/rate-limit";
 
@@ -13,8 +16,8 @@ import {
   firstSignupOutputSchema,
   inviteSignupInputSchema,
   inviteSignupOutputSchema,
-  signupInvitePreviewOutputSchema,
-  signupInviteTokenInputSchema,
+  invitePreviewOutputSchema,
+  inviteTokenInputSchema,
 } from "../schema";
 
 async function limit(headers: Headers, scope: string, limitPerHour: number): Promise<void> {
@@ -53,14 +56,13 @@ export const signupRouter = {
         });
       }
 
-      const pinnedEmail = config.app.ownerEmail;
-      if (pinnedEmail && pinnedEmail !== input.email) {
+      if (!isOwnerEmail(input.email)) {
         throw new ORPCError("FORBIDDEN", {
           message: "This instance only allows its configured owner email",
         });
       }
 
-      const result = await firstUserSignup({
+      const result = await ownerSignup({
         name: input.name,
         email: input.email,
         password: input.password,
@@ -73,17 +75,20 @@ export const signupRouter = {
     }),
 
   invitePreview: base
-    .input(signupInviteTokenInputSchema)
-    .output(signupInvitePreviewOutputSchema)
+    .input(inviteTokenInputSchema)
+    .output(invitePreviewOutputSchema)
     .handler(async ({ input, context }) => {
       await limit(context.headers, "signup-invite-preview", 30);
 
-      const result = await previewSignupInvite(input.token);
+      const session = await getAuth().api.getSession({ headers: context.headers });
+      const result = await previewInvite(
+        input.token,
+        session ? { email: session.user.email } : null,
+      );
       if ("error" in result) {
         throw new ORPCError("BAD_REQUEST", { message: result.error });
       }
-
-      return { email: result.email };
+      return result;
     }),
 
   invite: base
@@ -92,10 +97,11 @@ export const signupRouter = {
     .handler(async ({ input, context }) => {
       await limit(context.headers, "signup-invite", 10);
 
-      const result = await inviteSignup({
+      const result = await signUpFromInvite({
         token: input.token,
         name: input.name,
         password: input.password,
+        headers: context.headers,
       });
       if ("error" in result) {
         throw new ORPCError("BAD_REQUEST", { message: result.error });

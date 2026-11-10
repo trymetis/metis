@@ -429,7 +429,7 @@
   },
   {
     "name": "security/invites",
-    "from": "account/invites",
+    "from": "self-hosting/dashboard-invites",
     "focus": "main"
   },
   {

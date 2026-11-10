@@ -67,10 +67,14 @@ Owners and admins can invite people from the **Members** page.
 
 Each person gets an email titled with your name and the workspace's name, with an **Accept invite** button. Invites expire after 7 days.
 
-- A workspace invite works only for someone who already has an account on your Metis Suite instance, unless your instance lets anyone sign up. To invite someone who has no account yet, first send them an account invite. See [Account](/guide/account).
-- An invite works only for the account with the email address you invited. If someone else opens the link, they cannot use it to join.
-- Metis Suite does not show the invite link in the dialog, so the person needs the email to join.
-- If you send too many invites in a short time, the dialog lists the addresses that failed.
+- **People with an account** can accept the invite from the link.
+- **People with no account yet** create their account straight from the invite link, and join the workspace at the same time. This works when your instance has open sign-up, or when you are also the instance owner or an instance admin. Otherwise the invite is refused with "Ask the instance owner or an instance admin to invite this person."
+- An invite works only for the email address you invited. If someone signed in with another account opens the link, they cannot use it to join.
+- You can send up to 10 invites an hour into this workspace. Invites you send into your other workspaces count separately.
+- If some invites fail, they stay in the dialog with the reason, after "These invites failed." Fix them and send again, or close the dialog.
+- If the invite email cannot be sent, no invite is created. The instance owner is the exception: the dialog shows the link so they can copy it and send it themselves. Nobody else is shown the link.
+
+For every rule and message, see [How invites work](/guide/account/invite-people).
 
 ### Pending invites
 
@@ -85,13 +89,14 @@ The link stops working right away. You can invite the person again at any time.
 
 ### Accepting an invite
 
-When someone clicks **Accept invite**:
+When someone clicks **Accept invite** in the email, the invite page opens:
 
-- If they are signed out, they see "Sign in to accept". They click **Go to sign in**, and after signing in they come back to the invite.
-- If it works, they see "You're in!" and the workspace opens.
-- If it does not, they see "Couldn't accept invite" with the reason:
-  - "Invite not found", "Invite already used" or "Invite expired": ask an owner or admin for a new invite.
-  - "This invite was sent to a different email address. Sign in with that account to accept it.": they are signed in with another account. They sign out, sign in with the account for the invited address, and open the invite again.
+- **Signed in with the invited address:** they see a heading such as "Join Design as a member" (or "as an admin"), with **Accept** and **Decline**. **Accept** adds them to the workspace and opens it. **Decline** shows "Invite declined" and the invite cannot be used again.
+- **Signed out, with an account:** they click **Sign in to accept**, sign in, and come back to the invite.
+- **Signed in with another address:** they see **Invite unavailable**: "This invite was sent to a different email address. Sign out, then open the link again and sign in with the invited account." The page does not show which address was invited.
+- **No account yet:** they see a form to create their account, with the invited address filled in. Their new account joins your workspace, which becomes their default workspace.
+
+If the invite expired, was used, was declined or was revoked, they see **Invite unavailable** with "This invite link is no longer valid". Send them a new invite. See [How invites work](/guide/account/invite-people#what-the-invite-page-shows).
 
 ## Manage a member
 
@@ -130,3 +135,14 @@ There is no **Leave** button.
 - **A member** asks an owner or admin to remove them.
 - **If you are an admin**, click the trash icon on your own row on the **Members** page and confirm. After that, you are taken back to your workspaces.
 - **The owner** must transfer ownership first.
+
+## If a member's account is banned
+
+The instance owner or an instance admin can ban an account, so that person can no longer sign in to your instance. A ban deletes nothing in your workspace:
+
+- The person stays on the **Members** page, with the same role.
+- The mailboxes, calendars, drives and address books they added stay in the workspace. Other members keep using them.
+- Scheduled mail and snoozes they set up are held, not lost, and go ahead once the ban ends.
+- Runs of their other workflows that come due during the ban are blocked, and stay blocked after the ban ends, until someone retries them. Runs that come due after the ban run as usual. See [Who a workflow runs as](/guide/workflows/how-workflows-work#who-a-workflow-runs-as) and [Cancel and retry runs](/guide/workflows/cancel-and-retry-runs#retry-a-run).
+
+When the ban ends, they can use the workspace again. If they should not come back, [remove them](#remove-a-member). The mailboxes, calendars, drives and address books they connected then leave the workspace too.

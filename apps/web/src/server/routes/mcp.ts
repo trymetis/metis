@@ -6,7 +6,7 @@ import { and, count, desc, eq, gt, isNull } from "drizzle-orm";
 import { z } from "zod";
 
 import { appActor, recordAuditEvent } from "@/audit";
-import { isOwnerEmail } from "@/auth/owner";
+import { instanceRoleOf } from "@/auth/instance-role";
 import { verify2FA } from "@/auth/server";
 import { config } from "@/config";
 import { db } from "@/db";
@@ -131,7 +131,10 @@ async function memberWorkspaceIds(
 
 export const mcpRouter = {
   access: appSession.output(mcpAccessOutputSchema).handler(async ({ context }) => ({
-    isOwner: isOwnerEmail(context.appUser.user.email),
+    instanceRole: await instanceRoleOf({
+      id: context.appUser.userId,
+      email: context.appUser.user.email,
+    }),
     workspaces: await listMcpWorkspaces(context.appUser.userId),
   })),
 
@@ -446,7 +449,10 @@ export const mcpRouter = {
           preset: row.preset,
           hiddenWorkspaceIds: row.hiddenWorkspaceIds,
           tools: mcpToolsFor({
-            isOwner: isOwnerEmail(context.appUser.user.email),
+            instanceRole: await instanceRoleOf({
+              id: context.appUser.userId,
+              email: context.appUser.user.email,
+            }),
           })
             .filter((tool) => isMcpToolEnabled(tools, tool.key))
             .map((tool) => ({ key: tool.key, label: tool.label })),

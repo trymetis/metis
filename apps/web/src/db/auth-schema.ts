@@ -16,6 +16,10 @@ export const user = sqliteTable("user", {
     .notNull(),
   twoFactorEnabled: integer("two_factor_enabled", { mode: "boolean" }).default(false),
   defaultWorkspaceSlug: text("default_workspace_slug"),
+  role: text("role").default("user").notNull(),
+  banned: integer("banned", { mode: "boolean" }).default(false).notNull(),
+  banReason: text("ban_reason"),
+  banExpires: integer("ban_expires", { mode: "timestamp_ms" }),
 });
 
 export const session = sqliteTable(

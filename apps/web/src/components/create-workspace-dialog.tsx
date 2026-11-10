@@ -16,7 +16,14 @@ import { useState } from "react";
 import { orpc } from "@/lib/orpc";
 
 import { validateEmailRows } from "./email-rows";
-import { EMPTY_INVITE_ROW, type InviteRow, InviteRows, sendInvites } from "./invite-rows";
+import {
+  EMPTY_INVITE_ROW,
+  InviteLinks,
+  type InviteResults,
+  type InviteRow,
+  InviteRows,
+  sendInvites,
+} from "./invite-rows";
 
 export function CreateWorkspaceDialog({
   onCreated,
@@ -32,6 +39,7 @@ export function CreateWorkspaceDialog({
   const [createdSlug, setCreatedSlug] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [links, setLinks] = useState<InviteResults["links"]>([]);
 
   function reset() {
     setName("");
@@ -39,6 +47,7 @@ export function CreateWorkspaceDialog({
     setCreatedId(null);
     setCreatedSlug("");
     setError(null);
+    setLinks([]);
   }
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
@@ -65,13 +74,18 @@ export function CreateWorkspaceDialog({
         setCreatedSlug(slug);
       }
 
-      const failed = await sendInvites(slug, invites);
+      const sent = await sendInvites(slug, invites);
       await onCreated({ workspaceId, slug });
-      if (failed.length > 0) {
-        setRows(failed);
+      setLinks(sent.links);
+      if (sent.failed.length > 0) {
+        setRows(sent.failed);
         setError(
-          `Workspace created, but these invites failed: ${failed.map((f) => f.email).join(", ")}. Retry or close.`,
+          `Workspace created, but these invites failed. ${sent.errors.join(" ")} Retry or close.`,
         );
+        return;
+      }
+      if (sent.links.length > 0) {
+        setRows([EMPTY_INVITE_ROW]);
         return;
       }
 
@@ -135,6 +149,7 @@ export function CreateWorkspaceDialog({
           </div>
 
           {error && <p className="text-xs text-destructive-text">{error}</p>}
+          <InviteLinks links={links} />
 
           <Button type="submit" disabled={busy} className="w-full">
             {busy ? (

@@ -1,8 +1,7 @@
 import crypto from "node:crypto";
 
-import { and, eq, inArray, isNull, ne } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
 
-import { hashToken, newInviteToken } from "@/auth/invite-token";
 import { db, type Executor } from "@/db";
 import {
   addressBook,
@@ -17,13 +16,11 @@ import {
   userPrefs,
   user as userTable,
   workspace,
-  workspaceInvite,
   workspaceMember,
 } from "@/db/schema";
 import type { WorkspaceSummary } from "@/server/schema";
 import { DEFAULT_THEME_BRAND, isThemeBrand, type ThemeBrandId } from "@/theme/brand";
 import type { WorkspaceRole } from "@/types/workspace";
-import { memberJoined } from "@/workflow/hooks";
 
 import type { WorkspacePolicy } from "./policy";
 
@@ -264,33 +261,6 @@ export async function personalWorkspaceName(userName: string): Promise<string> {
   return trimmed ? `${trimmed}'s workspace` : "Personal workspace";
 }
 
-const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-
-export async function createInvite(opts: {
-  workspaceId: string;
-  email: string;
-  role: WorkspaceRole;
-  invitedBy: string;
-}): Promise<{ id: string; token: string; expiresAt: Date }> {
-  const id = crypto.randomUUID();
-  const token = newInviteToken();
-  const expiresAt = new Date(Date.now() + INVITE_TTL_MS);
-  const now = new Date();
-
-  await db.insert(workspaceInvite).values({
-    id,
-    workspaceId: opts.workspaceId,
-    email: opts.email.toLowerCase(),
-    role: opts.role,
-    tokenHash: hashToken(token),
-    invitedBy: opts.invitedBy,
-    expiresAt,
-    createdAt: now,
-  });
-
-  return { id, token, expiresAt };
-}
-
 export async function planAccountDelete(userId: string): Promise<{
   blocking: { id: string; name: string }[];
   soleOwnedWorkspaceIds: string[];
@@ -471,22 +441,6 @@ export async function removeMember(opts: {
   return { ok: true, userId: target.userId };
 }
 
-export async function revokeInvite(opts: {
-  workspaceId: string;
-  inviteId: string;
-}): Promise<{ ok: true; email: string } | { error: string }> {
-  const [target] = await db
-    .select()
-    .from(workspaceInvite)
-    .where(
-      and(eq(workspaceInvite.id, opts.inviteId), eq(workspaceInvite.workspaceId, opts.workspaceId)),
-    )
-    .limit(1);
-  if (!target) return { error: "Invite not found" };
-  await db.delete(workspaceInvite).where(eq(workspaceInvite.id, opts.inviteId));
-  return { ok: true, email: target.email };
-}
-
 export async function listWorkspaceMembers(workspaceId: string) {
   return db
     .select({
@@ -501,86 +455,4 @@ export async function listWorkspaceMembers(workspaceId: string) {
     .from(workspaceMember)
     .innerJoin(userTable, eq(userTable.id, workspaceMember.userId))
     .where(eq(workspaceMember.workspaceId, workspaceId));
-}
-
-export async function listPendingInvites(workspaceId: string) {
-  return db
-    .select({
-      id: workspaceInvite.id,
-      email: workspaceInvite.email,
-      role: workspaceInvite.role,
-      expiresAt: workspaceInvite.expiresAt,
-      createdAt: workspaceInvite.createdAt,
-    })
-    .from(workspaceInvite)
-    .where(and(eq(workspaceInvite.workspaceId, workspaceId), isNull(workspaceInvite.acceptedAt)));
-}
-
-export async function acceptInvite(opts: {
-  token: string;
-  userId: string;
-  email: string;
-}): Promise<
-  { workspaceId: string; workspaceName: string; workspaceSlug: string } | { error: string }
-> {
-  const [invite] = await db
-    .select()
-    .from(workspaceInvite)
-    .where(eq(workspaceInvite.tokenHash, hashToken(opts.token)))
-    .limit(1);
-  if (!invite) return { error: "Invite not found" };
-  if (invite.acceptedAt) return { error: "Invite already used" };
-  if (invite.expiresAt.getTime() < Date.now()) return { error: "Invite expired" };
-  if (invite.email.trim().toLowerCase() !== opts.email.trim().toLowerCase()) {
-    return {
-      error:
-        "This invite was sent to a different email address. Sign in with that account to accept it.",
-    };
-  }
-
-  const [existing] = await db
-    .select({ id: workspaceMember.id })
-    .from(workspaceMember)
-    .where(
-      and(
-        eq(workspaceMember.workspaceId, invite.workspaceId),
-        eq(workspaceMember.userId, opts.userId),
-      ),
-    )
-    .limit(1);
-  if (!existing) {
-    await db.insert(workspaceMember).values({
-      id: crypto.randomUUID(),
-      workspaceId: invite.workspaceId,
-      userId: opts.userId,
-      role: invite.role,
-      invitedBy: invite.invitedBy,
-      joinedAt: new Date(),
-    });
-    memberJoined({
-      workspaceId: invite.workspaceId,
-      userId: opts.userId,
-      email: invite.email,
-      name: "",
-      role: invite.role,
-    });
-  }
-  await appendWorkspaceOrder(opts.userId, invite.workspaceId);
-
-  await db
-    .update(workspaceInvite)
-    .set({ acceptedAt: new Date() })
-    .where(eq(workspaceInvite.id, invite.id));
-
-  const [w] = await db
-    .select({ id: workspace.id, name: workspace.name, slug: workspace.slug })
-    .from(workspace)
-    .where(eq(workspace.id, invite.workspaceId))
-    .limit(1);
-
-  return {
-    workspaceId: invite.workspaceId,
-    workspaceName: w?.name ?? "Workspace",
-    workspaceSlug: w?.slug ?? "",
-  };
 }

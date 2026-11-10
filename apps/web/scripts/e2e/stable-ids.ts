@@ -69,8 +69,11 @@ function naturalKeys(path: string): Map<string, string> {
       keys.set(r.id, `${resource}_workspace:${keyOf(r.resource_id)}:${keyOf(r.workspace_id)}`);
     }
   }
-  for (const r of rows({ id: text, email: text }, `SELECT id, email FROM "signup_invite"`)) {
-    keys.set(r.id, `signup_invite:${r.email}`);
+  for (const r of rows(
+    { id: text, email: text, workspace_id: text },
+    `SELECT id, email, coalesce(workspace_id, '') AS workspace_id FROM "invite"`,
+  )) {
+    keys.set(r.id, `invite:${r.email}:${r.workspace_id ? keyOf(r.workspace_id) : "account"}`);
   }
   for (const r of rows(
     { id: text, action: text, actor_email: text, target_label: text },

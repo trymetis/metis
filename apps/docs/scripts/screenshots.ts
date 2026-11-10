@@ -2,7 +2,15 @@ import { readdirSync, readFileSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-import { type Browser, chromium, type Page, type PageScreenshotOptions } from "@playwright/test";
+import { sentInviteLink } from "@metis/e2e/lib/invites";
+import {
+  type Browser,
+  type BrowserContext,
+  chromium,
+  type Page,
+  type PageScreenshotOptions,
+} from "@playwright/test";
+import * as OTPAuth from "otpauth";
 import sharp from "sharp";
 import { z } from "zod";
 
@@ -51,6 +59,14 @@ const shotsSchema = z.array(
     name: z.string(),
     path: z.string(),
     signedOut: z.boolean().optional(),
+    observer: z.boolean().optional(),
+    invite: z
+      .object({
+        email: z.string(),
+        workspace: z.boolean().optional(),
+        role: z.enum(["admin", "observer"]).optional(),
+      })
+      .optional(),
     seededWeek: z.boolean().optional(),
     steps: z.array(stepSchema).optional(),
     element: z.union([z.string(), z.array(z.string())]).optional(),
@@ -69,8 +85,10 @@ const accountSchema = z.object({
   mailboxSlug: z.string(),
   calendarSlug: z.string(),
   driveSlugs: z.record(z.string(), z.string()),
+  member: z.object({ email: z.string(), password: z.string(), totpURI: z.string() }),
 });
 type Account = z.infer<typeof accountSchema>;
+type StorageState = Awaited<ReturnType<BrowserContext["storageState"]>>;
 
 async function harness(path: string): Promise<Response> {
   const res = await fetch(`${HARNESS}${path}`);
@@ -90,18 +108,22 @@ function resolve(path: string, a: Account): string {
     });
 }
 
-async function signIn(browser: Browser, a: Account) {
+async function signIn(
+  browser: Browser,
+  who: { email: string; password: string },
+  code: () => Promise<string>,
+) {
   const context = await browser.newContext(contextOptions());
   const page = await context.newPage();
   await page.goto(`${APP}/`);
   const content = page.getByRole("main");
-  await content.getByRole("textbox", { name: "Email address" }).fill(a.email);
-  await content.getByRole("textbox", { name: "Password" }).fill(a.password);
+  await content.getByRole("textbox", { name: "Email address" }).fill(who.email);
+  await content.getByRole("textbox", { name: "Password" }).fill(who.password);
   await content.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.waitForURL(/\/2fa\/verify/);
   const input = page.locator('input[autocomplete="one-time-code"]');
   await input.click();
-  await page.keyboard.type((await (await harness("/totp?fresh=1")).text()).trim());
+  await page.keyboard.type(await code());
   await content.getByRole("button", { name: "Verify", exact: true }).click();
   await page.waitForURL(/\/w\//);
   const state = await context.storageState();
@@ -128,6 +150,94 @@ async function rpc(page: Page, procedure: string, input: unknown): Promise<unkno
   });
   if (!res.ok()) throw new Error(`rpc ${procedure}: HTTP ${res.status()}`);
   return res.json();
+}
+
+const invitesSchema = z.object({
+  json: z.object({ invites: z.array(z.object({ id: z.string(), email: z.string() })) }),
+});
+
+type Invite = NonNullable<Shot["invite"]>;
+
+async function totp(): Promise<string> {
+  return (await (await harness("/totp?fresh=1")).text()).trim();
+}
+
+async function revokeInvites(page: Page, a: Account, email: string, invite: Invite) {
+  if (invite.workspace) {
+    const scope = { workspaceSlug: a.workspaceSlug };
+    const { json } = invitesSchema.parse(await rpc(page, "workspaces/listInvites", scope));
+    for (const pending of json.invites.filter((i) => i.email === email))
+      await rpc(page, "workspaces/revokeInvite", { ...scope, inviteId: pending.id });
+  } else {
+    const { json } = invitesSchema.parse(await rpc(page, "dashboard/invites/list", {}));
+    for (const pending of json.invites.filter((i) => i.email === email))
+      await rpc(page, "dashboard/invites/revoke", { inviteId: pending.id });
+  }
+}
+
+async function withInvite(
+  browser: Browser,
+  state: StorageState,
+  a: Account,
+  invite: Invite,
+  onLink: (path: string) => Promise<void>,
+) {
+  const context = await browser.newContext({ ...contextOptions(), storageState: state });
+  const page = await context.newPage();
+  const email = invite.email.replaceAll("{member}", a.member.email);
+  try {
+    await revokeInvites(page, a, email, invite);
+    const link = await sentInviteLink(HARNESS, email, async () =>
+      invite.workspace
+        ? rpc(page, "workspaces/createInvite", {
+            workspaceSlug: a.workspaceSlug,
+            email,
+            role: "member",
+          })
+        : rpc(page, "dashboard/invites/create", {
+            email,
+            instanceRole: invite.role ?? null,
+            ...(invite.role ? { code: await totp() } : {}),
+          }),
+    );
+    const { pathname, search } = new URL(link);
+    await onLink(`${pathname}${search}`);
+  } finally {
+    await revokeInvites(page, a, email, invite);
+    await context.close();
+  }
+}
+
+const usersSchema = z.object({
+  json: z.object({ users: z.array(z.object({ id: z.string(), email: z.string() })) }),
+});
+
+function memberCode(a: Account): Promise<string> {
+  const parsed = OTPAuth.URI.parse(a.member.totpURI);
+  if (!(parsed instanceof OTPAuth.TOTP)) throw new Error("the member's totpURI is not a TOTP URI");
+  return Promise.resolve(parsed.generate());
+}
+
+async function withObserver(
+  browser: Browser,
+  state: StorageState,
+  a: Account,
+  onState: (observer: StorageState) => Promise<void>,
+) {
+  const context = await browser.newContext({ ...contextOptions(), storageState: state });
+  const page = await context.newPage();
+  const { json } = usersSchema.parse(await rpc(page, "dashboard/users/list", {}));
+  const member = json.users.find((u) => u.email === a.member.email);
+  if (!member) throw new Error(`${a.member.email} is not listed on the Users page`);
+  const setRole = async (role: "observer" | "user") =>
+    rpc(page, "dashboard/users/setRole", { userId: member.id, role, code: await totp() });
+  try {
+    await setRole("observer");
+    await onState(await signIn(browser, a.member, () => memberCode(a)));
+  } finally {
+    await setRole("user");
+    await context.close();
+  }
 }
 
 async function clearReadLater(page: Page, a: Account) {
@@ -263,14 +373,14 @@ async function main() {
     .filter((s) => only.length === 0 || only.some((o) => s.name.startsWith(o)));
   const account = accountSchema.parse(await (await harness("/account")).json());
   const browser = await chromium.launch({ channel: "chrome", headless: true });
-  const state = await signIn(browser, account);
+  const state: StorageState = await signIn(browser, account, totp);
   const failed: string[] = [];
 
-  for (const shot of shots) {
+  async function take(shot: Shot, path: string, as: StorageState = state) {
     const context = await browser.newContext({
       ...contextOptions(),
       ...(shot.viewport ? { viewport: shot.viewport } : {}),
-      storageState: shot.signedOut ? undefined : state,
+      storageState: shot.signedOut ? undefined : as,
     });
     await context.addInitScript(() => {
       if (window === window.top) localStorage.setItem("theme", "light");
@@ -278,7 +388,7 @@ async function main() {
     const page = await context.newPage();
     if (shot.seededWeek) await page.clock.setFixedTime(CLOCK);
     try {
-      await page.goto(resolve(shot.path, account));
+      await page.goto(resolve(path, account));
       await page.waitForLoadState("networkidle").catch(() => {});
       for (const step of shot.steps ?? []) await run(page, step, account);
       await page.waitForTimeout(400);
@@ -294,6 +404,31 @@ async function main() {
       console.error(`[docs-shots] failed ${shot.name}: ${String(error)}`);
     } finally {
       await context.close();
+    }
+  }
+
+  for (const shot of shots) {
+    const { invite } = shot;
+    if (shot.observer) {
+      try {
+        await withObserver(browser, state, account, (observer) => take(shot, shot.path, observer));
+      } catch (error) {
+        failed.push(shot.name);
+        console.error(`[docs-shots] failed ${shot.name}: ${String(error)}`);
+      }
+      continue;
+    }
+    if (!invite) {
+      await take(shot, shot.path);
+      continue;
+    }
+    try {
+      await withInvite(browser, state, account, invite, (link) =>
+        take(shot, shot.path.replaceAll("{invite}", link)),
+      );
+    } catch (error) {
+      failed.push(shot.name);
+      console.error(`[docs-shots] failed ${shot.name}: ${String(error)}`);
     }
   }
 

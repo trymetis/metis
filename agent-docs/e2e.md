@@ -55,13 +55,18 @@ See also [AGENTS.md](../AGENTS.md), [mcp.md](mcp.md), [updater.md](updater.md), 
 - **Testing a tool is separate from testing how a client connects.** The consent page, CIMD and the token endpoint are covered once in Playwright (`write/mcp.spec.ts`, `write/mcp-conformance.spec.ts`); the Vitest suite uses the seeded MCP clients' tokens directly.
   - `generate/mcp.ts` creates the clients through `src/mcp/clients.ts` and signs each access token with the JWT plugin's `signJWT` for the user's stable id.
   - Each tool group has its own client because the MCP route rate-limits per client ([mcp.md](mcp.md)); `api/support/mcp.ts` paces every client under it.
-- **The `system` tests share one 2FA rate limit** (`requireTotp`: 10 codes per user and scope in 300 s), so `setSection` waits out a 429's `retryAfterSec` (up to 300 s) and retries.
+- **API tests share the app's rate limits, so their helpers wait out a 429 and retry.**
+  - `requireTotp` allows 10 codes per user and scope in 300 s; every coded owner call (config saves, role changes, bans, account invites with a role) goes through `withTotp` in `api/support/config.ts`, which waits out `retryAfterSec` for that limit only; any other 429 fails at once.
+  - The wait is the full 300 s window, so the `rpc` and `system` projects, which hold the coded tests, get a 12-minute test timeout in `e2e/vitest.config.ts`.
+  - Account invites allow 10 per sender an hour (`createInvite`'s `invite-send` scope), and a full run sends close to that as the owner, so a spec that needs an account invite shares one: the MCP sign-up invite cases create, list and revoke one invite in order, and the roles spec's emailed invite also covers that its link is never handed back.
+  - Better Auth allows 10 `/sign-in/email` calls a minute per IP; `clients/sign-in.ts` waits out its `X-Retry-After`.
   - The `system` project's `testTimeout` in `vitest.config.ts` covers two such waits, since a test may call `setSection` twice right after another test's burst of edits.
 - **Every MCP tool has exactly one case, in `CASES` or `ALONE`, and a tool without one fails the suite.**
   - The completeness test compares `tools/list` of an all-tools client with the cases; `UNCOVERED` names the tools the stack cannot run.
   - A case asserts the tool's output and undoes what it changed.
   - The groups run concurrently, so a case that adds mail to the inbox goes in `ALONE` and runs by itself after them: "newest mail" reads such as `previewDecision` take arrival order, and an unrecorded message is a replay miss.
 - **A driver is tested by switching to it at runtime, the way an owner does.** The cache, runner and mailer chains in `api/system/` go through `dashboard.system.update`.
+- **The stack mails through the `console` driver into the harness** (`.env.fixture`), so a test reads an invite link or alert from `/console-mail-hits` without touching config (`e2e/lib/invites.ts` → `sentInviteLink`); a test that switches the mailer puts console back when it finishes.
   - So each step also covers the save's connection check, the rebuilt `sectionCached` driver, the change listeners and, for `bullmq`, the worker picking the change up through the config poll.
   - Each chain ends on the stack's default, so the files after it see the stack they expect.
 - **The browser suite runs before the API suite, against the same fresh stack.** `bun run test` is `down`, `up`, `test:browser`, `test:api`.

@@ -13,7 +13,7 @@ const { seedMcpClients } = await import("./mcp");
 const { writeSeed } = await import("./write");
 
 const account = await createAccount();
-const member = await createMember(account);
+const member = await createMember();
 const resources = await connectResources(account);
 await seedWorkspaceState(account, resources);
 await seedWorkflows(account, resources);

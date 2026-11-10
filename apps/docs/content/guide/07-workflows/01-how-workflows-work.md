@@ -79,6 +79,8 @@ A workflow runs as the person who created it. It can only reach the mailboxes, c
 
 If the person who created a workflow leaves the workspace, the workflow can no longer run. Its runs are blocked, and the run details say why, for example "The workflow's owner is no longer in this workspace".
 
+If the instance owner or an instance admin bans the person a workflow runs as, runs that come due while they are banned are blocked with "The workflow's owner is banned from this instance". Those runs stay blocked after the ban ends, until someone retries them. See [Cancel and retry runs](/guide/workflows/cancel-and-retry-runs#retry-a-run). Runs that come due after the ban run as usual.
+
 ## Who can see and change workflows
 
 Workflows belong to a workspace, and every member of the workspace can use them:

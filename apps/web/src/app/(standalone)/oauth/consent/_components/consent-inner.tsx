@@ -104,7 +104,7 @@ export function ConsentInner() {
   const [error, setError] = useState<string | null>(null);
 
   const isNew = client?.status === "new";
-  const manifest = mcpToolsFor({ isOwner: access?.isOwner ?? false });
+  const manifest = mcpToolsFor({ instanceRole: access?.instanceRole ?? null });
   const enabledTools = manifest.filter((t) => tools[t.key]);
   const workspaces = access?.workspaces ?? [];
   const hiddenIds = client?.status === "connected" ? new Set(client.hiddenWorkspaceIds) : hidden;

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { McpToolPicker } from "@/components/mcp-tool-picker";
 import { orpc } from "@/lib/orpc";
 import { isMcpToolEnabled, type McpToolKey, type McpToolPrefs, mcpToolsFor } from "@/mcp/tools";
+import type { InstanceRole } from "@/types/instance-role";
 
 type Manifest = ReturnType<typeof mcpToolsFor>;
 
@@ -16,15 +17,15 @@ function toDraft(manifest: Manifest, prefs: McpToolPrefs): Partial<Record<McpToo
 export function ClientTools({
   clientId,
   tools,
-  isOwner,
+  instanceRole,
   onSaved,
 }: {
   clientId: string;
   tools: McpToolPrefs;
-  isOwner: boolean;
+  instanceRole: InstanceRole | null;
   onSaved: () => void;
 }) {
-  const [manifest] = useState(() => mcpToolsFor({ isOwner }));
+  const [manifest] = useState(() => mcpToolsFor({ instanceRole }));
   const [saved, setSaved] = useState(() => toDraft(manifest, tools));
   const [draft, setDraft] = useState(saved);
   const [saving, setSaving] = useState(false);

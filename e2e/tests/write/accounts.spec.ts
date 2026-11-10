@@ -17,7 +17,7 @@ export default function accountSpecs() {
   }) => {
     const user = newSecondUser();
     const url = await inviteToSignUp(rpc, user.email);
-    expect(url).toContain("/invite/signup");
+    expect(url).toContain("/invite/accept");
 
     const context = await browser.newContext({
       baseURL: APP,

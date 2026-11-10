@@ -8,6 +8,7 @@ import trustedProxies from "./0004_trusted_proxies";
 import mailCacheDays from "./0005_mail_cache_days";
 import addressBooks from "./0006_address_books";
 import revocationAndRevisionAuthor from "./0007_revocation_and_revision_author";
+import invitesAndInstanceRoles from "./0008_invites_and_instance_roles";
 
 export const MIGRATIONS: readonly Migration[] = [
   baseline,
@@ -18,4 +19,5 @@ export const MIGRATIONS: readonly Migration[] = [
   mailCacheDays,
   addressBooks,
   revocationAndRevisionAuthor,
+  invitesAndInstanceRoles,
 ];

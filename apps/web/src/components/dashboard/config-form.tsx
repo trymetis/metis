@@ -24,6 +24,7 @@ import { useUnsavedChangesStore } from "@/store/unsaved-changes-store";
 import { CONFIG_SECTIONS, type ConfigSection } from "@/types/instance-config";
 
 import { ConfigFieldRows, fieldDirty, type Secrets, type Values } from "./config-fields";
+import { useDashboardRole } from "./dashboard-role";
 import { GuardedLink } from "./guarded-link";
 import { ResetSectionDialog } from "./reset-section-dialog";
 import { CheckResults, Loading } from "./system-client";
@@ -226,6 +227,7 @@ export function ConfigForm({
     view: DashboardConfigReset;
   } | null>(null);
   const [opening, setOpening] = useState<ConfigSection | null>(null);
+  const { canOperate } = useDashboardRole();
   const hydrated = useHydrated();
   const slot = hydrated ? document.getElementById(SAVE_BAR_SLOT_ID) : null;
   const added = useRef(0);
@@ -438,94 +440,104 @@ export function ConfigForm({
                         </span>
                         <span className="flex shrink-0 items-center gap-1.5">
                           {card.renderEntryBadge?.(original?.values ?? null)}
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={`Remove ${name}`}
-                            onClick={() =>
-                              update(draft.section, (current) => ({
-                                ...current,
-                                entries: current.entries.filter((item) => item.key !== entry.key),
-                              }))
-                            }
-                          >
-                            <Trash2 strokeWidth={1.75} />
-                          </Button>
+                          {canOperate && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label={`Remove ${name}`}
+                              onClick={() =>
+                                update(draft.section, (current) => ({
+                                  ...current,
+                                  entries: current.entries.filter((item) => item.key !== entry.key),
+                                }))
+                              }
+                            >
+                              <Trash2 strokeWidth={1.75} />
+                            </Button>
+                          )}
                         </span>
                       </div>
-                      <ConfigFieldRows
-                        idPrefix={`${draft.section}-${entry.key}`}
-                        fields={draft.fields}
-                        values={entry.values}
-                        initial={original?.values ?? {}}
-                        secrets={entry.secrets}
-                        onChange={(key, value) =>
-                          update(draft.section, (current) => ({
-                            ...current,
-                            entries: current.entries.map((item) =>
-                              item.key === entry.key
-                                ? {
-                                    ...item,
-                                    values: setValue(item.values, key, value),
-                                  }
-                                : item,
-                            ),
-                          }))
-                        }
-                      />
+                      <fieldset disabled={!canOperate} className="min-w-0">
+                        <ConfigFieldRows
+                          idPrefix={`${draft.section}-${entry.key}`}
+                          fields={draft.fields}
+                          values={entry.values}
+                          initial={original?.values ?? {}}
+                          secrets={entry.secrets}
+                          onChange={(key, value) =>
+                            update(draft.section, (current) => ({
+                              ...current,
+                              entries: current.entries.map((item) =>
+                                item.key === entry.key
+                                  ? {
+                                      ...item,
+                                      values: setValue(item.values, key, value),
+                                    }
+                                  : item,
+                              ),
+                            }))
+                          }
+                        />
+                      </fieldset>
                     </div>
                   );
                 })}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="self-start"
-                  onClick={() => {
-                    added.current += 1;
-                    const key = `new-${added.current}`;
-                    update(draft.section, (current) => ({
-                      ...current,
-                      entries: [
-                        ...current.entries,
-                        { key, id: null, values: current.blank, secrets: {} },
-                      ],
-                    }));
-                  }}
-                >
-                  <Plus strokeWidth={1.75} />
-                  Add server
-                </Button>
+                {canOperate && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="self-start"
+                    onClick={() => {
+                      added.current += 1;
+                      const key = `new-${added.current}`;
+                      update(draft.section, (current) => ({
+                        ...current,
+                        entries: [
+                          ...current.entries,
+                          { key, id: null, values: current.blank, secrets: {} },
+                        ],
+                      }));
+                    }}
+                  >
+                    <Plus strokeWidth={1.75} />
+                    Add server
+                  </Button>
+                )}
               </div>
             ) : (
-              <ConfigFieldRows
-                idPrefix={draft.section}
-                fields={draft.fields}
-                values={draft.values}
-                initial={before.values}
-                secrets={draft.secrets}
-                onChange={(key, value) =>
-                  update(draft.section, (current) => ({
-                    ...current,
-                    values: setValue(current.values, key, value),
-                  }))
-                }
-              />
+              <fieldset disabled={!canOperate} className="min-w-0">
+                <ConfigFieldRows
+                  idPrefix={draft.section}
+                  fields={draft.fields}
+                  values={draft.values}
+                  initial={before.values}
+                  secrets={draft.secrets}
+                  onChange={(key, value) =>
+                    update(draft.section, (current) => ({
+                      ...current,
+                      values: setValue(current.values, key, value),
+                    }))
+                  }
+                />
+              </fieldset>
             )}
             {card.children}
-            <div className="mt-3 flex justify-end">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={dirty || draft.matchesEnvironment || opening !== null}
-                onClick={() => openReset(draft)}
-              >
-                <RotateCcw strokeWidth={1.75} />
-                Reset to environment
-              </Button>
-            </div>
+            {canOperate && (
+              <div className="mt-3 flex justify-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={dirty || draft.matchesEnvironment || opening !== null}
+                  onClick={() => openReset(draft)}
+                >
+                  <RotateCcw strokeWidth={1.75} />
+                  Reset to environment
+                </Button>
+              </div>
+            )}
           </Section>
         );
       })}
