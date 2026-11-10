@@ -184,6 +184,8 @@ export const messagesRouter = {
         const { payload, addedBcc } = await prepareOutgoing({
           workspaceId: mail.workspaceId,
           mailboxId: from.mailboxId,
+          mailboxEmail: from.mailboxEmail,
+          userId: mail.userId,
           payload: forSender(mail, from, draft),
         });
 

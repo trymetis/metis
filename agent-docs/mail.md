@@ -1,6 +1,6 @@
 # Mail — sessions, adapters and providers
 
-How a mail request reaches a provider: `MailSession`, the `MailAdapter` interface and its providers, the `all` aggregate mailbox, drafts, personal mail state and undo send.
+How a mail request reaches a provider: `MailSession`, the `MailAdapter` interface and its providers, the `all` aggregate mailbox, drafts, signatures and the workspace footer, personal mail state and undo send.
 Paths are relative to `apps/web/`.
 See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mail-ai.md), [mail-rendering.md](mail-rendering.md), [servers.md](servers.md), [workflow-graph.md](workflow-graph.md), [orpc.md](orpc.md).
 
@@ -18,6 +18,8 @@ See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mai
 | Personal state                                      | `src/mail/mute.ts`, `src/mail/read-later.ts` · tables `mailMute`, `mailReadLater` in `src/db/schema.ts`                                                                                                                                                                                                                                  |
 | Mail list state (client)                            | `src/mail/mail-cache.ts` → `useMailList`, `useReadLaterList`, `refreshMailListHead`, `refreshReadLaterList`, `holdRemoved`, `setCachedLabels`, `mutedThreads`, `readLater` · `src/store/mail-store.ts` → `listTabs`, `selectedView`, `submittedSearch`, `updateEmail`, `removeEmail`, `removeEmails` · `src/lib/in-order.ts` → `inOrder` |
 | Custom labels, contacts, raw source                 | `src/mail/custom-labels.ts` · `src/mail/contacts.ts` → `suggestContacts` · `src/mail/raw.ts` → `readRawMessage`                                                                                                                                                                                                                          |
+| Signatures and the footer                           | `src/mail/signatures.ts` → `composeSignatures`, `saveSignature`, `setMailFooter`, `finishOutgoing` · `src/mail/signature-markup.ts` · table `mailSignature` · procedures `src/server/routes/mail/signatures.ts`, `workspace-signatures.ts`                                                                                               |
+| Signature UI                                        | composer node `src/app/w/[slug]/m/[mailbox]/_components/signature-block.ts` · settings `src/app/w/[slug]/settings/signatures/` · sanitizer `src/lib/sanitize-html.ts` → `sanitizeSignatureHtml`                                                                                                                                          |
 | Undo send                                           | `src/store/undo-send-store.ts` → store action `startSend` · `src/components/undo-send-toast.tsx`                                                                                                                                                                                                                                         |
 | Body rendering, labels                              | `src/mail/render/` ([mail-rendering.md](mail-rendering.md)) · `src/mail/labels.ts` ([mail-ai.md](mail-ai.md))                                                                                                                                                                                                                            |
 | Workspace search over mail                          | `MailAdapter.searchAst` in every provider · `src/mail/search.ts` → `searchMail` ([search.md](search.md))                                                                                                                                                                                                                                 |
@@ -93,6 +95,30 @@ See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mai
   - Every list and search fetch takes the time it started and drops a held id unless it started after the request settled; an earlier fetch may have read the folder before the provider moved the message.
   - The hold ends with the first fetch that started after the request settled, so a failed request lets the row return, and a message that comes back under the same id (a short snooze on Gmail or Outlook) stays visible.
 
+### Signatures and the footer
+
+- **A signature belongs to one of three owners, and the most personal default wins, separately for new mail and for replies** (`composeSignatures`).
+  - Personal (user × mailbox), mailbox, workspace; one `mail_signature` table holds all three, its check constraint ties each `scope` to its owner columns.
+  - A personal signature without a reply default falls through to the mailbox's reply default, then the workspace's.
+- **Each owner has its own editor:** personal signatures by their user, mailbox signatures by the person who connected the mailbox (`getMailbox(mailboxId, userId)`), workspace signatures and the footer by workspace owners and admins.
+  - `signatureOwnerFor` and `canEditWorkspaceSignatures` (`src/mail/signatures.ts`) hold these checks for the procedures and the tools alike.
+- **The agents and MCP manage signatures with `listSignatures`, `saveSignature`, `deleteSignature` and `setMailFooter`** (bodies in `src/ops/mail.ts`).
+  - The three writes are sensitive in `MCP_TOOL_MANIFEST` and need approval in the assistant, because a signature or footer goes out on other people's mail.
+- **The composer inserts the signature in the browser; every other send path inserts it on the server in `finishOutgoing`.**
+  - The composer adds the new-mail default to a new message and the reply default to a reply or forward, swaps it when the From mailbox changes, and offers every option plus No signature in its toolbar picker.
+  - A reopened draft never gets a signature added. Outlook (Graph) is reported to strip `data-` attributes from stored draft HTML, so the `data-metis-signature` marker cannot be trusted after a provider round trip.
+  - The editor holds the signature as one atom node with the sanitized HTML as an attribute, because StarterKit has no image or table nodes and drops unknown attributes.
+- **Agent, MCP and workflow mail gets the default new-mail signature unless the caller opts out.**
+  - `sendEmail`, `createDraft` and `scheduleEmail` take `signature` (default true); the workflow steps Create a draft, Send mail, Reply and Forward have **Add signature** (default on), Reply and Forward using the reply default and the workflow's principal as the user.
+  - `updateDraft` never adds one, and a body that already holds `data-metis-signature` is left alone.
+- **The footer goes on every message sent through Metis from the workspace, after any quoted text, and never into a draft.**
+  - App sends and scheduled sends get it in `prepareOutgoing` (a scheduled send when it is queued, so `mail.sendScheduled` does not add it again), agent and MCP sends in `send` (`src/ops/mail.ts`), workflow sends in the Send mail, Reply and Forward runners.
+  - It is added after the before-send Bcc policy runs, so policies match what the sender wrote.
+  - The unsubscribe `mailto:` send calls the adapter directly and gets neither signature nor footer.
+- **Signature and footer HTML is sanitized on save and again when rendered** (`sanitizeSignatureHtml`): no script, style, form or media tags, no `id`, `class` or `data-` attributes, links only `http(s)`, `mailto` and `tel`, images only `https`.
+- **`{{name}}` and `{{email}}` are filled per sender** with the user's account name and the sending address; the footer has no variables.
+- **Changing the footer writes `workspace.mail_footer_changed`** in `setMailFooter` ([audit.md](audit.md)).
+
 ### Other rules
 
 - **Unsubscribe results are mailbox-scoped**: the sender dropped the address, not the person.
@@ -125,6 +151,10 @@ See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mai
 - **IMAP sending.** SMTP does not file sent mail, so every send APPENDs to `\Sent` itself; a failed APPEND logs and still reports success, because the send succeeded.
 
 ## Deliberate limits
+
+- **The footer reaches only mail sent through Metis.** Mail sent from the provider's own app, including a Metis-created draft sent there, goes out without it.
+- **Signature images are hosted `https` links.** Embedded (`cid:`) images would need inline attachments in `DraftPayload` and every adapter.
+- **A reopened Outlook draft's signature is ordinary text** when Graph stripped the marker, so the composer picker appends the chosen signature instead of replacing it.
 
 - **IMAP is known-degraded.**
   - Search is `SEARCH TEXT` over `SEARCH_FOLDERS` (Inbox, Archive, Sent): substring, no ranking.

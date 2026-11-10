@@ -30,7 +30,18 @@ The Workspace Assistant can do everything below, across all the mailboxes, calen
 - Add to, remove from and list Read later
 - Find newsletters you receive, and unsubscribe from them **(approval)**
 
+When the assistant sends an email, schedules one or creates a draft, it adds your default signature for new messages after the text. It leaves the signature out if you ask for none, and may leave it out when the text already ends with a sign-off. Updating a draft never adds a signature. Email it sends or schedules also gets the workspace's mail footer, when it is on. Drafts do not. See [Signatures and the mail footer](/guide/mail/signatures).
+
 When phishing detection is off for a mailbox, the check reports that phishing detection is turned off for this mailbox. If your Metis Suite server has no phishing detection, the assistant cannot check for phishing.
+
+### Signatures
+
+- List the workspace's signatures and mail footer, and, for a mailbox, its signatures and your own signatures for it. The list says which ones you can change.
+- Add or edit a signature **(approval)**: a workspace signature (owners and admins only), a mailbox's signature (only the person who connected the mailbox) or your own signature for a mailbox. It can make the signature the default for new messages, for replies and forwards, or both. If you do not mention the defaults when changing a signature, it keeps the ones it has. A new signature is not a default unless you ask.
+- Delete a signature **(approval)**. The same people can delete a signature as can change it.
+- Set or turn off the workspace's mail footer **(approval)**. Only workspace owners and admins can do this.
+
+Signatures and footers saved by the assistant are cleaned up and limited the same way as on the **Signatures** page. A footer change shows on the workspace's [Activity](/guide/workspaces/workspace-activity) page, marked **Workspace Assistant**. See [Signatures and the mail footer](/guide/mail/signatures).
 
 ### Calendar
 

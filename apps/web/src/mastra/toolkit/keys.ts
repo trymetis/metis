@@ -87,6 +87,10 @@ export const TOOL_KEYS = [
   "removeMember",
   "revokeInvite",
   "setWorkspaceTheme",
+  "listSignatures",
+  "saveSignature",
+  "deleteSignature",
+  "setMailFooter",
 ] as const;
 
 export type ToolKey = (typeof TOOL_KEYS)[number];
@@ -132,6 +136,7 @@ export const READ_TOOL_KEYS = [
   "getDriveQuota",
   "previewDecision",
   "listInvites",
+  "listSignatures",
 ] as const satisfies readonly ToolKey[];
 
 export const WRITE_TOOL_KEYS = [
@@ -183,6 +188,9 @@ export const WRITE_TOOL_KEYS = [
   "createContact",
   "updateContact",
   "deleteContact",
+  "saveSignature",
+  "deleteSignature",
+  "setMailFooter",
 ] as const satisfies readonly ToolKey[];
 
 export type ReadToolKey = (typeof READ_TOOL_KEYS)[number];

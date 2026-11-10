@@ -18,6 +18,7 @@ import {
   mailboxTarget,
   messageTarget,
   setLabelsFields,
+  signatureField,
   summarizeThreadFields,
 } from "../toolkit/schema";
 
@@ -197,14 +198,20 @@ const sendEmailTool = createTool({
   inputSchema: z.object({
     ...mailboxTarget,
     ...draftFields,
+    ...signatureField,
     summary: z.string().describe("Short description of the mail that will go out, and to whom"),
   }),
-  execute: async ({ mailboxId, to, cc, bcc, subject, bodyHtml }, { requestContext }) =>
+  execute: async ({ mailboxId, to, cc, bcc, subject, bodyHtml, signature }, { requestContext }) =>
     withToolErrors(async () => {
       const ctx = getWorkspaceCtx(requestContext);
       const r = requireMailbox(ctx, mailboxId);
       if ("error" in r) return r;
-      return mail.send(r.mailbox, { to, cc, bcc, subject, bodyHtml });
+      return mail.send(
+        ctx,
+        r.mailbox,
+        { to, cc, bcc, subject, bodyHtml },
+        { signature: signature ?? true },
+      );
     }),
   requireApproval: true,
 });
@@ -213,13 +220,18 @@ const createDraftTool = createTool({
   id: "createDraft",
   description:
     "Create a draft email in a specific mailbox. The draft is saved to the provider's Drafts folder — nothing is sent. Returns the draft id for later updates.",
-  inputSchema: z.object({ ...mailboxTarget, ...draftFields }),
-  execute: async ({ mailboxId, to, cc, bcc, subject, bodyHtml }, { requestContext }) =>
+  inputSchema: z.object({ ...mailboxTarget, ...draftFields, ...signatureField }),
+  execute: async ({ mailboxId, to, cc, bcc, subject, bodyHtml, signature }, { requestContext }) =>
     withToolErrors(async () => {
       const ctx = getWorkspaceCtx(requestContext);
       const r = requireMailbox(ctx, mailboxId);
       if ("error" in r) return r;
-      return mail.createDraft(r.mailbox, { to, cc, bcc, subject, bodyHtml });
+      return mail.createDraft(
+        ctx,
+        r.mailbox,
+        { to, cc, bcc, subject, bodyHtml },
+        { signature: signature ?? true },
+      );
     }),
 });
 

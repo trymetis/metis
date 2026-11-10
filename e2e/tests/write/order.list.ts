@@ -11,6 +11,7 @@ import mcpConformanceSpecs from "./mcp-conformance.spec";
 import mcpSpecs from "./mcp.spec";
 import memberSpecs from "./members.spec";
 import settingsSpecs from "./settings.spec";
+import signatureSpecs from "./signatures.spec";
 import updateSpecs from "./updates.spec";
 import workflowSpecs from "./workflows.spec";
 
@@ -25,6 +26,7 @@ test.describe("mail", mailSpecs);
 test.describe("accounts", accountSpecs);
 test.describe("members", memberSpecs);
 test.describe("settings", settingsSpecs);
+test.describe("signatures", signatureSpecs);
 test.describe("dashboard", dashboardSpecs);
 test.describe("updates", updateSpecs);
 test.describe("mail filters", mailFilterSpecs);

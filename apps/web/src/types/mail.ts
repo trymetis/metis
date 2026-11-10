@@ -24,6 +24,12 @@ export type MailRemoteContentMode = (typeof MAIL_REMOTE_CONTENT_MODES)[number];
 export const MAIL_REMOTE_ALLOW_KINDS = ["address", "domain"] as const;
 export type MailRemoteAllowKind = (typeof MAIL_REMOTE_ALLOW_KINDS)[number];
 
+export const MAIL_SIGNATURE_SCOPES = ["personal", "mailbox", "workspace"] as const;
+export type MailSignatureScope = (typeof MAIL_SIGNATURE_SCOPES)[number];
+
+export const MAIL_SIGNATURE_KINDS = ["new", "reply"] as const;
+export type MailSignatureKind = (typeof MAIL_SIGNATURE_KINDS)[number];
+
 export const UNSUBSCRIBE_METHODS = ["one_click", "mailto", "link"] as const;
 export type UnsubscribeMethod = (typeof UNSUBSCRIBE_METHODS)[number];
 

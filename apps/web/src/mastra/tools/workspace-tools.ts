@@ -7,6 +7,7 @@ import { workspaceDriveTools } from "./workspace-drive-tools";
 import { workspaceInboxTools } from "./workspace-inbox-tools";
 import { workspaceMailTools } from "./workspace-mail-tools";
 import { workspaceMemberTools } from "./workspace-member-tools";
+import { workspaceSignatureTools } from "./workspace-signature-tools";
 import { workspaceWorkflowGraphTools, workspaceWorkflowTools } from "./workspace-workflow-tools";
 
 export const allWorkspaceTools = {
@@ -18,6 +19,7 @@ export const allWorkspaceTools = {
   ...workspaceContactTools,
   ...workspaceMemberTools,
   ...workspaceAdminTools,
+  ...workspaceSignatureTools,
 } satisfies Record<ToolKey, unknown>;
 
 export const RESIDENT_TOOL_KEYS = [

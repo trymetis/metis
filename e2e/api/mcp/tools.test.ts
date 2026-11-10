@@ -2071,6 +2071,163 @@ const ACCOUNT: Case[] = [
     },
   },
   {
+    tool: "listSignatures",
+    run: async (s, c) => {
+      const temp = await tempWorkspace(c);
+      const name = uniqueName();
+      const { signature } = await s.ok<{ signature: { signatureId: string } }>("saveSignature", {
+        workspaceId: temp.workspaceId,
+        scope: "workspace",
+        name,
+        html: "<p>Listed</p>",
+      });
+      try {
+        const out = await s.ok<{
+          workspace: { signatureId: string; name: string }[];
+          canEditWorkspace: boolean;
+          footer: { html: string; enabled: boolean };
+          mailbox?: unknown;
+        }>("listSignatures", { workspaceId: temp.workspaceId });
+        expect(out.workspace).toContainEqual(
+          expect.objectContaining({ signatureId: signature.signatureId, name }),
+        );
+        expect(out.canEditWorkspace).toBe(true);
+        expect(out.footer).toEqual({ html: "", enabled: false });
+        expect(out.mailbox).toBeUndefined();
+        const withMailbox = await s.ok<{ mailbox?: { mailboxId: string; canEdit: boolean } }>(
+          "listSignatures",
+          box(c),
+        );
+        expect(withMailbox.mailbox).toMatchObject({ mailboxId: c.mailboxId, canEdit: true });
+      } finally {
+        await s.ok("deleteSignature", {
+          workspaceId: temp.workspaceId,
+          scope: "workspace",
+          signatureId: signature.signatureId,
+        });
+      }
+    },
+  },
+  {
+    tool: "saveSignature",
+    run: async (s, c) => {
+      const temp = await tempWorkspace(c);
+      const name = uniqueName();
+      const first = await s.ok<{ signature: { signatureId: string; html: string } }>(
+        "saveSignature",
+        {
+          workspaceId: temp.workspaceId,
+          scope: "workspace",
+          name,
+          html: "<p>Team {{name}}</p><script>alert(1)</script>",
+          defaultNew: true,
+        },
+      );
+      expect(first.signature.html).toBe("<p>Team {{name}}</p>");
+      const second = await s.ok<{ signature: { signatureId: string } }>("saveSignature", {
+        workspaceId: temp.workspaceId,
+        scope: "workspace",
+        name: `${name} 2`,
+        html: "<p>Second</p>",
+        defaultNew: true,
+      });
+      const mine = await s.ok<{ scope: string; signature: { signatureId: string } }>(
+        "saveSignature",
+        { ...box(c), scope: "personal", name, html: "<p>Mine</p>" },
+      );
+      expect(mine.scope).toBe("personal");
+      const edited = await s.ok<{ signature: { defaultNew: boolean; html: string } }>(
+        "saveSignature",
+        {
+          workspaceId: temp.workspaceId,
+          scope: "workspace",
+          signatureId: second.signature.signatureId,
+          name: `${name} 2`,
+          html: "<p>Second, edited</p>",
+        },
+      );
+      expect(edited.signature).toMatchObject({ defaultNew: true, html: "<p>Second, edited</p>" });
+      try {
+        const listed = await s.ok<{
+          workspace: { signatureId: string; defaultNew: boolean }[];
+        }>("listSignatures", { workspaceId: temp.workspaceId });
+        expect(listed.workspace.filter((w) => w.defaultNew).map((w) => w.signatureId)).toEqual([
+          second.signature.signatureId,
+        ]);
+        const ownView = await s.ok<{ mailbox?: { yours: { signatureId: string }[] } }>(
+          "listSignatures",
+          box(c),
+        );
+        expect(ownView.mailbox?.yours.map((y) => y.signatureId)).toContain(
+          mine.signature.signatureId,
+        );
+        expect(
+          await s.refused("saveSignature", {
+            workspaceId: temp.workspaceId,
+            scope: "mailbox",
+            name,
+            html: "<p>No mailbox</p>",
+          }),
+        ).toBe("Pick the mailbox this signature belongs to");
+      } finally {
+        for (const id of [first.signature.signatureId, second.signature.signatureId]) {
+          await s.ok("deleteSignature", {
+            workspaceId: temp.workspaceId,
+            scope: "workspace",
+            signatureId: id,
+          });
+        }
+        await s.ok("deleteSignature", {
+          ...box(c),
+          scope: "personal",
+          signatureId: mine.signature.signatureId,
+        });
+      }
+    },
+  },
+  {
+    tool: "deleteSignature",
+    run: async (s, c) => {
+      const { signature } = await s.ok<{ signature: { signatureId: string } }>("saveSignature", {
+        ...box(c),
+        scope: "personal",
+        name: uniqueName(),
+        html: "<p>Short-lived</p>",
+      });
+      const target = { ...box(c), scope: "personal", signatureId: signature.signatureId };
+      expect(await s.ok("deleteSignature", target)).toMatchObject({
+        deleted: true,
+        signatureId: signature.signatureId,
+      });
+      expect(await s.refused("deleteSignature", target)).toBe(
+        `No personal signature "${signature.signatureId}" here`,
+      );
+    },
+  },
+  {
+    tool: "setMailFooter",
+    run: async (s, c) => {
+      const temp = await tempWorkspace(c);
+      const footer = { workspaceId: temp.workspaceId };
+      expect(
+        await s.ok("setMailFooter", {
+          ...footer,
+          html: "<p>Footer from MCP</p><script>x</script>",
+          enabled: true,
+        }),
+      ).toEqual({ updated: true, html: "<p>Footer from MCP</p>", enabled: true });
+      expect(
+        await s.ok("setMailFooter", { ...footer, html: "<p>Footer from MCP</p>", enabled: false }),
+      ).toEqual({ updated: true, html: "<p>Footer from MCP</p>", enabled: false });
+      const { events } = await c.rpc<AuditPage>("audit.workspace", {
+        workspaceSlug: temp.slug,
+      });
+      expect(
+        events.filter((e) => e.action === "workspace.mail_footer_changed").map((e) => e.via),
+      ).toEqual(["mcp", "mcp"]);
+    },
+  },
+  {
     tool: "revokeInvite",
     run: async (s, c) => {
       const temp = await tempWorkspace(c);

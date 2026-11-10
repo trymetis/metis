@@ -1,9 +1,9 @@
 ---
 title: Export your data
-description: Download a file with your preferences, workspaces, labels, workflows, assistant chats and security activity, and learn what it leaves out.
+description: Download a file with your preferences, workspaces, signatures, labels, workflows, assistant chats and security activity, and learn what it leaves out.
 ---
 
-You can download a copy of your Metis Suite settings and history. This includes your preferences, workspaces, labels, workflows, Workspace Assistant chats and security activity. You get one file in JSON format (a plain text format that many programs can read).
+You can download a copy of your Metis Suite settings and history. This includes your preferences, workspaces, signatures, labels, workflows, Workspace Assistant chats and security activity. You get one file in JSON format (a plain text format that many programs can read).
 
 The export is a copy for you to keep. You cannot import it back into Metis Suite.
 
@@ -33,6 +33,7 @@ The date in the file name is the date in UTC (Coordinated Universal Time). Early
 | Preferences                                    | Your default workspace and the order of your workspaces. Whether remote images load on their own, whether links are cleaned, and the senders and domains whose images always load. Whether you get sign-in alert emails. See [Privacy settings](/guide/account/privacy-settings) and [Sign-in alerts](/guide/account/sign-in-alerts).                                                                                                                                                                                                                                                                                                                  |
 | Workspaces                                     | Every workspace you belong to: its name, its short name from the web address, your role, the date you joined, its AI and phishing detection settings, and its accent color.                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | Mailboxes, calendars, drives and address books | Listed under each workspace: the ones you connected yourself and added to it. Each shows the provider, the account email, the server, its short name and whether AI is on. A mailbox also shows whether phishing detection is on. A calendar shows which of its calendars the workspace shows, and an address book shows which of its address books the workspace shows. A drive shows its [folder restrictions](/guide/drive/folder-restrictions). For drives, an empty list means nothing is hidden. For calendars and address books, an empty list means none is shown. A resource you have not added to any of your workspaces is not listed here. |
+| Signatures                                     | Your own signatures on any mailbox, including mailboxes another member connected. Also the mailbox signatures of every mailbox you connected. Each one shows the mailbox's email address, whether it is a mailbox signature or your own, its name, its HTML, whether it is the default for new messages and for replies and forwards, and the date it was created. See [Signatures and the mail footer](/guide/mail/signatures).                                                                                                                                                                                                                       |
 | Labels                                         | For each mailbox you connected: every custom label on it (name, color and date), including ones other members made. Also every label put on a message, with who put it there (AI, a person or the email provider), how sure the AI was, and when.                                                                                                                                                                                                                                                                                                                                                                                                      |
 | Workflows                                      | Every workflow that [runs as you](/guide/workflows/how-workflows-work#who-a-workflow-runs-as): its workspace, name, whether it is on, its dates, all of its steps and its workflow settings. It also lists the email address of each mailbox, calendar, drive and address book the workflow uses. Workflows you deleted are not included.                                                                                                                                                                                                                                                                                                              |
 | Workspace Assistant chats                      | Every chat you had with the assistant: its workspace, title, dates and all its messages. Chats from a workspace you have left are included too.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
@@ -49,6 +50,7 @@ Among other things, the file leaves out:
 - Scheduled sends and snoozes.
 - Workflow run history, pinned test samples and webhook secrets.
 - Muted conversations and **Read later**.
+- Workspace signatures and the workspace mail footer.
 - Saved searches.
 - Pinned drive folders.
 - Senders you unsubscribed from.
@@ -58,7 +60,7 @@ Among other things, the file leaves out:
 
 ### What another member connected
 
-Your export holds only the mailboxes, calendars, drives and address books you connected yourself. A mailbox that another member connected and added to a workspace you share belongs to that member. The mailbox and its labels are in their export, not in yours. The same goes for calendars, drives and address books.
+Your export holds only the mailboxes, calendars, drives and address books you connected yourself. A mailbox that another member connected and added to a workspace you share belongs to that member. The mailbox, its labels and its mailbox signatures are in their export, not in yours. The same goes for calendars, drives and address books. Your own signatures on that mailbox are in your export.
 
 ## If the download does not work
 

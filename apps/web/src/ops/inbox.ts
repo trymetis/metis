@@ -227,7 +227,7 @@ export async function listSnoozed(
 export async function scheduleEmail(
   ctx: WorkspaceCtx,
   mailbox: AgentMailbox,
-  args: { payload: DraftPayload; scheduledFor: string },
+  args: { payload: DraftPayload; scheduledFor: string; signature: boolean },
 ): Promise<Output<typeof scheduleEmailOutput>> {
   const mail = mailScopeFor(ctx, mailbox);
   const from = await sendingMailbox(mail);
@@ -236,6 +236,7 @@ export async function scheduleEmail(
     from,
     payload: args.payload,
     scheduledFor: args.scheduledFor,
+    signature: args.signature ? "new" : null,
   });
   if ("error" in scheduled) return scheduled;
   return {

@@ -3,7 +3,7 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
 import { requireMailbox, withToolErrors } from "@/mastra/toolkit/resolve";
-import { draftFields, draftTarget, mailboxTarget } from "@/mastra/toolkit/schema";
+import { draftFields, draftTarget, mailboxTarget, signatureField } from "@/mastra/toolkit/schema";
 import * as mail from "@/ops/mail";
 
 import { mcpScopeFromCall } from "../context";
@@ -13,13 +13,21 @@ export const createDraft = createTool({
   id: "createDraft",
   description:
     "Create a draft email in a specific mailbox. The draft is saved to the provider's Drafts folder — nothing is sent. Returns the draft id for later updates.",
-  inputSchema: inWorkspace({ ...mailboxTarget, ...draftFields }),
-  execute: async ({ workspaceId, mailboxId, to, cc, bcc, subject, bodyHtml }, { requestContext }) =>
+  inputSchema: inWorkspace({ ...mailboxTarget, ...draftFields, ...signatureField }),
+  execute: async (
+    { workspaceId, mailboxId, to, cc, bcc, subject, bodyHtml, signature },
+    { requestContext },
+  ) =>
     withToolErrors(async () => {
       const ctx = await mcpScopeFromCall(requestContext, workspaceId);
       const r = requireMailbox(ctx, mailboxId);
       if ("error" in r) return r;
-      return mail.createDraft(r.mailbox, { to, cc, bcc, subject, bodyHtml });
+      return mail.createDraft(
+        ctx,
+        r.mailbox,
+        { to, cc, bcc, subject, bodyHtml },
+        { signature: signature ?? true },
+      );
     }),
 });
 

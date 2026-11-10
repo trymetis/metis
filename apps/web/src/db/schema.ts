@@ -23,6 +23,7 @@ import {
   MAIL_LABEL_SOURCES,
   MAIL_REMOTE_ALLOW_KINDS,
   MAIL_REMOTE_CONTENT_MODES,
+  MAIL_SIGNATURE_SCOPES,
   UNSUBSCRIBE_METHODS,
   UNSUBSCRIBE_STATUSES,
 } from "@/types/mail";
@@ -77,6 +78,8 @@ export const workspace = sqliteTable(
       .notNull()
       .default("optional"),
     branding: text("branding", { mode: "json" }).$type<Record<string, unknown>>(),
+    mailFooterHtml: text("mail_footer_html").notNull().default(""),
+    mailFooterEnabled: bool("mail_footer_enabled").notNull().default(false),
     createdAt: timestamp("created_at").notNull(),
     updatedAt: timestamp("updated_at")
       .$onUpdate(() => new Date())
@@ -830,6 +833,34 @@ export const mailboxLabel = sqliteTable(
   (table) => [
     index("mailbox_label_mailbox_idx").on(table.mailboxId),
     uniqueIndex("mailbox_label_mailbox_key_idx").on(table.mailboxId, table.key),
+  ],
+);
+
+export const mailSignature = sqliteTable(
+  "mail_signature",
+  {
+    id: text("id").primaryKey(),
+    scope: text("scope", { enum: MAIL_SIGNATURE_SCOPES }).notNull(),
+    workspaceId: text("workspace_id").references(() => workspace.id, { onDelete: "cascade" }),
+    mailboxId: text("mailbox_id").references(() => mailbox.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => authSchemas.user.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    html: text("html").notNull(),
+    defaultNew: bool("default_new").notNull().default(false),
+    defaultReply: bool("default_reply").notNull().default(false),
+    createdAt: timestamp("created_at").notNull(),
+    updatedAt: timestamp("updated_at")
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("mail_signature_workspace_idx").on(table.workspaceId),
+    index("mail_signature_mailbox_idx").on(table.mailboxId),
+    index("mail_signature_user_idx").on(table.userId),
+    check(
+      "mail_signature_owner_ck",
+      sql`(${table.scope} = 'workspace' AND ${table.workspaceId} IS NOT NULL AND ${table.mailboxId} IS NULL AND ${table.userId} IS NULL) OR (${table.scope} = 'mailbox' AND ${table.mailboxId} IS NOT NULL AND ${table.workspaceId} IS NULL AND ${table.userId} IS NULL) OR (${table.scope} = 'personal' AND ${table.mailboxId} IS NOT NULL AND ${table.userId} IS NOT NULL AND ${table.workspaceId} IS NULL)`,
+    ),
   ],
 );
 

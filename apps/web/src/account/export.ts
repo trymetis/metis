@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, or } from "drizzle-orm";
 
 import { exportUserAuditEvents } from "@/audit";
 import { serverLabel } from "@/connections/connection-store";
@@ -17,6 +17,7 @@ import {
   mailboxWorkspace,
   mailLabel,
   mailRemoteAllow,
+  mailSignature,
   user,
   userPrefs,
   workflow,
@@ -32,7 +33,7 @@ import { graphResourceIds } from "@/workflow/validation";
 import { workspaceThemeBrand } from "@/workspace";
 
 const NOTICE =
-  "This file holds what Metis Suite stores for your account: preferences, workspaces, labels, workflows, Workspace Assistant chats and security activity. It is not a mailbox archive. Mail, calendar events, files and contacts stay with the provider you connected; export those from the provider.";
+  "This file holds what Metis Suite stores for your account: preferences, workspaces, signatures, labels, workflows, Workspace Assistant chats and security activity. It is not a mailbox archive. Mail, calendar events, files and contacts stay with the provider you connected; export those from the provider.";
 
 function iso(value: Date | string | number): string {
   return new Date(value).toISOString();
@@ -199,6 +200,44 @@ async function loadLabels(userId: string): Promise<DataExport["labels"]> {
   }));
 }
 
+async function loadSignatures(userId: string): Promise<DataExport["signatures"]> {
+  const rows = await db
+    .select({
+      email: connection.email,
+      scope: mailSignature.scope,
+      name: mailSignature.name,
+      html: mailSignature.html,
+      defaultNew: mailSignature.defaultNew,
+      defaultReply: mailSignature.defaultReply,
+      createdAt: mailSignature.createdAt,
+    })
+    .from(mailSignature)
+    .innerJoin(mailbox, eq(mailbox.id, mailSignature.mailboxId))
+    .innerJoin(connection, eq(connection.id, mailbox.connectionId))
+    .where(
+      or(
+        and(eq(mailSignature.scope, "personal"), eq(mailSignature.userId, userId)),
+        and(eq(mailSignature.scope, "mailbox"), eq(connection.userId, userId)),
+      ),
+    )
+    .orderBy(asc(mailSignature.createdAt));
+  return rows.flatMap((row) =>
+    row.scope === "workspace"
+      ? []
+      : [
+          {
+            mailbox: row.email,
+            scope: row.scope,
+            name: row.name,
+            html: row.html,
+            defaultNew: row.defaultNew,
+            defaultReply: row.defaultReply,
+            createdAt: iso(row.createdAt),
+          },
+        ],
+  );
+}
+
 async function resourceEmails(kind: ResourceKind, ids: string[]): Promise<Map<string, string>> {
   if (ids.length === 0) return new Map();
   const table = { mailbox, calendar, drive, addressbook: addressBook }[kind];
@@ -318,6 +357,7 @@ export async function buildDataExport(userId: string): Promise<DataExport> {
     calendarLinks,
     driveLinks,
     addressBookLinks,
+    signatures,
     labels,
     workflows,
     assistantThreads,
@@ -335,6 +375,7 @@ export async function buildDataExport(userId: string): Promise<DataExport> {
     loadCalendarLinks(userId),
     loadDriveLinks(userId),
     loadAddressBookLinks(userId),
+    loadSignatures(userId),
     loadLabels(userId),
     loadWorkflows(userId),
     loadAssistantThreads(userId),
@@ -385,6 +426,7 @@ export async function buildDataExport(userId: string): Promise<DataExport> {
       drives: (drivesBy.get(m.id) ?? []).map(({ workspaceId: _, ...link }) => link),
       addressBooks: (addressBooksBy.get(m.id) ?? []).map(({ workspaceId: _, ...link }) => link),
     })),
+    signatures,
     labels,
     workflows,
     assistantThreads,

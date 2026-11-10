@@ -7,7 +7,7 @@ import type { ResolvedMailbox } from "@/mail/aggregate";
 import { forSender, type MailScope } from "@/mail/session";
 import type { ScheduledSendItem as ScheduledSendView } from "@/server/schema";
 import { enforceRateLimit } from "@/services/rate-limit";
-import type { DraftPayload } from "@/types/mail";
+import type { DraftPayload, MailSignatureKind } from "@/types/mail";
 
 import { expr, literal } from "../expr";
 import { newNodeId } from "../graph";
@@ -84,14 +84,19 @@ export async function scheduleSend(opts: {
   userId: string;
   workspaceId: string;
   mailboxId: string;
+  mailboxEmail: string;
   linkId: string | null;
   payload: DraftPayload;
   at: Date;
+  signature?: MailSignatureKind | null;
 }): Promise<{ id: string; scheduledFor: string; addedBcc: string[] }> {
   const { payload: prepared, addedBcc } = await prepareOutgoing({
     workspaceId: opts.workspaceId,
     mailboxId: opts.mailboxId,
+    mailboxEmail: opts.mailboxEmail,
+    userId: opts.userId,
     payload: opts.payload,
+    signature: opts.signature,
   });
 
   const saved = await saveDefinition({
@@ -116,6 +121,7 @@ export async function scheduleOutgoing(opts: {
   from: ResolvedMailbox;
   payload: DraftPayload;
   scheduledFor: string;
+  signature?: MailSignatureKind | null;
 }): Promise<{ id: string; scheduledFor: string; addedBcc: string[] } | { error: string }> {
   await enforceRateLimit(opts.mail.userId, {
     scope: "schedule-send",
@@ -135,9 +141,11 @@ export async function scheduleOutgoing(opts: {
     userId: opts.mail.userId,
     workspaceId: opts.mail.workspaceId,
     mailboxId: opts.from.mailboxId,
+    mailboxEmail: opts.from.mailboxEmail,
     linkId: opts.from.linkId,
     payload: forSender(opts.mail, opts.from, opts.payload),
     at: when,
+    signature: opts.signature,
   });
 
   console.log(

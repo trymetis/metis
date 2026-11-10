@@ -1,8 +1,9 @@
 import { z } from "zod";
 
+import { SIGNATURE_HTML_MAX, SIGNATURE_NAME_MAX } from "@/mail/signature-markup";
 import { THEME_BRAND_IDS } from "@/theme/brand";
 import { WRITABLE_ATTENDEE_RESPONSES } from "@/types/calendar";
-import { CUSTOM_LABEL_COLORS, MAIL_FOLDERS } from "@/types/mail";
+import { CUSTOM_LABEL_COLORS, MAIL_FOLDERS, MAIL_SIGNATURE_SCOPES } from "@/types/mail";
 import { nodeSchema } from "@/workflow/schema";
 
 export const folderEnum = z.enum(MAIL_FOLDERS);
@@ -26,6 +27,74 @@ export const draftFields = {
   bodyHtml: z.string(),
 };
 
+export const signatureField = {
+  signature: z
+    .boolean()
+    .optional()
+    .describe(
+      "Add the sender's default email signature after the body. Defaults to true; pass false when the body already ends with a sign-off block or the user asked for no signature",
+    ),
+};
+
+const signatureScope = z
+  .enum(MAIL_SIGNATURE_SCOPES)
+  .describe(
+    "workspace: shared by everyone sending from this workspace (owners and admins only); mailbox: everyone who sends from the mailbox (only the person who connected it); personal: only you, for that mailbox",
+  );
+
+const signatureMailbox = z
+  .string()
+  .optional()
+  .describe("The mailbox the signature belongs to; required for mailbox and personal signatures");
+
+export const signatureListFields = {
+  mailboxId: z
+    .string()
+    .optional()
+    .describe("Also list this mailbox's signatures and your own for it"),
+};
+
+export const signatureFields = {
+  scope: signatureScope,
+  mailboxId: signatureMailbox,
+  signatureId: z.string().optional().describe("Edit this signature; leave out to add a new one"),
+  name: z.string().trim().min(1).max(SIGNATURE_NAME_MAX),
+  html: z
+    .string()
+    .max(SIGNATURE_HTML_MAX)
+    .describe(
+      "Signature HTML. {{name}} and {{email}} are filled in with the sender; images must be https links; scripts, forms and other links are removed",
+    ),
+  defaultNew: z
+    .boolean()
+    .optional()
+    .describe(
+      "true makes it the default for new messages and clears that default from the others in the same list; leave out to keep the current setting (off for a new signature)",
+    ),
+  defaultReply: z
+    .boolean()
+    .optional()
+    .describe(
+      "true makes it the default for replies and forwards and clears that default from the others in the same list; leave out to keep the current setting (off for a new signature)",
+    ),
+};
+
+export const signatureTarget = {
+  scope: signatureScope,
+  mailboxId: signatureMailbox,
+  signatureId: z.string(),
+};
+
+export const footerFields = {
+  html: z
+    .string()
+    .max(SIGNATURE_HTML_MAX)
+    .describe(
+      "Footer HTML added after the signature and any quoted text; images must be https links",
+    ),
+  enabled: z.boolean().describe("Whether the footer is added to outgoing mail"),
+};
+
 export const threadTarget = { mailboxId: z.string(), threadId: z.string() };
 
 export const draftTarget = { mailboxId: z.string(), draftId: z.string() };
@@ -40,6 +109,7 @@ export const snoozeFields = {
 export const scheduleFields = {
   ...mailboxTarget,
   ...draftFields,
+  ...signatureField,
   scheduledFor: z.string().describe("Absolute ISO-8601 time to send it; must be in the future"),
 };
 

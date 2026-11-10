@@ -20,6 +20,8 @@ Every member of a workspace has one of three roles. Each workspace has exactly o
 | See the workspace's [Activity](/guide/workspaces/workspace-activity) page                                  | Yes                           | Yes         | No                           |
 | Change the workspace's AI and phishing detection rules                                                     | Yes                           | Yes         | See only                     |
 | Change the workspace's logo and color                                                                      | Yes                           | Yes         | See only                     |
+| Change the workspace signatures and the mail footer                                                        | Yes                           | Yes         | See only                     |
+| Add, change and delete their own signatures for any mailbox in the workspace                               | Yes                           | Yes         | Yes                          |
 | Add their own mailboxes, calendars, drives and address books                                               | Yes                           | Yes         | Yes                          |
 | Remove a resource they connected from the workspace                                                        | Yes                           | Yes         | Yes                          |
 | Remove a resource someone else connected                                                                   | Yes                           | Yes         | No                           |
@@ -35,7 +37,7 @@ To keep a resource away from a workspace's members, do not add it to that worksp
 
 ## Settings only the person who connected a resource can change
 
-Whatever their role, only the person who connected a mailbox, calendar, drive or address book can turn AI on or off for it (the robot icon on its row), or phishing detection for a mailbox (the shield icon). Everyone else sees whether it is on. The workspace's own [AI and privacy settings](/guide/workspaces/ai-and-privacy) can still turn these features off, or require phishing detection.
+Whatever their role, only the person who connected a mailbox, calendar, drive or address book can turn AI on or off for it (the robot icon on its row), or phishing detection for a mailbox (the shield icon). Everyone else sees whether it is on. The workspace's own [AI and privacy settings](/guide/workspaces/ai-and-privacy) can still turn these features off, or require phishing detection. Only the person who connected a mailbox can change its **Mailbox signatures**. Everyone else sees them. See [Signatures and the mail footer](/guide/mail/signatures).
 
 ## Changes that need your authenticator code
 

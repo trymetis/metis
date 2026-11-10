@@ -83,7 +83,7 @@ const scheduleEmailTool = createTool({
   }),
   requireApproval: true,
   execute: async (
-    { mailboxId, to, cc, bcc, subject, bodyHtml, scheduledFor },
+    { mailboxId, to, cc, bcc, subject, bodyHtml, scheduledFor, signature },
     { requestContext },
   ) =>
     withToolErrors(async () => {
@@ -93,6 +93,7 @@ const scheduleEmailTool = createTool({
       return inbox.scheduleEmail(ctx, r.mailbox, {
         payload: { to, cc, bcc, subject, bodyHtml },
         scheduledFor,
+        signature: signature ?? true,
       });
     }),
 });

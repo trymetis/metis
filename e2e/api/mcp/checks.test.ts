@@ -38,6 +38,9 @@ const SENSITIVE = [
   "revokeInvite",
   "removeMember",
   "setWorkspaceTheme",
+  "saveSignature",
+  "deleteSignature",
+  "setMailFooter",
 ].toSorted();
 
 const FOREIGN_WORKSPACE = "00000000-0000-0000-0000-000000000000";

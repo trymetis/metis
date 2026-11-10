@@ -26,10 +26,10 @@ Fields that take email addresses accept several, separated by commas, for exampl
 | **Archive**                      | "Moves a message out of the inbox."                                                     | **Message**                                                                                                                           |
 | **Move to trash**                | "Moves a message to the trash."                                                         | **Message**                                                                                                                           |
 | **Move to Inbox**                | "Moves a message back to the inbox, from the archive, the trash or spam."               | **Message**                                                                                                                           |
-| **Create a draft**               | "Saves a draft in a mailbox without sending it."                                        | **From**, **To**, **Cc**, **Bcc**, **Subject**, **Message**, **Attachments**                                                          |
+| **Create a draft**               | "Saves a draft in a mailbox without sending it."                                        | **From**, **To**, **Cc**, **Bcc**, **Subject**, **Message**, **Attachments**, **Add signature** (on to start with)                    |
 | **Send mail** (sends or creates) | "Sends a new message. A send is never repeated; an unclear outcome waits for a person." | The same as **Create a draft**                                                                                                        |
-| **Reply** (sends or creates)     | "Replies to a message from the mailbox it arrived in."                                  | **Message**, **Reply** (the text), **Reply to everyone** (off to start with)                                                          |
-| **Forward** (sends or creates)   | "Forwards a message, with its attachments, from the mailbox it arrived in."             | **Message**, **To**, **Note**                                                                                                         |
+| **Reply** (sends or creates)     | "Replies to a message from the mailbox it arrived in."                                  | **Message**, **Reply** (the text), **Reply to everyone** (off to start with), **Add signature** (on to start with)                    |
+| **Forward** (sends or creates)   | "Forwards a message, with its attachments, from the mailbox it arrived in."             | **Message**, **To**, **Note**, **Add signature** (on to start with)                                                                   |
 | **Add a Bcc**                    | "Adds an address to an outgoing message's Bcc, unless it is already a recipient."       | **Address**. Works only after **Before mail is sent**. See [Add a BCC to outgoing mail](/guide/workflows/add-a-bcc-to-outgoing-mail). |
 
 Good to know:
@@ -37,6 +37,9 @@ Good to know:
 - **Label** offers the built-in labels and the custom labels of every mailbox in the workspace. If the label does not exist in the message's mailbox, the step fails with "There is no label "X" in that mailbox", where X is the label. A message has one label at a time, so **Remove** takes off the message's label, whichever label it is, not only the one you picked.
 - **Attachments** on **Create a draft** and **Send mail** takes a list of file contents, for example from **Download a file**.
 - **Mute the thread** mutes the conversation for the person the workflow runs as.
+- **Add signature** "Adds the default signature of the person the workflow runs as." **Create a draft** and **Send mail** use their default for new messages. **Reply** and **Forward** use their default for replies and forwards. In the signature, `{{name}}` becomes that person's account name. See [Signatures and the mail footer](/guide/mail/signatures).
+- **Send mail**, **Reply** and **Forward** also add the workspace's [mail footer](/guide/mail/signatures#the-workspace-mail-footer), when it is on. **Create a draft** does not. In **Forward**, the signature and the footer come after the forwarded message.
+- In a [test run](/guide/workflows/test-a-workflow), what these steps report they would send does not show the signature or the footer.
 - To move a message, use **Archive**, **Move to trash** or **Move to Inbox**. On Cloudflare Email and Resend mailboxes, **Move to Inbox** returns the message to the folder it was in before it was archived or deleted, which may not be the Inbox.
 
 ## Calendar

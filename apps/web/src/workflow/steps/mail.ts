@@ -186,12 +186,24 @@ const content = {
   }),
 };
 
+const signature = {
+  signature: p.boolean("Add signature", {
+    default: literal(true),
+    help: "Adds the default signature of the person the workflow runs as.",
+  }),
+};
+
 const draft = step({
   key: "mail.draft",
   label: "Create a draft",
   category: "mail",
   description: "Saves a draft in a mailbox without sending it.",
-  params: { mailbox: p.mailbox("From", { required: true }), ...recipients, ...content },
+  params: {
+    mailbox: p.mailbox("From", { required: true }),
+    ...recipients,
+    ...content,
+    ...signature,
+  },
   output: () => T.draft,
   effect: "write",
   card: (node, ctx) => [
@@ -207,7 +219,12 @@ const send = step({
   category: "mail",
   description:
     "Sends a new message. A send is never repeated; an unclear outcome waits for a person.",
-  params: { mailbox: p.mailbox("From", { required: true }), ...recipients, ...content },
+  params: {
+    mailbox: p.mailbox("From", { required: true }),
+    ...recipients,
+    ...content,
+    ...signature,
+  },
   output: () => T.mail,
   effect: "dispatch",
   card: (node, ctx) => [
@@ -226,6 +243,7 @@ const reply = step({
     message,
     body: p.longtext("Reply", { required: true }),
     replyAll: p.boolean("Reply to everyone", { default: literal(false) }),
+    ...signature,
   },
   output: () => T.mail,
   effect: "dispatch",
@@ -241,6 +259,7 @@ const forward = step({
     message,
     to: p.emails("To", { required: true, target: true }),
     note: p.longtext("Note", { default: template("") }),
+    ...signature,
   },
   output: () => T.mail,
   effect: "dispatch",

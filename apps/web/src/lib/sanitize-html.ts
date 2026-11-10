@@ -73,6 +73,48 @@ export function sanitizeEmailHtml(raw: string, visit?: (element: Element) => voi
   }
 }
 
+const SIGNATURE_CONFIG: Config = {
+  USE_PROFILES: { html: true },
+  FORBID_TAGS: [
+    "style",
+    "script",
+    "iframe",
+    "object",
+    "embed",
+    "form",
+    "input",
+    "button",
+    "textarea",
+    "select",
+    "video",
+    "audio",
+    "base",
+    "meta",
+    "link",
+  ],
+  FORBID_ATTR: ["id", "class"],
+  ALLOW_DATA_ATTR: false,
+  ALLOWED_URI_REGEXP: /^(?:https?|mailto|tel):/i,
+};
+
+const httpsImagesOnly: UponSanitizeAttributeHook = (_node, data) => {
+  if (/^on/i.test(data.attrName)) data.keepAttr = false;
+  if (data.attrName === "src" && !/^https:\/\//i.test(data.attrValue.trim())) {
+    data.keepAttr = false;
+  }
+  if (data.attrName === "srcset") data.keepAttr = false;
+};
+
+export function sanitizeSignatureHtml(raw: string): string {
+  if (!raw) return "";
+  DOMPurify.addHook("uponSanitizeAttribute", httpsImagesOnly);
+  try {
+    return DOMPurify.sanitize(raw, SIGNATURE_CONFIG).trim();
+  } finally {
+    DOMPurify.removeHook("uponSanitizeAttribute", httpsImagesOnly);
+  }
+}
+
 export function sanitizeHtml(raw: string): string {
   return raw ? DOMPurify.sanitize(raw, HTML_CONFIG) : "";
 }

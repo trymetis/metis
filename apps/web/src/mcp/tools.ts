@@ -780,6 +780,33 @@ export const MCP_TOOL_MANIFEST = [
     group: "Workspace admin",
     sensitive: true,
   },
+  {
+    key: "listSignatures",
+    label: "List signatures",
+    description: "List a workspace's signatures and mail footer, and a mailbox's and your own",
+    group: "Signatures",
+  },
+  {
+    key: "saveSignature",
+    label: "Save signature",
+    description: "Add or edit a workspace, mailbox or personal email signature",
+    group: "Signatures",
+    sensitive: true,
+  },
+  {
+    key: "deleteSignature",
+    label: "Delete signature",
+    description: "Delete a workspace, mailbox or personal email signature",
+    group: "Signatures",
+    sensitive: true,
+  },
+  {
+    key: "setMailFooter",
+    label: "Set mail footer",
+    description: "Set or turn off the footer on every message sent from a workspace (admins)",
+    group: "Signatures",
+    sensitive: true,
+  },
 ] as const satisfies readonly {
   key: ToolKey | McpOnlyToolKey;
   label: string;

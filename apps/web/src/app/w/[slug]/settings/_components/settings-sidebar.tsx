@@ -7,6 +7,7 @@ import {
   HardDrive,
   History,
   Inbox,
+  Signature,
   SlidersHorizontal,
   Users,
 } from "lucide-react";
@@ -39,6 +40,11 @@ export function SettingsSidebar() {
       href: workspaceSettingsPath(slug, "mailboxes"),
       label: "Mailboxes",
       icon: Inbox,
+    },
+    {
+      href: workspaceSettingsPath(slug, "signatures"),
+      label: "Signatures",
+      icon: Signature,
     },
     {
       href: workspaceSettingsPath(slug, "calendars"),

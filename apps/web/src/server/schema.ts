@@ -12,6 +12,7 @@ import {
   DRIVE_PROVIDERS,
   MAIL_PROVIDERS,
 } from "@/connections/types";
+import { SIGNATURE_HTML_MAX, SIGNATURE_NAME_MAX } from "@/mail/signature-markup";
 import { summarySpecSchema } from "@/mail/summary-catalog";
 import { MCP_PRESET_IDS } from "@/mcp/presets";
 import { MCP_TOOL_KEYS } from "@/mcp/tools";
@@ -45,6 +46,7 @@ import {
   MAIL_LABEL_SOURCES,
   MAIL_REMOTE_ALLOW_KINDS,
   MAIL_REMOTE_CONTENT_MODES,
+  MAIL_SIGNATURE_SCOPES,
   UNSUBSCRIBE_METHODS,
   UNSUBSCRIBE_STATUSES,
 } from "@/types/mail";
@@ -500,6 +502,17 @@ export const dataExportSchema = z.object({
           visibleBookIds: z.array(z.string()),
         }),
       ),
+    }),
+  ),
+  signatures: z.array(
+    z.object({
+      mailbox: z.string(),
+      scope: z.enum(["mailbox", "personal"]),
+      name: z.string(),
+      html: z.string(),
+      defaultNew: z.boolean(),
+      defaultReply: z.boolean(),
+      createdAt: z.string(),
     }),
   ),
   labels: z.array(
@@ -2562,6 +2575,79 @@ export const deleteDraftInputSchema = mailboxScopeSchema.extend(fromMailboxSchem
 });
 
 export const deleteDraftOutputSchema = successSchema;
+
+export const mailSignatureSchema = z.object({
+  id: z.string(),
+  scope: z.enum(MAIL_SIGNATURE_SCOPES),
+  name: z.string(),
+  html: z.string(),
+  defaultNew: z.boolean(),
+  defaultReply: z.boolean(),
+});
+
+export const signatureFieldsSchema = z.object({
+  id: z.string().min(1).optional(),
+  name: z.string().trim().min(1).max(SIGNATURE_NAME_MAX),
+  html: z.string().max(SIGNATURE_HTML_MAX),
+  defaultNew: z.boolean(),
+  defaultReply: z.boolean(),
+});
+
+export const mailboxSignatureScopeSchema = z.enum(["mailbox", "personal"]);
+
+export const listMailboxSignaturesInputSchema = mailboxScopeSchema.extend(fromMailboxSchema.shape);
+
+export const listMailboxSignaturesOutputSchema = z.object({
+  mailbox: z.array(mailSignatureSchema),
+  personal: z.array(mailSignatureSchema),
+  canEditMailbox: z.boolean(),
+});
+
+export const saveMailboxSignatureInputSchema = mailboxScopeSchema
+  .extend(fromMailboxSchema.shape)
+  .extend({ scope: mailboxSignatureScopeSchema, signature: signatureFieldsSchema });
+
+export const saveSignatureOutputSchema = z.object({ signature: mailSignatureSchema });
+
+export const deleteMailboxSignatureInputSchema = mailboxScopeSchema
+  .extend(fromMailboxSchema.shape)
+  .extend({ scope: mailboxSignatureScopeSchema, id: z.string().min(1) });
+
+export const composeSignaturesInputSchema = mailboxScopeSchema.extend(fromMailboxSchema.shape);
+
+export const composeSignaturesOutputSchema = z.object({
+  signatures: z.array(
+    z.object({
+      id: z.string(),
+      scope: z.enum(MAIL_SIGNATURE_SCOPES),
+      name: z.string(),
+      html: z.string(),
+    }),
+  ),
+  defaultNew: z.string().nullable(),
+  defaultReply: z.string().nullable(),
+});
+
+export const mailFooterSchema = z.object({
+  html: z.string().max(SIGNATURE_HTML_MAX),
+  enabled: z.boolean(),
+});
+
+export const listWorkspaceSignaturesOutputSchema = z.object({
+  signatures: z.array(mailSignatureSchema),
+  footer: mailFooterSchema,
+  canEdit: z.boolean(),
+});
+
+export const saveWorkspaceSignatureInputSchema = workspaceScopeSchema.extend({
+  signature: signatureFieldsSchema,
+});
+
+export const deleteWorkspaceSignatureInputSchema = workspaceScopeSchema.extend({
+  id: z.string().min(1),
+});
+
+export const setMailFooterInputSchema = workspaceScopeSchema.extend(mailFooterSchema.shape);
 
 export const getThreadInputSchema = mailboxScopeSchema.extend({
   threadId: z.string().min(1),

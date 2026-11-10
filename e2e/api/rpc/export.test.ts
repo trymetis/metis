@@ -5,7 +5,7 @@ import { expect, test } from "vitest";
 import { type Rpc, rpcWithCookie } from "../../clients/rpc";
 import { signIn } from "../../clients/sign-in";
 import { uniqueName } from "../support/poll";
-import { ana, totpCode } from "../support/session";
+import { ana, mailboxScope, totpCode } from "../support/session";
 
 interface ResourceLink {
   provider: string;
@@ -37,6 +37,15 @@ interface DataExport {
     mailboxes: (ResourceLink & { phishingDetectionEnabled: boolean })[];
     calendars: (ResourceLink & { visibleCalendarIds: string[] })[];
     drives: (ResourceLink & { visibleRootIds: string[] })[];
+  }[];
+  signatures: {
+    mailbox: string;
+    scope: string;
+    name: string;
+    html: string;
+    defaultNew: boolean;
+    defaultReply: boolean;
+    createdAt: string;
   }[];
   labels: {
     mailbox: string;
@@ -118,6 +127,51 @@ test("the export holds the account's preferences, workspaces, labels, workflows 
   );
 });
 
+test("the export holds the account's own and mailbox signatures, never the workspace's", async () => {
+  const { rpc, account } = await ana();
+  const box = mailboxScope(account);
+  const ws = { workspaceSlug: account.workspaceSlug };
+  const name = uniqueName();
+  const fields = (html: string) => ({ name, html, defaultNew: false, defaultReply: false });
+  const saved = await Promise.all([
+    rpc<{ signature: { id: string } }>("mail.signatures.save", {
+      ...box,
+      scope: "personal",
+      signature: fields("<p>personal</p>"),
+    }),
+    rpc<{ signature: { id: string } }>("mail.signatures.save", {
+      ...box,
+      scope: "mailbox",
+      signature: fields("<p>mailbox</p>"),
+    }),
+    rpc<{ signature: { id: string } }>("workspaceSignatures.save", {
+      ...ws,
+      signature: fields("<p>workspace</p>"),
+    }),
+  ]);
+  try {
+    const { signatures } = await exportData(rpc);
+    const mine = signatures.filter((s) => s.name === name);
+    expect(mine.map((s) => `${s.scope} ${s.html}`).toSorted((a, b) => a.localeCompare(b))).toEqual([
+      "mailbox <p>mailbox</p>",
+      "personal <p>personal</p>",
+    ]);
+    for (const s of mine) {
+      expect(s).toMatchObject({
+        defaultNew: false,
+        defaultReply: false,
+        createdAt: expect.any(String),
+      });
+      expect(s.mailbox).toContain("@");
+    }
+  } finally {
+    const [personal, mailbox, shared] = saved;
+    await rpc("mail.signatures.delete", { ...box, scope: "personal", id: personal.signature.id });
+    await rpc("mail.signatures.delete", { ...box, scope: "mailbox", id: mailbox.signature.id });
+    await rpc("workspaceSignatures.delete", { ...ws, id: shared.signature.id });
+  }
+});
+
 test("the export holds the account's own security activity", async () => {
   const { rpc, account } = await ana();
   const ws = { workspaceSlug: account.workspaceSlug };
@@ -172,6 +226,7 @@ test("a member's export holds only their own data", async () => {
   expect(data.labels.flatMap((l) => l.definitions)).not.toContainEqual(
     expect.objectContaining({ key: "custom:clients" }),
   );
+  expect(data.signatures.map((s) => s.scope)).not.toContain("mailbox");
   expect(data.workflows.map((w) => w.workspace)).not.toContain(account.workspaceSlug);
   expect(data.assistantThreads.map((t) => t.workspace)).not.toContain(account.workspaceSlug);
 });

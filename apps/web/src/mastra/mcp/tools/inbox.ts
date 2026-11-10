@@ -77,7 +77,7 @@ export const scheduleEmail = createTool({
     "Schedule a new email to send from a specific mailbox at scheduledFor. Nothing is sent now; it goes out at that time unless cancelled.",
   inputSchema: inWorkspace(scheduleFields),
   execute: async (
-    { workspaceId, mailboxId, to, cc, bcc, subject, bodyHtml, scheduledFor },
+    { workspaceId, mailboxId, to, cc, bcc, subject, bodyHtml, scheduledFor, signature },
     { requestContext },
   ) =>
     withToolErrors(async () => {
@@ -87,6 +87,7 @@ export const scheduleEmail = createTool({
       return inbox.scheduleEmail(ctx, r.mailbox, {
         payload: { to, cc, bcc, subject, bodyHtml },
         scheduledFor,
+        signature: signature ?? true,
       });
     }),
 });

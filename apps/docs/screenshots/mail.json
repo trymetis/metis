@@ -513,5 +513,110 @@
       { "waitFor": "role=menuitem[name=/Manage mailboxes/]" }
     ],
     "element": ["role=button[name=/^Switch mailbox$/]", "role=menu"]
+  },
+  {
+    "name": "mail/signatures-page",
+    "path": "{workspace}/settings/signatures",
+    "steps": [
+      {
+        "click": "role=region[name=/^Signatures for ana@/] >> role=region[name=\"Your signatures\"] >> role=button[name=\"Add\"]"
+      },
+      {
+        "waitFor": "role=dialog[name=\"New signature\"]"
+      },
+      {
+        "fill": "role=dialog >> role=textbox[name=\"Signature name\"]",
+        "value": "Work"
+      },
+      {
+        "click": "role=dialog >> role=button[name=\"HTML\"]"
+      },
+      {
+        "fill": "role=dialog >> role=textbox[name=\"Signature HTML\"]",
+        "value": "<p><strong>{{name}}</strong><br>Studio lead, Fernhill Studio<br><a href=\"mailto:{{email}}\">{{email}}</a></p>"
+      },
+      {
+        "click": "role=dialog >> role=checkbox[name=\"Default for new messages\"]"
+      },
+      {
+        "click": "role=dialog >> role=checkbox[name=\"Default for replies and forwards\"]"
+      },
+      {
+        "click": "role=dialog >> role=button[name=\"Save\"]"
+      },
+      {
+        "waitForHidden": "role=dialog[name=\"New signature\"]"
+      },
+      {
+        "waitFor": "role=region[name=/^Signatures for ana@/] >> role=region[name=\"Your signatures\"] >> text=\"New messages\""
+      }
+    ]
+  },
+  {
+    "name": "mail/signatures-editor",
+    "path": "{workspace}/settings/signatures",
+    "steps": [
+      {
+        "click": "role=button[name=\"Edit Work\"]"
+      },
+      {
+        "waitFor": "role=dialog[name=\"Edit signature\"] >> text=\"Preview\""
+      },
+      {
+        "click": "role=dialog >> role=button[name=\"HTML\"]"
+      },
+      {
+        "wait": 400
+      }
+    ],
+    "element": "role=dialog[name=\"Edit signature\"]"
+  },
+  {
+    "name": "mail/signatures-footer",
+    "path": "{workspace}/settings/signatures",
+    "steps": [
+      {
+        "click": "role=region[name=\"Footer\"] >> role=button[name=\"Edit\"]"
+      },
+      {
+        "waitFor": "role=dialog[name=\"Mail footer\"]"
+      },
+      {
+        "click": "role=dialog >> role=button[name=\"HTML\"]"
+      },
+      {
+        "fill": "role=dialog >> role=textbox[name=\"Signature HTML\"]",
+        "value": "<p style=\"color:#6b7280;font-size:12px\">Fernhill Studio Ltd. This message and any files sent with it are confidential.</p>"
+      },
+      {
+        "click": "role=dialog >> role=button[name=\"Save\"]"
+      },
+      {
+        "waitForHidden": "role=dialog[name=\"Mail footer\"]"
+      },
+      {
+        "waitFor": "role=region[name=\"Footer\"] >> text=/confidential/"
+      }
+    ],
+    "element": "role=region[name=\"Footer\"]"
+  },
+  {
+    "name": "mail/signatures-picker",
+    "path": "{workspace}/m/{mailbox}/inbox",
+    "steps": [
+      {
+        "click": "role=complementary[name=\"Folders\"] >> role=button[name=/^Compose$/]"
+      },
+      {
+        "waitFor": "[aria-modal=\"true\"]:has([aria-label=\"Close compose\"]) [data-metis-signature]"
+      },
+      {
+        "click": "[aria-modal=\"true\"]:has([aria-label=\"Close compose\"]) >> role=button[name=\"Signature\"]"
+      },
+      {
+        "waitFor": "role=menuitem[name=\"No signature\"]"
+      }
+    ],
+    "element": ["[aria-modal=\"true\"]:has([aria-label=\"Close compose\"])", "role=menu"]
   }
 ]

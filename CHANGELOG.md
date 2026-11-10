@@ -9,12 +9,17 @@ Each release's notes are in [`releases/`](releases/), listed under Releases belo
 ### Upgrade notes
 
 - `METIS_OWNER_EMAIL` is now required: the app and preflight stop at start until it is set to the instance owner's email, and `bootstrap.sh` asks for it (or fails in a non-interactive run). An instance without it stops at preflight until you add it to `.env`.
+- Contains a database migration that adds a table for email signatures and two workspace columns for the mail footer.
 - Contains a database migration that moves sign-up and workspace invites into one invite table, keeping every pending and accepted invite (older duplicate pending invites to the same workspace collapse into the newest), adds instance roles and account bans to each account, and records each account's last sign-in, starting from its newest session.
 - Sign-up invite emails sent before this release link to `/invite/signup`, which no longer exists. Revoke and resend those invites from Dashboard → Accounts → Invites.
 - Settings → Invites is gone. Account invites are sent from the dashboard's new Accounts → Invites page by the owner or an instance admin; workspace invites stay under each workspace's Settings → Members.
 
 ### Added
 
+- Email signatures: each person, each mailbox and each workspace can keep signatures, with separate defaults for new messages and for replies and forwards. Your own default wins over the mailbox's, which wins over the workspace's. The composer adds the default, swaps it when you change the From address, and lets you pick another or none; `{{name}}` and `{{email}}` fill in the sender. Manage them under workspace Settings → Signatures.
+- Workspace mail footer: owners and admins can add a footer, such as a legal notice, to every message sent through Metis from the workspace. Senders can't remove it, and changing it is recorded in the audit log.
+- Mail sent or drafted by the AI agents, MCP clients and workflows gets the sender's default signature, with an option to leave it out, and sent mail gets the workspace footer.
+- The Workspace Assistant and MCP clients can list, add, edit and delete signatures and set the workspace footer. Saving, deleting and the footer need approval in the assistant and are off by default for MCP clients.
 - Instance roles: the owner can make accounts **Admins**, who have the same dashboard powers as the owner, and the owner or an admin can make accounts **Observers**, who see the whole dashboard read-only. Neither role opens anyone's mail, calendars, drives or contacts, and the owner's MCP tools follow the same roles.
 - Dashboard → Accounts replaces People: an overview of accounts, two-factor adoption, bans and pending invites, with a **Users** page that searches and filters every account by role, status and two-factor and changes roles, bans, unbans and removes users from each row's menu, and an **Invites** page that searches and filters account invites and sends and revokes them, optionally with an instance role. MCP clients of the owner, admins and observers can read both lists with the same filters through the new **Instance users** tool and **List sign-up invites**.
 - The owner or an admin can ban an account for a day, a week, a month or until unbanned, with an optional reason. A banned user is signed out everywhere, can't sign in, and their MCP clients and workflows stop; the mailboxes, calendars, drives and address books they linked stay usable by the other members of each workspace.

@@ -120,6 +120,7 @@ import {
 import { aggregateInbox, getEmail, getThread, listEmails, listMailboxes } from "./tools/messages";
 import { analyzePhishing } from "./tools/phishing";
 import { searchMail } from "./tools/search";
+import { deleteSignature, listSignatures, saveSignature, setMailFooter } from "./tools/signatures";
 import {
   applyWorkflows,
   cancelWorkflowRun,
@@ -254,6 +255,10 @@ const MCP_TOOLS = {
   removeMember,
   revokeInvite,
   setWorkspaceTheme,
+  listSignatures,
+  saveSignature,
+  deleteSignature,
+  setMailFooter,
 } satisfies Record<ToolKey | McpOnlyToolKey, unknown>;
 
 export function buildMcpServer(

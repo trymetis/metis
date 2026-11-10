@@ -9,6 +9,7 @@ Mail brings every mailbox in your workspace into one place, whether it is Gmail,
 - [Find and filter mail](/guide/mail/find-and-filter-mail): search, the tabs above the list, and filtering by label.
 - [Labels](/guide/mail/labels): AI labels, built-in labels, your own custom labels, and labelling many messages at once.
 - [Compose and send](/guide/mail/compose-and-send): new messages, replies, forwards, attachments, undo send and drafts.
+- [Signatures and the mail footer](/guide/mail/signatures): your own, mailbox and workspace signatures, picking one while you write, and the workspace footer.
 - [Schedule a send](/guide/mail/schedule-a-send): send a message later and follow it in the Scheduled folder.
 - [Snooze and read later](/guide/mail/snooze-and-read-later): hide a message until later, or save it to come back to.
 - [Organize mail](/guide/mail/organize-mail): star, archive, delete, restore, mute and mark as read, one by one or in bulk.

@@ -1,6 +1,7 @@
 import "server-only";
 import { htmlToText } from "@/lib/utils";
-import type { DraftPayload } from "@/types/mail";
+import { finishOutgoing } from "@/mail/signatures";
+import type { DraftPayload, MailSignatureKind } from "@/types/mail";
 
 import { authorizeMailboxAccess, resolvePrincipal } from "../authorization";
 import { executeRun } from "../executor";
@@ -95,7 +96,10 @@ export async function collectSendPolicyBccs(opts: SendPolicyInput): Promise<stri
 export async function prepareOutgoing(opts: {
   workspaceId: string;
   mailboxId: string;
+  mailboxEmail: string;
+  userId: string;
   payload: DraftPayload;
+  signature?: MailSignatureKind | null;
 }): Promise<{ payload: DraftPayload; addedBcc: string[] }> {
   const { payload } = opts;
   const bccs = await collectSendPolicyBccs({
@@ -110,6 +114,16 @@ export async function prepareOutgoing(opts: {
       hasAttachment: (payload.attachments?.length ?? 0) > 0,
     },
   });
-  if (bccs.length === 0) return { payload, addedBcc: [] };
-  return { payload: { ...payload, bcc: [...(payload.bcc ?? []), ...bccs] }, addedBcc: bccs };
+  const finished = await finishOutgoing(
+    {
+      workspaceId: opts.workspaceId,
+      mailboxId: opts.mailboxId,
+      mailboxEmail: opts.mailboxEmail,
+      userId: opts.userId,
+    },
+    payload,
+    { signature: opts.signature ?? null, footer: true },
+  );
+  if (bccs.length === 0) return { payload: finished, addedBcc: [] };
+  return { payload: { ...finished, bcc: [...(finished.bcc ?? []), ...bccs] }, addedBcc: bccs };
 }

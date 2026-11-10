@@ -12,7 +12,7 @@ Unsubscribing applies to the whole mailbox. If you share the mailbox, everyone s
 Metis Suite uses the best option the sender offers:
 
 - **Automatic**: the sender supports one-click unsubscribe, and Metis Suite does it for you.
-- **We'll email them**: Metis Suite sends an unsubscribe email to the sender's unsubscribe address.
+- **We'll email them**: Metis Suite sends an unsubscribe email to the sender's unsubscribe address. This email gets no signature and no workspace footer.
 - **Finish on their site**: the sender's unsubscribe page opens in a new tab, and you finish there.
 
 ## Unsubscribe from one message

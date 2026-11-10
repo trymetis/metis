@@ -21,15 +21,17 @@ Only you see these. Other members are not affected.
 | Your saved searches                                                                                          | The bookmark icon (**Save this search**) in search. Each workspace has its own list, and it follows your account to every browser. See [Saved and recent searches](/guide/search/saved-and-recent-searches). |
 | Your recent searches                                                                                         | Kept for you in each workspace, in this browser only                                                                                                                                                         |
 | Your MCP clients                                                                                             | **Settings**, then **MCP clients**, when your instance has AI set up                                                                                                                                         |
+| Your own signatures for each mailbox                                                                         | **Your signatures** on the workspace's **Signatures** page. They are the same in every workspace the mailbox is in. See [Signatures and the mail footer](/guide/mail/signatures).                            |
 
 ## Per resource, in each workspace
 
 The person who connected the mailbox, calendar, drive or address book sets these, separately in each workspace.
 
-| Setting                                    | Where you change it                                                                                                               |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| Whether AI can read the resource           | The robot icon on the resource's row on the workspace's **Mailboxes**, **Calendars**, **Drives** or **Contacts** page             |
-| Whether phishing detection scans a mailbox | The shield icon (its label reads "Phishing detection is on for this mailbox here" or "off") on the workspace's **Mailboxes** page |
+| Setting                                    | Where you change it                                                                                                                               |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Whether AI can read the resource           | The robot icon on the resource's row on the workspace's **Mailboxes**, **Calendars**, **Drives** or **Contacts** page                             |
+| Whether phishing detection scans a mailbox | The shield icon (its label reads "Phishing detection is on for this mailbox here" or "off") on the workspace's **Mailboxes** page                 |
+| A mailbox's signatures                     | **Mailbox signatures** on the workspace's **Signatures** page. Unlike the settings above, they are the same in every workspace the mailbox is in. |
 
 See [Add and remove resources](/guide/workspaces/add-resources).
 
@@ -45,5 +47,6 @@ These apply to everyone in the workspace.
 | Which drive folders the workspace shows               | Owners, admins, and the person who connected the drive                                                            |
 | Which address books of an account the workspace shows | Owners, admins, and the person who connected the account                                                          |
 | Members, roles and invites                            | Owners and admins invite and remove members, on the **Members** page and in search. Only the owner changes roles. |
+| Workspace signatures and the mail footer              | Owners and admins, on the **Signatures** page                                                                     |
 
-Owners and admins can see who changed members, roles, invites, workflows and resources in the workspace on its **Activity** page. See [Workspace activity](/guide/workspaces/workspace-activity).
+Owners and admins can see who changed members, roles, invites, workflows, resources and the mail footer in the workspace on its **Activity** page. See [Workspace activity](/guide/workspaces/workspace-activity).

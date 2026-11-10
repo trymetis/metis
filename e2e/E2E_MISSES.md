@@ -31,6 +31,7 @@ The e2e stack is a seeded environment that two suites drive: Vitest in `api/` fo
 - **PUT-only S3 bucket:** a second bucket with a different CORS rule and its server entry.
 - **Video and HEIC previews:** committed binaries or an encoder.
 - **System mail flows beyond invites and sign-in alerts:** the mailer chain sends workspace invites under each driver and sign-in alerts under `console`; magic links, password resets and verification mail under `smtp` would read the same `system` mailbox.
+- **A signature in an Outlook or Zoho draft:** the stack has only IMAP and gateway mailboxes, which store a draft's HTML as sent, so a provider that rewrites draft HTML and drops the signature marker on save is never exercised; `tests/write/signatures.spec.ts` checks the reopened IMAP draft only.
 - **A failed scheduled send:** every send reaches Postfix, so `retryScheduled` is covered only for a send with no run yet; resuming a failed send needs an SMTP that refuses on demand.
 
 ## 3. Not trivial

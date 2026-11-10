@@ -1,4 +1,5 @@
 import "server-only";
+import { finishOutgoing } from "@/mail/signatures";
 import { muteThreadOf } from "@/ops/inbox";
 import { labelMessage } from "@/ops/labels";
 import {
@@ -16,7 +17,7 @@ import {
   textToHtml,
   writeFileBytes,
 } from "@/ops/values";
-import type { DraftAttachment, DraftPayload, MailFolder } from "@/types/mail";
+import type { DraftAttachment, DraftPayload, MailFolder, MailSignatureKind } from "@/types/mail";
 import { isMailFolder } from "@/types/mail";
 
 import { sendFingerprint } from "../fingerprint";
@@ -84,6 +85,27 @@ async function blobsToAttachments(ctx: StepCtx, value: unknown): Promise<DraftAt
     mimeType: blob.mimeType,
     contentBase64: blob.data.toString("base64"),
   }));
+}
+
+async function finished(
+  ctx: StepCtx,
+  handle: MailHandle,
+  params: Params,
+  payload: DraftPayload,
+  opts: { kind: MailSignatureKind; footer: boolean },
+): Promise<DraftPayload> {
+  const workspaceId = ctx.principal.workspaceId ?? ctx.definition.workspaceId;
+  if (!workspaceId) return payload;
+  return finishOutgoing(
+    {
+      workspaceId,
+      mailboxId: handle.mailboxId,
+      mailboxEmail: handle.email,
+      userId: ctx.principal.userId,
+    },
+    payload,
+    { signature: boolOf(params, "signature", true) ? opts.kind : null, footer: opts.footer },
+  );
 }
 
 async function payloadOf(ctx: StepCtx, params: Params): Promise<DraftPayload> {
@@ -261,7 +283,10 @@ const toInbox = action(async (_ctx, handle, message) => {
 const draft: Runner = {
   async run(ctx, params) {
     const handle = await ctx.mailbox(text(params, "mailbox"));
-    const payload = await payloadOf(ctx, params);
+    const payload = await finished(ctx, handle, params, await payloadOf(ctx, params), {
+      kind: "new",
+      footer: false,
+    });
     const created = await createDraftMail(handle, payload);
     return emit(
       {
@@ -308,7 +333,13 @@ const send: Runner = {
   expect: expectFrom,
   async run(ctx, params) {
     const handle = await ctx.mailbox(text(params, "mailbox"));
-    return dispatchSend(handle, await payloadOf(ctx, params));
+    return dispatchSend(
+      handle,
+      await finished(ctx, handle, params, await payloadOf(ctx, params), {
+        kind: "new",
+        footer: true,
+      }),
+    );
   },
   async preview(ctx, params) {
     return previewSent(await payloadOf(ctx, params), text(params, "mailbox"));
@@ -358,7 +389,13 @@ const reply: Runner = {
   async run(ctx, params) {
     const message = messageOf(params);
     const handle = await ctx.mailbox(message.mailboxId);
-    return dispatchSend(handle, await replyPayload(handle, message, params));
+    return dispatchSend(
+      handle,
+      await finished(ctx, handle, params, await replyPayload(handle, message, params), {
+        kind: "reply",
+        footer: true,
+      }),
+    );
   },
   preview(_ctx, params) {
     const message = messageOf(params);
@@ -403,13 +440,22 @@ const forward: Runner = {
     }
     const note = text(params, "note");
     const body = `${note}\n\n---------- Forwarded message ----------\nFrom: ${original.fromName ? `${original.fromName} <${original.from}>` : original.from}\nSubject: ${original.subject}\n\n${original.body}`;
-    return dispatchSend(handle, {
-      to: list(params, "to"),
-      subject: /^fwd?:/i.test(original.subject) ? original.subject : `Fwd: ${original.subject}`,
-      bodyText: body,
-      bodyHtml: textToHtml(body),
-      attachments,
-    });
+    return dispatchSend(
+      handle,
+      await finished(
+        ctx,
+        handle,
+        params,
+        {
+          to: list(params, "to"),
+          subject: /^fwd?:/i.test(original.subject) ? original.subject : `Fwd: ${original.subject}`,
+          bodyText: body,
+          bodyHtml: textToHtml(body),
+          attachments,
+        },
+        { kind: "reply", footer: true },
+      ),
+    );
   },
   preview(_ctx, params) {
     const message = messageOf(params);

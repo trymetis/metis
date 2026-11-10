@@ -36,6 +36,7 @@ export async function seedWorkflows(account: Account, resources: Resources): Pro
     userId: account.userId,
     workspaceId: account.workspaceId,
     mailboxId: box.mailboxId,
+    mailboxEmail: box.email,
     linkId: box.linkId,
     payload: {
       to: [account.email],

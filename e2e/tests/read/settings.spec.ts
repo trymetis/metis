@@ -20,6 +20,7 @@ const ACCOUNT_PAGES = [
 const WORKSPACE_PAGES = [
   ["general", "General"],
   ["mailboxes", "Mailboxes"],
+  ["signatures", "Signatures"],
   ["calendars", "Calendars"],
   ["drives", "Drives"],
 ] as const;

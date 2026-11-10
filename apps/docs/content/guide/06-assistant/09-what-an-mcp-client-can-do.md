@@ -38,6 +38,7 @@ These are on for a new client. They read and organize your mail, calendars, driv
 | **People**            | List members and their roles, and find mail, events and files linked to a member                                                                                                                                                                                    |
 | **Drive**             | List drives, browse folders, search files, read file details and text files, see storage use, and pin or unpin folders                                                                                                                                              |
 | **Workspace admin**   | List pending workspace invitations (owners and admins only)                                                                                                                                                                                                         |
+| **Signatures**        | List the workspace's signatures and mail footer, and, for a mailbox, its signatures and your own signatures for it, with which ones you can change (**List signatures**)                                                                                            |
 
 ## Sensitive tools
 
@@ -57,6 +58,11 @@ These are off for a new client. Turn on only the ones you need.
 | **Contacts**          | **Create contact**, **Edit contact**, **Delete contact**                                                                                                  |
 | **Drive**             | **Create folder**, **Rename file**, **Move file**, **Delete file**                                                                                        |
 | **Workspace admin**   | **Revoke invite**, **Remove member**, **Change accent color**                                                                                             |
+| **Signatures**        | **Save signature**, **Delete signature**, **Set mail footer**                                                                                             |
+
+**Save signature** adds or edits a workspace signature (owners and admins only), a mailbox's signature (only the person who connected the mailbox) or your own signature for a mailbox. It can make the signature the default for new messages, for replies and forwards, or both. When a client edits a signature without setting the defaults, the signature keeps the ones it has. A new signature is not a default unless the client sets one. **Delete signature** follows the same rules. **Set mail footer** sets or turns off the workspace's mail footer, and only works for workspace owners and admins. Signatures and footers saved by a client are cleaned up and limited the same way as on the **Signatures** page. A footer change shows on the workspace's [Activity](/guide/workspaces/workspace-activity) page, marked **MCP client**.
+
+When a client uses **Send email**, **Schedule email** or **Create draft**, your default signature for new messages is added after the text, unless the client asks for none. **Update draft** never adds a signature. Email sent with **Send email** or **Schedule email** also gets the workspace's mail footer, when it is on. Drafts do not. See [Signatures and the mail footer](/guide/mail/signatures).
 
 When a client creates, changes or deletes an event, or responds to an invitation, the attendees are notified. A contact a client creates, changes or deletes is changed at your provider, the same as in Contacts. A client can move files only within the same drive. **Attach to workspace** adds one of your own mailboxes, calendars, drives or address books to a workspace, with AI off for it there. What a client attaches is visible to every member of that workspace. An address book it attaches shows no contacts until someone switches its address books on. See [Show and hide address books](/guide/contacts/show-and-hide-address-books).
 

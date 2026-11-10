@@ -6,12 +6,27 @@ import { looksTextual, TEXT_LIMIT } from "@/lib/file-utils";
 import { htmlToText, truncate } from "@/lib/utils";
 import { isParsableAttachment, parseAttachment } from "@/mail/attachment-data";
 import { readRawMessage } from "@/mail/raw";
+import {
+  canEditWorkspaceSignatures,
+  deleteSignature as removeSignature,
+  finishOutgoing,
+  getMailFooter,
+  listSignatures as storedSignatures,
+  ownsMailbox,
+  saveSignature as storeSignature,
+  type SenderContext,
+  setMailFooter as storeMailFooter,
+  signatureOwnerFor,
+  type StoredSignature,
+  WORKSPACE_SIGNATURES_ADMIN_ONLY,
+} from "@/mail/signatures";
 import { summaryCardSchema } from "@/mail/summary-catalog";
 import { summarizeThread as summarizeConversation } from "@/mail/thread-summary";
-import type { DraftPayload, Email, MailFolder } from "@/types/mail";
+import type { DraftPayload, Email, MailFolder, MailSignatureScope } from "@/types/mail";
+import { MAIL_SIGNATURE_SCOPES } from "@/types/mail";
 
-import type { Output } from "./output";
-import { type AgentMailbox, mailScopeFor, type WorkspaceCtx } from "./scope";
+import { orFailure, type Output } from "./output";
+import { type AgentMailbox, auditedBy, mailScopeFor, type WorkspaceCtx } from "./scope";
 
 export const emailSummaryOutput = z.object({
   id: z.string(),
@@ -314,10 +329,25 @@ export async function trash(
   return { deleted: ids.length, mailboxId: mailbox.mailboxId, ids };
 }
 
+function senderOf(ctx: WorkspaceCtx, mailbox: AgentMailbox): SenderContext {
+  return {
+    workspaceId: ctx.workspaceId,
+    mailboxId: mailbox.mailboxId,
+    mailboxEmail: mailbox.email,
+    userId: ctx.userId,
+  };
+}
+
 export async function send(
+  ctx: WorkspaceCtx,
   mailbox: AgentMailbox,
-  payload: DraftPayload,
+  draft: DraftPayload,
+  opts: { signature: boolean },
 ): Promise<Output<typeof sendOutput>> {
+  const payload = await finishOutgoing(senderOf(ctx, mailbox), draft, {
+    signature: opts.signature ? "new" : null,
+    footer: true,
+  });
   await mailbox.adapter.sendMessage(payload);
   return {
     sent: true,
@@ -328,9 +358,15 @@ export async function send(
 }
 
 export async function createDraft(
+  ctx: WorkspaceCtx,
   mailbox: AgentMailbox,
-  payload: DraftPayload,
+  draft: DraftPayload,
+  opts: { signature: boolean },
 ): Promise<Output<typeof draftOutput>> {
+  const payload = await finishOutgoing(senderOf(ctx, mailbox), draft, {
+    signature: opts.signature ? "new" : null,
+    footer: false,
+  });
   const { id } = await mailbox.adapter.createDraft(payload);
   return { success: true, mailboxId: mailbox.mailboxId, draftId: id };
 }
@@ -440,4 +476,143 @@ export async function summarizeThread(
     cards,
     note: cards.length === 0 ? "Nothing in this conversation needed a summary card." : undefined,
   };
+}
+
+const signatureOutput = z.object({
+  signatureId: z.string(),
+  name: z.string(),
+  html: z.string(),
+  defaultNew: z.boolean(),
+  defaultReply: z.boolean(),
+});
+
+const footerOutput = z.object({ html: z.string(), enabled: z.boolean() });
+
+export const listSignaturesOutput = z.object({
+  workspace: z.array(signatureOutput),
+  canEditWorkspace: z.boolean(),
+  footer: footerOutput,
+  mailbox: z
+    .object({
+      mailboxId: z.string(),
+      email: z.string(),
+      signatures: z.array(signatureOutput),
+      canEdit: z.boolean(),
+      yours: z.array(signatureOutput),
+    })
+    .optional(),
+  note: z.string(),
+});
+
+export const saveSignatureOutput = orFailure(
+  z.object({
+    saved: z.literal(true),
+    scope: z.enum(MAIL_SIGNATURE_SCOPES),
+    signature: signatureOutput,
+  }),
+);
+
+export const deleteSignatureOutput = orFailure(
+  z.object({
+    deleted: z.literal(true),
+    scope: z.enum(MAIL_SIGNATURE_SCOPES),
+    signatureId: z.string(),
+  }),
+);
+
+export const setMailFooterOutput = orFailure(footerOutput.extend({ updated: z.literal(true) }));
+
+function signatureValue(s: StoredSignature) {
+  return {
+    signatureId: s.id,
+    name: s.name,
+    html: s.html,
+    defaultNew: s.defaultNew,
+    defaultReply: s.defaultReply,
+  };
+}
+
+export async function listSignatures(
+  ctx: WorkspaceCtx,
+  mailbox: AgentMailbox | null,
+): Promise<Output<typeof listSignaturesOutput>> {
+  const [workspace, footer, perMailbox] = await Promise.all([
+    storedSignatures({ scope: "workspace", workspaceId: ctx.workspaceId }),
+    getMailFooter(ctx.workspaceId),
+    mailbox
+      ? Promise.all([
+          storedSignatures({ scope: "mailbox", mailboxId: mailbox.mailboxId }),
+          storedSignatures({
+            scope: "personal",
+            mailboxId: mailbox.mailboxId,
+            userId: ctx.userId,
+          }),
+          ownsMailbox(ctx.userId, mailbox.mailboxId),
+        ])
+      : Promise.resolve(null),
+  ]);
+  return {
+    workspace: workspace.map(signatureValue),
+    canEditWorkspace: canEditWorkspaceSignatures(ctx),
+    footer,
+    ...(mailbox &&
+      perMailbox && {
+        mailbox: {
+          mailboxId: mailbox.mailboxId,
+          email: mailbox.email,
+          signatures: perMailbox[0].map(signatureValue),
+          canEdit: perMailbox[2],
+          yours: perMailbox[1].map(signatureValue),
+        },
+      }),
+    note: "Your own default wins over the mailbox's, which wins over the workspace's, separately for new mail and for replies and forwards. The footer goes on every message sent from this workspace.",
+  };
+}
+
+export async function saveSignature(
+  ctx: WorkspaceCtx,
+  scope: MailSignatureScope,
+  mailbox: AgentMailbox | null,
+  input: {
+    signatureId?: string;
+    name: string;
+    html: string;
+    defaultNew?: boolean;
+    defaultReply?: boolean;
+  },
+): Promise<Output<typeof saveSignatureOutput>> {
+  const owner = await signatureOwnerFor(ctx, scope, mailbox?.mailboxId ?? null);
+  if ("error" in owner) return owner;
+  const saved = await storeSignature(owner, {
+    id: input.signatureId,
+    name: input.name,
+    html: input.html,
+    defaultNew: input.defaultNew,
+    defaultReply: input.defaultReply,
+  });
+  if (!saved) return { error: `No ${scope} signature "${input.signatureId ?? ""}" here` };
+  return { saved: true, scope, signature: signatureValue(saved) };
+}
+
+export async function deleteSignature(
+  ctx: WorkspaceCtx,
+  scope: MailSignatureScope,
+  mailbox: AgentMailbox | null,
+  signatureId: string,
+): Promise<Output<typeof deleteSignatureOutput>> {
+  const owner = await signatureOwnerFor(ctx, scope, mailbox?.mailboxId ?? null);
+  if ("error" in owner) return owner;
+  if (!(await removeSignature(owner, signatureId))) {
+    return { error: `No ${scope} signature "${signatureId}" here` };
+  }
+  return { deleted: true, scope, signatureId };
+}
+
+export async function setMailFooter(
+  ctx: WorkspaceCtx,
+  footer: { html: string; enabled: boolean },
+): Promise<Output<typeof setMailFooterOutput>> {
+  if (!canEditWorkspaceSignatures(ctx)) return { error: WORKSPACE_SIGNATURES_ADMIN_ONLY };
+  const saved = await storeMailFooter(ctx.workspaceId, footer, auditedBy(ctx));
+  return { updated: true, ...saved };
 }

@@ -38,6 +38,7 @@ import {
   ListOrdered,
   Paperclip,
   Send,
+  Signature,
   UnderlineIcon,
   X,
 } from "lucide-react";
@@ -61,9 +62,11 @@ import { mailboxMarkColor } from "@/mail/mailbox-color";
 import type { RemoteImages } from "@/mail/render/types";
 import { useMailStore } from "@/store/mail-store";
 import { useUndoSendStore } from "@/store/undo-send-store";
+import type { MailSignatureKind, MailSignatureScope } from "@/types/mail";
 import { ALL_DRIVES_SLUG } from "@/workspace/path";
 
 import { RecipientField } from "./recipient-field";
+import { hasSignature, setSignature, SignatureBlock, typedText } from "./signature-block";
 
 interface AttachedFile {
   id: string;
@@ -169,6 +172,19 @@ export function ComposeDialog() {
   const [draftStatus, setDraftStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const draftIdRef = useRef<string | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [openSeen, setOpenSeen] = useState(false);
+  const [openCount, setOpenCount] = useState(0);
+  const [signatureKind, setSignatureKind] = useState<MailSignatureKind | null>("new");
+  const signatureSessionRef = useRef(0);
+  const signatureFromRef = useRef<string | null>(null);
+  const signatureAutoRef = useRef(false);
+  const signatures = useQuery({
+    ...rpc.mail.signatures.forCompose.queryOptions({
+      input: { ...scope, fromMailboxSlug: fromMailboxSlug || undefined },
+    }),
+    enabled: composeOpen && !!fromMailboxSlug,
+    staleTime: 60_000,
+  }).data;
 
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -236,10 +252,12 @@ export function ComposeDialog() {
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Link.extend({ inclusive: () => false }).configure({ openOnClick: false }),
       Placeholder.configure({ placeholder: "Write your message…" }),
+      SignatureBlock,
     ],
     editorProps: {
       attributes: {
-        class: "min-h-[180px] px-0 py-2 text-[14px] leading-relaxed focus:outline-none",
+        class:
+          "min-h-[180px] px-0 py-2 text-[14px] leading-relaxed focus:outline-none [&_[data-metis-signature]]:mt-3 [&_[data-metis-signature]]:rounded-sm [&_[data-metis-signature]]:text-muted-foreground [&_.ProseMirror-selectednode[data-metis-signature]]:outline-2 [&_.ProseMirror-selectednode[data-metis-signature]]:outline-ring/50",
       },
     },
     immediatelyRender: false,
@@ -254,9 +272,27 @@ export function ComposeDialog() {
     return () => window.removeEventListener("keydown", onKey);
   }, [composeOpen, setComposeOpen]);
 
+  if (composeOpen !== openSeen) {
+    setOpenSeen(composeOpen);
+    if (composeOpen) {
+      setOpenCount((n) => n + 1);
+      setSignatureKind(
+        composeInitial?.draftId
+          ? null
+          : composeInitial?.replyToMessageId || composeInitial?.quotedHtml
+            ? "reply"
+            : "new",
+      );
+    }
+  }
+
   const [seededInitial, setSeededInitial] = useState<typeof composeInitial>(null);
   if (composeOpen && composeInitial && composeInitial !== seededInitial) {
     setSeededInitial(composeInitial);
+    if (composeInitial.draftId) setSignatureKind(null);
+    else if (composeInitial.replyToMessageId || composeInitial.quotedHtml) {
+      setSignatureKind("reply");
+    }
     if (composeInitial.to) setTo(splitRecipients(composeInitial.to));
     if (composeInitial.cc) {
       setCc(splitRecipients(composeInitial.cc));
@@ -288,6 +324,22 @@ export function ComposeDialog() {
     }
   }, [composeOpen, composeInitial, setComposeInitial, editor]);
 
+  useEffect(() => {
+    if (!composeOpen || !editor || !signatures || composeInitial) return;
+    const id = signatureKind === "reply" ? signatures.defaultReply : signatures.defaultNew;
+    const preferred = signatures.signatures.find((s) => s.id === id) ?? null;
+    if (signatureSessionRef.current !== openCount) {
+      signatureSessionRef.current = openCount;
+      signatureFromRef.current = fromMailboxSlug;
+      signatureAutoRef.current = signatureKind !== null && !hasSignature(editor);
+      if (signatureAutoRef.current && preferred) setSignature(editor, preferred);
+      return;
+    }
+    if (signatureFromRef.current === fromMailboxSlug) return;
+    signatureFromRef.current = fromMailboxSlug;
+    if (hasSignature(editor) || signatureAutoRef.current) setSignature(editor, preferred);
+  }, [composeOpen, editor, signatures, composeInitial, openCount, signatureKind, fromMailboxSlug]);
+
   const buildPayload = useCallback(() => {
     const editorHtml = editor?.getHTML() ?? "";
     const bodyHtml = quotedHtml ? `${editorHtml}<br>${quotedHtml}` : editorHtml;
@@ -315,9 +367,8 @@ export function ComposeDialog() {
   }, [editor, to, cc, bcc, subject, attachedFiles, quotedHtml]);
 
   const saveDraftNow = useCallback(async () => {
-    const bodyHtml = editor?.getHTML() ?? "";
     const subjTrim = subject.trim();
-    const bodyTrim = bodyHtml.replace(/<[^>]+>/g, "").trim();
+    const bodyTrim = editor ? typedText(editor) : "";
     if (to.length === 0 && !subjTrim && !bodyTrim) {
       setDraftStatus("idle");
       return;
@@ -363,6 +414,8 @@ export function ComposeDialog() {
     setPendingScheduleTime(null);
     setDraftStatus("idle");
     draftIdRef.current = null;
+    signatureFromRef.current = null;
+    signatureAutoRef.current = false;
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
       saveTimerRef.current = null;
@@ -666,6 +719,17 @@ export function ComposeDialog() {
                 <HardDrive className="h-3 w-3" />
               </FmtBtn>
             )}
+            {signatures && signatures.signatures.length > 0 && (
+              <SignaturePicker
+                signatures={signatures.signatures}
+                onPick={(picked) => {
+                  if (!editor) return;
+                  signatureFromRef.current = fromMailboxSlug;
+                  signatureAutoRef.current = picked !== null;
+                  setSignature(editor, picked);
+                }}
+              />
+            )}
             <input
               ref={fileInputRef}
               type="file"
@@ -822,6 +886,42 @@ function FmtBtn({
     >
       {children}
     </Button>
+  );
+}
+
+const SCOPE_LABEL: Record<MailSignatureScope, string> = {
+  personal: "Yours",
+  mailbox: "Mailbox",
+  workspace: "Workspace",
+};
+
+function SignaturePicker({
+  signatures,
+  onPick,
+}: {
+  signatures: { id: string; scope: MailSignatureScope; name: string; html: string }[];
+  onPick: (signature: { id: string; html: string } | null) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={<Button variant="ghost" size="icon-sm" title="Signature" className="text-faint" />}
+      >
+        <Signature className="h-3 w-3" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="top" align="start" className="w-60">
+        {signatures.map((s) => (
+          <DropdownMenuItem key={s.id} onClick={() => onPick(s)}>
+            <span className="min-w-0 flex-1 truncate">{s.name}</span>
+            <span className="text-[10px] uppercase tracking-wider text-faint">
+              {SCOPE_LABEL[s.scope]}
+            </span>
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => onPick(null)}>No signature</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

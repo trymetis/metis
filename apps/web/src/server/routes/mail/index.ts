@@ -7,6 +7,7 @@ import { messagesRouter } from "./messages";
 import { muteRouter } from "./mute";
 import { readLaterRouter } from "./read-later";
 import { scheduledSendRouter } from "./scheduled-send";
+import { signaturesRouter } from "./signatures";
 import { subscriptionsRouter } from "./subscriptions";
 import { threadRouter } from "./thread";
 
@@ -20,5 +21,6 @@ export const mailRouter = {
   mute: muteRouter,
   readLater: readLaterRouter,
   scheduledSend: scheduledSendRouter,
+  signatures: signaturesRouter,
   subscriptions: subscriptionsRouter,
 };

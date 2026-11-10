@@ -1,0 +1,278 @@
+---
+title: Signatures and the mail footer
+description: Set up your own, mailbox and workspace signatures, pick one while you write, and add a footer to every message a workspace sends.
+---
+
+A signature is a short block at the end of a message, such as your name, your job title and a phone number. If there is a default signature, Metis Suite adds it for you when you write a message, and you can switch it or remove it for each message.
+
+A workspace can also have a mail footer. The footer is a block, such as a legal notice, that is added to the end of every message sent from the workspace. Senders cannot remove it. See [The workspace mail footer](#the-workspace-mail-footer).
+
+## Three kinds of signature
+
+| Kind                     | Who it is for                                                                         | Who can change it                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **Your signatures**      | Only you, when you send from one mailbox                                              | You. Any member can add their own signatures to any mailbox in the workspace. |
+| **Mailbox signatures**   | Everyone who sends from one mailbox, in every workspace that mailbox is in            | Only the person who connected the mailbox, whatever their role                |
+| **Workspace signatures** | Anyone who sends from the workspace and has no default of their own or of the mailbox | Workspace owners and admins. Members can see them, but not change them.       |
+
+Your signatures and mailbox signatures belong to the mailbox, not to one workspace. If the mailbox is in two workspaces, the same signatures are used in both.
+
+## Which signature is added
+
+Each kind of signature can have a default for new messages and a default for replies and forwards. When you write a message, Metis Suite picks the most personal default that exists:
+
+1. Your own default for the mailbox you send from.
+2. If you have none, the mailbox's default.
+3. If the mailbox has none, the workspace's default.
+
+New messages and replies are worked out separately. Replies and forwards use the defaults for replies and forwards. For example, if your own signature is only the default for new messages, a reply uses the mailbox's default for replies. If the mailbox has none, it uses the workspace's.
+
+If no default exists at any level, no signature is added. You can still pick one by hand. See [Pick a signature while you write](#pick-a-signature-while-you-write).
+
+## Open the Signatures page
+
+1. Open the workspace menu at the top of the left rail and choose **General**.
+2. In the list on the left, click **Signatures**. It is between **Mailboxes** and **Calendars**.
+
+For a workspace called Design, the page address looks like `/w/design/settings/signatures`. Every member of the workspace can open it.
+
+The page says "Your own signature wins over the mailbox's, which wins over the workspace's. Each message can switch or drop it in the composer."
+
+It has these parts:
+
+- **Workspace**, at the top. It holds the **Workspace signatures** list ("Used for anyone sending from this workspace who has no mailbox or personal default.") and the [**Footer**](#the-workspace-mail-footer). Members also see "Only owners and admins can change them."
+- **One part for each mailbox** in the workspace, headed by the mailbox's email address. Each has two lists:
+  - **Mailbox signatures**: "Used by everyone who sends from this mailbox, in every workspace it is in." If you did not connect the mailbox, you also see "Only the person who connected it can change them."
+  - **Your signatures**: "Only for you when you send from this mailbox."
+
+Each signature shows as a card with its name and a preview on a white background. A badge shows what it is the default for:
+
+- **New messages**: the default for new messages.
+- **Replies**: the default for replies and forwards.
+
+A list with no signatures says "None yet."
+
+<img
+  src="/images/mail/signatures-page.webp"
+  alt="The Signatures page with the Workspace part and a mailbox part, where Your signatures holds a signature named Work with the New messages and Replies badges"
+  class="dark:hidden"
+/>
+<img
+  src="/images/mail/signatures-page-dark.webp"
+  alt="The Signatures page with the Workspace part and a mailbox part, where Your signatures holds a signature named Work with the New messages and Replies badges"
+  class="hidden dark:block"
+/>
+
+## Add or edit a signature
+
+<Steps>
+  <Step title="Open the list">
+    On the **Signatures** page, find the list you want, for example **Your signatures** under the
+    mailbox you send from.
+  </Step>
+  <Step title="Click Add">
+    To change a signature instead, click the pencil button on its card. The **New signature** or
+    **Edit signature** window opens. If you do not see **Add** or the pencil, you cannot change that
+    list.
+  </Step>
+  <Step title="Name the signature">
+    Type a name in **Signature name**, for example "Work" or "Short". The name shows in the
+    composer's signature menu. It can be up to 80 characters.
+  </Step>
+  <Step title="Write the signature">
+    Write it in **Rich text**, or click **HTML** to type HTML. See [Rich text and
+    HTML](#rich-text-and-html). Check the result under **Preview**.
+  </Step>
+  <Step title="Choose the defaults">
+    Tick **Default for new messages**, **Default for replies and forwards**, both or neither.
+  </Step>
+  <Step title="Click Save">
+    The window closes and the card shows in the list. Click **Cancel** to close the window without
+    saving.
+  </Step>
+</Steps>
+
+<img
+  src="/images/mail/signatures-editor.webp"
+  alt="The Edit signature window in HTML mode, with the HTML of the Work signature, its preview, and both default checkboxes ticked"
+  class="dark:hidden"
+/>
+<img
+  src="/images/mail/signatures-editor-dark.webp"
+  alt="The Edit signature window in HTML mode, with the HTML of the Work signature, its preview, and both default checkboxes ticked"
+  class="hidden dark:block"
+/>
+
+Each list has at most one default for new messages and one for replies and forwards. When you tick a default on one signature, it is taken off the other signatures in the same list.
+
+If you save without a name, the window says "Give the signature a name".
+
+### Fill in the sender's name and address
+
+The window reminds you that you can use `{{name}}` and `{{email}}` to fill in the sender, and that images must be https links.
+
+- `{{name}}` becomes the name on the sender's Metis Suite account.
+- `{{email}}` becomes the address the message is sent from.
+
+They are filled in when the signature is added to a message. The preview on the **Signatures** page shows them as you typed them. Spaces and capital letters inside the braces are fine, so `{{ Name }}` works too.
+
+This is useful for a mailbox or workspace signature that many people use. For example, a workspace signature of `{{name}}, Design team` reads "Ana Lopez, Design team" when Ana sends a message.
+
+### Rich text and HTML
+
+- **Rich text** is a plain writing area. It has no buttons, but the usual keyboard shortcuts work, such as Ctrl+B (or Cmd+B on a Mac) for bold.
+- **HTML** is a text box where you type or paste HTML.
+
+Some signatures use layout that rich text cannot keep, such as images, tables or inline styles. These open in **HTML**. If you click **Rich text** on such a signature, the window says "This signature uses HTML layout (images, tables or inline styles) that rich text would drop. Edit it as HTML."
+
+**Preview** updates as you type. It shows the signature as it will be saved. When it is empty, it says "Nothing yet."
+
+### What is removed when you save
+
+To keep mail safe, some content is removed from a signature when you save it. The preview already shows the result.
+
+Removed:
+
+- Scripts and style blocks.
+- Forms, input fields and buttons.
+- Embedded frames and objects, video and audio.
+- `id` and `class` attributes.
+- The address of a link that is not a web link (`http` or `https`), an email link (`mailto`) or a phone link (`tel`). The link text stays.
+- The address of an image that does not start with `https://`, including `http://` images and images pasted into the HTML as data. The image then does not show.
+
+Inline `style` attributes are kept, so colors, fonts and sizes set on an element stay.
+
+If nothing is left after this cleanup, the signature is never offered in the composer and never used as a default.
+
+### Limits
+
+- A signature can be up to 20,000 characters, counting its HTML.
+- Each list can hold up to 25 signatures. When a list is full, saving a new signature says "You can keep up to 25 signatures here".
+
+### Delete a signature
+
+Click the trash button on the signature's card. It is deleted at once, without asking you to confirm.
+
+## Signatures in the composer
+
+When you open the composer, the default signature is added for you:
+
+- **Compose**: the default for new messages goes at the end of your message.
+- **Reply**, **Reply all** and **Forward**: the default for replies and forwards goes under your text and above the quoted message. This also applies when you start from the quick reply box under a message and click **Continue**.
+
+In the composer, the signature is one block. It looks greyed out. A click selects the whole block. You cannot type inside it, and Backspace or Delete removes it as one piece. To change a signature's text, edit it on the **Signatures** page.
+
+The workspace footer does not show in the composer. It is added when the message is sent.
+
+### Pick a signature while you write
+
+1. Click **Signature** (the signature icon) in the bar under your message. It is the last button in the bar, after **Attach files** and, when shown, **Link a file from Drive**.
+2. Pick a signature from the menu. Each one shows its name and a tag: **Yours**, **Mailbox** or **Workspace**. Your own signatures come first, then the mailbox's, then the workspace's.
+3. To send without a signature, pick **No signature** at the end of the menu.
+
+<img
+  src="/images/mail/signatures-picker.webp"
+  alt="The composer with a signature at the end of the message and the Signature menu open, listing a signature tagged Yours and then No signature"
+  class="dark:hidden"
+/>
+<img
+  src="/images/mail/signatures-picker-dark.webp"
+  alt="The composer with a signature at the end of the message and the Signature menu open, listing a signature tagged Yours and then No signature"
+  class="hidden dark:block"
+/>
+
+The signature you pick replaces the one in the message. The **Signature** button only shows when there is at least one signature for the mailbox in **From**.
+
+### When you change From
+
+If you change **From** to another mailbox, the signature is swapped for that mailbox's default. If the other mailbox has no default at any level, the signature is removed.
+
+If you picked **No signature**, changing **From** adds nothing.
+
+### Drafts
+
+When you reopen a draft with **Edit draft**, no signature is added by itself. If the draft already has a signature that Metis Suite added, picking another one or changing **From** replaces it.
+
+With Outlook mailboxes, the signature in a saved draft may come back as ordinary text. If you then pick a signature, a second one is added at the end of the message. Delete the old text yourself.
+
+## Signatures added for you
+
+The Workspace Assistant, connected AI clients and workflows can also add your default signature.
+
+- **The assistant and AI clients.** When they send an email, schedule an email or create a draft for you, they add your default signature for new messages after the text. They use the same order as the composer: your own default, then the mailbox's, then the workspace's. The assistant leaves it out if you ask for no signature. It may also leave it out when the text already ends with a sign-off. Updating a draft never adds a signature.
+- **Workflows.** The **Create a draft**, **Send mail**, **Reply** and **Forward** steps have an **Add signature** setting, on to start with. It adds the default signature of the person the workflow runs as. **Create a draft** and **Send mail** use the default for new messages. **Reply** and **Forward** use the default for replies and forwards. See [Steps](/guide/workflows/steps#mail).
+
+The Workspace Assistant and connected AI clients can also list, add, change and delete signatures and set the footer for you, with the same rights you have on the **Signatures** page. In the assistant, each change waits for your approval. An AI client can list signatures from the start, but needs **Save signature**, **Delete signature** and **Set mail footer** turned on first. It then makes those changes without asking you. See [What the assistant can do](/guide/assistant/what-the-assistant-can-do#signatures) and [What an MCP client can do](/guide/assistant/what-an-mcp-client-can-do#sensitive-tools).
+
+A message that already has a signature from Metis Suite never gets a second one. If the message also has a plain-text version, the signature there starts after a line that reads "-- ".
+
+## The workspace mail footer
+
+Each workspace can have one footer. When it is on, it is added at the very end of every message sent through Metis Suite from that workspace, after the signature and any quoted text. Senders cannot remove it.
+
+A mailbox can be in two workspaces. Mail sent from it in one workspace gets that workspace's footer only.
+
+Only workspace owners and admins can change the footer. Members see it, read-only, with "Only owners and admins can change it."
+
+### Set up the footer
+
+1. Open the [**Signatures** page](#open-the-signatures-page).
+2. Under **Workspace**, find **Footer**. It says "Added to the end of every message sent through Metis from this workspace. Senders cannot remove it."
+3. Click **Edit**. The **Mail footer** window opens.
+4. Write the footer in **Rich text** or **HTML**, and check it under **Preview**.
+5. Click **Save**.
+
+The footer follows the same cleanup rules and the same 20,000-character limit as signatures. See [What is removed when you save](#what-is-removed-when-you-save). It has no name and no defaults. `{{name}}` and `{{email}}` are not filled in: they stay in the footer exactly as you typed them.
+
+A preview of the current footer shows under **Footer**.
+
+<img
+  src="/images/mail/signatures-footer.webp"
+  alt="The Footer block with its switch on, the Edit button, and a preview of a short confidentiality notice"
+  class="dark:hidden"
+/>
+<img
+  src="/images/mail/signatures-footer-dark.webp"
+  alt="The Footer block with its switch on, the Edit button, and a preview of a short confidentiality notice"
+  class="hidden dark:block"
+/>
+
+### Turn the footer on or off
+
+Use the switch next to **Edit**. The switch cannot be used while the footer is empty.
+
+- When you save a footer for the first time, it is turned on.
+- When you save changes while it is off, it stays off.
+- When you save an empty footer, it is turned off.
+
+When the footer has text but is off, the page says "Off: not added to outgoing mail."
+
+Changing the footer's text, or turning it on or off, is recorded as **Mail footer changed**. Owners and admins see it on the workspace's [Activity](/guide/workspaces/workspace-activity) page, and the person who made the change sees it in their [Security activity](/guide/account/security-activity). Changes to signatures are not recorded.
+
+### Which mail gets the footer
+
+The footer is added to:
+
+- Messages you send from the composer.
+- Scheduled messages. The footer is added when you schedule the message, so a later change to the footer does not change messages already waiting in **Scheduled**.
+- Email the Workspace Assistant or a connected AI client sends or schedules for you.
+- Mail sent by the workflow steps **Send mail**, **Reply** and **Forward**.
+
+The footer is never added to:
+
+- Drafts, including drafts that the assistant, an AI client or a workflow creates.
+- Mail you send from your provider's own app or website. This includes a draft you started in Metis Suite but sent from there.
+- The email Metis Suite sends for you when you [unsubscribe](/guide/mail/unsubscribe) by email. That email gets no signature either.
+
+[Before mail is sent](/guide/workflows/add-a-bcc-to-outgoing-mail) workflows check the message without the footer.
+
+## If saving fails
+
+The window shows what went wrong. When you delete a signature or use the footer switch, the message shows on the page instead:
+
+| Message                                                                           | What it means                                                                |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| "Only the person who connected this mailbox can change its signatures"            | You tried to change a mailbox signature on a mailbox someone else connected. |
+| "Only workspace owners and admins can change workspace signatures and the footer" | You are a member, and only owners and admins can change these.               |
+| "That signature is gone"                                                          | The signature was deleted while you were editing it.                         |
+| "You can keep up to 25 signatures here"                                           | The list is full. Delete a signature first.                                  |

@@ -63,16 +63,17 @@ What a workspace is, how it borrows mailboxes, calendars, drives and address boo
 ### Data scope
 
 - **Rows are keyed by the narrowest scope that is true for everyone who can see them, always with a real FK**, so a wrong scoping choice is a constraint violation at write time instead of an empty read.
-  - Keyed by **mailbox** (true for anyone who can see it): the message cache with its phishing verdict (`src/mail/cache.ts`), thread summaries, unsubscribe results and labels.
-  - Keyed by **user × mailbox** (personal): mutes and read later; drive pins are user × drive.
+  - Keyed by **mailbox** (true for anyone who can see it): the message cache with its phishing verdict (`src/mail/cache.ts`), thread summaries, unsubscribe results, labels and mailbox signatures ([mail.md](mail.md)).
+  - Keyed by **user × mailbox** (personal): mutes, read later and personal signatures; drive pins are user × drive.
   - Keyed by **user × workspace** (personal): saved searches ([search.md](search.md)).
+  - Keyed by **workspace**: workspace signatures and the mail footer (`workspace.mail_footer_html`, `mail_footer_enabled`).
   - Keyed by **workspace** with a principal: user workflows, whose mailbox references hang off `workflow_resource` ([workflow-graph.md](workflow-graph.md)).
 - **Never add a per-user toggle over per-mailbox data.** One user's "on" would cache a verdict another user's "off" was meant to prevent, so summaries and phishing analysis run for everyone who can see the mailbox.
 
 ### Data export
 
 - **The data export (`user.exportData`) is the account's own settings and history, never a mailbox archive.**
-  - It holds preferences with the remote-content allowlist, workspace memberships, labels, user workflows, Workspace Assistant threads and the user's own audit events (`securityActivity`, [audit.md](audit.md)).
+  - It holds preferences with the remote-content allowlist, workspace memberships, signatures (personal ones and those on mailboxes the user connected), labels, user workflows, Workspace Assistant threads and the user's own audit events (`securityActivity`, [audit.md](audit.md)).
   - Mail, events, files and contacts stay with the provider; the settings section and the file's `notice` both say so.
 - **It follows ownership, not visibility.**
   - Resource links and labels come only from resources the user connected (`connection.user_id`), for all four kinds.

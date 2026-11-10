@@ -41,7 +41,7 @@ To add the BCC only to some messages, put an **If** or a **Filter** step between
    item.to.exists(a, a.endsWith("@example.com"))
    ```
 
-The message being sent has these fields: `to`, `cc`, `bcc`, `subject`, `body` (the plain text) and `mailboxId`. See [Expressions](/guide/workflows/expressions#build-a-condition-from-rows) for how to build or write a condition.
+The message being sent has these fields: `to`, `cc`, `bcc`, `subject`, `body` (the plain text) and `mailboxId`. The workspace's [mail footer](/guide/mail/signatures#the-workspace-mail-footer) is not part of the message these workflows see. See [Expressions](/guide/workflows/expressions#build-a-condition-from-rows) for how to build or write a condition.
 
 ## Good to know
 

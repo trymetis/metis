@@ -90,6 +90,8 @@ export function formatAuditEvent(event: AuditEvent): string {
       return `${actor} transferred ownership of ${workspace ?? "the workspace"} to ${person}`;
     case "workspace.deleted":
       return `${actor} deleted the workspace ${workspace ?? target}`;
+    case "workspace.mail_footer_changed":
+      return `${actor} ${detail.enabled === true ? "changed the mail footer" : "turned off the mail footer"}${workspace ? ` in ${workspace}` : ""}`;
     case "workspace_invite.created": {
       const role = text(detail.role);
       return `${actor} invited ${target}${workspace ? ` to ${workspace}` : ""}${role ? ` as ${ROLE_PHRASES[role] ?? role}` : ""}`;
@@ -183,6 +185,8 @@ export function auditPhrase(action: AuditAction, kind: AuditResourceKind | null)
       return "transferred ownership of to";
     case "workspace.deleted":
       return "deleted the workspace";
+    case "workspace.mail_footer_changed":
+      return "changed the mail footer turned off the mail footer in";
     case "workspace_invite.created":
       return "invited to as";
     case "workspace_invite.revoked":
