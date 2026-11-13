@@ -1,0 +1,170 @@
+name: Server CLI
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    if: startsWith(github.event.release.tag_name, 'cli-v')
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      latest: ${{ steps.release.outputs.latest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Parse the tag
+        id: release
+        run: |
+          tag=$(jq -r .release.tag_name "$GITHUB_EVENT_PATH")
+          latest=true
+          if [[ $(jq -r .release.prerelease "$GITHUB_EVENT_PATH") == true ]]; then
+            latest=false
+          fi
+          printf 'version=%s\nlatest=%s\n' "${tag#cli-v}" "$latest" >> "$GITHUB_OUTPUT"
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+
+      - name: Install the release tooling
+        run: bun install --frozen-lockfile --filter @metis/releases
+
+      - name: Check the release notes exist
+        run: bun run --silent release:notes "cli-v${{ steps.release.outputs.version }}" > /dev/null
+
+  build:
+    needs: release
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/cli
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: apps/cli/go.mod
+          cache-dependency-path: apps/cli/go.sum
+
+      - name: Install go-licenses
+        run: go install github.com/google/go-licenses/v2@v2.0.1
+
+      - name: Build
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          mkdir -p ../../out
+          for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64; do
+            export GOOS="${target%/*}" GOARCH="${target#*/}" CGO_ENABLED=0
+            name="metis-$GOOS-$GOARCH"
+            [[ "$GOOS" == windows ]] && name="$name.exe"
+            go-licenses report ./cmd/metis --ignore github.com/trymetis/metis --template licenses.tpl > internal/version/licenses.txt
+            go build -trimpath -ldflags "-s -w -X github.com/trymetis/metis/apps/cli/internal/version.Version=$VERSION" -o "../../out/$name" ./cmd/metis
+            if [[ "$target" == linux/amd64 ]]; then
+              cp internal/version/licenses.txt ../../out/THIRD_PARTY_LICENSES.txt
+            fi
+          done
+          cp bootstrap.sh ../../out/bootstrap
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cli
+          path: out/*
+          if-no-files-found: error
+
+  smoke:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: cli
+          path: out
+
+      - name: Install the CLI
+        run: sudo install -m 0755 out/metis-linux-amd64 /usr/local/bin/metis
+
+      - name: Set up a server
+        id: setup
+        run: |
+          set -o pipefail
+          if sudo metis setup --yes --owner-email owner@example.com --with updater 2>&1 | tee setup.log; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          elif grep -qE "no published release|needs Metis CLI" setup.log; then
+            echo "::notice::No published app release runs on this CLI yet, so the smoke test is skipped"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            exit 1
+          fi
+
+      - name: Wait for the app
+        if: steps.setup.outputs.skip == 'false'
+        run: |
+          for _ in $(seq 60); do
+            curl -fsS http://127.0.0.1:3000/api/readyz && exit 0
+            sleep 5
+          done
+          sudo metis logs app --tail 200
+          exit 1
+
+      - name: Add, check and remove the workers
+        if: steps.setup.outputs.skip == 'false'
+        run: |
+          sudo metis add worker --yes
+          sudo metis status --json | tee status.json
+          jq -e '[.components[] | select(.name == "app" or .name == "sqld" or .name == "updater" or .name == "redis" or .name == "worker") | select(.healthy)] | length == 5' status.json
+          sudo metis remove worker --yes
+          sudo metis remove redis --yes
+
+  publish:
+    needs: [release, build, smoke]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+
+      - name: Install the release tooling
+        run: bun install --frozen-lockfile --filter @metis/releases
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: cli
+          path: out
+
+      - name: Upload to R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.SH_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SH_R2_SECRET_ACCESS_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.SH_R2_BUCKET }}
+          VERSION: ${{ needs.release.outputs.version }}
+          LATEST: ${{ needs.release.outputs.latest }}
+          TRACK: cli
+          VERSION_MANIFEST: true
+        run: |
+          .github/scripts/r2-upload.sh out "cli/v$VERSION/" cli/ \
+            metis-linux-amd64 \
+            metis-linux-arm64 \
+            metis-darwin-amd64 \
+            metis-darwin-arm64 \
+            metis-windows-amd64.exe \
+            THIRD_PARTY_LICENSES.txt \
+            bootstrap
+
+      - name: Publish the bootstrap shim
+        if: needs.release.outputs.latest == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.SH_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SH_R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.SH_R2_BUCKET }}
+        run: |
+          aws s3 cp out/bootstrap "s3://${R2_BUCKET}/bootstrap" \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
+            --cache-control "public, max-age=300" \
+            --content-type "text/x-shellscript; charset=utf-8"

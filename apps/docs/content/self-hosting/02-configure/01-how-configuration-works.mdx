@@ -17,11 +17,27 @@ These live only in the environment (the `.env` file) or in the optional config f
 - The databases: `METIS_DB_DRIVER`, `DATABASE_URL`, `MASTRA_DATABASE_URL` and their tokens.
 - The drive relay secret: `METIS_DRIVE_RELAY_SECRET`.
 
-To change one with the Compose stack, edit `/opt/metis-suite/.env` and run:
+On a server the `metis` CLI runs, change one with `metis config set`:
 
 ```bash
-sudo docker compose --project-directory /opt/metis-suite up -d
+sudo metis config set METIS_SOURCE_URL=https://git.example.com/metis
 ```
+
+The command writes the line to `/opt/metis-suite/.env`, shows what it changes, restarts the app on the new value (preflight runs first), and prints "Stored in /opt/metis-suite/.env and applied". To remove a variable, use `metis config unset`:
+
+```bash
+sudo metis config unset METIS_SOURCE_URL
+```
+
+You can also edit `/opt/metis-suite/.env` yourself, then apply it:
+
+```bash
+sudo metis apply
+```
+
+`metis apply` compares `.env` and the components with what runs, shows the changes and asks "Apply these changes?". `metis restart app` is not enough: it restarts the app as it is, without reading `.env` again.
+
+On a container platform or Vercel, change the variable in the platform's settings and redeploy.
 
 ## Settings the owner or an admin changes in the dashboard
 
@@ -38,7 +54,56 @@ The first time preflight runs, it stores these settings. Each one takes its valu
 
 When an update adds a new card to the dashboard, such as the decision model, the mail image proxy, **Mail cache** or **Proxies**, the next preflight stores it the same way, from the environment, the config file or the default. This happens on an instance that already runs too. **History** lists this as a **Seed** version.
 
-Once preflight has stored a setting, the environment no longer changes it. If a value in the environment later differs from the stored one, the stored value is used and the dashboard shows a warning under **Deploy checks**. Change the setting in the dashboard, or remove it from the environment. You can also click **Reset to environment** on the setting's card to apply the environment values again. The app reads the environment when it starts, so after you edit `.env` or the config file, apply the change as shown [above](#settings-fixed-at-startup) before you reset. See [Reset a card to the environment](/self-hosting/operate/owner-dashboard#reset-a-card-to-the-environment).
+Once preflight has stored a setting, the environment no longer changes it, unless you change it with the `metis` CLI (see [Change dashboard settings with the metis CLI](#change-dashboard-settings-with-the-metis-cli)). If a value in the environment later differs from the stored one, the stored value is used and the dashboard shows a warning under **Deploy checks**. Change the setting in the dashboard, or remove it from the environment. You can also click **Reset to environment** on the setting's card to apply the environment values again. The app reads the environment when it starts, so after you edit `.env` or the config file, apply the change as shown [above](#settings-fixed-at-startup) before you reset. See [Reset a card to the environment](/self-hosting/operate/owner-dashboard#reset-a-card-to-the-environment).
+
+## Change dashboard settings with the metis CLI
+
+`metis config set` and `metis config unset` also change dashboard settings. Among the variables you name, each one that belongs to a dashboard setting is stored in the database, over the value the dashboard holds. The others only go into `.env`. For example, this sets the Google OAuth client:
+
+```bash
+sudo metis config set GOOGLE_CLIENT_ID=1234-abc.apps.googleusercontent.com GOOGLE_CLIENT_SECRET=your-client-secret
+```
+
+- **The whole card is stored.** The command stores every field of each card a variable belongs to, from `.env` and the defaults. Another field of that card that you changed only in the dashboard goes back to its `.env` value or its default, as with **Reset to environment**.
+- **A shared variable stores every card that uses it.** For example, `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` can belong to more than one card.
+- **`unset` returns a dashboard setting to its default.**
+- **Server lists keep your dashboard entries.** On a server list, the command changes only the entries the CLI manages. See [Entries the metis CLI manages](/self-hosting/configure/server-lists#entries-the-metis-cli-manages).
+- **History shows it.** The change appears under **System**, **History** as a **Server** version, by "Preflight", with the cards it changed.
+- **Quote a value that holds spaces or JSON** in single quotes, so your shell passes it as one piece, for example `sudo metis config set 'METIS_IMAP_SERVERS=[{"name":"Office mail","imap":{"host":"imap.example.com"},"smtp":{"host":"smtp.example.com"}}]'`. The value is written to `.env` exactly as the shell passes it.
+
+If a stored card fails its checks, preflight fails and nothing is stored in the database. The command shows "preflight failed:" with lines that name the card and the field, and the app keeps running. The change stays in `.env`, though. Fix the value and run `metis config set` or `metis config unset` again. A later `metis apply` alone starts the app on the new `.env` without storing the card, so the dashboard keeps its value and **Deploy checks** shows that the environment differs.
+
+### Change settings away from the server
+
+On a container platform or Vercel, run the CLI on your own computer with the deployment's environment file, such as `production.env` (one `NAME=value` per line, the same variables as the app). See [Install the CLI on your computer](/self-hosting/reference/cli-commands#install-the-cli-on-your-computer).
+
+```bash
+metis config set --env-file production.env --version 1.2.3 GOOGLE_CLIENT_ID=1234-abc.apps.googleusercontent.com GOOGLE_CLIENT_SECRET=your-client-secret
+```
+
+| Flag         | What it does                                                                                 |
+| ------------ | -------------------------------------------------------------------------------------------- |
+| `--env-file` | The deployment's environment file to update. Required away from the server.                  |
+| `--version`  | The release the deployment runs, such as `1.2.3`. Needed when you change dashboard settings. |
+| `--yes`      | Go ahead without asking.                                                                     |
+
+The command:
+
+1. Updates the file and prints "Updated production.env".
+2. Prints "Set these on the platform that runs Metis:", followed by each `KEY=VALUE` to set and each `remove KEY` to remove. Make those changes on the platform.
+3. Stores the dashboard settings among them once, in the deployment's database. With Docker running on your computer, it runs that release's preflight image once and prints, for example, "Stored GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET in the deployment's database". Your computer must be able to reach the databases.
+
+Without Docker, it prints "Docker is not running here. Store the dashboard settings once with:" and a command such as this one. Run it once on a machine that has Docker and can reach the databases:
+
+```bash
+docker run --rm --env-file production.env -e METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS=GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET ghcr.io/trymetis/metis:1.2.3-preflight
+```
+
+If none of the variables is a dashboard setting, it prints "None of them is a dashboard setting, so the next deploy picks them up." Without `--version`, it updates the file, then stops with, for example, "GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET are dashboard settings; pass --version X.Y.Z, the release the deployment runs, to store them once through its preflight image".
+
+:::danger[Never set METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS yourself]
+The CLI passes this variable to one preflight run only. Never put it in `.env` or in a platform's environment, and above all never on a platform whose build or start command runs preflight on every deploy. Every later preflight would store those settings from the environment again, and overwrite what the owner or an admin changed in the dashboard. The CLI warns: "Never set METIS**UPDATER**FORCE_UPDATE_CONFIG_KEYS on the platform itself; every deploy would then overwrite the dashboard."
+:::
 
 ## Saving a change in the dashboard
 
@@ -133,13 +198,17 @@ mailer:
 As with the environment, preflight reads the settings that the dashboard manages from the file only once, the first time it runs. After that, **Reset to environment** on a card applies the file's values to that card again, as the file was when the app last started.
 
 :::note
-The Compose stack does not mount a config file into its containers. With the Compose stack, use `.env`.
+A server the `metis` CLI runs gives the app no config file. Use `.env` there.
 :::
 
 ## When a setting is wrong
 
-The app checks every setting when it starts. A setting with a wrong value stops it from starting, and the error names the setting. With the Compose stack, the preflight log shows it:
+The app checks every setting when it starts. A setting with a wrong value stops it from starting, and the error names the setting.
+
+On a server the `metis` CLI runs, preflight runs before every new app starts. If it fails, the app that was running keeps running. The end of preflight's output is in the error of the command that made the change (`metis config set`, `metis apply`, `metis add`, `metis remove` or `metis domain`), after "preflight failed:". Fix the value and run the command again.
+
+The app's own log shows errors after it has started:
 
 ```bash
-sudo docker compose --project-directory /opt/metis-suite logs preflight
+sudo metis logs app
 ```

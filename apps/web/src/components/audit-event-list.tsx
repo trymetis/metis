@@ -43,6 +43,7 @@ const dateTime = new Intl.DateTimeFormat(undefined, {
 function viaLabel(event: AuditEvent): string | null {
   if (event.via === "assistant") return "Workspace Assistant";
   if (event.via === "mcp") return "MCP client";
+  if (event.via === "cli") return "Server CLI";
   return null;
 }
 

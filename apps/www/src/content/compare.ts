@@ -37,8 +37,8 @@ export type Competitor = {
 export const METIS: Record<RowKey, Cell> = {
   license: { text: "Open source, AGPL-3.0-or-later", source: LICENSE_URL },
   selfHost: {
-    text: "Yes, with Docker Compose on your own Linux server, or run for you on Metis Cloud",
-    source: `${DOCS_URL}/self-hosting/install/install-with-docker-compose`,
+    text: "Yes, on your own Linux server with Docker and the metis CLI, or run for you on Metis Cloud",
+    source: `${DOCS_URL}/self-hosting/install/install-with-bootstrap`,
   },
   providers: {
     text: "Gmail, Microsoft 365 and Outlook.com, Zoho Mail, and IMAP servers the instance owner adds",

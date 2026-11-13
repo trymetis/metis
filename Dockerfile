@@ -39,18 +39,6 @@ COPY LICENSE NOTICE ./
 WORKDIR /app/apps/web
 CMD ["node", "workflow-worker.mjs"]
 
-FROM golang:1.27-alpine AS updater-build
-WORKDIR /src
-COPY apps/updater/go.mod apps/updater/go.sum ./
-RUN go mod download
-COPY apps/updater/ ./
-RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/metis-updater ./cmd/metis-updater
-
-FROM docker:29-cli AS updater
-COPY --from=updater-build /out/metis-updater /usr/local/bin/metis-updater
-COPY LICENSE NOTICE /usr/share/metis-updater/
-ENTRYPOINT ["/usr/local/bin/metis-updater"]
-
 FROM node:26-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production

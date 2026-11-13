@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.48.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.114.10
-	github.com/trymetis/metis/apps/updater v0.0.0
+	github.com/trymetis/metis/apps/cli v0.0.0
 	google.golang.org/protobuf v1.36.12
 )
 
@@ -23,4 +23,4 @@ require (
 	github.com/aws/smithy-go v1.28.9 // indirect
 )
 
-replace github.com/trymetis/metis/apps/updater => ../../apps/updater
+replace github.com/trymetis/metis/apps/cli => ../../apps/cli

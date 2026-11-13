@@ -3,10 +3,11 @@ title: Environment variables
 description: Every environment variable a Metis Suite instance reads, grouped by topic, with defaults.
 ---
 
-Each variable is one of two kinds:
+Each variable is one of three kinds:
 
-- **Startup:** read every time the app starts. Change it in `.env` and restart the app.
-- **Starting value:** read once, the first time preflight runs, to fill in a setting the owner then manages in the dashboard. After that, change it under **Dashboard**, **System**. When a release adds a new group of settings to the dashboard, such as the **Decision model** card, preflight reads that group's variables once, on the first run after that update. A new field in a group you already have is not read on an existing instance: set it in the dashboard. To apply a starting value again later, apply your `.env` change as for [settings fixed at startup](/self-hosting/configure/how-configuration-works#settings-fixed-at-startup), then click **Reset to environment** on the setting's card. This resets every field on that card. See [How configuration works](/self-hosting/configure/how-configuration-works).
+- **Startup:** read every time the app starts. On a server the `metis` CLI runs, change it with `sudo metis config set`, which writes `.env` and restarts the app. On a platform, change it there and redeploy.
+- **Starting value:** read once, the first time preflight runs, to fill in a setting the owner then manages in the dashboard. After that, change it under **Dashboard**, **System**. When a release adds a new group of settings to the dashboard, such as the **Decision model** card, preflight reads that group's variables once, on the first run after that update. A new field in a group you already have is not read on an existing instance: set it in the dashboard. To apply a starting value again later, apply your `.env` change as for [settings fixed at startup](/self-hosting/configure/how-configuration-works#settings-fixed-at-startup), then click **Reset to environment** on the setting's card. This resets every field on that card. On a server the `metis` CLI runs, `sudo metis config set` does both in one step. See [How configuration works](/self-hosting/configure/how-configuration-works).
+- **Set by the CLI:** the `metis` CLI sets it for one run. Do not put it in `.env` or a platform's environment.
 
 Any variable can also come from the optional config file. A missing or wrong value stops the app from starting with an "Invalid configuration" error. The error names each setting by a key, not by its variable name. For the startup settings, it is the config file key. For example:
 
@@ -40,17 +41,17 @@ Invalid configuration:
 
 ## Database
 
-| Variable                     | Kind    | What it does                                                                                                                   | Default |
-| ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------ | ------- |
-| `METIS_DB_DRIVER`            | Startup | `sqld` (a libSQL server, as in the Compose stack), `turso`, or `local` (a file, for development only, never for a deployment). |         |
-| `DATABASE_URL`               | Startup | The app database: `http(s)://` or `ws(s)://` for sqld, `libsql://` for Turso, `file:` for local.                               |         |
-| `DATABASE_AUTH_TOKEN`        | Startup | Its token. Required for sqld and Turso.                                                                                        |         |
-| `MASTRA_DATABASE_URL`        | Startup | The AI memory database. A separate database on the same driver.                                                                |         |
-| `MASTRA_DATABASE_AUTH_TOKEN` | Startup | Its token. Required for sqld and Turso.                                                                                        |         |
-| `SQLD_AUTH_JWT_KEY`          | Startup | The bundled database server's public key. The bootstrap script generates it.                                                   |         |
-| `SQLD_ADMIN_KEY`             | Startup | The key for the bundled database server's admin access. The bootstrap script generates it.                                     |         |
+| Variable                     | Kind    | What it does                                                                                                                               | Default |
+| ---------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| `METIS_DB_DRIVER`            | Startup | `sqld` (a libSQL server, as on a server the `metis` CLI runs), `turso`, or `local` (a file, for development only, never for a deployment). |         |
+| `DATABASE_URL`               | Startup | The app database: `http(s)://` or `ws(s)://` for sqld, `libsql://` for Turso, `file:` for local.                                           |         |
+| `DATABASE_AUTH_TOKEN`        | Startup | Its token. Required for sqld and Turso.                                                                                                    |         |
+| `MASTRA_DATABASE_URL`        | Startup | The AI memory database. A separate database on the same driver.                                                                            |         |
+| `MASTRA_DATABASE_AUTH_TOKEN` | Startup | Its token. Required for sqld and Turso.                                                                                                    |         |
+| `SQLD_AUTH_JWT_KEY`          | Startup | The public key the server's database server (sqld) checks tokens with. `metis setup` generates it.                                         |         |
+| `SQLD_ADMIN_KEY`             | Startup | The key for the admin access of the server's database server. `metis setup` generates it.                                                  |         |
 
-For a stack you set up without the bootstrap script, `bash bootstrap.sh sqld-auth` prints a matching `SQLD_AUTH_JWT_KEY` and token pair.
+For a sqld server you run yourself, `metis sqld-auth` prints a new `SQLD_AUTH_JWT_KEY` and the token that goes with it, as `DATABASE_AUTH_TOKEN` and `MASTRA_DATABASE_AUTH_TOKEN`. It runs on any computer with the `metis` CLI.
 
 ### Create the databases on Turso
 
@@ -268,21 +269,37 @@ See [Owner dashboard](/self-hosting/operate/owner-dashboard#audit-log).
 
 ## Other
 
-| Variable               | Kind    | What it does                                                                                                  | Default        |
-| ---------------------- | ------- | ------------------------------------------------------------------------------------------------------------- | -------------- |
-| `METIS_CONFIG_PATH`    | Startup | The path of the config file. If the file does not exist, the app does not start.                              | Not set        |
-| `METIS_UPDATER_SOCKET` | Startup | Connects the app to the updater. The Compose stack sets it for you. Without it, there is no **Updates** page. | Set by Compose |
+| Variable                                   | Kind           | What it does                                                                                                                                                   | Default        |
+| ------------------------------------------ | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| `METIS_CONFIG_PATH`                        | Startup        | The path of the config file. If the file does not exist, the app does not start.                                                                               | Not set        |
+| `METIS_UPDATER_SOCKET`                     | Startup        | Connects the app to the updater. The `metis` CLI sets it when the updater component is on. Without it, there is no **Updates** page.                           | Set by the CLI |
+| `METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS` | Set by the CLI | Set by the `metis` CLI for one preflight run only. Never put it in `.env` or a platform's environment. See [below](#metis__updater__force_update_config_keys). | Not set        |
 
-## Bootstrap script
+### METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS
 
-These are read by the bootstrap script only. See [Install with the bootstrap script](/self-hosting/install/install-with-bootstrap).
+The name has two underscores in the middle, on each side of `UPDATER`. It is a comma-separated list of variable names. When preflight runs with it, it stores the dashboard cards those variables belong to from the environment, over the values stored in the database. This is how `metis config set`, `metis config unset` and other `metis` commands change dashboard settings. See [Change dashboard settings with the metis CLI](/self-hosting/configure/how-configuration-works#change-dashboard-settings-with-the-metis-cli).
 
-| Variable                                                        | What it does                                            | Default                                             |
-| --------------------------------------------------------------- | ------------------------------------------------------- | --------------------------------------------------- |
-| `METIS_DOMAIN`                                                  | Your domain. When set, Caddy serves the app over HTTPS. | Not set                                             |
-| `METIS_VERSION`                                                 | The release to install, such as `1.2.3`.                | The newest release                                  |
-| `INSTALL_DIR`                                                   | Where the stack is installed.                           | `/opt/metis-suite`                                  |
-| `APP_PORT`                                                      | The port the app listens on, on `127.0.0.1`.            | `3000`                                              |
-| `COMPOSE_URL`                                                   | A full URL for the Compose file.                        | The Compose file of the release the script installs |
-| `APP_IMAGE`, `PREFLIGHT_IMAGE`, `WORKER_IMAGE`, `UPDATER_IMAGE` | Exact images to use instead of a release.               |                                                     |
-| `SQLD_IMAGE`, `CADDY_IMAGE`                                     | Other images for the database server and Caddy.         |                                                     |
+- The whole card is stored, from the environment and the defaults. A variable that several cards share stores each of them.
+- On a server list, only the entries whose id starts with `metis-` are replaced. Entries added in the dashboard stay.
+- A name that is not a dashboard setting stops preflight before anything changes, for example: "METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS names FOO, which is not an instance setting".
+- A value that fails its checks also stops preflight, and nothing is stored.
+- **History** shows the result as a **Server** version.
+
+The `metis` CLI passes it to one preflight run. Never set it yourself in `.env` or in a platform's environment, and above all never on a platform whose build or start command runs preflight on every deploy: every later preflight would overwrite what the owner or an admin changed in the dashboard. The only time you type it is the one-off `docker run` command that `metis config set --env-file` prints when Docker is not running on your computer.
+
+## The metis CLI
+
+These variables are read by the `metis` CLI or its install script, not by the app. See [CLI commands](/self-hosting/reference/cli-commands).
+
+| Variable                                                    | What it does                                                                                                                                                                       |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `METIS_CLI_VERSION`                                         | The CLI version the install script installs, such as `0.1.0`. Without it, the script installs the newest CLI.                                                                      |
+| `CLOUDFLARE_API_TOKEN`                                      | A Cloudflare API token. Used to create the DNS records for your domain and the mail gateways, and to set up the Cloudflare Email gateway.                                          |
+| `RESEND_API_KEY`                                            | A Resend API key with full access, for the Resend gateway. Without it, the CLI asks for one.                                                                                       |
+| `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_PROFILE` | AWS credentials for the Amazon SES gateway, read the usual AWS way. With `sudo`, pass the key on the command line, as `sudo` does not pass on `AWS_PROFILE` or your own AWS files. |
+
+The CLI never stores the Cloudflare token or the AWS credentials. It keeps the Resend key, because the Resend gateway on your server needs it.
+
+The CLI also writes `METIS_DOMAIN` to `.env` when you set a domain. The app does not read it.
+
+What the install chooses (the release, the install folder, the app's port and the domain) is set with `metis setup` flags. See [Install with the metis CLI](/self-hosting/install/install-with-bootstrap#install-without-questions).

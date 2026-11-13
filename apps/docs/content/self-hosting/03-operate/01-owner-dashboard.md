@@ -27,9 +27,8 @@ The owner cannot delete their own account. Trying shows "You're this instance's 
 
 To hand the instance to someone else:
 
-1. Set `METIS_OWNER_EMAIL` to the new owner's email in `.env`.
-2. Restart the app. With the Compose stack, run `sudo docker compose --project-directory /opt/metis-suite up -d`.
-3. If the new owner already has an account, they sign in and are the owner. If they have no account yet, they create it at `/setup` with the setup code. Open sign-up never creates the owner account. So keep `METIS_SETUP_CODE` set if you may hand the instance to an address that has no account. The **Accounts** card on the **Instance** page says so too, once the owner account exists: "The owner account exists, so the setup code no longer works. Keep it set if you may hand the instance to an address that has no account yet; that new owner claims it at /setup."
+1. Set `METIS_OWNER_EMAIL` to the new owner's email. On a server the `metis` CLI runs, run `sudo metis config set METIS_OWNER_EMAIL=bob@example.com`, which writes it to `.env` and restarts the app. On a container platform or Vercel, change the variable there and redeploy.
+2. If the new owner already has an account, they sign in and are the owner. If they have no account yet, they create it at `/setup` with the setup code. Open sign-up never creates the owner account. So keep `METIS_SETUP_CODE` set if you may hand the instance to an address that has no account. The **Accounts** card on the **Instance** page says so too, once the owner account exists: "The owner account exists, so the setup code no longer works. Keep it set if you may hand the instance to an address that has no account yet; that new owner claims it at /setup."
 
 When the instance next starts, the previous owner's account becomes an admin, so they keep access to the dashboard. The new owner can change the previous owner's role or remove them, like any other admin. Since the previous owner is no longer the owner, they can also delete their own account. See [Delete your account](/guide/account/delete-your-account).
 
@@ -319,12 +318,12 @@ The **All events** card lists changes such as turned-off two-factor authenticati
 
 Each row shows:
 
-- **A sentence** that starts with who made the change and says what they did, for example "Alice Martin removed the drive alice@example.com and revoked its access at the provider". A deleted account's row also says how many workspaces were deleted with it, if any, for example "… deleted their account and 2 workspaces with it". [Security activity](/guide/account/security-activity#what-is-recorded) shows how each kind of row reads.
-- **A second, lighter line** with these parts, separated by a dot (·): the workspace's name, when the change happened in one; **Workspace Assistant** or **MCP client**, when the change came through one of them; the date and time; and the IP address and device it came from, when known.
+- **A sentence** that starts with who made the change and says what they did (or "The server CLI" for an undo run with `sudo metis undo`), for example "Alice Martin removed the drive alice@example.com and revoked its access at the provider". A deleted account's row also says how many workspaces were deleted with it, if any, for example "… deleted their account and 2 workspaces with it". [Security activity](/guide/account/security-activity#what-is-recorded) shows how each kind of row reads.
+- **A second, lighter line** with these parts, separated by a dot (·): the workspace's name, when the change happened in one; **Workspace Assistant** or **MCP client**, when the change came through one of them, or **Server CLI** for an undo run with `sudo metis undo`; the date and time; and the IP address and device it came from, when known.
 
-The IP address is the visitor's address, found through **Trusted proxies** on the **Proxies** card of the **Instance** page. Behind Cloudflare, it is Cloudflare's address until you list Cloudflare's ranges there. Behind another CDN in front of the bundled Caddy, it is always the CDN's address. See [Proxies](/self-hosting/reference/dashboard-settings#proxies).
+The IP address is the visitor's address, found through **Trusted proxies** on the **Proxies** card of the **Instance** page. Behind Cloudflare, it is Cloudflare's address until you list Cloudflare's ranges there. Behind another CDN in front of the Caddy that `metis domain` adds, it is always the CDN's address. See [Proxies](/self-hosting/reference/dashboard-settings#proxies).
 
-The person who made the change, and a member it was done to, are shown by the name on their account today. With no name, or for a deleted account, the row shows their email address. With neither, it says "A deleted account". Invited people, MCP clients, mailboxes, calendars, drives, address books, connected accounts and workflows are shown as they were named when the change was made.
+The person who made the change, and a member it was done to, are shown by the name on their account today. With no name, or for a deleted account, the row shows their email address. With neither, it says "A deleted account". An undo run with `sudo metis undo` has no person behind it, so its row starts with "The server CLI". Invited people, MCP clients, mailboxes, calendars, drives, address books, connected accounts and workflows are shown as they were named when the change was made.
 
 The newest change is at the top, 50 at a time. Click **Load more** for older ones. The log cannot be edited from the app. If nothing has been recorded yet, the card says "No audit events yet."
 
@@ -339,7 +338,7 @@ Above the list are a search box ("Search events") and a list of event types, whi
   - the email address of the person who made the change, not their name;
   - the workspace's name;
   - the IP address.
-- **Not searched:** people's names, the roles and tool names in a sentence, the device, the date and time, the words **Workspace Assistant** and **MCP client** on the second line, and "a deleted account".
+- **Not searched:** people's names, the roles and tool names in a sentence, the device, the date and time, the words **Workspace Assistant**, **MCP client** and **Server CLI** on the second line, "a deleted account" and "The server CLI".
 - **Filter:** pick an event type. The list has **Account deleted** and every type in the [Security activity filter](/guide/account/security-activity#filter-by-event-type). **Resource removed** and **Resource detached from a workspace** each cover mailboxes, calendars, drives and address books.
 - **Both together:** a row must match both. If no row matches, the card says "No events match your search." **Load more** keeps showing older matches, 50 at a time.
 
@@ -416,7 +415,7 @@ You find the button on these cards:
 
 Read-only cards have no such button: **App** and **Accounts** on the **Instance** page, **Health** on driver and provider pages, **Status** on the **Workflow runner** page, and **Driver** on the **Database** page.
 
-The app reads the environment and the config file when it starts. If you edit `.env` or the config file, apply the change before you reset, as for [settings fixed at startup](/self-hosting/configure/how-configuration-works#settings-fixed-at-startup). With the Compose stack, run `sudo docker compose --project-directory /opt/metis-suite up -d`. If you skip this, the reset uses the values from before your edit.
+The app reads the environment and the config file when it starts. If you edit `.env` or the config file, apply the change before you reset, as for [settings fixed at startup](/self-hosting/configure/how-configuration-works#settings-fixed-at-startup). On a server the `metis` CLI runs, run `sudo metis apply` after you edit `.env`. If you skip this, the reset uses the values from before your edit. Instead of editing `.env` and resetting, you can also run `sudo metis config set`, which applies the change and stores the card in one step. See [Change dashboard settings with the metis CLI](/self-hosting/configure/how-configuration-works#change-dashboard-settings-with-the-metis-cli).
 
 A server list is replaced as a whole. Entries you added in the dashboard are removed, and the entries set in the environment come back. If the environment sets no entries for that list, the list ends up empty.
 
@@ -444,7 +443,7 @@ Authenticator codes for **Save changes**, **Save anyway**, **Restore**, **Restor
 
 ### History
 
-Every saved change and every reset is a version. The **History** page lists them, newest first: the version (the current one is marked **Current**), its kind (**Seed** for settings preflight stored, **Edit**, **Restore**, or **Reset** for a reset to the environment), the settings that changed, who changed them (or "Preflight"), and when.
+Every saved change and every reset is a version. The **History** page lists them, newest first: the version (the current one is marked **Current**), its kind (**Seed** for settings preflight stored, **Edit**, **Restore**, **Reset** for a reset to the environment, or **Server** for settings that `metis config set` or another `metis` command stored), the settings that changed, who changed them (or "Preflight"), and when.
 
 - **Compare:** pick two versions in **From** and **To** to see what changed, as old and new values. Secrets show only whether they changed.
 - **Restore:** click **Restore** on a row and enter your authenticator code. Every setting that differs is checked against the real service, then stored as a new version. On a server list, only entries that are new or whose connection settings differ are contacted, as for a save. Restoring never rewrites history. When it succeeds, you see "Version N restored as version M".

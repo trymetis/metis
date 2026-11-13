@@ -44,7 +44,10 @@ function text(value: unknown): string | null {
 }
 
 export function formatAuditEvent(event: AuditEvent): string {
-  const actor = event.actorName || event.actorEmail || "A deleted account";
+  const actor =
+    event.actorName ||
+    event.actorEmail ||
+    (event.via === "cli" ? "The server CLI" : "A deleted account");
   const person = event.targetName || event.targetLabel || "a deleted account";
   const target = event.targetLabel ?? "";
   const kind = event.resourceKind ? AUDIT_RESOURCE_NOUNS[event.resourceKind] : "resource";

@@ -2,11 +2,15 @@ version: v2
 clean: true
 plugins:
   - remote: buf.build/protocolbuffers/go:v1.36.12
-    out: apps/updater/gen
-    opt: paths=source_relative
+    out: apps/cli/gen
+    opt:
+      - paths=source_relative
+      - Mmetis/updater/v1/updater.proto=github.com/trymetis/metis/apps/cli/gen/metis/updater/v1;updaterv1
   - remote: buf.build/connectrpc/go:v2.0.1
-    out: apps/updater/gen
-    opt: paths=source_relative
+    out: apps/cli/gen
+    opt:
+      - paths=source_relative
+      - Mmetis/updater/v1/updater.proto=github.com/trymetis/metis/apps/cli/gen/metis/updater/v1;updaterv1
   - remote: buf.build/bufbuild/es:v2.16.0
     out: packages/updater-proto/src/gen
     opt:

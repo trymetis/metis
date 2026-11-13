@@ -98,6 +98,27 @@ domain identity, sending and account details use SESv2 (`aws sesv2`).
   base64-encoded in the request, total at most about 4.5 MB. The SNS-content
   action is not used, because it bounces mail over 150 KB.
 
+## Setup with the metis CLI
+
+With AWS credentials in the environment (`AWS_PROFILE`, `AWS_ACCESS_KEY_ID`,
+and so on), one command creates everything listed above, from the domain
+identity to the receipt rule, applies the schema to the database and registers
+the gateway in Metis:
+
+```sh
+sudo metis add gateway-ses --domain example.com --region eu-west-1 \
+  --database-url libsql://... --database-token ...
+```
+
+It puts its rule into the active rule set and creates a set only when none is
+active. From any other machine, add `--remote --version 1.4.0` (the release
+your instance runs): it prints the admin token and the server entry instead.
+`metis remove gateway-ses --domain example.com` deletes only this gateway's
+rule and resources; `--purge` also deletes the bucket and its objects. Mint
+mailbox tokens with `metis gateway token create alice@example.com`.
+
+The steps below do the same by hand.
+
 ## Setup with the AWS CLI
 
 The commands below use these shell variables; replace the values with your

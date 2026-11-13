@@ -35,7 +35,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     question: "What is the difference between Metis Cloud and self-hosting?",
     answer:
-      "Both run the same release. On Metis Cloud we run an isolated instance for you, on your domain or a metis-suite.app subdomain. Self-hosting runs it on a Linux server you own with Docker Compose, free under AGPL-3.0.",
+      "Both run the same release. On Metis Cloud we run an isolated instance for you, on your domain or a metis-suite.app subdomain. Self-hosting runs it on a Linux server you own with Docker and the metis CLI, free under AGPL-3.0.",
   },
   {
     question: "Is there a desktop or mobile app?",

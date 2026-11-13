@@ -48,6 +48,7 @@ Metis Cloud backs up every running instance each night and keeps the two most re
 These parts of the Self-Hosting Guide are about running the server, which Metis Cloud does for you:
 
 - The whole [Install](/self-hosting/install) section. [Finish setup](/cloud/get-started/finish-setup) replaces its first-run page.
-- [Environment variables](/self-hosting/reference/environment-variables) and [Ports and endpoints](/self-hosting/reference/ports-and-endpoints).
+- [Environment variables](/self-hosting/reference/environment-variables), [Ports and endpoints](/self-hosting/reference/ports-and-endpoints), and the [CLI commands](/self-hosting/reference/cli-commands) you run on the server. The mail gateway commands you run on your own computer work for a Cloud instance too. See [Mail gateways](/self-hosting/mail-gateways).
 - [Backups](/self-hosting/operate/backups). Metis Cloud backs up your instance, as described above.
+- [Manage components](/self-hosting/operate/manage-components), which is about the parts of the server.
 - The server commands on [Health checks](/self-hosting/operate/health-checks) and [Troubleshooting](/self-hosting/operate/troubleshooting). The **Health** row on the console's [**Overview**](https://console.trymetis.email/instances/~) shows whether your instance answers.

@@ -4,15 +4,15 @@ The oxlint rule set: what the root config turns on, off or tunes and why, the pe
 
 ## Code map
 
-| Concern                                                                                                             | Where                                    |
-| ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| Root rule set (plugins, categories, rule options)                                                                   | `oxlint.config.mts`                      |
-| Web JSX settings and label depth, worker and e2e-script overrides                                                   | `apps/web/oxlint.config.mts`             |
-| www exhibit-model and screenshot-script overrides                                                                   | `apps/www/oxlint.config.mts`             |
-| docs `.astro` and screenshot-script overrides                                                                       | `apps/docs/oxlint.config.mts`            |
-| e2e rule set                                                                                                        | `e2e/oxlint.config.mts`                  |
-| Lint scripts (`--type-aware`, `--report-unused-disable-directives`)                                                 | root `package.json` → `lint`, `lint:fix` |
-| CI on every push and pull request (typecheck, then lint; `gofmt -l` and `go vet` in `apps/updater` and `e2e/fakes`) | `.github/workflows/ci.yml`               |
+| Concern                                                                                                                    | Where                                    |
+| -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| Root rule set (plugins, categories, rule options)                                                                          | `oxlint.config.mts`                      |
+| Web JSX settings and label depth, worker and e2e-script overrides                                                          | `apps/web/oxlint.config.mts`             |
+| www exhibit-model and screenshot-script overrides                                                                          | `apps/www/oxlint.config.mts`             |
+| docs `.astro` and screenshot-script overrides                                                                              | `apps/docs/oxlint.config.mts`            |
+| e2e rule set                                                                                                               | `e2e/oxlint.config.mts`                  |
+| Lint scripts (`--type-aware`, `--report-unused-disable-directives`)                                                        | root `package.json` → `lint`, `lint:fix` |
+| CI on every push and pull request (typecheck, then lint; `gofmt -l`, `go vet` and `go test` in `apps/cli` and `e2e/fakes`) | `.github/workflows/ci.yml`               |
 
 ## Rules
 

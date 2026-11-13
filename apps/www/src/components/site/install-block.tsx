@@ -6,14 +6,14 @@ import { useState } from "react";
 const LINES = [
   {
     cmd: "curl -fsSL https://sh.trymetis.email/bootstrap -o bootstrap.sh",
-    note: "Download the script",
+    note: "Download the installer",
   },
   {
-    cmd: "sudo -E bash bootstrap.sh --interactive",
-    note: "Install, pin a release, start the stack",
+    cmd: "sudo sh bootstrap.sh",
+    note: "Install the metis CLI and set up the server",
   },
   {
-    cmd: "sudo bash bootstrap.sh domain mail.example.com",
+    cmd: "sudo metis domain mail.example.com",
     note: "Caddy fetches the certificate on the first request",
   },
 ];

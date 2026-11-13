@@ -5,11 +5,11 @@ description: Choose how your instance runs workflows, scheduled sends, snooze re
 
 Some work happens when nobody has a page open: workflows, mail scheduled to send later, snoozed mail coming back, and housekeeping. One background engine does all of it. It runs in short rounds called ticks. You choose what wakes it up, with the workflow runner setting.
 
-| Runner               | What you run                                         | Use it when                                                     |
-| -------------------- | ---------------------------------------------------- | --------------------------------------------------------------- |
-| `internal` (default) | Nothing extra. The app runs the engine itself.       | The app runs on an always-on server, as with the Compose stack. |
-| `cron`               | An external scheduler that calls the app on a timer. | The app runs on a host that sleeps between requests.            |
-| `bullmq`             | A separate worker process and your own Redis.        | You want background work off the web process.                   |
+| Runner               | What you run                                         | Use it when                                                               |
+| -------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------- |
+| `internal` (default) | Nothing extra. The app runs the engine itself.       | The app runs on an always-on server, as on a server the `metis` CLI runs. |
+| `cron`               | An external scheduler that calls the app on a timer. | The app runs on a host that sleeps between requests.                      |
+| `bullmq`             | A separate worker process and your own Redis.        | You want background work off the web process.                             |
 
 All three run the same engine on the same database, so schedules, retries and history behave the same way with each.
 
@@ -118,16 +118,16 @@ jobs:
 A crontab line on another machine that is always on, every minute:
 
 ```bash
-* * * * * curl -fsS -X POST --max-time 60 -H "X-Metis-Secret: <cron secret>" https://mail.example.com/api/workflows/tick > /dev/null
+* * * * * curl -fsS -X POST --max-time 60 -H "X-Metis-Secret: your-cron-secret" https://mail.example.com/api/workflows/tick > /dev/null
 ```
 
 Keep the crontab readable only by you, since it holds the secret.
 
 ## bullmq
 
-Run the published worker image, `ghcr.io/trymetis/metis:<version>-worker`, on the same version as the app, on any server that can reach your database and your Redis. It needs no port and has no health endpoint. You also need your own Redis, hosted or self-run, with persistence on and `maxmemory-policy noeviction`. Enter its address in **Redis URL**. The **Health** card connects to it, and a failed check stops the save.
+Run the published worker image, such as `ghcr.io/trymetis/metis:1.4.0-worker`, on the same release as the app, on any server that can reach your database and your Redis. It needs no port and has no health endpoint. You also need your own Redis, hosted or self-run, with persistence on and `maxmemory-policy noeviction`. Enter its address in **Redis URL**. The **Health** card connects to it, and a failed check stops the save.
 
-The `bullmq` runner is for container platforms and setups you run yourself. The bundled Docker Compose stack uses the `internal` runner by default and has no worker service.
+On a server the `metis` CLI runs, the runner is `internal` by default. To run workers there, see [Workers on a server the metis CLI runs](#workers-on-a-server-the-metis-cli-runs).
 
 The worker needs only these variables, with the same values as the app:
 
@@ -147,10 +147,34 @@ It reads everything else from the database, and stays idle while the runner is s
 
 When Redis is down, no work is lost: the worker waits and catches up once Redis is back. When you stop the worker, it finishes the tick in progress first, so give it a stop timeout longer than the tick budget (75 seconds is enough for the default budget of 45 seconds).
 
+### Workers on a server the metis CLI runs
+
+On a server the `metis` CLI runs, one command adds the worker and Redis:
+
+```bash
+sudo metis add worker
+```
+
+- It adds Redis (Valkey, with `noeviction` and persistence on), with the notice "Added redis, which worker needs".
+- It runs one worker container. To run more, pass `--replicas`, for example `sudo metis add worker --replicas 3`. Run it again with another number to change the count.
+- It sets the runner to `bullmq`, with the Redis URL `redis://redis:6379`.
+
+Before it changes anything, it warns: "This stores the whole workflow runner section from .env, so runner settings changed on the dashboard (cadence, budget, batch size, concurrency, retention) go back to their .env values or defaults." It then asks "Go ahead?". Answer **Yes**, or pass `--yes`. It ends with "worker is on", and `sudo metis status` shows the worker with, for example, "1 replica(s), bullmq runner".
+
+To stop using workers:
+
+```bash
+sudo metis remove worker
+```
+
+It shows the same warning, sets the runner back to `internal` and stops the workers. Redis keeps running. To remove it too, run `sudo metis remove redis` afterwards. Removing Redis while the workers run is refused with "the workers use redis; run metis remove worker first".
+
+See [Manage components](/self-hosting/operate/manage-components).
+
 ### Redis on Upstash
 
 - **Eviction:** Upstash databases have eviction off by default, which is what the worker needs. Do not turn on **Eviction** for this database. See Upstash's guide to [eviction](https://upstash.com/docs/redis/features/eviction).
-- **Address:** under **Connect**, **TCP**, copy the connection string, of the form `rediss://default:<token>@<endpoint>:<port>`.
+- **Address:** under **Connect**, **TCP**, copy the connection string, such as `rediss://default:your-token@example-12345.upstash.io:6379`.
 - **Cost:** the worker reads Redis regularly, even when there is no work. Upstash bills its pay-as-you-go plan per request, and recommends a Fixed plan for this kind of use. See Upstash's guide to [BullMQ](https://upstash.com/docs/redis/integrations/bullmq).
 
 ## Tuning
@@ -208,9 +232,9 @@ How they work together:
 
 For the **Only from these IPs** setting of a webhook trigger to work:
 
-- Put the app behind a reverse proxy that adds the caller's address to `X-Forwarded-For`, such as the Caddy proxy in the bundled `compose.yml`.
-- If Cloudflare sits in front of the bundled Caddy, list Cloudflare's ranges under **Trusted proxies**. The check then takes the caller's address from `cf-connecting-ip`. Behind any other proxy or CDN in front of Caddy, the check sees that proxy's address and cannot tell callers apart.
-- Without the bundled Caddy, if another address follows the caller's in `X-Forwarded-For` (for example, a proxy behind your load balancer adds the load balancer's address), list that address under **Trusted proxies**.
+- Put the app behind a reverse proxy that adds the caller's address to `X-Forwarded-For`, such as the Caddy that `metis domain` adds.
+- If Cloudflare sits in front of the Caddy that `metis domain` adds, list Cloudflare's ranges under **Trusted proxies**. The check then takes the caller's address from `cf-connecting-ip`. Behind any other proxy or CDN in front of Caddy, the check sees that proxy's address and cannot tell callers apart.
+- Without that Caddy, if another address follows the caller's in `X-Forwarded-For` (for example, a proxy behind your load balancer adds the load balancer's address), list that address under **Trusted proxies**.
 - Do not let callers reach the app directly.
 
 The check reads `X-Forwarded-For` from right to left and takes the first address that is not in this list. A port is removed first, so `203.0.113.7:51234` counts as `203.0.113.7`. If every address is in this list, the check takes the address in the `cf-connecting-ip` header, which Cloudflare adds, or else the first address. If the check meets an entry that is not an address before it finds one, it refuses the request.

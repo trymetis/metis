@@ -34,6 +34,10 @@ jobs:
         if: steps.release.outputs.version != ''
         run: bun run --silent release:notes "app-v${{ steps.release.outputs.version }}" > /dev/null
 
+      - name: Check the release names its oldest CLI
+        if: steps.release.outputs.version != ''
+        run: bun run --silent release:meta "app-v${{ steps.release.outputs.version }}" > /dev/null
+
   build:
     name: ${{ matrix.image }}
     needs: release
@@ -62,7 +66,6 @@ jobs:
               suffix: -worker,
               build-args: NEXT_BUILD_OUTPUT=standalone,
             }
-          - { image: updater, file: Dockerfile, target: updater, suffix: -updater, build-args: "" }
           - {
               image: gateway-resend,
               name: "${{ github.repository }}-gateway-resend",
@@ -127,10 +130,11 @@ jobs:
           bun run --cwd apps/gateway-cloudflare package
 
       - name: Collect the published files
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
         run: |
           mkdir out
-          cp bootstrap.sh out/bootstrap
-          cp compose.yml out/compose.yml
+          bun run --silent release:meta "app-v$VERSION" > out/metis.json
           cp apps/gateway-ses/dist/gateway-ses.zip out/gateway-ses.zip
           cp apps/gateway-cloudflare/dist/gateway-cloudflare.zip out/gateway-cloudflare.zip
 
@@ -141,7 +145,6 @@ jobs:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_BUCKET: ${{ secrets.SH_R2_BUCKET }}
           VERSION: ${{ needs.release.outputs.version }}
-          LATEST: ${{ needs.release.outputs.latest }}
+          LATEST: "false"
           TRACK: app
-          VERSION_ONLY: gateway-ses.zip gateway-cloudflare.zip
-        run: .github/scripts/r2-upload.sh out "v$VERSION/" "" bootstrap compose.yml
+        run: .github/scripts/r2-upload.sh out "v$VERSION/" "" metis.json gateway-ses.zip gateway-cloudflare.zip

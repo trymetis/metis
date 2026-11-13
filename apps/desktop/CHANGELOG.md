@@ -1,6 +1,6 @@
 # Changelog
 
-Notable changes to the Metis Suite desktop app, released under `desktop-v<version>` tags. The server has its own [changelog](../../CHANGELOG.md).
+Notable changes to the Metis Suite desktop app, released under `desktop-v<version>` tags. The server has its own [changelog](../web/CHANGELOG.md).
 
 Each release's notes are in [`releases/`](../../releases/), listed under Releases below. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 

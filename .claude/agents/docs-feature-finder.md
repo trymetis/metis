@@ -11,7 +11,7 @@ Where to look, in this order:
 1. `AGENTS.md` and the `agent-docs/<domain>.md` file for the area. They explain the rules and the flows.
 2. The UI the customer touches: `apps/web/src/app/**` (pages, `_components/`), `apps/web/src/components/**`. Take button labels, menu items, field names, dialog titles, empty states, toasts and error messages word for word.
 3. The e2e specs in `e2e/tests/read/` and `e2e/tests/write/`. They show the real click paths and the exact text on screen.
-4. For self-hosting topics only: `compose.yml`, `bootstrap.sh`, `apps/web/.env.example`, `agent-docs/configuration.md` and `agent-docs/deployment.md`.
+4. For self-hosting topics only: `apps/cli/` (the `metis` CLI), `apps/web/.env.example`, `agent-docs/cli.md`, `agent-docs/configuration.md` and `agent-docs/deployment.md`.
 5. For Metis Cloud topics (`apps/docs/content/cloud/`): the sources your prompt names. For what the owner sees inside a Cloud instance, this repository's app and dashboard code, as in steps 1 and 2. If your prompt names no source for a Cloud topic, stop and say so.
 
 Report back, per feature:

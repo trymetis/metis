@@ -148,6 +148,7 @@ See also [AGENTS.md](../AGENTS.md), [auth.md](auth.md), [configuration.md](confi
   - The bar is hidden until a run exists and highlighted while the latest run has unacknowledged warnings; the page groups the warnings by kind.
   - MCP clients of instance role holders read the same data through `getPreflightWarnings` ([mcp.md](mcp.md)).
 - **History.** `/dashboard/system/history` lists every version with its kind, author, time and `changed_keys`.
+  - The kind's badge (`KIND_BADGE`) shows a `forced` version, written by the server CLI through preflight ([configuration.md](configuration.md)), as **Server**.
   - Compare diffs any two (`configDiff`, field by field through the form descriptors).
   - Restore (`revertConfig`) inserts a copy of the chosen version (`kind: revert`, `reverted_from_version`) for every section that differs, after the same TOTP and verification as an edit; a refused restore offers **Restore anyway**.
 - **Reset to environment.** Each section card's **Reset to environment** calls `dashboard.system.reset` (`resetConfigSection` in `src/dashboard/system-config.ts`), which compares the stored section with `instanceSeed[section]`.

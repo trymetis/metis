@@ -27,6 +27,27 @@ only mail received after setup exists — there is no history import.
 - An API token with `Zone → Email Routing:Edit`, `Zone → DNS:Edit` for the
   setup script, and account permission to deploy Workers for wrangler.
 
+## Setup with the metis CLI
+
+On a Metis server, one command creates everything below (the D1 database, the
+R2 bucket, the Worker from the release's `gateway-cloudflare.zip`, its
+workers.dev route, Email Routing and Email Sending with their DNS records) and
+registers the gateway in Metis:
+
+```sh
+sudo CLOUDFLARE_API_TOKEN=... metis add gateway-cloudflare --domain example.com
+```
+
+`--addresses alice@example.com,bob@example.com` routes only those addresses
+instead of the whole domain. From any other machine, `metis add
+gateway-cloudflare --remote --domain example.com --version 1.4.0` does the same
+for the release your instance runs and prints the admin token and the server
+entry. `metis remove gateway-cloudflare --domain example.com` undoes it, and
+`--purge` also deletes the D1 database and the R2 bucket. Mint mailbox tokens
+with `metis gateway token create alice@example.com`.
+
+The steps below do the same by hand.
+
 ## Initial setup (once per domain)
 
 ```sh

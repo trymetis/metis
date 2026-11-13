@@ -48,6 +48,7 @@ const KIND_BADGE: Record<InstanceConfigKind, { label: string; tone: SystemTone }
   edit: { label: "Edit", tone: "warning" },
   revert: { label: "Restore", tone: "warning" },
   reset: { label: "Reset", tone: "warning" },
+  forced: { label: "Server", tone: "warning" },
 };
 
 type Version = DashboardConfigHistory["versions"][number];

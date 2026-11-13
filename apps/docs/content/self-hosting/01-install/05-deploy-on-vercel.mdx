@@ -245,6 +245,21 @@ On a host that builds from source and keeps the app running all the time, the st
 - **With several copies, use a `redis` or `upstash` cache.**
 - **Put a reverse proxy in front of the app that replaces `X-Forwarded-For`, and do not let callers reach the app directly.** `bun run start` keeps the `X-Forwarded-For` header a caller sends. A caller who reaches it directly can name any address. That address then counts for rate limits, sign-in limits and the IP addresses in the audit log, and can pass the **Only from these IPs** check of a webhook trigger. See [Proxies](/self-hosting/reference/dashboard-settings#proxies) and [Webhooks that only accept some addresses](/self-hosting/configure/background-work#webhooks-that-only-accept-some-addresses).
 
+## Use the metis CLI from your computer
+
+The `metis` CLI also runs on your own computer. There it changes only outside services and an environment file you keep, such as `production.env` with your production variables. To download it, see [Install the CLI on your computer](/self-hosting/reference/cli-commands#install-the-cli-on-your-computer).
+
+Pass `--version` with the release you deploy: for the release tag `app-v1.2.3`, that is `--version 1.2.3`.
+
+- **Change dashboard settings** without opening the dashboard: `metis config set --env-file production.env --version 1.2.3 GOOGLE_CLIENT_ID=1234-abc.apps.googleusercontent.com GOOGLE_CLIENT_SECRET=your-client-secret`. See [Change settings away from the server](/self-hosting/configure/how-configuration-works#change-settings-away-from-the-server).
+- **Set up Google sign-in:** `metis connect google --env-file production.env --version 1.2.3`. The file must contain `BETTER_AUTH_URL`. See [Set up Google with the metis CLI](/self-hosting/configure/sign-in-providers#set-up-google-with-the-metis-cli).
+- **Set up a mail gateway** with `--remote` (Cloudflare Email and Amazon SES) or `--endpoint` (a Resend gateway you run elsewhere). See [Mail gateways](/self-hosting/mail-gateways).
+- **Create mailbox tokens:** `metis gateway token create alice@example.com --endpoint https://resend-gateway.example.com --admin-token your-admin-token`. See [Mailbox tokens](/self-hosting/mail-gateways/mailbox-tokens).
+
+:::danger[Never set METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS on Vercel or your Node host]
+The CLI stores dashboard settings by passing `METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS` to one preflight run. Never set this variable yourself in the project's environment. This matters most when preflight runs on every deploy: with `bun run preflight && bun run build` as the build command, or `bun run preflight && bun run start` as the start command on another Node host. Every deploy would then store those settings from the environment again, and overwrite what the owner or an admin changed in the dashboard.
+:::
+
 ## Upgrade
 
 <Steps>

@@ -24,8 +24,8 @@ import (
 
 	"connectrpc.com/connect/v2"
 	"connectrpc.com/connect/v2/connecthttp"
-	updaterv1 "github.com/trymetis/metis/apps/updater/gen/metis/updater/v1"
-	"github.com/trymetis/metis/apps/updater/gen/metis/updater/v1/updaterv1connect"
+	updaterv1 "github.com/trymetis/metis/apps/cli/gen/metis/updater/v1"
+	"github.com/trymetis/metis/apps/cli/gen/metis/updater/v1/updaterv1connect"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -52,6 +52,7 @@ type updaterSettings struct {
 	Snapshots bool              `json:"snapshots"`
 	Outcome   string            `json:"outcome"`
 	StepMs    int               `json:"stepMs"`
+	MinCli    map[string]string `json:"minCli"`
 }
 
 func loadReleaseDefaults(dir string) (updaterSettings, error) {
@@ -104,6 +105,7 @@ func loadReleaseDefaults(dir string) (updaterSettings, error) {
 		Snapshots: true,
 		Outcome:   "succeed",
 		StepMs:    1_000,
+		MinCli:    map[string]string{},
 	}, nil
 }
 
@@ -111,6 +113,7 @@ func defaultUpdaterSettings() updaterSettings {
 	settings := releaseDefaults
 	settings.Releases = slices.Clone(releaseDefaults.Releases)
 	settings.Notes = maps.Clone(releaseDefaults.Notes)
+	settings.MinCli = maps.Clone(releaseDefaults.MinCli)
 	return settings
 }
 
@@ -321,6 +324,10 @@ func (f *updaterFake) StartUpgrade(_ context.Context, req *updaterv1.StartUpgrad
 	if !slices.Contains(f.settings.Releases, version) {
 		return nil, connect.NewError(connect.CodeNotFound, version+" is not a published release")
 	}
+	if minCli := f.settings.MinCli[version]; minCli != "" {
+		return nil, connect.NewError(connect.CodeFailedPrecondition,
+			fmt.Sprintf("This release needs Metis CLI %s or later. Run sudo metis self-update on the server, then try again.", minCli))
+	}
 	if err := f.abortedIfRunning(); err != nil {
 		return nil, err
 	}
@@ -452,6 +459,7 @@ func parseUpdaterSettings(r *http.Request) (updaterSettings, error) {
 		"snapshots": &settings.Snapshots,
 		"outcome":   &settings.Outcome,
 		"stepMs":    &settings.StepMs,
+		"minCli":    &settings.MinCli,
 	} {
 		if err := decode(key, into); err != nil {
 			return settings, fmt.Errorf("%s: %w", key, err)

@@ -50,7 +50,7 @@ The card has one field, **Keep message bodies (days)**: "Days a message's body s
 
 The **Proxies** card says: "How this instance finds a visitor's address behind a load balancer or CDN. Workflow webhook IP allow lists use the Workflow runner's own list."
 
-A proxy is a server that passes requests on to your instance, such as a load balancer, a CDN or the bundled Caddy server. Most proxies add the address of the computer that connected to them to the end of the `X-Forwarded-For` header. Each address in that header is called a hop. The bundled Caddy server replaces any `X-Forwarded-For` it receives, so behind it the header holds one hop: the computer that connected to Caddy.
+A proxy is a server that passes requests on to your instance, such as a load balancer, a CDN or the Caddy that `metis domain` adds. Most proxies add the address of the computer that connected to them to the end of the `X-Forwarded-For` header. Each address in that header is called a hop. The Caddy that `metis domain` adds replaces any `X-Forwarded-For` it receives, so behind it the header holds one hop: the computer that connected to Caddy.
 
 The card has one optional field, **Trusted proxies**: "IP addresses or CIDR ranges, comma separated, of the proxies in front of this instance. Their X-Forwarded-For hops are skipped when finding a visitor's address for rate limits, sign-in limits and the audit log."
 
@@ -81,9 +81,9 @@ If the app finds no usable address, the audit log row has no IP address, sign-in
 
 #### When to fill it in
 
-- **Behind the bundled Caddy, or behind one load balancer** that adds the caller's address to the end of `X-Forwarded-For`: leave the field empty.
-- **Cloudflare in front of the bundled Caddy:** list Cloudflare's address ranges. The app then takes the visitor's address from `cf-connecting-ip`. If you do not, every visitor who comes through one Cloudflare server gets that server's address. They share one rate limit, and the audit log shows the same address for all of them. See [Behind Cloudflare or another CDN](/self-hosting/install/domain-and-https#behind-cloudflare-or-another-cdn).
-- **Another CDN in front of the bundled Caddy:** listing the CDN's ranges does not help. Caddy replaces the `X-Forwarded-For` header that the CDN sends with the CDN server's address, and the app reads no other CDN's header. Visitors still share the CDN server's address.
+- **Behind the Caddy that `metis domain` adds, or behind one load balancer** that adds the caller's address to the end of `X-Forwarded-For`: leave the field empty.
+- **Cloudflare in front of the Caddy that `metis domain` adds:** list Cloudflare's address ranges. The app then takes the visitor's address from `cf-connecting-ip`. If you do not, every visitor who comes through one Cloudflare server gets that server's address. They share one rate limit, and the audit log shows the same address for all of them. See [Behind Cloudflare or another CDN](/self-hosting/install/domain-and-https#behind-cloudflare-or-another-cdn).
+- **Another CDN in front of the Caddy that `metis domain` adds:** listing the CDN's ranges does not help. Caddy replaces the `X-Forwarded-For` header that the CDN sends with the CDN server's address, and the app reads no other CDN's header. Visitors still share the CDN server's address.
 - **A CDN in front of your own proxy**, where that proxy keeps the CDN's `X-Forwarded-For` and adds the CDN server's address after it: list the CDN's address ranges.
 - **List only the proxies in front of your instance.** A list that is too wide, such as `0.0.0.0/0`, lets a caller choose their own address.
 - **Keep the app private behind the proxy.** A caller who reaches the app directly can send any address in `X-Forwarded-For`.

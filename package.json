@@ -68,6 +68,7 @@
     "release": "bun packages/releases/src/cli.ts cut",
     "release:check": "bun packages/releases/src/cli.ts check",
     "release:notes": "bun packages/releases/src/cli.ts notes",
+    "release:meta": "bun packages/releases/src/cli.ts meta",
     "proto:generate": "buf generate proto --template proto/buf.gen.yaml",
     "build:desktop": "bun run --cwd apps/desktop dist",
     "dev:mobile": "bun run --cwd apps/mobile dev"

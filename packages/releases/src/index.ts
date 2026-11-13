@@ -4,12 +4,13 @@ import { dirname, join } from "node:path";
 import { parse } from "yaml";
 import { z } from "zod";
 
-export const TRACKS = ["app", "desktop", "mobile"] as const;
+export const TRACKS = ["app", "cli", "desktop", "mobile"] as const;
 
 export type Track = (typeof TRACKS)[number];
 
 export const CHANGELOGS: Record<Track, string> = {
-  app: "CHANGELOG.md",
+  app: "apps/web/CHANGELOG.md",
+  cli: "apps/cli/CHANGELOG.md",
   desktop: "apps/desktop/CHANGELOG.md",
   mobile: "apps/mobile/CHANGELOG.md",
 };
@@ -18,6 +19,10 @@ export const RELEASES_DIR = "releases";
 
 export const releaseFieldsSchema = z.strictObject({
   date: z.iso.date(),
+  cli: z
+    .string()
+    .regex(/^\d+\.\d+\.\d+$/, "must be an X.Y.Z version")
+    .optional(),
 });
 
 export type ReleaseFields = z.infer<typeof releaseFieldsSchema>;
@@ -29,7 +34,7 @@ export type Release = ReleaseFields & {
   body: string;
 };
 
-const TAG = /^(app|desktop|mobile)-v(\d+\.\d+\.\d+(?:-rc\.\d+)?)$/;
+const TAG = /^(app|cli|desktop|mobile)-v(\d+\.\d+\.\d+(?:-rc\.\d+)?)$/;
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
 
@@ -57,7 +62,7 @@ export function compareVersions(a: string, b: string) {
 
 export function findRoot(from: string) {
   let dir = from;
-  while (!existsSync(join(dir, RELEASES_DIR)) || !existsSync(join(dir, CHANGELOGS.app))) {
+  while (!existsSync(join(dir, RELEASES_DIR)) || !existsSync(join(dir, "package.json"))) {
     const parent = dirname(dir);
     if (parent === dir)
       throw new Error(`[release] no repository root with releases/ above ${from}`);
@@ -69,7 +74,8 @@ export function findRoot(from: string) {
 export function parseRelease(name: string, source: string): Release {
   const tag = name.replace(/\.md$/, "");
   const parsed = name.endsWith(".md") ? parseTag(tag) : null;
-  if (!parsed) throw new Error(`releases/${name} is not named <app|desktop|mobile>-v<version>.md`);
+  if (!parsed)
+    throw new Error(`releases/${name} is not named <app|cli|desktop|mobile>-v<version>.md`);
   const frontmatter = FRONTMATTER.exec(source);
   if (!frontmatter) throw new Error(`releases/${name} has no frontmatter block`);
   let data: unknown;
@@ -83,6 +89,9 @@ export function parseRelease(name: string, source: string): Release {
   const fields = releaseFieldsSchema.safeParse(data);
   if (!fields.success) {
     throw new Error(`releases/${name} frontmatter: ${z.prettifyError(fields.error)}`);
+  }
+  if (fields.data.cli !== undefined && parsed.track !== "app") {
+    throw new Error(`releases/${name} sets cli, which only app releases may set`);
   }
   const body = source
     .slice(frontmatter[0].length)

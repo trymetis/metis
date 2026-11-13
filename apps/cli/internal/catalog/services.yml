@@ -1,0 +1,165 @@
+name: metis
+
+services:
+  sqld:
+    image: ghcr.io/tursodatabase/libsql-server:latest@sha256:6dd3eb276d9d3604e4a48ac4a999a2e267814732d57d7e94c04ba71482333a67
+    command: ["/bin/sqld", "--enable-namespaces"]
+    environment:
+      SQLD_AUTH_JWT_KEY: ${SQLD_AUTH_JWT_KEY:-}
+      SQLD_ADMIN_LISTEN_ADDR: 0.0.0.0:9090
+      LIBSQL_ADMIN_AUTH_KEY: ${SQLD_ADMIN_KEY:-}
+    ports:
+      - "127.0.0.1::9090"
+      - "127.0.0.1::8080"
+    healthcheck: &sqld-health
+      test:
+        - CMD
+        - bash
+        - -c
+        - 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf "GET /health HTTP/1.0\r\n\r\n" >&3 && read -r status <&3 && [[ $$status == *" 200 "* ]]'
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    stop_grace_period: 30s
+    restart: unless-stopped
+    volumes:
+      - metis-sqld:/var/lib/sqld
+    networks:
+      metis:
+        aliases: [app.sqld, mastra.sqld, resend.sqld]
+
+  sqld-resend:
+    image: ghcr.io/tursodatabase/libsql-server:latest@sha256:6dd3eb276d9d3604e4a48ac4a999a2e267814732d57d7e94c04ba71482333a67
+    command: ["/bin/sqld"]
+    env_file:
+      - path: ${METIS_INSTALL_DIR}/env/sqld-resend.env
+        format: raw
+    ports:
+      - "127.0.0.1::8080"
+    healthcheck: *sqld-health
+    stop_grace_period: 30s
+    restart: unless-stopped
+    volumes:
+      - metis-sqld-resend:/var/lib/sqld
+    networks: [metis]
+
+  preflight:
+    image: ${PREFLIGHT_IMAGE}
+    env_file:
+      - path: ${METIS_INSTALL_DIR}/.env
+        format: raw
+    restart: "no"
+    networks: [metis]
+
+  app:
+    image: ${APP_IMAGE}
+    env_file:
+      - path: ${METIS_INSTALL_DIR}/.env
+        format: raw
+    environment:
+      METIS_UPDATER_SOCKET: /run/metis-updater/updater.sock
+    ports:
+      - "127.0.0.1:${APP_PORT}:3000"
+    volumes:
+      - ${UPDATER_SOCKET_SOURCE}:/run/metis-updater:ro
+    stop_grace_period: 30s
+    restart: unless-stopped
+    networks: [metis]
+
+  worker:
+    image: ${WORKER_IMAGE}
+    env_file:
+      - path: ${METIS_INSTALL_DIR}/.env
+        format: raw
+    stop_grace_period: 75s
+    restart: unless-stopped
+    networks: [metis]
+
+  redis:
+    image: valkey/valkey:9.0-alpine@sha256:2d04268dfa26ab31cfa3fdc538866e76438b2d00e41db41b8cb86d780ac5a416
+    command: ["valkey-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    stop_grace_period: 30s
+    restart: unless-stopped
+    volumes:
+      - metis-redis:/data
+    networks: [metis]
+
+  objstore:
+    image: rustfs/rustfs:1.0.5@sha256:b81d16a90ee25bd9511280127ca1471788c6e874cf0f0da759645f46b2dc1d74
+    env_file:
+      - path: ${METIS_INSTALL_DIR}/env/objstore.env
+        format: raw
+    environment:
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: 0.0.0.0:9000
+    ports:
+      - "127.0.0.1::9000"
+    stop_grace_period: 30s
+    restart: unless-stopped
+    volumes:
+      - ${OBJSTORE_DATA}:/data
+    networks: [metis]
+
+  gateway-resend:
+    image: ghcr.io/trymetis/metis-gateway-resend:${GATEWAY_RESEND_VERSION}
+    env_file:
+      - path: ${METIS_INSTALL_DIR}/env/gateway-resend.env
+        format: raw
+    stop_grace_period: 30s
+    restart: unless-stopped
+    volumes:
+      - metis-gateway-resend:/data
+    networks: [metis]
+
+  caddy:
+    image: caddy:2-alpine@sha256:78bd35025c7ba85961dd149ae670315129954e77abe2383ac47c89106b35ade9
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    stop_grace_period: 30s
+    restart: unless-stopped
+    volumes:
+      - metis-caddy-data:/data
+      - metis-caddy-config:/config
+      - ${METIS_INSTALL_DIR}/Caddyfile:/etc/caddy/Caddyfile:ro
+    networks: [metis]
+
+  updater:
+    image: gcr.io/distroless/static-debian12:latest@sha256:d75cdd72874d4790092fcb1b058493ecf6bb5bf2b2b897045b00ff01d91843f2
+    entrypoint: ["/metis", "updater", "serve"]
+    environment:
+      METIS_INSTALL_DIR: ${METIS_INSTALL_DIR}
+      METIS_UPDATER_SOCKET: /run/metis-updater/updater.sock
+    stop_grace_period: 10s
+    restart: unless-stopped
+    volumes:
+      - /usr/local/bin/metis:/metis:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${METIS_INSTALL_DIR}:${METIS_INSTALL_DIR}
+      - metis-updater:/run/metis-updater
+    networks: [metis]
+
+volumes:
+  metis-sqld:
+    name: metis-sqld
+  metis-sqld-resend:
+    name: metis-sqld-resend
+  metis-redis:
+    name: metis-redis
+  metis-objstore:
+    name: metis-objstore
+  metis-gateway-resend:
+    name: metis-gateway-resend
+  metis-caddy-data:
+    name: metis-caddy-data
+  metis-caddy-config:
+    name: metis-caddy-config
+  metis-updater:
+    name: metis-updater
+
+networks:
+  metis:
+    name: metis
+    driver: bridge

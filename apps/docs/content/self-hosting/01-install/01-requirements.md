@@ -3,22 +3,31 @@ title: Requirements
 description: The server, network access and accounts you need before you install Metis Suite.
 ---
 
-This page is for the bootstrap script and Docker Compose, which run the whole stack on one server. It lists what the server needs. If you deploy on a container platform, on Vercel or on another Node host, skip this page. Go straight to [Deploy on a container platform](/self-hosting/install/deploy-on-a-container-platform) or [Deploy on Vercel or another Node host](/self-hosting/install/deploy-on-vercel). Each one lists what it needs.
+This page is for a server that the `metis` CLI installs and runs. It lists what that server needs. If you deploy on a container platform, on Vercel or on another Node host, skip this page. Go straight to [Deploy on a container platform](/self-hosting/install/deploy-on-a-container-platform) or [Deploy on Vercel or another Node host](/self-hosting/install/deploy-on-vercel). Each one lists what it needs.
 
 ## Server
 
-- **An Ubuntu server.** The bootstrap script installs Docker from Docker's Ubuntu package repository with `apt-get`. Other systems are not covered by the script.
-- **Root access.** You run the script as root, or with `sudo`.
-- **OpenSSL 3.** The script uses it to generate keys for the bundled database server. Current Ubuntu releases include it.
-- **Docker with the Compose plugin.** If Docker is not installed, the script installs Docker Engine and the Compose plugin for you. If Docker is already installed, the script only adds the Compose plugin when it is missing. The stack needs Docker Compose v2.
+- **Linux on amd64 or arm64.** These are the two kinds of processor the CLI runs on (amd64 is also called x86_64). The install script stops with "[bootstrap] unsupported architecture" on any other.
+- **Root access.** You run the install and every command that changes the server with `sudo`.
+- **Docker Engine.** If Docker Engine already runs on the server, the CLI uses it. If not, the CLI installs it from Docker's own package repository, on Debian and Ubuntu only. On any other Linux, install Docker Engine yourself first. See [Install Docker Engine](https://docs.docker.com/engine/install/).
+- **The `curl`, `sha256sum`, `grep` and `install` commands**, which the install script uses. Most Linux servers have them.
+- **systemd (optional).** When the server runs systemd, the updater runs as a systemd service. Otherwise it runs as a container. Both work the same way.
 
-No minimum CPU, memory or disk size is published. Size the server for the number of people who will use it and the amount of mail they keep.
+No minimum CPU, memory or disk size is published. Size the server for the number of people who will use it and the amount of mail they keep. The updater keeps a copy of the database for undo, so leave room for it. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo).
 
-The server must stay on all the time. By default, background work (scheduled sends, snooze reminders and workflows) runs inside the app, so a server that sleeps or scales to zero stops that work. See [Background work](/self-hosting/configure/background-work) for other options.
+The server must stay on all the time. By default, background work (scheduled sends, snooze reminders and workflows) runs inside the app, so a server that sleeps stops that work. See [Background work](/self-hosting/configure/background-work) for other options.
 
 ## Network
 
-- **Outbound access** to `ghcr.io` (where the Metis Suite images and the list of releases come from) and `sh.trymetis.email` (where the script downloads the Compose file). When the script installs Docker, it also needs `download.docker.com` and your Ubuntu package mirrors.
+- **Outbound access** to these hosts:
+  - `sh.trymetis.email`: the `metis` CLI, the details and notes of each release, and the mail gateway packages.
+  - `ghcr.io`: the Metis Suite images, the list of releases and the database server image.
+  - Docker Hub: the Redis (Valkey), object storage (RustFS) and Caddy images.
+  - `gcr.io`: the base image of the updater, when it runs as a container.
+  - `download.docker.com` and your distribution's package mirrors, when the CLI installs Docker.
+  - `https://1.1.1.1/cdn-cgi/trace`: finds the server's public IPv4 address, for the DNS record of your domain and of the Resend gateway.
+  - `raw.githubusercontent.com`: files the mail gateway commands need, such as the gateways' table definitions.
+  - The Cloudflare, Resend, AWS and Google APIs, when you use the commands that set those up.
 - **Ports 80 and 443** reachable from the internet once you serve the instance on a domain. Port 443 is used over TCP, and over UDP for HTTP/3.
 - **A domain name** that you can point at the server, for HTTPS. You can install first and add the domain later. Until then, the app is reachable only from the server itself, through an SSH tunnel.
 

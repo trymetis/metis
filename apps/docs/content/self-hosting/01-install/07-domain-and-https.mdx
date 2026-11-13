@@ -5,26 +5,58 @@ description: Serve your instance on your own domain with an automatic HTTPS cert
 
 Until you set a domain, the app listens only on the server itself, at `127.0.0.1:3000`. Without HTTPS, sign-in cookies are not marked secure, so the app is not exposed to the internet. You reach it through an SSH tunnel instead.
 
-Once you set a domain, the stack adds Caddy, a web server that gets and renews an HTTPS certificate for you. Nothing else is installed on the server.
+Once you set a domain, the `metis` CLI adds Caddy, a web server that gets and renews an HTTPS certificate for you. This page is for a server the `metis` CLI runs. Container platforms and Vercel handle HTTPS themselves.
 
 ## Before you start
 
-- Create a DNS record for your domain (for example `mail.example.com`) that points at the server.
 - Make sure ports 80 and 443 are open on the server and its firewall. Port 443 is used over TCP, and over UDP for HTTP/3.
+- Decide on the domain, for example `mail.example.com`. Its DNS record must point at the server. The CLI can create it for you on Cloudflare (see below).
 
 ## Set the domain
 
-If you installed with the bootstrap script, run:
+Run:
 
 ```bash
-sudo bash bootstrap.sh domain mail.example.com
+sudo metis domain mail.example.com
 ```
 
-The script sets `METIS_DOMAIN` and changes `BETTER_AUTH_URL` to `https://mail.example.com` in `.env`, then redeploys the stack with Caddy. When it finishes, it prints "Live at https://mail.example.com". Caddy gets the certificate on the first request, so the first page load can take a few seconds.
+Write the name only, without `https://`. The command:
 
-You can also set the domain during the install: export `METIS_DOMAIN` before you run the script, or type it at the prompt.
+1. Changes `BETTER_AUTH_URL` to `https://mail.example.com` in `/opt/metis-suite/.env`.
+2. Adds Caddy, which listens on ports 80 and 443.
+3. Shows what it changes and restarts the app on the new address.
+4. Creates or lists the DNS record (see below).
 
-If you manage the stack yourself, see the last step of [Install with Docker Compose](/self-hosting/install/install-with-docker-compose).
+It ends with "Metis is served on https://mail.example.com once its DNS points at this server". Caddy gets the certificate on the first request, so the first page load can take a few seconds.
+
+You can also set the domain during the install, in the **Domain** field of the form or with `--domain`. Setup creates no DNS record. See [Install with the metis CLI](/self-hosting/install/install-with-bootstrap).
+
+To move to another domain, run the same command with the new name.
+
+### The DNS record
+
+The command finds the server's public IPv4 address. Then:
+
+- **With a Cloudflare API token,** when the domain's zone is on that Cloudflare account, it creates an A record that points the domain at the server, and prints a line such as "DNS A mail.example.com → 203.0.113.10". Pass the token on the same line:
+
+  ```bash
+  sudo CLOUDFLARE_API_TOKEN=your-cloudflare-token metis domain mail.example.com
+  ```
+
+  The token needs **Zone, Zone: Read** and **Zone, DNS: Edit** for the zone. If the same A record exists, nothing changes. An A record for the same name with another address is not replaced: a second one is added, so delete the old one in Cloudflare yourself.
+
+- **Without a token,** it prints "Add these DNS records at your DNS provider:", followed by the record, such as "A mail.example.com → 203.0.113.10". Add it at your DNS provider.
+- **With a token, when the zone is not on that account,** it prints "no zone for mail.example.com is on this Cloudflare account; add the records yourself", followed by the same list.
+
+If the server's address cannot be found, the command prints nothing about DNS. Create the record yourself.
+
+## Remove the domain
+
+```bash
+sudo metis domain --remove
+```
+
+`BETTER_AUTH_URL` goes back to `http://localhost:3000`, Caddy stops, and the command prints "Metis is reachable on 127.0.0.1 only". Reach the app through an SSH tunnel again. The certificates stay on the server, in the `metis-caddy-data` Docker volume, so they are reused if you set the domain again.
 
 :::warning[Update your OAuth redirect URIs]
 The redirect URIs for Google, Microsoft and Zoho are built from your app's address. After you change the domain, open each provider page under **Dashboard**, **System**, copy the new **Redirect URI** and register it in the provider's console. Until you do, connecting those accounts fails. See [OAuth providers](/self-hosting/configure/sign-in-providers).
@@ -61,13 +93,17 @@ Without a CDN, Caddy alone needs nothing in this list.
 
 ## If something goes wrong
 
-| Message                                       | What to do                                                |
-| --------------------------------------------- | --------------------------------------------------------- |
-| `Usage: bootstrap.sh domain <yourdomain.com>` | Add the domain name after `domain`.                       |
-| "No deployment in /opt/metis-suite"           | Install the stack first with `sudo -E bash bootstrap.sh`. |
+| Message                                                                                                          | What to do                                                                                                                                                                                      |
+| ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "enter a hostname such as mail.example.com, without https://"                                                    | Write the domain name only, such as `mail.example.com`.                                                                                                                                         |
+| "metis domain changes the server; run it as root: sudo metis domain mail.example.com"                            | Run the command with `sudo`.                                                                                                                                                                    |
+| "objstore --direct serves files from a public host on the domain; run metis add objstore without --direct first" | Object storage serves files on your domain. Run `sudo metis add objstore` first, then remove the domain. See [Drive transfers](/self-hosting/configure/drive-transfers#storage-on-your-server). |
+| "the Resend gateway needs a public HTTPS address; run metis remove gateway-resend first"                         | Remove the Resend gateway first. See [Set up the Resend gateway](/self-hosting/mail-gateways/resend).                                                                                           |
+| "Caddy comes with a domain: run metis domain mail.example.com"                                                   | You ran `metis add caddy`. Set a domain instead.                                                                                                                                                |
+| "Caddy goes with the domain: run metis domain --remove"                                                          | You ran `metis remove caddy`. Remove the domain instead.                                                                                                                                        |
 
 If the certificate never arrives, check that DNS points at this server and that ports 80 and 443 are reachable from the internet. Caddy's log shows what failed:
 
 ```bash
-sudo docker compose --project-directory /opt/metis-suite logs caddy
+sudo metis logs caddy
 ```

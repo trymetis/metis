@@ -18,7 +18,93 @@ The same function serves the gateway on its function URL. A function URL is the 
 
 Search in an Amazon SES gateway mailbox ignores upper and lower case only for the letters A to Z. For other letters, such as accented ones, the case must match. For the other limits all gateways share, see [What to expect](/self-hosting/mail-gateways/what-is-a-gateway-mailbox#what-to-expect).
 
-## Before you start
+You can set it up in one command with the `metis` CLI, or by hand.
+
+## Set it up with the metis CLI
+
+### Before you start
+
+- **An AWS account**, and an access key for it that may manage Amazon SES, S3, SQS, IAM and Lambda.
+- **A region where Amazon SES can receive mail**, such as `eu-west-1`. The regions are listed in the manual setup below. The command also lists them when you pass another region.
+- **A domain whose DNS you control.** If the domain already has MX records for another mail service, use a subdomain.
+- **A libSQL database of its own** that AWS Lambda can reach over the internet, such as a Turso database, with its URL and token. Your server's own database server cannot be used: Lambda cannot reach it.
+
+### On the server
+
+On a server the `metis` CLI runs, pass the AWS access key on the same line:
+
+```bash
+sudo AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE AWS_SECRET_ACCESS_KEY=your-secret-access-key \
+  metis add gateway-ses --domain example.com --region eu-west-1 \
+  --database-url libsql://metis-ses-acme.turso.io --database-token your-database-token
+```
+
+`sudo` does not pass on your own AWS settings, such as `AWS_PROFILE` or the files in your home folder, so name the key on the line as above. The CLI never stores it. You can also run the command from your computer instead (see below).
+
+| Flag               | What it does                                                       |
+| ------------------ | ------------------------------------------------------------------ |
+| `--domain`         | The mail domain.                                                   |
+| `--region`         | The Amazon SES receiving region, such as `eu-west-1`.              |
+| `--database-url`   | The libSQL URL of the gateway's database, which Lambda must reach. |
+| `--database-token` | The token for `--database-url`.                                    |
+| `--yes`            | Go ahead without asking.                                           |
+
+The command deploys the gateway for the release your instance runs. Each resource is named after the domain, such as `metis-ses-example-com` for `example.com`:
+
+1. Checks the key: "AWS account 123456789012, eu-west-1".
+2. Creates the gateway's tables in the database: "Database schema".
+3. Adds the domain to Amazon SES, and creates its DNS records: the MX record, such as `10 inbound-smtp.eu-west-1.amazonaws.com`, and three DKIM records. With `CLOUDFLARE_API_TOKEN` set and the domain on that Cloudflare account, it creates them there. Otherwise it prints them under "Add these DNS records at your DNS provider:".
+4. Waits for Amazon SES to check the domain: "Waiting for SES to verify example.com (up to 10 minutes)…", then "SES verified example.com". If it takes longer, it says "Run the same command again once DNS has spread". Running it again continues where it stopped.
+5. If the account is in the sandbox, it warns "SES in eu-west-1 is in the sandbox: it sends only to verified addresses, at most 200 messages per 24 hours and 1 per second." and asks "Ask AWS for production access now?" ("AWS answers within 96 hours; mail still arrives meanwhile."). On a server, the request names your instance's address and the owner email.
+6. Creates the S3 bucket ("S3 bucket metis-ses-example-com"), a queue for failed deliveries (`metis-ses-example-com-failed`) and the function's role ("IAM role metis-ses-example-com").
+7. Creates the function: "Lambda function metis-ses-example-com (1.4.0)", on Node.js 24 and arm64, with 1024 MB of memory and a 60-second timeout.
+8. Gives it a function URL ("Function URL https://abcdefghijklmnopqrstuvwxyz012345.lambda-url.eu-west-1.on.aws"). A failed delivery to the function is tried twice more, for up to 6 hours, and then goes to the queue.
+9. Adds the receipt rule to the active rule set: "Receipt rule metis-ses-example-com in metis". Only when no rule set is active, it creates one first: "Created and activated the rule set metis".
+10. Adds the gateway to the **Amazon SES** server list, named after the domain, and stores it at once.
+
+Then create a mailbox token for each address with `sudo metis gateway token create alice@example.com`. See [Mailbox tokens](/self-hosting/mail-gateways/mailbox-tokens).
+
+`sudo metis status` shows the gateway, with the number of deliveries in the failure queue, for example ", 2 failed receipt(s) in metis-ses-example-com-failed".
+
+The gateway stays on its release when you upgrade your instance. To move it to the release your instance runs, run the same `metis add` command again.
+
+### From your computer
+
+Add `--remote` and the release your instance runs. On your computer, the CLI finds your AWS credentials the usual way, so `AWS_PROFILE` works too:
+
+```bash
+metis add gateway-ses --remote --domain example.com --region eu-west-1 --version 1.4.0 \
+  --database-url libsql://metis-ses-acme.turso.io --database-token your-database-token
+```
+
+It works against your AWS account only, and then prints the gateway's admin token ("The gateway's admin token (API_TOKEN), shown once; metis gateway token needs it:") and the server entry to add under **Dashboard**, **System**, **Amazon SES**. Keep the admin token: you need it to create mailbox tokens.
+
+### Remove it
+
+```bash
+sudo AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE AWS_SECRET_ACCESS_KEY=your-secret-access-key \
+  metis remove gateway-ses --domain example.com
+```
+
+It deletes only the gateway's receipt rule (never the rule set), the function URL and the function, the queue and the role ("Deleted the queue and the role"), and removes the server entry. The bucket and its mail stay. With `--purge`, it also empties and deletes the bucket.
+
+From your computer, run `metis remove gateway-ses --remote --domain example.com --region eu-west-1`.
+
+### If something goes wrong
+
+| Message                                                                                                                | What to do                                                              |
+| ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| "loading AWS credentials:" or "checking the AWS credentials (AWS_PROFILE, AWS_ACCESS_KEY_ID, …):" followed by a reason | Check the access key. On the server, pass it on the line after `sudo`.  |
+| "pass --region, one of" followed by the regions                                                                        | Add `--region`.                                                         |
+| "eu-west-9 is not an SES receiving region; use one of" followed by the regions                                         | Pick one of the listed regions.                                         |
+| "pass --database-url and --database-token: a libSQL database Lambda can reach over the internet, such as Turso"        | Add the database flags.                                                 |
+| "Run the same command again once DNS has spread"                                                                       | DNS changes take time to spread. Wait, then run the same command again. |
+| "The request failed (…); ask from the SES console's Account dashboard"                                                 | Ask AWS for production access in the Amazon SES console.                |
+| "no SES gateway serves example.org; pass --domain"                                                                     | No gateway on this server serves that domain. Check the domain.         |
+
+## Set it up by hand
+
+### Before you start
 
 - **An AWS account and a recent version 2 of the AWS CLI.** Older versions do not have the `--invoked-via-function-url` option that step 7 uses. Receipt rule sets and receipt rules use the `aws ses` commands. The domain, sending and account settings use the `aws sesv2` commands.
 - **A region where Amazon SES can receive mail.** These are us-east-1, us-east-2, us-west-1, us-west-2, ca-central-1, eu-central-1, eu-west-1, eu-west-2, eu-west-3, eu-south-1, eu-north-1, ap-south-1, ap-southeast-1, ap-southeast-2, ap-southeast-3, ap-northeast-1, ap-northeast-2, ap-northeast-3, af-south-1, il-central-1, me-south-1 and sa-east-1. The receipt rule set, the function and its role live in that region. The bucket may be in another of these regions.
@@ -36,7 +122,7 @@ bun install
 cd apps/gateway-ses
 ```
 
-## The gateway package
+### The gateway package
 
 Each Metis Suite server release publishes the gateway as a ready-made package, `gateway-ses.zip`, in its own folder. For release 1.2.3, the package is at `https://sh.trymetis.email/v1.2.3/gateway-ses.zip`. The folder also holds `SHA256SUMS`, a list of checksums you use to check the download.
 
@@ -49,11 +135,11 @@ Use the release your instance runs. Older releases have no package. If the downl
 To find the release your instance runs:
 
 - Every page of Metis Suite shows a **Source code** link with the version, for example "Source code · v1.2.3". It is in the left rail, at the bottom of the account settings and dashboard sidebars, and in the footer of the pages before sign-in. See [Source code link](/self-hosting/configure/source-code-link).
-- With the Compose stack, open **Dashboard**, **System**, **Updates**. The **Version** row of **Running release** shows the release, such as `1.2.3`. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo). If it shows **Not a pinned release**, use the **Source code** link instead.
+- On a server the `metis` CLI runs, open **Dashboard**, **System**, **Updates**. The **Version** row of **Running release** shows the release, such as `1.2.3`. `sudo metis status` shows it too. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo).
 
 You can also build the package yourself from the source code. Step 6 shows both ways.
 
-## Run the gateway
+### Run the gateway
 
 <Steps>
   <Step title="Set the shell variables">
@@ -404,7 +490,7 @@ You can also build the package yourself from the source code. Step 6 shows both 
   </Step>
 </Steps>
 
-## Remove the gateway
+### Remove the gateway by hand
 
 Delete only the gateway's receipt rule, and leave the rule set alone. In a new shell, set `REGION` and `RULE` again as in step 1, and find the active rule set:
 

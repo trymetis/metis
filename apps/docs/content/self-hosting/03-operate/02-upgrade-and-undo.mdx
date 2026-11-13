@@ -1,9 +1,9 @@
 ---
 title: Upgrade and undo
-description: Upgrade your instance to a newer release from the owner dashboard, undo the last upgrade, and what happens when a step fails.
+description: Upgrade your instance to a newer release from the owner dashboard or the metis CLI, undo the last upgrade, keep the CLI up to date, and what happens when a step fails.
 ---
 
-With the Compose stack, you upgrade Metis Suite from the owner dashboard. The updater service (the part of the stack that changes which release runs) does the work for you:
+On a server the `metis` CLI runs, you upgrade Metis Suite from the owner dashboard or with `sudo metis update`. The updater (the part of the CLI that changes which release runs) does the work for you:
 
 1. It downloads the release you choose.
 2. It stops the app and takes a snapshot of the database, when your instance supports it (see below). A snapshot is a full copy of the database at that moment.
@@ -12,19 +12,19 @@ With the Compose stack, you upgrade Metis Suite from the owner dashboard. The up
 
 If any step fails, the updater puts the snapshot back, if it took one, and switches to the release you had.
 
-Releases install forward only. The dashboard offers only releases that are newer than the one you run. To go back, use **Undo last upgrade**. It returns to the release you had before your last upgrade, with the database as it was in the snapshot.
+Releases install forward only. The dashboard and `metis update` offer only releases that are newer than the one you run. The only way back is **Undo last upgrade** (or `sudo metis undo`), right after an upgrade. It returns to the release you had before your last upgrade, with the database as it was in the snapshot.
 
-The **Updates** page exists only when the updater is connected, which the Compose stack does for you. On hosts that build from source, the page does not appear: update by deploying the new version there.
+The **Updates** page needs the updater component, which `metis setup` adds unless you leave it out. To add it later, run `sudo metis add updater`. See [Manage components](/self-hosting/operate/manage-components#updater). Without it, you upgrade with `sudo metis update`. On hosts that build from source or run the images themselves, the page does not appear: update by deploying the new version there.
 
 The instance owner and instance admins can upgrade and undo. Observers see the **Updates** page without the **Upgrade** and **Undo last upgrade** buttons. See [Instance roles](/self-hosting/operate/owner-dashboard#instance-roles).
 
-On a Metis Cloud instance, the **Updates** page works the same way, and a snapshot is always taken, so **Undo last upgrade** is offered after an upgrade. Unless the owner turns automatic updates off in the console, Metis Cloud also installs each new release on its own, in the hour the owner picks there. The server steps on this page (the snapshot folder, disk space, the `docker` commands, the bootstrap script and pinning releases) do not apply there, and steps that mention the server, the stack or the updater service are handled by Metis Cloud. See [Updates on Metis Cloud](/cloud/your-instance/updates).
+On a Metis Cloud instance, the **Updates** page works the same way, and a snapshot is always taken, so **Undo last upgrade** is offered after an upgrade. Unless the owner turns automatic updates off in the console, Metis Cloud also installs each new release on its own, in the hour the owner picks there. The server steps on this page (the snapshot folder, disk space and the `metis` commands) do not apply there, and steps that mention the server or the updater are handled by Metis Cloud. See [Updates on Metis Cloud](/cloud/your-instance/updates).
 
-## Snapshots need the bundled database
+## Snapshots need the database on your server
 
-The updater can take a snapshot only when your instance uses the bundled database server. The bootstrap script sets this up unless you choose Turso.
+The updater can take a snapshot only when the app database is on the server's own database server (sqld). `metis setup` sets this up unless you choose another database.
 
-If your databases are on Turso, or on a database server you run yourself (as in [Install with Docker Compose](/self-hosting/install/install-with-docker-compose)), then:
+If your databases are on Turso, or on a database server you run elsewhere, then:
 
 - Upgrades still work, but there is no snapshot, and an upgrade cannot be undone.
 - The **Undo** row on the **Updates** page reads **Not available**, and the page says "The database is not this stack's sqld, so the updater cannot snapshot it and an upgrade cannot be undone. Back up the database before upgrading."
@@ -35,12 +35,11 @@ If your databases are on Turso, or on a database server you run yourself (as in 
 Open **Dashboard**, **System**, **Updates**.
 
 - **Running release** shows the release every service of your instance runs.
-  - The badge reads **Up to date** or **Update available**. When the images are not pinned to a release, there is no badge.
-  - The **Version** row shows the version. If the images are not pinned to a release, it shows **Not a pinned release** instead, and upgrading pins them.
+  - The badge reads **Up to date** or **Update available**.
+  - The **Version** row shows the version, such as `1.4.0`.
   - The **Undo** row shows the **Undo last upgrade** button when there is an upgrade to undo. Otherwise it reads **None**, or **Not available** when your instance cannot take snapshots.
 - **Releases** lists the releases that are newer than the one you run, up to 10, newest first. The newest one is marked **Latest**. Each one has an **Upgrade** button, and a **Release notes** toggle when the release has notes.
   - If no newer release exists, the card says "No newer release is published."
-  - If your images are not pinned to a release, the card lists every published release, up to 10.
 
 <img
   src="/images/self-hosting/dashboard-updates.webp"
@@ -55,7 +54,7 @@ Open **Dashboard**, **System**, **Updates**.
 
 ## Read the release notes first
 
-Click **Release notes** under a release to read what changed in it. Read the **Upgrade notes** section first, when the notes have one. It says what you need to do besides clicking **Upgrade**, such as running the bootstrap script again before you upgrade. See [Releases that need the bootstrap script](#releases-that-need-the-bootstrap-script).
+Click **Release notes** under a release to read what changed in it. Read the **Upgrade notes** section first, when the notes have one. It says what you need to do besides clicking **Upgrade**, such as updating the `metis` CLI first. See [Update the metis CLI](#update-the-metis-cli).
 
 If you skip releases, read the notes of every release between yours and the one you install.
 
@@ -112,6 +111,38 @@ While an upgrade runs, your instance is offline for a while:
 Each snapshot is a full copy of your database, kept on the server. During an upgrade, the server can hold two copies at once: the one kept for undo and the new one. Make sure the disk has room for both.
 :::
 
+## Upgrade from the terminal
+
+On the server, run:
+
+```bash
+sudo metis update
+```
+
+It installs the newest release. To install a given release, name it, for example `sudo metis update 1.4.0`. This works with or without the updater component, and the dashboard's **Last upgrade** card shows the upgrade too.
+
+The command prints the move, such as "1.3.2 → 1.4.0", then each step as it starts: "Pulling the images", "Stopping the app and snapshotting the database", "Running preflight", "Switching releases" and "Waiting for the app to answer". When it is done, it prints "Now running 1.4.0".
+
+If you press Ctrl+C while it downloads, it stops with "Stopping before anything changed". After that, it keeps going and says "The upgrade continues: stopping now would leave the app down. Follow it with metis status."
+
+To upgrade without a snapshot, add `--no-backup`. It warns "--no-backup takes no database snapshot, so this upgrade cannot be undone". It also removes the snapshot kept for the previous undo, so neither upgrade can be undone. Back up first. See [Backups](/self-hosting/operate/backups).
+
+| Message                                                                                                  | What it means                                                                                |
+| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| "1.4.0 is the newest release"                                                                            | You run the newest release already.                                                          |
+| "1.2.0 is older than the running 1.3.0; only newer releases can be installed"                            | Releases install forward only.                                                               |
+| "1.4.1 is not a published release"                                                                       | Check the release number on the [releases page](https://github.com/trymetis/metis/releases). |
+| "\"1.4\" is not a release version such as 1.4.0"                                                         | Write all three numbers.                                                                     |
+| "This release needs Metis CLI 0.5.0 or later. Run sudo metis self-update on the server, then try again." | Update the CLI first. See [Update the metis CLI](#update-the-metis-cli).                     |
+| "an upgrade or rollback is already running"                                                              | Another upgrade or undo runs. Wait until it ends.                                            |
+| "another metis command is changing this install; try again in a moment"                                  | Another `metis` command is changing the server. Try again in a moment.                       |
+
+When a step fails, it ends with one of these, followed by the error:
+
+- "1.4.0 was not installed; 1.3.2 kept running:"
+- "1.4.0 failed and 1.3.2 runs again with its database:"
+- "switching back to 1.3.2 failed too and the install needs attention:" (see [Needs attention](#needs-attention))
+
 ## Undo the last upgrade
 
 **Undo last upgrade** returns your instance to the release it ran before your last upgrade. It also puts back the database snapshot taken just before that upgrade, for both the app database and the AI memory database.
@@ -122,9 +153,8 @@ Mail, events and files at the providers your users connected stay as they are. U
 
 The button appears only when all of these are true:
 
-- Your instance uses the bundled database server, so it can take snapshots.
+- Your instance keeps its database on the server, so it can take snapshots.
 - Your last successful upgrade kept its snapshot.
-- Before that upgrade, the **Version** row showed a release number, not **Not a pinned release**.
 - You still run the release that upgrade installed.
 
 To undo:
@@ -166,26 +196,34 @@ To undo:
   </Step>
 </Steps>
 
+To undo from the terminal instead, run this on the server:
+
+```bash
+sudo metis undo
+```
+
+It prints its steps as `metis update` does, and ends with "Now running" and the previous version. If there is nothing to undo, it says "there is no upgrade to undo".
+
 Undo works once. After it, the **Undo** row reads **None** until your next upgrade.
 
 There is only ever one undo. Each successful upgrade replaces the snapshot, so you can undo only your most recent successful upgrade. A failed upgrade does not change it.
 
-The snapshot is kept in `/opt/metis-suite/.updater-snapshot/` on the server. Leave that folder alone if you want to keep the undo. If you delete it, the undo is gone.
+The snapshot is kept in `/opt/metis-suite/snapshots/` on the server. Leave that folder alone if you want to keep the undo. If you delete it, the undo is gone.
 
-The undo is recorded in the **Audit log**. Its row starts with the name of the owner or admin who started it and reads, for example, "… undid the last upgrade (0.2.3 → 0.2.2)": the version it left, then the version it returned to. Its event type, in the event type list, is **Instance upgrade undone**. It also shows in your own [Security activity](/guide/account/security-activity). The row is written once the undo has succeeded and the **Updates** page loads again. If you closed the page during the undo, it is written the next time you open **Updates**. See [Owner dashboard](/self-hosting/operate/owner-dashboard#audit-log).
+The undo is recorded in the **Audit log**, with the event type **Instance upgrade undone**. For an undo from the dashboard, the row starts with the name of the owner or admin who started it and reads, for example, "… undid the last upgrade (0.2.3 → 0.2.2)": the version it left, then the version it returned to. It also shows in that person's own [Security activity](/guide/account/security-activity). An undo run with `sudo metis undo` reads "The server CLI undid the last upgrade (0.2.3 → 0.2.2)", and its second line shows **Server CLI**. It is recorded only while the updater component is on, because without it there is no **Updates** page. The row is written once the undo has succeeded and the **Updates** page loads again. If nobody had the page open during the undo, it is written the next time someone opens **Updates**. See [Owner dashboard](/self-hosting/operate/owner-dashboard#audit-log).
 
 ## When a step fails
 
 The card shows **Failed**, and a pop-up message says "The upgrade failed" or "The undo failed". A note says what the updater did, and the error is shown below it. When preflight failed, the error includes the end of its output, which names the database change that failed.
 
-In these notes, &lt;your release&gt; is the release that was running when the upgrade or undo started, and &lt;new release&gt; is the release you upgraded to.
+In these notes, 1.3.2 stands for the release that was running when the upgrade or undo started, and 1.4.0 for the release you upgraded to.
 
-| Note                                                                                                                   | What happened                                                                                                           |
-| ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| "&lt;new release&gt; was not installed; &lt;your release&gt; kept running."                                            | The release could not be downloaded, the snapshot failed, or preflight failed on an instance without snapshots.         |
-| "&lt;new release&gt; failed, so the updater restored the database snapshot and switched back to &lt;your release&gt;." | Preflight failed, or the new release did not come up. The updater put the snapshot back and returned to your release.   |
-| "&lt;new release&gt; failed, so the updater switched back to &lt;your release&gt;."                                    | Without snapshots: the new release did not come up, and the updater returned to your release.                           |
-| "The undo did not start; &lt;your release&gt; kept running."                                                           | The previous release could not be downloaded, or the app could not be stopped. Your release and database are unchanged. |
+| Note                                                                                      | What happened                                                                                                           |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| "1.4.0 was not installed; 1.3.2 kept running."                                            | The release could not be downloaded, the snapshot failed, or preflight failed on an instance without snapshots.         |
+| "1.4.0 failed, so the updater restored the database snapshot and switched back to 1.3.2." | Preflight failed, or the new release did not come up. The updater put the snapshot back and returned to your release.   |
+| "1.4.0 failed, so the updater switched back to 1.3.2."                                    | Without snapshots: the new release did not come up, and the updater returned to your release.                           |
+| "The undo did not start; 1.3.2 kept running."                                             | The previous release could not be downloaded, or the app could not be stopped. Your release and database are unchanged. |
 
 :::warning[Without snapshots, a failed preflight can leave changes behind]
 On Turso or your own database server, a release can apply some of its database changes and then fail. Your current release keeps running, but those changes stay in the database. This is why you back up before every upgrade on these instances.
@@ -195,54 +233,65 @@ On Turso or your own database server, a release can apply some of its database c
 
 The card shows **Needs attention** when the updater could not get back to a working state:
 
-- An upgrade failed, and switching back or starting your release again failed too.
-- An undo failed partway.
-- The updater stopped in the middle of an upgrade or undo.
+- An upgrade failed, and switching back or starting your release again failed too. The note reads, for example, "Switching back to 1.3.2 failed too. On the server, check sudo metis status and sudo metis logs app."
+- An undo failed partway. The note reads "Undoing the upgrade failed partway. On the server, check sudo metis status (the release it runs, and that sqld and the app are running) and sudo metis logs app."
+- The updater stopped in the middle of an upgrade or undo. The error says "the updater stopped while this upgrade was running", and where any snapshot is.
 
-When a snapshot exists, the error names the folder in `/opt/metis-suite/.updater-snapshot/` that holds it. Do not delete that folder: it is the copy of your database from before the upgrade.
+When a snapshot exists, the error names the folder that holds it, for example "(the database snapshot is in /opt/metis-suite/snapshots/current)". Do not delete that folder: it is the copy of your database from before the upgrade.
 
-Check the stack on the server: which images `.env` pins, that the database server and the app are running, and the app's log:
+On the server, check which release runs, that the database server and the app are running, and the app's log:
 
 ```bash
-sudo grep _IMAGE= /opt/metis-suite/.env
-sudo docker compose --project-directory /opt/metis-suite ps
-sudo docker compose --project-directory /opt/metis-suite logs app
+sudo metis status
+sudo metis logs app
 ```
+
+`metis status` shows the release, each component with "ok" or "NOT HEALTHY", and the last upgrade with its error. See [Health checks](/self-hosting/operate/health-checks#check-the-server-with-the-metis-cli).
 
 ### The updater is not answering
 
-If the page shows **The updater is not answering**, the updater service is not running. Check it with:
+If the page shows **The updater is not answering**, the updater is not running. Check it with `sudo metis status`. Its line reads "systemd unit metis-updater.service (active)" when it runs as a systemd service, or "container metis-updater" when it runs as a container, followed by "ok" or "NOT HEALTHY". Restart it with:
 
 ```bash
-sudo docker compose --project-directory /opt/metis-suite ps updater
+sudo metis restart updater
 ```
+
+Its log is in the systemd journal when it runs as a service:
+
+```bash
+sudo journalctl -u metis-updater.service
+```
+
+When it runs as a container, use `sudo metis logs updater`.
 
 ### Errors in the dialog
 
-| Message                                     | What to do                                                                                |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| "Invalid authenticator or backup code"      | Enter a fresh code from your authenticator app, or a backup code.                         |
-| "Too many attempts. Please slow down."      | Wait a few minutes. You can try 10 codes every 5 minutes, for upgrades and undo together. |
-| "an upgrade or rollback is already running" | Wait until the **Last upgrade** or **Last undo** card shows the result.                   |
-| "there is no upgrade to undo"               | The undo is no longer available. Reload the page.                                         |
+| Message                                                                                                  | What to do                                                                                |
+| -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| "Invalid authenticator or backup code"                                                                   | Enter a fresh code from your authenticator app, or a backup code.                         |
+| "Too many attempts. Please slow down."                                                                   | Wait a few minutes. You can try 10 codes every 5 minutes, for upgrades and undo together. |
+| "an upgrade or rollback is already running"                                                              | Wait until the **Last upgrade** or **Last undo** card shows the result.                   |
+| "another metis command is changing this install; try again in a moment"                                  | A `metis` command is changing the server. Try again in a moment.                          |
+| "1.4.0 is already running"                                                                               | Reload the page.                                                                          |
+| "This release needs Metis CLI 0.5.0 or later. Run sudo metis self-update on the server, then try again." | Update the CLI, then upgrade. See [Update the metis CLI](#update-the-metis-cli).          |
+| "there is no upgrade to undo"                                                                            | The undo is no longer available. Reload the page.                                         |
 
-## Releases that need the bootstrap script
+## Update the metis CLI
 
-Upgrades from the dashboard change only the app's images. They never update the updater itself or the Compose file. A release's **Upgrade notes** say when it needs either.
+An upgrade changes only the app's images (the app, preflight and the worker). Everything else changes only with a new version of the `metis` CLI: how each container is set up; the versions of the database server, Redis, object storage and Caddy; and the updater itself. A release that needs a newer CLI says so in its **Upgrade notes**, and the dashboard and `metis update` refuse it until you update.
 
-To pick up a new updater or Compose file, run the [bootstrap script](/self-hosting/install/install-with-bootstrap#run-the-script-again) again. It updates the updater, downloads the Compose file of the release it installs, and pins every image to that release: the newest one, or the one in `METIS_VERSION`.
+The CLI never updates itself on its own. To update it, run:
 
-A bootstrap run is also an upgrade, but a different kind:
+```bash
+sudo metis self-update
+```
 
-- It takes no snapshot, and it cannot be undone. Back up first. See [Backups](/self-hosting/operate/backups).
-- Preflight still applies the release's database changes.
-- If the run moves your instance to a different release, it ends any undo that was waiting. The **Undo** row then reads **None**.
+It downloads the newest CLI, checks it against its published checksum and replaces `/usr/local/bin/metis`, printing, for example, "Metis CLI 0.2.0 is installed at /usr/local/bin/metis". It then restarts the updater, prints "The new CLI may define the containers differently." and runs `metis apply`, which shows what changes and asks "Apply these changes?". Pass `--yes` to apply without asking. If you run the newest CLI already, it says, for example, "Metis CLI 0.1.0 is the newest". To install a given version, name it: `sudo metis self-update 0.2.0`.
+
+Mail gateways stay on their release until you run their `metis add` command again. `metis status` shows such a gap, for example "1.3.2, app 1.4.0: run metis add again to move it".
 
 ## Going back further
 
-Once a release has changed your database, an older release cannot run on it. If you pin older images, with `METIS_VERSION` on a bootstrap run or by editing `.env`, preflight refuses the database and the app does not start. The preflight log says the database has changes "which this release does not ship: a newer release migrated it." To recover, pin that newer release again, or a newer one.
+There is no command to go back to an older release, except **Undo last upgrade** or `sudo metis undo` right after an upgrade. Once a release has changed your database, an older release cannot run on it: preflight refuses the database.
 
-To go back, you have two ways:
-
-- **Undo last upgrade**, while it is offered.
-- Restore a database backup you took before the newer release, together with that older release. See [Backups](/self-hosting/operate/backups).
+If you need an older state of your data, restore a database backup you took before the upgrade. See [Backups](/self-hosting/operate/backups).

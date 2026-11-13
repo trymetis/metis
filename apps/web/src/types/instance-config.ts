@@ -1,4 +1,4 @@
-export const INSTANCE_CONFIG_KINDS = ["seed", "edit", "revert", "reset"] as const;
+export const INSTANCE_CONFIG_KINDS = ["seed", "edit", "revert", "reset", "forced"] as const;
 export type InstanceConfigKind = (typeof INSTANCE_CONFIG_KINDS)[number];
 
 export const CONFIG_SECTIONS = [

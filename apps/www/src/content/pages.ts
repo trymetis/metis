@@ -19,7 +19,7 @@ const FIXED: Record<string, PageInfo> = {
     absolute: true,
     og: "Every account, one suite.",
     description: SITE_DESCRIPTION,
-    updated: "2026-11-06",
+    updated: "2026-11-12",
   },
   "/mail": {
     label: "Mail",
@@ -87,18 +87,18 @@ const FIXED: Record<string, PageInfo> = {
   },
   "/self-host": {
     label: "Self-host",
-    title: "Self-Hosted Email Client with Docker Compose",
+    title: "Self-Hosted Email Client on Docker",
     og: "Your server, the whole suite.",
     description:
-      "Run Metis Suite on your own Linux server with Docker Compose and one install script. Free under AGPL-3.0, with every tool and your own AI model.",
-    updated: "2026-11-06",
+      "Run Metis Suite on your own Linux server with Docker and one install command. Free under AGPL-3.0, with every tool and your own AI model.",
+    updated: "2026-11-12",
   },
   "/pricing": {
     label: "Pricing",
     title: `Pricing: Free to Self-Host, Cloud from ${usd(ENTRY_PLAN.cost.yearly / 12)}/mo`,
     og: "Free on yours. Fair on ours.",
     description: `Self-host Metis Suite free under AGPL-3.0, or let us run your own instance on Metis Cloud from ${usd(ENTRY_PLAN.cost.yearly / 12)} a month billed yearly, with monthly AI included.`,
-    updated: "2026-11-06",
+    updated: "2026-11-12",
   },
   "/apps": {
     label: "Apps",
@@ -113,7 +113,7 @@ const FIXED: Record<string, PageInfo> = {
     title: "Compare Email Clients: Metis Suite vs Alternatives",
     og: "How Metis compares.",
     description: `How Metis Suite compares with ${COMPETITORS.map((c) => c.name).join(", ")}: licensing, self-hosting, AI, MCP and price.`,
-    updated: "2026-11-06",
+    updated: "2026-11-12",
   },
   "/about": {
     label: "About",

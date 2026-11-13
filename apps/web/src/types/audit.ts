@@ -61,7 +61,7 @@ export const WORKSPACE_AUDIT_ACTIONS = [
   "workflow.deleted",
 ] as const satisfies readonly AuditAction[];
 
-export const AUDIT_VIAS = ["app", "assistant", "mcp"] as const;
+export const AUDIT_VIAS = ["app", "assistant", "mcp", "cli"] as const;
 export type AuditVia = (typeof AUDIT_VIAS)[number];
 
 export const AUDIT_RESOURCE_KINDS = ["mailbox", "calendar", "drive", "addressbook"] as const;

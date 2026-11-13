@@ -111,7 +111,7 @@ function failureNote(upgrade: DashboardUpgrade, from: string, snapshots: boolean
   if (upgrade.kind === "rollback") {
     return upgrade.state === "failed"
       ? `The undo did not start; ${from} kept running.`
-      : `Undoing the upgrade failed partway. Check the stack on the host: which images .env pins, that sqld and the app are running, and the app's logs.`;
+      : `Undoing the upgrade failed partway. On the server, check sudo metis status (the release it runs, and that sqld and the app are running) and sudo metis logs app.`;
   }
   if (upgrade.state === "failed") {
     if (!upgrade.restored) return `${upgrade.toVersion} was not installed; ${from} kept running.`;
@@ -119,7 +119,7 @@ function failureNote(upgrade: DashboardUpgrade, from: string, snapshots: boolean
       ? `${upgrade.toVersion} failed, so the updater restored the database snapshot and switched back to ${from}.`
       : `${upgrade.toVersion} failed, so the updater switched back to ${from}.`;
   }
-  return `Switching back to ${from} failed too. Check the stack on the host: which images .env pins, and the app's logs.`;
+  return `Switching back to ${from} failed too. On the server, check sudo metis status and sudo metis logs app.`;
 }
 
 function UpgradeSection({

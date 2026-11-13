@@ -200,5 +200,19 @@ METIS_SFTP_SERVERS=[{"name":"Office SFTP","host":"sftp.example.com","port":22,"h
 The JSON keys are listed in [Environment variables](/self-hosting/reference/environment-variables#server-lists). In the [config file](/self-hosting/configure/how-configuration-works#the-optional-config-file), the lists sit under `connections`, with the names `imapServers`, `caldavServers`, `carddavServers`, `s3Servers`, `webdavServers`, `ftpServers` and `sftpServers`.
 
 :::note
-WebDAV, FTP, SFTP and relayed S3 servers need `METIS_DRIVE_RELAY_SECRET` set to a value of at least 32 characters. The bootstrap script generates it for you.
+WebDAV, FTP, SFTP and relayed S3 servers need `METIS_DRIVE_RELAY_SECRET` set to a value of at least 32 characters. `metis setup` generates it for you.
 :::
+
+## Entries the metis CLI manages
+
+On a server the `metis` CLI runs, some commands add an entry to a server list for you:
+
+- `metis add objstore` adds **Server storage** to the S3 list. See [Storage on your server](/self-hosting/configure/drive-transfers#storage-on-your-server).
+- Each mail gateway command adds one entry to the **Cloudflare Email**, **Resend** or **Amazon SES** list, named after its domain, such as `example.com`. See [Mail gateways](/self-hosting/mail-gateways).
+
+These entries have an id that starts with `metis-`, such as `metis-objstore` or `metis-cloudflare-example-com`.
+
+- **Your own entries are kept.** When the CLI changes a list, it replaces only its own `metis-` entries. Entries you added in the dashboard stay as they are.
+- **The CLI's entries follow the CLI.** If you edit or remove one of them in the dashboard, the CLI puts it back the next time it changes that list. To remove one for good, remove its component, for example with `sudo metis remove objstore`.
+- **Use the dashboard for your own entries.** On an instance that already runs, `sudo metis config set METIS_S3_SERVERS=...` applies only entries whose `id` starts with `metis-` and ignores the others.
+- **Reset to environment replaces the whole list,** with the entries in `.env`, which include the CLI's. Entries you added only in the dashboard are removed.

@@ -15,17 +15,32 @@ Your instance also keeps a copy of the body of each message someone opened, unti
 
 ## What lives where
 
-With the Compose stack installed in `/opt/metis-suite`:
+On a server the `metis` CLI runs, your data is in Docker volumes, and your settings and secrets are in the install folder, `/opt/metis-suite`.
 
-| What                                        | Where                                  | Why it matters                                                                                                                                                               |
-| ------------------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The settings file, with every secret        | `/opt/metis-suite/.env`                | Holds the encryption key, the app secret, the database credentials and the release pins.                                                                                     |
-| The app database and the AI memory database | The `metis_sqld` Docker volume         | Accounts, workspaces, connections, settings and their history, workflows, scheduled mail, the audit log, stored copies of opened message bodies, and the assistant's memory. |
-| HTTPS certificates                          | The `metis_caddy_data` Docker volume   | Caddy gets a new certificate if this is lost, so it is optional.                                                                                                             |
-| Updater state                               | `/opt/metis-suite/.updater-state.json` | The last upgrade or undo, the release you can undo back to, and when its snapshot was taken.                                                                                 |
-| Upgrade snapshot                            | `/opt/metis-suite/.updater-snapshot/`  | The copy of both databases from before your last upgrade, used only by **Undo last upgrade**.                                                                                |
+### Docker volumes
 
-If your databases are on Turso, they live there instead of in the `metis_sqld` volume. The updater then takes no snapshot, so back them up before every upgrade.
+| Volume                                      | What it holds                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `metis-sqld`                                | The app database and the AI memory database: accounts, workspaces, connections, settings and their history, workflows, scheduled mail, the audit log, stored copies of opened message bodies, and the assistant's memory. With the Resend gateway on `--database stack`, also its mail and tokens. |
+| `metis-caddy-data`, `metis-caddy-config`    | HTTPS certificates and Caddy's own state. Caddy gets a new certificate if these are lost, so they are optional.                                                                                                                                                                                    |
+| `metis-objstore`                            | The files on **Server storage**, unless you chose a folder with `--data-dir`. Then back up that folder instead. With the Resend gateway on `--blobs objstore`, it also holds the gateway's mail, in the `gateway-resend` bucket.                                                                   |
+| `metis-redis`                               | The workers' queue, which Redis keeps on disk.                                                                                                                                                                                                                                                     |
+| `metis-sqld-resend`, `metis-gateway-resend` | The Resend gateway's own database and its stored mail, with `--database own` and `--blobs dir` (the defaults).                                                                                                                                                                                     |
+
+You have only the volumes of the components you added. See [Manage components](/self-hosting/operate/manage-components).
+
+### The install folder
+
+| Path                          | What it holds                                                                                                                                   |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/opt/metis-suite/.env`       | Every app secret, including the encryption key, the app secret, the database credentials and the setup code.                                    |
+| `/opt/metis-suite/env/`       | The keys of the server's object storage and of the Resend gateway's database, each gateway's admin token (`API_TOKEN`), and the Resend API key. |
+| `/opt/metis-suite/Caddyfile`  | Caddy's settings. The CLI writes it again on every change.                                                                                      |
+| `/opt/metis-suite/snapshots/` | The upgrade snapshot (see below).                                                                                                               |
+
+The folder also holds the CLI's record of which components are on, their options and the release you run. Back up the whole folder. `/etc/metis/install-dir` tells the CLI where the folder is.
+
+If your databases are on Turso or another database server, they live there instead of in the `metis-sqld` volume. The updater then takes no snapshot, so back them up before every upgrade.
 
 :::warning[The encryption key and the database belong together]
 The passwords and tokens in the database can be read only with the `METIS_ENCRYPTION_KEY` that was in use when they were stored. A database backup without its key is not enough to bring connections back: every user would have to reconnect every mailbox, calendar, drive and address book. Keep a copy of `.env`, or at least the key, with every database backup, and store it somewhere other than the server.
@@ -33,17 +48,18 @@ The passwords and tokens in the database can be read only with the `METIS_ENCRYP
 
 ## The upgrade snapshot is not a backup
 
-When your instance uses the bundled database server, the updater copies the database before each upgrade from the dashboard. It keeps that copy so that you can [undo the last upgrade](/self-hosting/operate/upgrade-and-undo#undo-the-last-upgrade).
+When your database is on the server's own database server, the updater copies it before each upgrade, from the dashboard or with `metis update`. It keeps that copy so that you can [undo the last upgrade](/self-hosting/operate/upgrade-and-undo#undo-the-last-upgrade).
 
 Do not rely on it as a backup:
 
 - There is only one. Each successful upgrade replaces it, and an undo uses it up.
 - It sits on the same server as the database, so it is lost with the server.
 - It holds the database only, not `.env` and its encryption key.
-- A bootstrap run takes no snapshot.
+- `sudo metis update --no-backup` takes no snapshot, and removes the one kept for undo.
+- It holds only the `metis-sqld` volume: not the Resend gateway's own database (`metis-sqld-resend`) or its mail.
 - With Turso or your own database server, there is no snapshot at all.
 
-The folder holds a full copy of your database, so protect it as you protect the `metis_sqld` volume. It needs disk space: during an upgrade, the server can hold two copies at once. If you delete the folder, you lose the undo.
+The `/opt/metis-suite/snapshots/` folder holds a full copy of your database, so protect it as you protect the `metis-sqld` volume. It needs disk space: during an upgrade, the server can hold two copies at once. If you delete the folder, you lose the undo.
 
 ## Mailbox gateways
 

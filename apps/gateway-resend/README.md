@@ -52,6 +52,28 @@ state, and only mail received after setup exists — there is no history import.
 | `BLOB_ENDPOINT` `BLOB_BUCKET` `BLOB_KEY_ID` `BLOB_SECRET` | no       | S3-compatible object storage (R2, S3, MinIO, RustFS) for raw MIME and attachments. Set all four or none — with none, blobs go in `BLOB_DIR`.                                                        |
 | `BLOB_REGION`                                             | no       | Defaults to `auto` (correct for R2).                                                                                                                                                                |
 
+## Setup with the metis CLI
+
+On a Metis server with a domain, one command adds the domain to Resend with
+receiving on, creates its DNS records (through Cloudflare when
+`CLOUDFLARE_API_TOKEN` is set and the zone is there, otherwise it prints them),
+waits for verification, creates the webhook, runs this image with its own
+database and registers the gateway in Metis:
+
+```sh
+sudo RESEND_API_KEY=... metis add gateway-resend --domain example.com
+```
+
+The gateway is served at `resend.` plus your Metis domain (`--host` changes
+it). `--database stack` keeps its rows in a namespace on the server's sqld
+instead of a sqld of its own, and `--blobs objstore` keeps blobs in the
+server's object storage. With the gateway running elsewhere, `metis add
+gateway-resend --endpoint https://gateway.example.com --domain example.com`
+sets up only the Resend side and prints the values to set on the gateway. Mint
+mailbox tokens with `metis gateway token create alice@example.com`.
+
+The steps below do the same by hand.
+
 ## Setup
 
 The published image is `ghcr.io/trymetis/metis-gateway-resend`, tagged with

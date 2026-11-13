@@ -5,7 +5,84 @@ description: Deploy a Cloudflare Worker that receives, stores and sends mail for
 
 The Cloudflare Email gateway is a Cloudflare Worker. It receives mail through Email Routing, stores messages in D1 with raw mail and attachments in R2, and sends through Cloudflare Email Sending. You deploy one Worker per domain.
 
-## Before you start
+You can set it up in one command with the `metis` CLI, or by hand.
+
+## Set it up with the metis CLI
+
+### Before you start
+
+- The domain is a zone on your Cloudflare account, and you use the zone itself, such as `example.com`, not a name inside it. Email Routing needs Cloudflare DNS.
+- Your Cloudflare account is on the **Workers Paid** plan, which Email Sending needs to send to any recipient. Email Sending is in beta.
+- A Cloudflare API token with these permissions: **Account, Workers Scripts: Edit**, **Account, D1: Edit**, **Account, Workers R2 Storage: Edit**, **Zone, Email Routing: Edit**, **Zone, DNS: Edit** and **Zone, Zone: Read**.
+
+### On the server
+
+On a server the `metis` CLI runs, pass the token on the same line:
+
+```bash
+sudo CLOUDFLARE_API_TOKEN=your-cloudflare-token metis add gateway-cloudflare --domain example.com
+```
+
+Without `CLOUDFLARE_API_TOKEN`, the command asks for the **Cloudflare API token**. It never stores the token.
+
+By default, every address on the domain goes to the gateway (a catch-all). Aliases then work with no setup, but the domain accepts more spam. Mail for an address with no token is kept, and it appears once you create a token for that address. To route only some addresses instead, list them:
+
+```bash
+sudo CLOUDFLARE_API_TOKEN=your-cloudflare-token metis add gateway-cloudflare --domain example.com --addresses alice@example.com,bob@example.com
+```
+
+The command first prints "Needs: the domain's zone on this Cloudflare account, Workers Paid (Email Sending to any recipient), and Email Sending, which is in beta." Then it deploys the gateway for the release your instance runs. Each resource is named after the domain, such as `metis-mail-example-com` for `example.com`:
+
+1. "Downloaded the gateway for 1.4.0"
+2. "D1 database metis-mail-example-com", with the gateway's tables
+3. "R2 bucket metis-mail-example-com-raw"
+4. "Worker https://metis-mail-example-com.example-account.workers.dev", with its admin token
+5. "Email Routing to the Worker": Email Routing is turned on, with a catch-all or one rule for each address
+6. The DNS records Email Sending needs, then "Email Sending for example.com"
+
+The admin token is kept on the server, in `/opt/metis-suite/env/`. The command adds the gateway to the **Cloudflare Email** server list, named after the domain, and stores it at once. Then create a mailbox token for each address with `sudo metis gateway token create alice@example.com`. See [Mailbox tokens](/self-hosting/mail-gateways/mailbox-tokens).
+
+The gateway stays on its release when you upgrade your instance. To move it to the release your instance runs, run the same `metis add` command again.
+
+### From your computer
+
+To set up the gateway for an instance on a container platform or Vercel, run the command on your computer with `--remote`, and the release your instance runs:
+
+```bash
+CLOUDFLARE_API_TOKEN=your-cloudflare-token metis add gateway-cloudflare --remote --domain example.com --version 1.4.0
+```
+
+It works against your Cloudflare account only, and then prints:
+
+- "The gateway's admin token (API_TOKEN), shown once; metis gateway token needs it:", followed by the token. Keep it: you need it to create mailbox tokens. Each run sets a new admin token, so keep the one from your last run.
+- "Add this server under Dashboard → System, or store it with metis config set --env-file:", followed by the server entry, and the same entry as a line such as `METIS_CLOUDFLARE_SERVERS=[{"id":"metis-cloudflare-example-com","name":"example.com","domain":"example.com","endpoint":"https://metis-mail-example-com.example-account.workers.dev"}]`.
+
+Add the server under **Dashboard**, **System**, **Cloudflare Email**, or store it with `metis config set --env-file`. See [Change settings away from the server](/self-hosting/configure/how-configuration-works#change-settings-away-from-the-server).
+
+### Remove it
+
+```bash
+sudo CLOUDFLARE_API_TOKEN=your-cloudflare-token metis remove gateway-cloudflare --domain example.com
+```
+
+It deletes the routing rules that point at the Worker, turns off a catch-all that points at it, deletes the Worker and removes the server entry. Mail stays in D1 and R2. With `--purge`, it also deletes the D1 database and the R2 bucket. R2 deletes only an empty bucket, so empty it in the Cloudflare dashboard first.
+
+From your computer, use `CLOUDFLARE_API_TOKEN=your-cloudflare-token metis remove gateway-cloudflare --remote --domain example.com`. It ends with "Remove the server metis-cloudflare-example-com from Dashboard → System, or drop it from METIS_CLOUDFLARE_SERVERS."
+
+### If something goes wrong
+
+| Message                                                                                           | What to do                                                                                      |
+| ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| "no zone for example.com is on this Cloudflare account"                                           | Add the domain to the Cloudflare account the token belongs to, or use a token for that account. |
+| "Email Routing works on a zone apex; mail.example.com is inside the zone example.com"             | Use the zone itself, such as `example.com`.                                                     |
+| "checking the Cloudflare API token:" or "the Cloudflare API token is" followed by a reason        | Check the token in the Cloudflare dashboard, or create a new one.                               |
+| "pass --domain example.com"                                                                       | Add `--domain`.                                                                                 |
+| "no Cloudflare gateway serves example.org; pass --domain"                                         | No gateway on this server serves that domain. Check the domain.                                 |
+| "deleting the R2 bucket metis-mail-example-com-raw (empty it in the Cloudflare dashboard first):" | Empty the bucket in the Cloudflare dashboard, then run the command again.                       |
+
+## Set it up by hand
+
+### Before you start
 
 - The domain is a zone on your Cloudflare account. Email Routing needs Cloudflare DNS.
 - Your Cloudflare account is on the **Workers Paid** plan, which Email Sending needs to send to any recipient.
@@ -21,7 +98,7 @@ cd apps/gateway-cloudflare
 
 Each Metis Suite server release also publishes the built Worker, without its bindings, so you can deploy it with your own tools. For release 1.2.3, it is at `https://sh.trymetis.email/v1.2.3/gateway-cloudflare.zip`, and the folder's `SHA256SUMS` lists its checksum. Use the release your instance runs. You supply the bindings yourself, as `wrangler.jsonc` in the source code names them: the D1 database as `DB`, the R2 bucket as `RAW`, the sending binding as `EMAIL`, and the `MAIL_DOMAIN` variable. You also set the `API_TOKEN` secret.
 
-## Deploy the Worker
+### Deploy the Worker
 
 <Steps>
   <Step title="Create the database">

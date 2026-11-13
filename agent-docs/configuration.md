@@ -20,6 +20,7 @@ See also [AGENTS.md](../AGENTS.md), [servers.md](servers.md), [database.md](data
 | The snapshot                                               | `src/config/runtime.ts` → `getInstanceConfig`, `loadInstanceConfig`, `startInstanceConfigPoll`, `onInstanceConfigChange`, `sectionCached`, `aiEnabled`, `phishingDetectionEnabled`, `decisionEnabled`, `decisionClassifierBatch`                                           |
 | What every process does on a change                        | `src/config/watch.ts` → `watchInstanceConfig` · registered by `src/instrumentation.ts` and `scripts/workflow-worker.ts`                                                                                                                                                    |
 | Seeding once                                               | `src/config/seed.ts` → `seedInstanceConfig` · called by `scripts/preflight.ts` and the first dashboard save                                                                                                                                                                |
+| Forced keys                                                | `src/config/seed.ts` → `forceInstanceConfigKeys`, `forcedSections`, `mergeCliServers` · read in `scripts/preflight.ts`                                                                                                                                                     |
 | Pluggable drivers                                          | `src/services/{cache,decision,llm,mailer,phishing-detection,workflow-runner}/` · decision model over the AI SDK's `experimental_decide`: `drivers/systemone.ts` (`@ai-sdk/typesafe-ai`, any `/systemone` server by base URL), `drivers/openai.ts` (`openai.decisionModel`) |
 | Dashboard forms, saves, history                            | `src/dashboard/config-forms.ts` · `src/dashboard/system-config.ts` ([dashboard.md](dashboard.md))                                                                                                                                                                          |
 | Annotated example                                          | `.env.example`                                                                                                                                                                                                                                                             |
@@ -65,11 +66,20 @@ See also [AGENTS.md](../AGENTS.md), [servers.md](servers.md), [database.md](data
 
 - **The database wins once a row exists.** Preflight seeds an empty table, and later only a section the row has never stored; afterwards it only warns for each section the environment or config file sets to something other than the stored value (`suppliedSections`).
   - The owner puts a section back to the environment and config file with the dashboard's **Reset to environment**, which stores that section of `instanceSeed` as a new `reset` version ([dashboard.md](dashboard.md)); `instanceSeed` is read at boot, so a changed variable needs a restart first.
+- **`METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS` makes one preflight run store the named variables' sections from the environment over the stored config.** The `metis` CLI passes it to one preflight container after a config change and never writes it to a file.
+  - The double underscore keeps it apart from every config variable.
+  - It must never be set on a platform whose build or start command runs preflight on every deploy, because every deploy would then overwrite the dashboard's edits to those sections.
+  - A forced section is stored whole from `instanceSeed`, exactly as **Reset to environment** stores it, so the CLI always writes every variable of a section it forces.
+  - A shared variable (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`) forces every section that lists it.
+  - A name in no section of `SECTION_ENV_VARS` (a boot-only variable included) stops preflight before migrations, so nothing is written.
+- **Server entries whose id starts with `metis-` belong to the CLI** (`mergeCliServers`).
+  - Forcing a `*Servers` section keeps every stored entry without the prefix and replaces every stored `metis-` entry with the environment's `metis-` entries, so an entry removed from `.env` and forced is removed.
+  - Environment entries without the prefix only seed a first run; forcing ignores them.
 - **One table, one current row.** `is_current` carries a partial unique index; every write is one short transaction that clears the current flag where `version` is the expected one, refuses when that touched nothing, then inserts. SQLite has no `FOR UPDATE`; the conditional update is the fence.
 - **Each secret is its own `encryptedText` column; only the server lists are JSON**, in one sealed `servers` column, because they are variable-shaped lists that carry S3 secret keys. Adding a setting is a schema change and a migration ([database.md](database.md)).
 - **Cross-section checks (`validateInstanceConfig`, against the boot config) run on every candidate config, and only there.**
   - They cover: a decision switch on with the LLM disabled, a relayed server listed without `METIS_DRIVE_RELAY_SECRET`, and the `internal` runner on a known serverless host.
-  - A dashboard save refuses a candidate that fails them.
+  - A dashboard save and a forced preflight run refuse a candidate that fails them.
   - Seeding warns and stores it anyway, so a first deploy (the default `internal` runner on Vercel, for example) never fails on them.
   - They cannot run at boot, because the LLM and server lists a process boots with are not the stored ones.
 - **No provider at all is a warning** (`instanceConfigWarnings`): preflight logs it when seeding, a save returns it, and the System overview shows it.
@@ -102,6 +112,12 @@ See also [AGENTS.md](../AGENTS.md), [servers.md](servers.md), [database.md](data
   - A concurrent seed loses on the partial unique index and falls through to the existing-row branch.
   - With a row, it first fills each section that row has never stored (`unstoredSections`: its marker column is NULL, as on a row written before the section's columns existed) from `instanceSeed`, in one new `seed` version, then returns the supplied sections that differ from the stored ones.
   - The first dashboard save also seeds when no row exists, so a development database (`next dev` never runs preflight) needs no preflight run.
+- **Forcing** (`forceInstanceConfigKeys`), right after seeding in the same preflight run.
+  - It builds the candidate from the current row and the forced sections, parses each forced section through its `instanceConfigSchema` shape (a failure names the field through `formatConfigError`), runs `validateInstanceConfig`, and exits preflight non-zero on any finding.
+  - It stores one `forced` version with `changed_keys` set to the forced sections, retried on `ConfigVersionConflictError`, and logs `[preflight] forced sections=google version=12 keys=GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET`.
+  - `instanceConfigWarnings` findings go to the deploy checks; the drift warning skips the forced sections.
+  - It writes no audit event, like a dashboard config edit; the version row, with no user, is the record.
+  - Running processes pick the new version up on their next poll.
 - **What the variables themselves do not say** (`.env.example` annotates every variable):
   - An `https://` `BETTER_AUTH_URL` turns on secure cookies.
   - `MAIL_FROM_AUTH` and `MAIL_FROM_INVITE` fall back to `MAIL_FROM`.

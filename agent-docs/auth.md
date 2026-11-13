@@ -42,7 +42,7 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
   - `createAccount` in `signup.ts` writes `user`, `account` (`providerId: "credential"`, hashed with Better Auth's `hashPassword`), `legal_consent`, the personal workspace and `defaultWorkspaceSlug`; `ownerSignup` and `signUpFromInvite` both call it.
   - The workspace and default slug are written explicitly because `databaseHooks.user.create.after` in `server.ts` fires only on Better Auth's own inserts.
   - Both pages then call `signIn.email` client-side and land on `/2fa/setup`.
-- **`METIS_OWNER_EMAIL` is required and names the one instance owner.** Boot and preflight fail without it, naming the variable (`appConfigSchema` in `src/config/schema.ts`); `bootstrap.sh` will not write an `.env` without it.
+- **`METIS_OWNER_EMAIL` is required and names the one instance owner.** Boot and preflight fail without it, naming the variable (`appConfigSchema` in `src/config/schema.ts`); `metis setup` refuses to run without it ([cli.md](cli.md)).
 - **The owner account comes only from `/setup`, which needs `METIS_SETUP_CODE`.** `verifySetupCode` compares sha256 digests with `timingSafeEqual`; the code lives only in the operator's environment, so it protects a deployment nobody watches boot.
   - `/setup` is open exactly while no account has the owner address (`ownerHasAccount`), and only for that address: the page shows it read-only and `signup.first` refuses any other.
   - Handing over ownership is changing `METIS_OWNER_EMAIL` and restarting; the new owner signs in, or claims the address on `/setup` when it has no account yet. Preflight's `syncOwnerRole` makes the previous owner an Admin ([dashboard.md](dashboard.md)).

@@ -15,7 +15,7 @@ Where the schema lives and how it reaches a database through migrations, the one
 | The runner and the interface       | `src/db/migrations.ts` → `migrateDatabase`, `Migration`, `MigrationDb`, `schemaMigration` · run by `scripts/preflight.ts` and `scripts/migrate.ts` (`db:migrate`)           |
 | The drift check                    | `scripts/check-migrations.ts` (`db:check`, run in CI)                                                                                                                       |
 | `db:push` / `db:export`            | `drizzle.config.ts`                                                                                                                                                         |
-| sqld key and token generation      | `bootstrap.sh` (repository root) → `gen_sqld_auth`; `bash bootstrap.sh sqld-auth` prints a pair                                                                             |
+| sqld key and token generation      | `apps/cli/internal/secrets` → `NewSqldAuth`; `metis sqld-auth` prints a pair                                                                                                |
 
 ## Rules
 
@@ -46,7 +46,7 @@ Where the schema lives and how it reaches a database through migrations, the one
 ## How it works
 
 - **sqld JWT auth.** sqld holds only the Ed25519 public key (`SQLD_AUTH_JWT_KEY`); the app holds an EdDSA JWT with the claim `{"a":"rw"}`.
-  - The key is server-wide, so one token authorizes both namespaces; bootstrap writes it into `DATABASE_AUTH_TOKEN` and `MASTRA_DATABASE_AUTH_TOKEN`, keeping tokens exported before it ran.
+  - The key is server-wide, so one token authorizes every namespace; `metis setup` writes it into `DATABASE_AUTH_TOKEN` and `MASTRA_DATABASE_AUTH_TOKEN`.
   - The private key is discarded, so rotating means generating a new pair.
 - **Namespaces.** The stack's sqld holds `app` and `mastra` as separate databases, reached at `http://app.sqld:8080` and `http://mastra.sqld:8080` ([deployment.md](deployment.md)).
 - **Migrating** (`migrateDatabase`).

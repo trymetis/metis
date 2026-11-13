@@ -1,11 +1,11 @@
 ---
 title: Deploy on a container platform
-description: Run the published Metis Suite images on Railway, Render, Fly.io, Google Cloud Run, Kubernetes or any host that runs container images, without Docker Compose.
+description: Run the published Metis Suite images on Railway, Render, Fly.io, Google Cloud Run, Kubernetes or any host that runs container images.
 ---
 
-Use this page to run Metis Suite on a platform that runs container images, such as Railway, Render, Fly.io, Google Cloud Run or Kubernetes. You use the same published images as the Compose stack, but you start them yourself.
+Use this page to run Metis Suite on a platform that runs container images, such as Railway, Render, Fly.io, Google Cloud Run or Kubernetes. You use the same published images as a server the `metis` CLI runs, but you start them yourself.
 
-Without the bootstrap script and the Compose stack, a few jobs become yours:
+Without the `metis` CLI running your server, a few jobs become yours:
 
 - You create the secrets and set every environment variable on the platform.
 - You provide the two databases, for example on Turso.
@@ -22,7 +22,6 @@ All images are public, on `ghcr.io/trymetis/metis`. This page uses release `1.2.
 | `ghcr.io/trymetis/metis:1.2.3`           | The app. It listens on port 3000.                                                                  | Always.                        |
 | `ghcr.io/trymetis/metis:1.2.3-preflight` | Preflight: a one-time run that prepares the database for this version, then exits when it is done. | Once for every deploy.         |
 | `ghcr.io/trymetis/metis:1.2.3-worker`    | The background worker.                                                                             | Only with the `bullmq` runner. |
-| `ghcr.io/trymetis/metis:1.2.3-updater`   | The updater. It works only inside the Compose stack.                                               | Never on these platforms.      |
 
 Pin a release number. Do not use the `latest` tags, so that every image you run is the same version. Pre-releases have no `latest` tags. Releases are listed on the [Metis Suite releases page](https://github.com/trymetis/metis/releases), tagged `app-v` and the release number, such as `app-v1.2.3`.
 
@@ -35,7 +34,7 @@ Preflight runs only from the preflight image. The app image does not include it.
 - **An `https://` address** for the app: the address the platform gives you, or your own domain pointed at the platform.
 - **OpenSSL**, on your own computer, to generate the secrets.
 
-You can also use a libSQL server (sqld) that you run yourself. The platform must be able to reach it over the network. Set `METIS_DB_DRIVER=sqld`. Both database URLs must start with `http://`, `https://`, `ws://` or `wss://`. Both tokens are required: `DATABASE_AUTH_TOKEN` and `MASTRA_DATABASE_AUTH_TOKEN`. Both databases must exist on the server before the first preflight. This guide does not cover setting one up outside the Compose stack. See [Install with Docker Compose](/self-hosting/install/install-with-docker-compose) and the [database variables](/self-hosting/reference/environment-variables#database).
+You can also use a libSQL server (sqld) that you run yourself. The platform must be able to reach it over the network. Set `METIS_DB_DRIVER=sqld`. Both database URLs must start with `http://`, `https://`, `ws://` or `wss://`. Both tokens are required: `DATABASE_AUTH_TOKEN` and `MASTRA_DATABASE_AUTH_TOKEN`. Both databases must exist on the server before the first preflight. To make a matching key and token for it, run `metis sqld-auth` on any computer that has the `metis` CLI. It prints three lines: `SQLD_AUTH_JWT_KEY`, the key sqld checks tokens with, then `DATABASE_AUTH_TOKEN` and `MASTRA_DATABASE_AUTH_TOKEN`, which hold the same token. See [Use the metis CLI from your computer](#use-the-metis-cli-from-your-computer) and the [database variables](/self-hosting/reference/environment-variables#database).
 
 Do not use the `local` database driver on a platform, even with a persistent volume. It is for development only.
 
@@ -220,11 +219,11 @@ Do not use the `local` database driver on a platform, even with a persistent vol
     | Port         | `3000`. If the platform sets the `PORT` variable, the app listens on that port instead.                                       |
     | Address      | The app listens on all addresses (`HOSTNAME`, default `0.0.0.0`). Leave it as it is unless your platform needs another value. |
     | Health check | `/api/livez` to decide when to restart the app, and `/api/readyz` to decide when to send it traffic.                          |
-    | Stop timeout | Long enough for open requests to finish. The Compose stack gives the app 30 seconds. See below.                               |
+    | Stop timeout | Long enough for open requests to finish. A server the `metis` CLI runs gives the app 30 seconds. See below.                               |
     | Disk         | None.                                                                                                                         |
 
     The platform handles HTTPS. `METIS_DOMAIN`, `APP_PORT` and Caddy belong
-    to the Compose stack only, so you do not need them. See
+    to a server the `metis` CLI runs, so you do not need them. See
     [Health checks](/self-hosting/operate/health-checks).
 
     **Stop timeout.** The stop timeout is how long the platform waits
@@ -286,7 +285,7 @@ Do not use the `local` database driver on a platform, even with a persistent vol
 
 | Topic                  | On a container platform                                                                                                                                                                                                                                                                                                                            |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Upgrades               | The **Updates** page does not appear, because it needs the updater from the Compose stack. You upgrade by deploying a new version (see below).                                                                                                                                                                                                     |
+| Upgrades               | The **Updates** page does not appear, because it needs the updater on a server the `metis` CLI runs. You upgrade by deploying a new version (see below).                                                                                                                                                                                           |
 | Undo                   | There are no upgrade snapshots, so an upgrade cannot be undone. Back up your databases before every upgrade.                                                                                                                                                                                                                                       |
 | HTTPS                  | The platform serves HTTPS. If you later change the address, update `BETTER_AUTH_URL` and register the new redirect URIs with your OAuth providers. See [OAuth providers](/self-hosting/configure/sign-in-providers). If **Public URL for webhooks and push** is not set, every webhook address changes too, so update the services that call them. |
 | Relayed drives         | WebDAV, FTP, FTPS, SFTP and relayed S3 transfers work on a container that stays running. The **Transfers per user, per process** limit counts on each container separately. See [Drive transfers](/self-hosting/configure/drive-transfers).                                                                                                        |
@@ -310,6 +309,44 @@ Workflows can start from a webhook, or from a push message that Google Calendar,
 - **Public URL.** Webhook addresses use `BETTER_AUTH_URL`, unless you set **Public URL for webhooks and push** under **Dashboard**, **System**, **Workflow runner**. Push works only while that field is set. Without it, those triggers check for changes every few minutes. Enter an address that starts with `https://`.
 - **Its variable is for new instances only.** Before the first preflight of a new instance, you can set the field's starting value with `METIS_WORKFLOW_PUBLIC_URL`. On an instance that already runs, the variable is not read, and it only adds a warning to the deploy checks. Set the field in the dashboard instead.
 - **Only from these IPs.** This setting of a webhook trigger checks the caller's address, found as described in [Visitor addresses behind the load balancer](#visitor-addresses-behind-the-load-balancer).
+
+## Use the metis CLI from your computer
+
+The `metis` CLI also runs on your own computer, away from the platform. There it changes only outside services and an environment file you keep, such as `production.env` with the same variables as the app. To download it, see [Install the CLI on your computer](/self-hosting/reference/cli-commands#install-the-cli-on-your-computer).
+
+Pass `--version` with the release your deployment runs, such as `1.2.3`.
+
+- **Change dashboard settings**, such as an OAuth client, without opening the dashboard. The command updates the file, lists what to set on the platform, and stores the dashboard settings in the database once, through that release's preflight image:
+
+  ```bash
+  metis config set --env-file production.env --version 1.2.3 GOOGLE_CLIENT_ID=1234-abc.apps.googleusercontent.com GOOGLE_CLIENT_SECRET=your-client-secret
+  ```
+
+  The databases must be reachable from your computer. See [Change settings away from the server](/self-hosting/configure/how-configuration-works#change-settings-away-from-the-server).
+
+- **Set up Google sign-in.** The file must contain `BETTER_AUTH_URL`. See [Set up Google with the metis CLI](/self-hosting/configure/sign-in-providers#set-up-google-with-the-metis-cli).
+
+  ```bash
+  metis connect google --env-file production.env --version 1.2.3
+  ```
+
+- **Set up a mail gateway.** For the Resend gateway, run the image `ghcr.io/trymetis/metis-gateway-resend:1.2.3` on your platform first, then set up the Resend side and print the gateway's values:
+
+  ```bash
+  metis add gateway-resend --endpoint https://resend-gateway.example.com --domain example.com
+  ```
+
+  The Cloudflare Email and Amazon SES gateways run on Cloudflare and AWS, so you set them up with `--remote`, for example `metis add gateway-cloudflare --remote --domain example.com --version 1.2.3`. See [Mail gateways](/self-hosting/mail-gateways).
+
+- **Create mailbox tokens** on a gateway:
+
+  ```bash
+  metis gateway token create alice@example.com --endpoint https://resend-gateway.example.com --admin-token your-admin-token
+  ```
+
+:::danger[Never set METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS on the platform]
+The CLI stores dashboard settings by passing `METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS` to one preflight run. Never set this variable yourself in the platform's environment. Every later preflight would then store those settings from the environment again, and overwrite what the owner or an admin changed in the dashboard.
+:::
 
 ## Upgrade
 

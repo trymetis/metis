@@ -200,6 +200,105 @@ If you clear a provider's client, every account connected through it is quaranti
 The redirect URI changes when your app's address changes. After you move to a new domain, register the new redirect URI with each provider.
 :::
 
+## Set up Google with the metis CLI
+
+The `metis` CLI can guide you through the Google OAuth client and store it for you. Google does not let anyone create an OAuth client through its API, so you still make the consent screen and the client in the Google Cloud console yourself. The CLI shows a link to each page and checks the result.
+
+On a server the `metis` CLI runs:
+
+```bash
+sudo metis connect google
+```
+
+Away from the server, for a container platform or Vercel, run it on your own computer with the deployment's environment file and release. See [Change settings away from the server](/self-hosting/configure/how-configuration-works#change-settings-away-from-the-server).
+
+```bash
+metis connect google --env-file production.env --version 1.2.3
+```
+
+The redirect URI comes from `BETTER_AUTH_URL` in `.env` or in the file, for example `https://mail.example.com/api/connections/google/callback`. Set your domain first. See [Domain and HTTPS](/self-hosting/install/domain-and-https).
+
+<Steps>
+  <Step title="Pick the project">
+    If the `gcloud` CLI is signed in on the machine, the CLI asks for the
+    **Project ID**: "gcloud is signed in. Leave this blank to create a new
+    project." Leave it blank, and it creates a project named Metis, with an
+    id such as `metis-abcdef`, and prints "Created the project
+    metis-abcdef". It then turns on the APIs Metis Suite needs and prints
+    "Turned on the Gmail, Calendar, Drive and People APIs".
+
+    Otherwise, it prints a link to create a project, and a link for each
+    API to turn on: `gmail.googleapis.com`,
+    `calendar-json.googleapis.com`, `drive.googleapis.com` and
+    `people.googleapis.com`. Turn them on, then enter the **Project ID**.
+
+    On a server, `sudo` runs `gcloud` as root, so it counts as signed in
+    only if root's `gcloud` is.
+
+  </Step>
+
+  <Step title="Follow the four screens">
+    The CLI shows four screens, each with a link to the right page of your
+    project in the Google Cloud console:
+
+    1. **Branding**: "Set the app name (Metis) and a support email."
+    2. **Audience**: with Google Workspace, choose **Internal**. Otherwise
+       choose **External**, then **Publish app**. People then see Google's
+       "unverified app" screen before they consent, and the project can
+       sign up at most 100 new users over its lifetime. Leave **Testing**
+       alone: its tokens expire after 7 days.
+    3. **Data access**: add the scopes it lists:
+       `https://www.googleapis.com/auth/gmail.modify`,
+       `https://www.googleapis.com/auth/gmail.send`,
+       `https://www.googleapis.com/auth/calendar`,
+       `https://www.googleapis.com/auth/drive` and
+       `https://www.googleapis.com/auth/contacts`.
+    4. **Client**: "Choose Web application and add this authorised redirect
+       URI:" followed by your redirect URI.
+
+  </Step>
+
+  <Step title="Enter the client ID and secret">
+    Paste the **Client ID**, which ends in `.apps.googleusercontent.com`,
+    and the **Client secret**. The CLI checks the pair with Google. When
+    Google accepts it, it prints "Google accepts the client".
+
+  </Step>
+
+  <Step title="Let it store the client">
+    The CLI stores the client as `metis config set` does with
+    `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`. On a server, it writes
+    them to `.env` and stores the **Google** card in the database, which
+    **History** shows as a **Server** version. Away from the server, it
+    updates your file and stores them through the release's preflight
+    image. See
+    [Change dashboard settings with the metis CLI](/self-hosting/configure/how-configuration-works#change-dashboard-settings-with-the-metis-cli).
+
+  </Step>
+</Steps>
+
+If you already have a client, skip the guided screens:
+
+```bash
+sudo metis connect google --client-id 1234-abc.apps.googleusercontent.com --client-secret your-client-secret
+```
+
+| Flag              | What it does                                             |
+| ----------------- | -------------------------------------------------------- |
+| `--client-id`     | An existing client ID, skipping the guided steps.        |
+| `--client-secret` | The secret for `--client-id`.                            |
+| `--project`       | The Google Cloud project to use.                         |
+| `--env-file`      | Away from the server: the deployment's environment file. |
+| `--version`       | With `--env-file`: the release the deployment runs.      |
+| `--yes`           | Go ahead without asking.                                 |
+
+| Message                                                                                          | What to do                                                         |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| "Google does not accept this client ID and secret"                                               | Copy the client ID and secret again from the Google Cloud console. |
+| "without a terminal, pass --client-id and --client-secret"                                       | Run it in a terminal, or pass both flags.                          |
+| "away from the server, pass --env-file FILE: the deployment's environment, with BETTER_AUTH_URL" | Pass `--env-file` with your deployment's environment file.         |
+| "production.env sets no BETTER_AUTH_URL"                                                         | Add `BETTER_AUTH_URL` to the file.                                 |
+
 ## Add contacts to a provider you already use
 
 If your OAuth client does not include the contacts permission yet, update it in the provider's console, as listed above:

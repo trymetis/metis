@@ -50,7 +50,7 @@ You can upgrade and undo from your instance's owner dashboard at any time, wheth
 1. Open your instance and click your initials at the bottom of the left rail. Choose **Dashboard**.
 2. Open **System**, then **Updates**.
 
-The **Updates** page works as on a self-hosted instance. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo). On Cloud, a snapshot of the database is always taken before an upgrade, so **Undo last upgrade** is offered after a successful upgrade. The steps on that page about the server do not apply to you: the snapshot folder, disk space, the `docker` commands, the bootstrap script and pinning releases. Steps there that mention the server, the stack or the updater service are for Metis Cloud.
+The **Updates** page works as on a self-hosted instance. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo). On Cloud, a snapshot of the database is always taken before an upgrade, so **Undo last upgrade** is offered after a successful upgrade. The steps on that page about the server do not apply to you: the snapshot folder, disk space and the `metis` commands. Steps there that mention the server or the updater are for Metis Cloud.
 
 An automatic update shows on the **Updates** page like an upgrade you started yourself, in the **Last upgrade** card. You can undo it with **Undo last upgrade**. Undo puts the database back as it was when the update started, so everything written since then is lost. See [Undo the last upgrade](/self-hosting/operate/upgrade-and-undo#undo-the-last-upgrade).
 

@@ -1,34 +1,38 @@
 ---
-title: Install with the bootstrap script
-description: Deploy Metis Suite on an Ubuntu server with one script, then find the setup code for the owner account.
+title: Install with the metis CLI
+description: Install Metis Suite on a Linux server with the metis CLI, then find the setup code for the owner account.
 ---
 
-In this tutorial you install a complete Metis Suite instance on a fresh Ubuntu server. The bootstrap script installs Docker, generates every secret, picks the newest release and starts the services. By the end, the app is running and you have the setup code that creates the owner account.
+In this tutorial you install a complete Metis Suite instance on a Linux server. You use the `metis` CLI, a command-line tool that installs and runs Metis Suite. It installs Docker when the server has none, generates every secret, picks the newest release and starts everything. By the end, the app is running and you have the setup code that creates the owner account.
 
-The stack the script starts has these services:
+## What gets installed
 
-- **sqld**: the database server. It holds the app database and the AI memory database, in the `metis_sqld` Docker volume.
-- **preflight**: a one-time check that runs before the app starts on every deploy. It applies the release's changes to the database and checks your settings.
-- **app**: Metis Suite itself.
-- **updater**: upgrades the app when you start an upgrade from the owner dashboard, and undoes the last upgrade if you ask. Before each upgrade from the dashboard, it takes a snapshot (a full copy) of the bundled database.
-- **caddy**: serves the app over HTTPS. It runs only once you set a domain.
+These always run:
+
+- **The app**: Metis Suite itself. It listens on `127.0.0.1:3000` only, so it is not reachable from the internet on its own.
+- **Preflight**: a one-time check that runs before a new app starts. It applies the release's changes to the database and checks your settings.
+- **sqld**: the database server, unless you choose another database. It holds the app database and the AI memory database, in the `metis-sqld` Docker volume.
+
+These are optional. Each one is a component, a part you can add or remove at any time with `metis add` and `metis remove`:
+
+- **Caddy**: serves the app over HTTPS. It comes with a domain.
+- **The updater**: lets you upgrade from **Dashboard**, **System**, **Updates**, and undo the last upgrade. It is on by default.
+- **Workers with Redis**: run background work outside the app.
+- **Object storage**: a drive on your server.
+- **Mail gateways**: mailboxes on your own domain, through Cloudflare Email, Resend or Amazon SES.
+
+See [Manage components](/self-hosting/operate/manage-components).
 
 Everything is installed in `/opt/metis-suite`. Your settings go in `/opt/metis-suite/.env`, which only root can read.
 
+## Before you start
+
+- A server that meets the [requirements](/self-hosting/install/requirements).
+- **The owner email.** The owner is the account that always has full access to the owner dashboard, where you change settings and apply updates. Pick the email address you will sign in with, for example `alice@example.com`. Only this address can create the owner account on the setup page. Later, the owner can give other people access to the dashboard. See [Instance roles](/self-hosting/operate/owner-dashboard#instance-roles).
+- **Your domain, if you have one,** such as `mail.example.com`. You can leave it out and add it later.
+
 <Steps>
-  <Step title="Decide on the owner email">
-    The owner is the account that always has full access to the owner
-    dashboard, where you change settings and apply updates. Pick the email
-    address you will sign in with, for example `you@example.com`.
-
-    The owner email is required. The app does not start without it. Only
-    this address can create the owner account on the setup page. Later, the
-    owner can give other people access to the dashboard. See
-    [Instance roles](/self-hosting/operate/owner-dashboard#instance-roles).
-
-  </Step>
-
-  <Step title="Download the script">
+  <Step title="Download the install script">
     Sign in to the server and download the script:
 
     ```bash
@@ -38,88 +42,125 @@ Everything is installed in `/opt/metis-suite`. Your settings go in `/opt/metis-s
   </Step>
 
   <Step title="Run it">
-    Run the script in interactive mode. It asks for anything you have not
-    exported as an environment variable:
-
     ```bash
-    sudo -E bash bootstrap.sh --interactive
+    sudo sh bootstrap.sh
     ```
 
-    Press Enter to accept a default. The script asks for:
+    The script downloads the `metis` CLI for your server's processor,
+    checks it against its published checksum, installs it as
+    `/usr/local/bin/metis`, and starts `metis setup`. From then on, you run
+    every command as `sudo metis` followed by the command.
 
-    - **METIS_DOMAIN**: your domain. Leave it blank if DNS does not point at
-      the server yet; you can add it later.
-    - **BETTER_AUTH_URL**: the address people use to reach the app. It
-      defaults to `https://` followed by your domain, such as
-      `https://mail.example.com`, or to `http://localhost:3000` without a
-      domain.
-    - **BETTER_AUTH_SECRET** and the other secrets: leave them blank and the
-      script generates them.
-    - **METIS_DB_DRIVER**: `sqld` (the default) runs the bundled database
-      server. Choose `turso` only if your databases are hosted on Turso (see
-      below).
-    - **DATABASE_URL** and **MASTRA_DATABASE_URL**: press Enter to use the
-      bundled database server.
-    - **METIS_SETUP_CODE**: leave it blank to generate one.
-    - **METIS_OWNER_EMAIL**: the owner email from step 1. The prompt reads
-      "METIS_OWNER_EMAIL (the instance owner's email, required)". It has no
-      default, and the script asks again until you enter an email address.
+  </Step>
 
-    The script also generates `METIS_ENCRYPTION_KEY`, which protects every
-    password and token users store when they connect accounts.
+  <Step title="Fill in the form">
+    Setup asks a few questions. Each one is also a flag, so you can answer
+    them on the command line instead (see
+    [Install without questions](#install-without-questions)).
 
-    To run without prompts, for example from cloud-init, export the values
-    you want first and run `sudo -E bash bootstrap.sh`. Anything you do not
-    export is generated or left at its default, except `METIS_OWNER_EMAIL`,
-    which you must export:
+    - **Domain**: "The hostname people open, such as mail.example.com.
+      Leave it blank to reach Metis only through an SSH tunnel for now."
+      Write the name only, without `https://`.
+    - **Owner email**: "The instance owner; the setup page accepts only
+      this address."
+    - **Database**: **sqld on this server** (the usual choice), or **A
+      libSQL database elsewhere (Turso or your own sqld)**. See
+      [Use Turso or your own database server](#use-turso-or-your-own-database-server).
+    - **Components**: tick what you want now. **Updater: upgrade from
+      Dashboard → Updates** is ticked already. The others are **Workers
+      with Redis: run workflows outside the app**, **Object storage: a
+      drive on this server**, and the three mail gateways. The Resend
+      gateway needs a domain.
+    - **Google sign-in**: **Later, with metis connect google**, or **Now,
+      once Metis runs**. This lets people connect Gmail, Google Calendar,
+      Drive and Contacts. See
+      [Set up Google with the metis CLI](/self-hosting/configure/sign-in-providers#set-up-google-with-the-metis-cli).
 
-    ```bash
-    export METIS_OWNER_EMAIL=you@example.com
-    sudo -E bash bootstrap.sh
+    If you use a screen reader, run the script as
+    `sudo sh bootstrap.sh --accessible` to get plain prompts instead of the
+    form.
+
+  </Step>
+
+  <Step title="Confirm">
+    Setup shows a summary under "Install Metis?", for example:
+
+    ```
+    Install folder: /opt/metis-suite
+    Owner: alice@example.com
+    Domain: mail.example.com (Caddy with HTTPS)
+    Database: sqld on this server
+    Components: updater
     ```
 
-    Without it, the script stops with "METIS_OWNER_EMAIL is required:
-    export METIS_OWNER_EMAIL=you@example.com before running, or run with
-    --interactive".
+    Answer **Yes** to install. **No** stops with "setup cancelled", and
+    nothing is installed.
+
+  </Step>
+
+  <Step title="Wait for it to start">
+    Setup prints what it does. It installs Docker if needed ("Docker Engine
+    answers"), picks the release ("Using Metis 1.4.0"), downloads the images
+    and starts everything. When the app is up, it prints "Metis is running"
+    and then:
+
+    - With a domain: "Open https://mail.example.com/setup once DNS for
+      mail.example.com points at this server."
+    - Without a domain: "Metis listens on 127.0.0.1:3000. Reach it with ssh
+      -L 3000:127.0.0.1:3000, then open http://localhost:3000/setup," and
+      "or give it a domain with sudo metis domain mail.example.com."
+    - **Setup code:** the code that creates the owner account. It is also
+      kept as `METIS_SETUP_CODE` in `/opt/metis-suite/.env`.
+
+    Setup creates no DNS record. Point your domain at the server yourself,
+    or let `metis domain` create it later on Cloudflare. See
+    [Domain and HTTPS](/self-hosting/install/domain-and-https).
 
   </Step>
 
   <Step title="Back up the encryption key">
-    Copy `METIS_ENCRYPTION_KEY` from `/opt/metis-suite/.env` to a safe place,
-    such as a password manager.
+    Setup warns: "Back up METIS_ENCRYPTION_KEY from /opt/metis-suite/.env;
+    losing it means reconnecting every mailbox, calendar, drive and address
+    book." Copy the key to a safe place, such as a password manager:
+
+    ```bash
+    sudo grep METIS_ENCRYPTION_KEY /opt/metis-suite/.env
+    ```
 
     :::warning[Losing this key means reconnecting everything]
-    Without the encryption key, the stored passwords and tokens cannot be
-    read. Every user would have to reconnect every mailbox, calendar,
-    drive and address book. Keep a copy somewhere other than the server.
+    The encryption key protects every password and token users store when
+    they connect accounts. Without it, they cannot be read. Every user would
+    have to reconnect every mailbox, calendar, drive and address book. Keep
+    a copy somewhere other than the server.
     :::
 
   </Step>
 
-  <Step title="Read the summary">
-    When the stack is up, the script prints:
+  <Step title="Finish the gateways and Google">
+    If you ticked a mail gateway, setup now sets it up ("Setting up
+    gateway-resend"). It asks for the **Mail domain**, such as
+    `example.com`. The Amazon SES gateway also asks for the **SES region**
+    and a **Database URL** and **Database token**. The Amazon SES gateway
+    does not ask for AWS credentials. Pass them on the install line, for
+    example `sudo AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE AWS_SECRET_ACCESS_KEY=your-secret-access-key sh bootstrap.sh`,
+    or add the gateway later with `sudo metis add gateway-ses`, its flags
+    and the AWS key on the same line, as
+    [Set up the Amazon SES gateway](/self-hosting/mail-gateways/amazon-ses)
+    shows.
 
-    - The address the app runs at.
-    - Two commands for later: one shows the status of the services, the
-      other follows the app's log.
-    - Without a domain, an SSH tunnel command for reaching the app.
-    - **Create the owner account at:** the setup page address.
-    - **Setup code:** the code that creates the owner account. It is also
-      kept in `/opt/metis-suite/.env`, and it works while no account has the
-      owner email.
+    If you chose **Now, once Metis runs** for Google sign-in, setup then
+    guides you through it ("Connecting Google").
 
-    The status and log commands are:
-
-    ```bash
-    docker compose --project-directory /opt/metis-suite ps
-    docker compose --project-directory /opt/metis-suite logs -f app
-    ```
+    If one of these fails, Metis Suite still runs. Setup prints why and
+    what to run later, for example "gateway-resend was not set up: … Run
+    sudo metis add gateway-resend later." or "Google was not connected: …
+    Run sudo metis connect google later."
 
   </Step>
 
   <Step title="Open the app">
-    With a domain, open `/setup` at your domain, for example
-    `https://mail.example.com/setup`.
+    With a domain, open `/setup` at your domain once DNS points at the
+    server, for example `https://mail.example.com/setup`.
 
     Without a domain, the app listens only on the server itself. Open a
     tunnel from your own computer. Use your own user name and your server's
@@ -135,60 +176,87 @@ Everything is installed in `/opt/metis-suite`. Your settings go in `/opt/metis-s
   </Step>
 </Steps>
 
-## Optional settings for the script
+## Install without questions
 
-Export any of these before you run the script:
-
-| Variable                                                        | What it does                                                                                                                                                          | Default                                             |
-| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| `METIS_VERSION`                                                 | Installs a specific release, such as `1.2.3`. A leading `v` is ignored.                                                                                               | The newest release                                  |
-| `INSTALL_DIR`                                                   | Where the stack and `.env` are installed.                                                                                                                             | `/opt/metis-suite`                                  |
-| `APP_PORT`                                                      | The port the app listens on, on `127.0.0.1`. If you change it, also add the same line to `.env`, such as `APP_PORT=3001`, so later `docker compose` commands keep it. | `3000`                                              |
-| `COMPOSE_URL`                                                   | A full URL to download the Compose file from instead.                                                                                                                 | The Compose file of the release the script installs |
-| `APP_IMAGE`, `PREFLIGHT_IMAGE`, `WORKER_IMAGE`, `UPDATER_IMAGE` | Use these exact images instead of a release.                                                                                                                          |                                                     |
-
-Provider, AI, mail, background work, sign-up and legal variables can be exported too. Provider variables include every server list, such as `METIS_CALDAV_SERVERS` and `METIS_CARDDAV_SERVERS`. The script copies each one you export into `.env`, and the instance uses it as the starting value for that setting. After the first start, you change those settings in the owner dashboard. See [How configuration works](/self-hosting/configure/how-configuration-works).
-
-## Use Turso instead of the bundled database
-
-To keep both databases on [Turso](https://turso.tech), first create them and their tokens. See [Create the databases on Turso](/self-hosting/reference/environment-variables#create-the-databases-on-turso). Then export these before you run the script:
+With `--yes`, or when there is no terminal (for example in cloud-init), setup asks nothing and uses the flags. Pass them after `bootstrap.sh`, which hands them to `metis setup`:
 
 ```bash
-export METIS_DB_DRIVER=turso
-export DATABASE_URL=libsql://metis-app-acme.turso.io
-export DATABASE_AUTH_TOKEN=your-app-database-token
-export MASTRA_DATABASE_URL=libsql://metis-memory-acme.turso.io
-export MASTRA_DATABASE_AUTH_TOKEN=your-memory-database-token
+sudo sh bootstrap.sh --yes --owner-email alice@example.com --domain mail.example.com --with updater,worker
 ```
 
-Use the URL that `turso db show` prints for each database with `--url`, for example `turso db show metis-app --url`. It starts with `libsql://`. Use each database's own token.
+If a value is missing or wrong, setup stops at once and lists what it needs, for example "setup needs --owner-email you@example.com; --domain mail.example.com".
 
-With these set, the bundled database server does not start. Both databases must use the same driver.
+- **Mail gateways and Google** cannot be set up without questions. Add them once Metis runs, with `sudo metis add` and `sudo metis connect google`.
+- **Starting values** for other settings, such as OAuth clients, the AI model, server lists or the workflow runner, go in with `--env` or `--env-file`. They are written to `.env` last, and the first preflight stores them as the starting values of those dashboard settings. See [Environment variables](/self-hosting/reference/environment-variables).
 
-With Turso, the updater cannot take a snapshot before an upgrade, so an upgrade cannot be undone. Back up your databases before each upgrade. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo#snapshots-need-the-bundled-database).
+| Flag               | What it does                                                                                                                                                                                              | Default            |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| `--owner-email`    | The instance owner's email address. Required.                                                                                                                                                             | None               |
+| `--domain`         | The hostname people open, such as `mail.example.com`.                                                                                                                                                     | None               |
+| `--with`           | The components to add: `updater`, `worker` and `objstore`, separated by commas. The list replaces the default, so `--with worker` installs without the updater. Write `--with updater,worker` to keep it. | `updater`          |
+| `--database-url`   | A libSQL database URL to use instead of sqld on this server.                                                                                                                                              | None               |
+| `--database-token` | The token for `--database-url`.                                                                                                                                                                           | None               |
+| `--version`        | Install this release instead of the newest one this CLI supports, such as `1.4.0`. A leading `v` is ignored.                                                                                              | The newest release |
+| `--app-port`       | The port on `127.0.0.1` the app listens on.                                                                                                                                                               | `3000`             |
+| `--env`            | An extra `KEY=VALUE` line for `.env`. Repeat it for each line.                                                                                                                                            | None               |
+| `--env-file`       | A file of extra `KEY=VALUE` lines for `.env`.                                                                                                                                                             | None               |
+| `--dir`            | The install folder. It must be empty, and the path must start with `/`.                                                                                                                                   | `/opt/metis-suite` |
+| `--yes`            | Skip the questions and use the flags.                                                                                                                                                                     |                    |
 
-## Run the script again
+`--with` takes only `updater`, `worker` and `objstore`. A mail gateway there is refused with, for example, "a running install for gateway-resend: add it after setup with metis add gateway-resend".
 
-You can run the script again at any time. It is the only way to update the updater service and the Compose file, which upgrades from the dashboard never change. A release's upgrade notes say when you need to. See [Releases that need the bootstrap script](/self-hosting/operate/upgrade-and-undo#releases-that-need-the-bootstrap-script).
+## Use Turso or your own database server
 
-- An existing `.env` is kept. In interactive mode the script asks "Re-configure .env? (y/N)" first.
-- The script does not add `METIS_OWNER_EMAIL` to an existing `.env`. If your `.env` has no such line, add one, such as `METIS_OWNER_EMAIL=you@example.com`, before you upgrade. Without it, preflight refuses to start the new release, and the script stops with "The stack did not start".
-- Every run downloads the Compose file and pins every image again, the updater included: to the newest release, or to the one in `METIS_VERSION`. So running the script also upgrades the app, and preflight applies the release's database changes.
-- This upgrade takes no snapshot and cannot be undone. Back up the database first. See [Backups](/self-hosting/operate/backups).
-- If the run moves your instance to a different release, it also ends any undo that was waiting on the **Updates** page.
-- `METIS_VERSION` cannot take you back to a release older than one that already changed your database. Preflight refuses the database, and the script stops with "The stack did not start".
+The app needs two libSQL databases: the app database and the AI memory database. To keep them on [Turso](https://turso.tech) or on a libSQL server (sqld) you run elsewhere, create both first. For Turso, see [Create the databases on Turso](/self-hosting/reference/environment-variables#create-the-databases-on-turso).
 
-:::warning[Do not regenerate .env to start over]
-If you delete `.env`, or answer **y** to "Re-configure .env?", the script generates every secret you have not exported, including a new encryption key. The instance can then no longer read the passwords and tokens users stored, and everyone has to reconnect every account. Edit `.env` instead. Do not answer **y** or delete `.env` unless you first export your saved `METIS_ENCRYPTION_KEY` and `BETTER_AUTH_SECRET`, so the script reuses them.
-:::
+In the form, choose **A libSQL database elsewhere (Turso or your own sqld)**, then enter the **App database URL**, the **App database token**, the **Agent memory database URL** and the **Agent memory database token**. URLs start with `libsql://` for Turso, and with `http://`, `https://`, `ws://` or `wss://` for sqld.
+
+Without questions, pass the app database with flags and the memory database with `--env`:
+
+```bash
+sudo sh bootstrap.sh --yes --owner-email alice@example.com \
+  --database-url libsql://metis-app-acme.turso.io --database-token your-app-database-token \
+  --env MASTRA_DATABASE_URL=libsql://metis-memory-acme.turso.io \
+  --env MASTRA_DATABASE_AUTH_TOKEN=your-memory-database-token
+```
+
+Both URLs must be the same kind: both `libsql://`, or both `http(s)://` or `ws(s)://`.
+
+The server then runs no database server of its own. The updater cannot take a snapshot before an upgrade, so an upgrade cannot be undone. Back up your databases before each upgrade. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo#snapshots-need-the-database-on-your-server).
+
+## Which release is installed
+
+Setup installs the newest published release that your version of the CLI supports. A release can need a newer CLI. Then:
+
+- Without `--version`, if every release needs a newer CLI, setup stops with, for example, "every published release needs Metis CLI 0.5.0 or later; this is 0.4.0". Download the install script again and run it: it always installs the newest CLI.
+- With `--version`, setup stops with, for example, "1.4.0 needs Metis CLI 0.5.0 or later; run sudo metis self-update, then setup again".
+- With `--version`, a release that does not exist is refused with a message that starts with, for example, "1.3.9 is not a published release".
+
+The install script always downloads the newest CLI. To install a fixed version of the CLI instead, set `METIS_CLI_VERSION`:
+
+```bash
+sudo METIS_CLI_VERSION=0.1.0 sh bootstrap.sh
+```
+
+## If the first start fails
+
+The error ends with "Fix the cause, then run sudo metis apply". The install already exists at that point, so running setup again is refused. Fix the cause, then run:
+
+```bash
+sudo metis apply
+```
 
 ## Troubleshooting the install
 
-| Message                                                                                                             | What to do                                                                                                                                                                         |
-| ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| "Run as root (or with sudo)"                                                                                        | Run the script with `sudo -E bash bootstrap.sh`.                                                                                                                                   |
-| "METIS_OWNER_EMAIL is required: export METIS_OWNER_EMAIL=you@example.com before running, or run with --interactive" | Run `export METIS_OWNER_EMAIL=you@example.com` with your own address, then run `sudo -E bash bootstrap.sh` again. Or run it with `--interactive` and enter the address when asked. |
-| "openssl could not generate an Ed25519 key for sqld (OpenSSL 3 is required)"                                        | Install OpenSSL 3, or use a newer Ubuntu release.                                                                                                                                  |
-| "Could not download" the Compose file                                                                               | Check that the server can reach `sh.trymetis.email`, or point `COMPOSE_URL` at a copy of the Compose file.                                                                         |
-| "sqld did not become healthy"                                                                                       | Look at the database server's log: `docker compose --project-directory /opt/metis-suite logs sqld`.                                                                                |
-| "The stack did not start"                                                                                           | Look at the preflight log: `docker compose --project-directory /opt/metis-suite logs preflight`. It names the setting that is wrong.                                               |
+| Message                                                                                        | What to do                                                                                                                       |
+| ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| "[bootstrap] run as root: sudo sh bootstrap.sh"                                                | Run the script with `sudo`.                                                                                                      |
+| "[bootstrap] unsupported architecture" followed by a name                                      | The server's processor is not amd64 or arm64. Use another server.                                                                |
+| "Install Docker Engine first: https://docs.docker.com/engine/install/"                         | The server is not Debian or Ubuntu, so the CLI cannot install Docker. Install Docker Engine yourself, then run the script again. |
+| "Docker Engine was installed but does not answer on its socket"                                | Check that the Docker service runs, for example with `sudo systemctl status docker`, then run the script again.                  |
+| "/opt/metis-suite is not empty; setup installs only into an empty folder"                      | Choose another folder with `--dir`, or empty this one.                                                                           |
+| "Metis is already installed in /opt/metis-suite; use metis status, metis add and metis update" | Metis Suite is installed already. Change it with the other commands. See [CLI commands](/self-hosting/reference/cli-commands).   |
+| "setup needs" followed by a list                                                               | Pass the flags it names.                                                                                                         |
+| "preflight failed: metis-preflight exited with code 1:" followed by its output                 | A setting is wrong. The output names it. Fix it in `/opt/metis-suite/.env`, then run `sudo metis apply`.                         |
+| "metis-sqld was not healthy within 1m0s" followed by its log                                   | The database server did not start. Its log follows the message. Fix the cause, then run `sudo metis apply`.                      |
+| "metis-app exited with code 1:" followed by its log                                            | The app stopped. Its log follows the message. Fix the cause, then run `sudo metis apply`.                                        |

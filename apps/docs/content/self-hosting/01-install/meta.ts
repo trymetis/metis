@@ -6,7 +6,6 @@ export default defineMeta({
   pages: [
     "requirements",
     "install-with-bootstrap",
-    "install-with-docker-compose",
     "deploy-on-a-container-platform",
     "deploy-on-vercel",
     "first-run",

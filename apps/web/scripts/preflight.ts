@@ -1,6 +1,12 @@
 import { syncOwnerRole } from "@/auth/instance-role";
 import { decisionEnabled, loadInstanceConfig } from "@/config/runtime";
-import { seedInstanceConfig } from "@/config/seed";
+import {
+  FORCE_KEYS_VARIABLE,
+  forcedSections,
+  forceInstanceConfigKeys,
+  ForcedConfigError,
+  seedInstanceConfig,
+} from "@/config/seed";
 import { backfillServerIds, reconcileQuarantine } from "@/connections/quarantine";
 import {
   checkDecisionModel,
@@ -15,6 +21,23 @@ import type { PreflightWarning, PreflightWarningKind } from "@/types/preflight";
 import { ensureSystemWorkflows } from "@/workflow/builtins/system";
 
 import { MIGRATIONS } from "../migrations";
+
+const forcedKeys = (process.env[FORCE_KEYS_VARIABLE] ?? "")
+  .split(",")
+  .map((key) => key.trim())
+  .filter((key) => key !== "");
+
+function failForced(err: unknown): never {
+  if (!(err instanceof ForcedConfigError)) throw err;
+  for (const line of err.message.split("\n")) console.error(`[preflight] ${line}`);
+  process.exit(1);
+}
+
+try {
+  forcedSections(forcedKeys);
+} catch (err) {
+  failForced(err);
+}
 
 const migrated = await migrateDatabase(db.$client, MIGRATIONS);
 if (migrated.baselined) {
@@ -32,6 +55,9 @@ function warn(kind: PreflightWarningKind, message: string): void {
 }
 
 const seeded = await seedInstanceConfig();
+const forced =
+  forcedKeys.length > 0 ? await forceInstanceConfigKeys(forcedKeys).catch(failForced) : null;
+const configVersion = forced?.version ?? seeded.version;
 if (seeded.kind === "seeded") {
   console.log(`[preflight] seeded instance config version ${seeded.version}`);
   for (const warning of seeded.warnings) warn("seed", warning);
@@ -42,13 +68,20 @@ if (seeded.kind === "seeded") {
     );
   }
   for (const warning of seeded.warnings) warn("seed", warning);
-  console.log(`[preflight] instance config version ${seeded.version} in use`);
-  for (const section of seeded.differing) {
+  console.log(`[preflight] instance config version ${configVersion} in use`);
+  for (const section of seeded.differing.filter((name) => !forced?.sections.includes(name))) {
     warn(
       "drift",
       `${section} in the environment or config file differs from the stored instance config; the stored value is used. Change it under Dashboard → System, or remove it from the environment.`,
     );
   }
+}
+
+if (forced) {
+  console.log(
+    `[preflight] forced sections=${forced.sections.join(",")} version=${forced.version} keys=${forcedKeys.join(",")}`,
+  );
+  for (const warning of forced.warnings) warn("seed", warning);
 }
 
 const ownerRole = await syncOwnerRole();
@@ -138,7 +171,7 @@ if (quarantine.quarantined > 0) {
 }
 
 try {
-  await recordPreflightRun({ configVersion: seeded.version, warnings });
+  await recordPreflightRun({ configVersion, warnings });
   console.log(`[preflight] recorded ${warnings.length} warning(s)`);
 } catch (err) {
   console.warn(

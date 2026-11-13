@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        module: [apps/updater, e2e/fakes]
+        module: [apps/cli, e2e/fakes]
     defaults:
       run:
         working-directory: ${{ matrix.module }}
@@ -60,3 +60,6 @@ jobs:
 
       - name: Vet
         run: go vet ./...
+
+      - name: Test
+        run: go test ./...

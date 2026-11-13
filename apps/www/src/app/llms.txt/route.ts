@@ -31,7 +31,7 @@ const DOCS: [string, string][] = [
   ],
   ["/self-hosting", "Self-hosting guide"],
   ["/self-hosting/install/requirements", "Server requirements"],
-  ["/self-hosting/install/install-with-docker-compose", "Install with Docker Compose"],
+  ["/self-hosting/install/install-with-bootstrap", "Install with the metis CLI"],
   ["/self-hosting/configure/sign-in-providers", "Set up Google, Microsoft and Zoho sign-in"],
   [
     "/self-hosting/configure/server-lists",

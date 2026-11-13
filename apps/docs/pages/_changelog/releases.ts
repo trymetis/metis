@@ -9,6 +9,7 @@ import { Marked } from "marked";
 
 export const TRACK_LABELS: Record<Track, string> = {
   app: "App",
+  cli: "Server CLI",
   desktop: "Desktop",
   mobile: "Mobile",
 };

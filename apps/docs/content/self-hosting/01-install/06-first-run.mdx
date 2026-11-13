@@ -6,14 +6,17 @@ description: Use the setup code to create the owner account, set up two-factor a
 A new instance has no accounts, and nobody can sign up on their own. You create the owner account on the setup page, with the setup code from the install. Only the address in `METIS_OWNER_EMAIL` can be used there. In this tutorial you create that account, secure it, and open the owner dashboard.
 
 :::note[Deployed on a container platform or Vercel?]
-Use the `METIS_SETUP_CODE` you set, and open the instance at your `BETTER_AUTH_URL`. Where this page says to edit `.env`, change the variable in your platform's settings instead, then redeploy.
+Use the `METIS_SETUP_CODE` you set, and open the instance at your `BETTER_AUTH_URL`. Where this page runs `sudo metis config set` or `sudo metis config unset`, change the variable in your platform's settings instead, then redeploy.
 :::
 
 <Steps>
   <Step title="Open the setup page">
     Open `/setup` on your instance, for example
     `https://mail.example.com/setup`. Without a domain, open
-    `http://localhost:3000/setup` through the SSH tunnel from the install.
+    `http://localhost:3000/setup` through the SSH tunnel from the install:
+    `ssh -L 3000:127.0.0.1:3000`, followed by your user name and the
+    server's address. If you chose another port with `--app-port`, use that
+    port instead of `3000`.
 
     The page shows **Set up Metis Suite** and "Create the owner account for
     this instance."
@@ -21,8 +24,8 @@ Use the `METIS_SETUP_CODE` you set, and open the instance at your `BETTER_AUTH_U
   </Step>
 
   <Step title="Fill in the form">
-    - **Setup code**: paste the code the bootstrap script printed. It is also
-      `METIS_SETUP_CODE` in `/opt/metis-suite/.env`.
+    - **Setup code**: paste the code `metis setup` printed after "Setup
+      code:". It is also `METIS_SETUP_CODE` in `/opt/metis-suite/.env`.
     - **Name**: your name.
     - **Email address**: already filled in with your `METIS_OWNER_EMAIL`.
       You cannot change it.
@@ -66,19 +69,25 @@ Use the `METIS_SETUP_CODE` you set, and open the instance at your `BETTER_AUTH_U
 
 The setup page works only while no account has the owner email. Once the owner account exists, opening it takes you to the sign-in page.
 
-You can remove `METIS_SETUP_CODE` from `.env` now. Keep it if you may later hand the instance to an address that has no account yet: the new owner creates their account at `/setup` with the same code. See [Hand the instance to a new owner](/self-hosting/operate/owner-dashboard#hand-the-instance-to-a-new-owner).
+You can remove the setup code now:
+
+```bash
+sudo metis config unset METIS_SETUP_CODE
+```
+
+Keep it if you may later hand the instance to an address that has no account yet: the new owner creates their account at `/setup` with the same code. See [Hand the instance to a new owner](/self-hosting/operate/owner-dashboard#hand-the-instance-to-a-new-owner).
 
 Everyone else joins by invitation. As the owner, you invite people from **Dashboard**, **Accounts**, **Invites**, and you can make them an admin or observer there. Workspace owners and admins invite people to their workspaces. See [How invites work](/guide/account/invite-people). To let people create accounts on their own, see [Sign-up](/self-hosting/configure/sign-up).
 
 ## If the setup page does not work
 
-| What you see                                                              | What it means                                                               |
-| ------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| **Not available**, "This page isn't available."                           | No setup code is set. Add `METIS_SETUP_CODE` to `.env` and restart the app. |
-| "That setup code isn't valid"                                             | The code does not match. Copy it again from `.env`.                         |
-| "Too many requests. Please slow down."                                    | Too many attempts in a short time. Wait a few minutes.                      |
-| "Account created, but sign-in failed. Try signing in from the home page." | The account exists. Sign in from the home page.                             |
+| What you see                                                              | What it means                                                                                            |
+| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Not available**, "This page isn't available."                           | No setup code is set. Set one, for example with `sudo metis config set METIS_SETUP_CODE=K7QM-2HXP-9RTA`. |
+| "That setup code isn't valid"                                             | The code does not match. Copy it again from `.env`.                                                      |
+| "Too many requests. Please slow down."                                    | Too many attempts in a short time. Wait a few minutes.                                                   |
+| "Account created, but sign-in failed. Try signing in from the home page." | The account exists. Sign in from the home page.                                                          |
 
 :::note[Need a different owner email?]
-`METIS_OWNER_EMAIL` decides which address the setup page accepts. To use another address, change the line in `.env`, for example `METIS_OWNER_EMAIL=you@example.com`, then restart the app with `sudo docker compose --project-directory /opt/metis-suite up -d`.
+`METIS_OWNER_EMAIL` decides which address the setup page accepts. To use another address, run `sudo metis config set METIS_OWNER_EMAIL=alice@example.com` with that address. The command writes it to `.env` and restarts the app on it.
 :::

@@ -159,7 +159,7 @@ async function settle<T>(call: Promise<T>): Promise<PromiseSettledResult<T>> {
 
 async function recordUndo(upgrade: Upgrade | undefined): Promise<void> {
   if (
-    !upgrade?.requestedBy ||
+    !upgrade ||
     upgrade.kind !== UpgradeKind.ROLLBACK ||
     upgrade.state !== UpgradeState.SUCCEEDED
   ) {
@@ -177,7 +177,7 @@ async function recordUndo(upgrade: Upgrade | undefined): Promise<void> {
     .limit(1);
   if (recorded) return;
   await recordAuditEvent(
-    { userId: upgrade.requestedBy, via: "app" },
+    upgrade.requestedBy ? { userId: upgrade.requestedBy, via: "app" } : { userId: "", via: "cli" },
     {
       action: "instance.upgrade_undone",
       targetLabel: `${upgrade.fromVersion || "unpinned"} → ${upgrade.toVersion}`,

@@ -7,7 +7,6 @@
 !apps/web/.env.example
 Dockerfile
 preflight.Dockerfile
-bootstrap.sh
 *.md
 .github
 apps/desktop/release

@@ -1,71 +1,64 @@
-# Deployment — compose, bootstrap and the Docker images
+# Deployment — the server, the Docker images and releases
 
-How an instance is deployed: `compose.yml`, `bootstrap.sh`, the two Dockerfiles and their images, release tags, health endpoints and build traps.
+How an instance is deployed: what runs on a server the `metis` CLI manages, the two Dockerfiles and their images, release tags, preflight, health endpoints and build traps. The CLI itself (commands, components, the catalog, `metis.json`) is in [cli.md](cli.md).
 Paths are from the repository root.
-See also [AGENTS.md](../AGENTS.md), [updater.md](updater.md), [self-host.md](self-host.md), [workflow-runtime.md](workflow-runtime.md), [database.md](database.md), [configuration.md](configuration.md). The operator-facing install guide is `apps/docs/content/self-hosting/`.
+See also [AGENTS.md](../AGENTS.md), [cli.md](cli.md), [updater.md](updater.md), [self-host.md](self-host.md), [workflow-runtime.md](workflow-runtime.md), [database.md](database.md), [configuration.md](configuration.md). The operator-facing install guide is `apps/docs/content/self-hosting/`.
 
 ## Code map
 
-| Concern                         | Where                                                                                                                                                                                             |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The deployment                  | `compose.yml`                                                                                                                                                                                     |
-| Driving it                      | `bootstrap.sh` → `cmd_deploy` · release pins `pin_release`, `latest_release` · the compose download `fetch_compose`                                                                               |
-| Health endpoints                | `apps/web/src/app/api/livez/route.ts`, `apps/web/src/app/api/readyz/route.ts` · the database probe `apps/web/src/db/readiness.ts` → `databasesReady`                                              |
-| Images                          | `Dockerfile` (`runner`, `worker`, `updater`) · `preflight.Dockerfile` (the preflight image)                                                                                                       |
-| Publishing                      | `.github/workflows/docker.yml` → jobs `release`, `build`, `publish` · tags `.github/scripts/image-tags.sh` (`IMAGE_NAME` for an image with its own package)                                       |
-| Release notes                   | `releases/` · each track's `CHANGELOG.md` · `packages/releases/src/index.ts` (`releaseFieldsSchema`, `readReleases`, `publishedNotes`) · `packages/releases/src/cli.ts` (`cut`, `check`, `notes`) |
-| Standalone output and tracing   | `apps/web/next.config.ts` → `output` (when `NEXT_BUILD_OUTPUT=standalone`), `outputFileTracingIncludes`                                                                                           |
-| One-shot preflight              | `apps/web/scripts/preflight.ts`                                                                                                                                                                   |
-| Worker entry                    | `apps/web/scripts/workflow-worker.ts`                                                                                                                                                             |
-| License file                    | `apps/web/scripts/licenses.ts` (run by the `tools` stage)                                                                                                                                         |
-| Other images built the same way | `e2e/Dockerfile`, `apps/gateway-resend/Dockerfile`, `e2e/gateway-resend/Dockerfile`, `e2e/gateway-ses/Dockerfile`                                                                                 |
+| Concern                         | Where                                                                                                                                                                                                     |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The server's services           | `apps/cli/internal/catalog/services.yml`, applied by `apps/cli/internal/stack` ([cli.md](cli.md))                                                                                                         |
+| Health endpoints                | `apps/web/src/app/api/livez/route.ts`, `apps/web/src/app/api/readyz/route.ts` · the database probe `apps/web/src/db/readiness.ts` → `databasesReady`                                                      |
+| Images                          | `Dockerfile` (`runner`, `worker`) · `preflight.Dockerfile` (the preflight image)                                                                                                                          |
+| Publishing                      | `.github/workflows/docker.yml` → jobs `release`, `build`, `publish` · tags `.github/scripts/image-tags.sh` (`IMAGE_NAME` for an image with its own package)                                               |
+| Release notes                   | `releases/` · each track's `CHANGELOG.md` · `packages/releases/src/index.ts` (`releaseFieldsSchema`, `readReleases`, `publishedNotes`) · `packages/releases/src/cli.ts` (`cut`, `check`, `notes`, `meta`) |
+| Standalone output and tracing   | `apps/web/next.config.ts` → `output` (when `NEXT_BUILD_OUTPUT=standalone`), `outputFileTracingIncludes`                                                                                                   |
+| One-shot preflight              | `apps/web/scripts/preflight.ts`                                                                                                                                                                           |
+| Worker entry                    | `apps/web/scripts/workflow-worker.ts`                                                                                                                                                                     |
+| License file                    | `apps/web/scripts/licenses.ts` (run by the `tools` stage)                                                                                                                                                 |
+| Other images built the same way | `e2e/Dockerfile`, `apps/gateway-resend/Dockerfile`, `e2e/gateway-resend/Dockerfile`, `e2e/gateway-ses/Dockerfile`                                                                                         |
 
 ## Rules
 
-### Compose and bootstrap
+### The server
 
-- **`compose.yml` is the deployment, and `bootstrap.sh` only drives it.**
-  - Compose owns every image default, network and volume.
-  - Bootstrap passes only `APP_PORT`, `METIS_INSTALL_DIR` and `COMPOSE_PROFILES`.
-- **Every bootstrap deploy re-pins all four images.** `pin_release` writes `APP_IMAGE`, `PREFLIGHT_IMAGE`, `WORKER_IMAGE` and `UPDATER_IMAGE` into `.env` on every run.
-  - Precedence: a caller-exported `*_IMAGE`, then `METIS_VERSION`, then the highest `X.Y.Z` app tag in GHCR (`latest_release`).
-  - With no release found it warns and pins the rolling `latest*` tags.
-  - Between bootstrap runs the updater owns the app's three pins ([updater.md](updater.md)), so re-running bootstrap moves the app too.
-- **Bootstrap downloads the `compose.yml` of the release it pinned**, from `https://sh.trymetis.email/v<version>/` ([self-host.md](self-host.md)).
-  - Bootstrap starts, stops and retires services by name, and those names must match the pinned images.
-  - With the `latest*` tags pinned it downloads the bucket-root `compose.yml`; `COMPOSE_URL` overrides both.
-  - So bootstrap, compose and the images always come from one release, and a compose change on `main` never reaches a pinned install.
-- **The root stack runs `sqld` (profile `sqld`), the one-shot `preflight`, `app`, the `updater`, and Caddy (profile `proxy`).**
-  - The runner defaults to `internal`, so the stack has no worker and no Redis.
-  - The `worker` image is published for operators who choose `bullmq`; they run it with their own Redis ([workflow-runtime.md](workflow-runtime.md)).
-- **A `.env` whose database URL is one of `LEGACY_SQLD_URLS` is refused, never rewritten** (`refuse_legacy_database_urls`). Those URLs name services this compose file does not run; rewriting them would start the app on empty namespaces while the data sits in a volume this stack does not mount.
+- **A server runs the catalog's services for the components that are on, and nothing else** ([cli.md](cli.md)).
+  - Always: sqld unless the databases are elsewhere, the one-shot `preflight` and `app`.
+  - Optional components: `worker` replicas with Redis, object storage (RustFS), Caddy, the Resend gateway, and the updater as a container (`--docker`) or a systemd service.
+- **`metis.json` pins the app's three images (`app`, `preflight`, `worker`) to one release.** `metis setup` pins the newest release whose `metis.json` this CLI meets; afterwards only the updater moves them ([updater.md](updater.md)).
+- **Every third-party image is pinned by digest in the catalog**, so sqld, Valkey, RustFS, Caddy and the updater's base image move only with a CLI release (`metis self-update`).
 
 ### Releases and images
 
-- **Every release is addressable by its version.** On a GitHub release tagged `app-v<version>`, `docker.yml` pushes `:<version>`, `:<version>-preflight`, `:<version>-worker` and `:<version>-updater` beside the `<sha>*` tags.
+- **Every release is addressable by its version.** On a GitHub release tagged `app-v<version>`, `docker.yml` pushes `:<version>`, `:<version>-preflight` and `:<version>-worker` beside the `<sha>*` tags.
   - It also pushes the `latest*` tags unless the release is a pre-release.
   - A run by hand (`workflow_dispatch`) pushes `latest*` and `<sha>*` only, and skips `publish`.
-  - Releases tagged `desktop-v*` or `mobile-v*` build no images ([downloads.md](downloads.md)).
+  - Releases tagged `desktop-v*`, `mobile-v*` ([downloads.md](downloads.md)) or `cli-v*` ([self-host.md](self-host.md)) build no images.
 - **A pre-release image is reachable only by pinning it.** `latest_release` and the updater's `fetchReleases` accept only `X.Y.Z` tags.
 - **An `app-v*` tag must match `apps/web/package.json` → `version`, and `releases/app-v<version>.md` must exist with notes; `docker.yml` fails the run before building otherwise.**
   - `bun run release:notes <tag>` checks the file and prints its published notes, which is also how the release body is written (`gh release create app-v<version> --verify-tag --notes-file …`).
   - The updater shows that body as the release's notes on Dashboard → Updates ([updater.md](updater.md)).
   - That field is the version the app shows beside its source link on every platform, including hosts no tag reaches ([ui.md](ui.md)).
-- **Every release's notes are one file in the root `releases/` folder, `<track>-v<version>.md` for the `app`, `desktop` and `mobile` tracks; the track and version come from the file name, and the YAML frontmatter holds the fields `releaseFieldsSchema` allows (`date` is required).**
+- **Every release's notes are one file in the root `releases/` folder, `<track>-v<version>.md` for the `app`, `cli`, `desktop` and `mobile` tracks; the track and version come from the file name, and the YAML frontmatter holds the fields `releaseFieldsSchema` allows (`date` is required).**
   - Each track's `CHANGELOG.md` holds `## Unreleased`, then `## Releases`, a list of that track's files, newest first.
   - `@metis/releases` is the only reader: the docs changelog page, the CLI and CI all parse files through `readReleases`, so a new field is one schema line.
   - `bun run release <tag>` moves `## Unreleased` into the new file and adds its list line; it never bumps versions, commits or tags.
   - `bun run release:check` runs in CI and fails on a misnamed file, frontmatter the schema rejects, empty notes, or a list that differs from the files.
+- **An app release names the oldest `metis` CLI it runs on in its file's `cli` field (`X.Y.Z`).**
+  - `bun run release:meta app-v<version>` prints `{"version":"1.4.0","minCli":"0.1.0"}` and fails when the field is missing; `docker.yml` → `release` runs it before any image builds, and `publish` writes its output to `v<version>/metis.json` ([self-host.md](self-host.md)).
+  - `parseRelease` refuses the field on every other track.
+  - The schema keeps it optional, because release files published before it existed are never edited.
 - **What a release publishes is `publishedNotes(release)`, never the raw file.** The GitHub release body and every `v<version>/release.md` come from `bun run release:notes <tag>`, so fields reach published notes only through that function.
   - The `release` and `publish` jobs install only this package (`bun install --filter @metis/releases`).
   - Bump it in the commit the tag points at.
-- **The updater is the only container with the Docker socket**, and the app reaches it only through its socket ([updater.md](updater.md)).
-- **Preflight is its own image and a one-shot service.** The app and worker wait on it with `service_completed_successfully`.
+- **Only the `metis` CLI and the updater talk to Docker**; the app reaches the updater only through its socket ([updater.md](updater.md)).
+- **Preflight is its own image and a one-shot container.** The CLI runs it before it creates or recreates the app, and creates the app only when it exits 0.
   - As the app's entrypoint it would re-run the whole server verification and quarantine pass on every restart.
   - It would also turn a failed schema load into a crash-loop instead of one non-zero exit the operator sees.
 - **The worker is a separate image because it needs a real `node_modules`** (libSQL's native binding, `bullmq`, `ioredis`), which `.next/standalone` is not. It fails loudly and exits instead of crash-looping inside the web container.
 - **Every image builds with the repository root as context**, because each one starts from `turbo prune`.
-- **The sqld image is pinned by digest (`SQLD_IMAGE`).** Its version tags do not match what `latest` reports, so patches arrive by bumping the pin and re-running bootstrap.
+- **The sqld image is pinned by digest in the catalog.** Its version tags do not match what `latest` reports, so patches arrive by bumping the pin in a CLI release.
 
 ### Health
 
@@ -104,20 +97,15 @@ See also [AGENTS.md](../AGENTS.md), [updater.md](updater.md), [self-host.md](sel
 ### sqld
 
 - **One sqld holds both databases as namespaces** (`--enable-namespaces`): `app` and `mastra`, each its own SQLite file ([database.md](database.md)).
-  - sqld picks the namespace from the Host subdomain, so the service carries the network aliases `app.sqld` and `mastra.sqld`.
+  - sqld picks the namespace from the Host subdomain, so the service carries the network aliases `app.sqld`, `mastra.sqld` and `resend.sqld` (the Resend gateway's namespace with `--database stack`).
   - One JWT key authorizes both.
 - **sqld's admin API requires `SQLD_ADMIN_KEY` and is published only on `127.0.0.1`, on an ephemeral host port.**
   - It can create and delete namespaces, so without the key any local process could drop a database.
   - The ephemeral port avoids colliding with whatever already uses 9090.
-- **Bootstrap creates the namespaces before preflight runs**, because the sqld image has no curl and preflight needs the `app` namespace.
+- **The CLI creates the namespaces once sqld is healthy and before preflight runs**, because preflight needs the `app` namespace.
 
 ## How it works
 
-- **Bootstrap (`cmd_deploy`).**
-  - On a fresh host it installs Docker and writes `/opt/metis-suite/.env` (mode 600; `INSTALL_DIR` overrides the path).
-  - It pins the release (`pin_release`, which also sets `RELEASE_VERSION`), then downloads and validates `compose.yml` (`fetch_compose`).
-  - `deploy_stack` runs `pull`, retires the services whose profile is off (`retire_inactive_services`) and runs `up -d --remove-orphans`.
-  - `up -d` recreates only services whose image or config changed, so a redeploy leaves an unchanged sqld running.
 - **Preflight** (`bun run --cwd apps/web preflight`, idempotent, once per deployment; `--conditions=react-server` because `credentials.ts` imports `server-only`) runs in order:
   - applies pending migrations, creating the schema of an empty database from `0000_baseline` ([database.md](database.md));
   - seeds the stored config when the table is empty, else warns where the environment differs ([configuration.md](configuration.md));
@@ -127,21 +115,13 @@ See also [AGENTS.md](../AGENTS.md), [updater.md](updater.md), [self-host.md](sel
   - runs `backfillServerIds` and `reconcileQuarantine` ([connections.md](connections.md));
   - records every warning for the dashboard's Deploy checks ([dashboard.md](dashboard.md)).
   - It warns on a failed probe and exits non-zero only when the run itself fails (invalid boot config such as a missing `METIS_OWNER_EMAIL`, a failed or unknown migration, a database error), so one bad server never blocks a deploy.
-- **Profiles from the `.env`** (`compose_profiles`): `sqld` when `METIS_DB_DRIVER=sqld` and `DATABASE_URL=http://app.sqld:8080`; `proxy` (`caddy`) when `METIS_DOMAIN` is set.
-  - Bootstrap writes `METIS_DB_DRIVER=sqld` with the two namespace URLs unless `turso` is exported; `turso`, or `sqld` at an external URL, leaves the stack's sqld off.
-- **Bootstrap resolves only the env-only variables** (domain, auth URL and secret, encryption key, database variables, relay secret, setup code, owner), generating or prompting where needed; it stops without an owner email, which it never generates.
-  - Every variable in `PASSTHROUGH_VARS` is copied into `.env` only when it is exported, so the first seed uses it ([configuration.md](configuration.md)).
-- **Namespaces.** With the `sqld` profile, `deploy_stack` runs `create_sqld_namespaces` first: `compose up -d --wait sqld`, then `POST /v1/namespaces/<ns>/create` on the admin port for `app` and `mastra`. A response saying `already exists` counts as success, so redeploys are idempotent.
-- **`bootstrap.sh domain <host>`** writes `METIS_DOMAIN` and `BETTER_AUTH_URL=https://<host>` and redeploys. Caddy obtains the certificate on the first request, so ports 80 and 443 must be reachable.
 - **The app publishes only `127.0.0.1:${APP_PORT}`.** With a domain it is reached through Caddy; without one, through an SSH tunnel.
-- **The containers read `.env` with `format: raw`**, so values reach them verbatim with no `$` interpolation.
-- **sqld** keeps both namespaces in the `metis_sqld` volume and is health-checked with `GET /health` over bash's `/dev/tcp`, because the image has no curl or wget.
-  - Preflight waits for it with `service_healthy` and `required: false`, so a Turso deployment with the profile off still starts.
+- **The CLI reads `.env` and the files in `env/` raw** (`apps/cli/internal/envfile`), so values reach the containers verbatim with no `$` interpolation.
+- **sqld** keeps every namespace in the `metis-sqld` volume and is health-checked with `GET /health` over bash's `/dev/tcp`, because the image has no curl or wget; the CLI waits for it to be healthy before anything that uses it.
 - **Published images.**
   - `runner` serves `node apps/web/server.js` from the standalone output, which mirrors the repository layout because `outputFileTracingRoot` is the repository root.
   - `worker` carries the full install and `workflow-worker.mjs`.
-  - `updater` is the `metis-updater` binary on `docker:29-cli`, which ships the Docker CLI and the compose plugin it calls.
   - `docker.yml` builds one matrix job per image, each with its own build cache scope.
   - `gateway-resend` is the Resend gateway (`apps/gateway-resend/Dockerfile`), published as its own GHCR package, `ghcr.io/trymetis/metis-gateway-resend`, with the same tags as the release's other images; its package is public like the `metis` image's ([gateways.md](gateways.md)).
-- **A deployment needs `runner`, `preflight` and `updater`, plus sqld unless the databases are elsewhere.**
+- **A deployment needs `runner` and `preflight`, plus sqld unless the databases are elsewhere.** The updater is the `metis` binary's `updater serve` command, not an image ([updater.md](updater.md)).
 - **A platform that builds from source uses `apps/web` as the project root and `bun run preflight && bun run start` as the start command**; the images build from the repository root (`docker build --target runner .`).

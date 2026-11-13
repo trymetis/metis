@@ -23,11 +23,13 @@ No invite is created when its email is not sent. This happens with `noop`, and w
 
 With `log` or `noop`, your users get no sign-in alerts. They can still turn the **Sign-in alerts** switch on or off in their settings, and the app does not warn them that no alert will arrive.
 
-With `log`, you can read the links in the app's log:
+With `log`, you can read the links in the app's log. On a server the `metis` CLI runs:
 
 ```bash
-sudo docker compose --project-directory /opt/metis-suite logs -f app
+sudo metis logs app --follow
 ```
+
+Press Ctrl+C to stop. `-f` works the same as `--follow`.
 
 ## Fields
 

@@ -21,12 +21,8 @@ const RELEASES = "## Releases";
 
 const root = join(import.meta.dirname, "../../..");
 
-function linkPrefix(track: Track) {
-  return track === "app" ? `${RELEASES_DIR}/` : `../../${RELEASES_DIR}/`;
-}
-
-function listLine(release: Pick<Release, "tag" | "track" | "version" | "date">) {
-  return `- [${release.version}](${linkPrefix(release.track)}${release.tag}.md) - ${release.date}`;
+function listLine(release: Pick<Release, "tag" | "version" | "date">) {
+  return `- [${release.version}](../../${RELEASES_DIR}/${release.tag}.md) - ${release.date}`;
 }
 
 function sections(track: Track, text: string) {
@@ -52,7 +48,7 @@ function dropLeadingBlank(lines: string[]) {
 function cut(tag: string | undefined) {
   const parsed = tag ? parseTag(tag) : null;
   if (!tag || !parsed) {
-    throw new Error(`${tag ?? "(none)"} is not <app|desktop|mobile>-v<X.Y.Z or X.Y.Z-rc.N>`);
+    throw new Error(`${tag ?? "(none)"} is not <app|cli|desktop|mobile>-v<X.Y.Z or X.Y.Z-rc.N>`);
   }
   const { track, version } = parsed;
   const file = join(root, RELEASES_DIR, `${tag}.md`);
@@ -80,7 +76,7 @@ function cut(tag: string | undefined) {
     "",
     RELEASES,
     "",
-    listLine({ tag, track, version, date }),
+    listLine({ tag, version, date }),
     ...dropLeadingBlank(lines.slice(end + 1)),
   ];
   writeFileSync(changelog, `${updated.join("\n").trimEnd()}\n`);
@@ -126,9 +122,22 @@ function check() {
 
 function notes(tag: string | undefined) {
   if (!tag || !parseTag(tag)) {
-    throw new Error(`${tag ?? "(none)"} is not <app|desktop|mobile>-v<version>`);
+    throw new Error(`${tag ?? "(none)"} is not <app|cli|desktop|mobile>-v<version>`);
   }
   process.stdout.write(`${publishedNotes(readRelease(root, tag))}\n`);
+}
+
+function meta(tag: string | undefined) {
+  if (parseTag(tag ?? "")?.track !== "app") {
+    throw new Error(`${tag ?? "(none)"} is not app-v<version>`);
+  }
+  const release = readRelease(root, tag ?? "");
+  if (!release.cli) {
+    throw new Error(
+      `${RELEASES_DIR}/${release.tag}.md sets no cli, the oldest Metis CLI it runs on`,
+    );
+  }
+  process.stdout.write(`${JSON.stringify({ version: release.version, minCli: release.cli })}\n`);
 }
 
 const [command, argument] = process.argv.slice(2);
@@ -137,9 +146,10 @@ try {
   if (command === "cut") cut(argument);
   else if (command === "check") check();
   else if (command === "notes") notes(argument);
+  else if (command === "meta") meta(argument);
   else {
     throw new Error(
-      "usage: cli.ts cut <app|desktop|mobile>-v<version> | check | notes <app|desktop|mobile>-v<version>",
+      "usage: cli.ts cut <app|cli|desktop|mobile>-v<version> | check | notes <app|cli|desktop|mobile>-v<version> | meta app-v<version>",
     );
   }
 } catch (error) {

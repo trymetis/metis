@@ -8,7 +8,7 @@ import { loadReleases, TRACK_LABELS } from "./_changelog/releases";
 const { config } = data;
 const product = config.logo?.text || config.title;
 const releases = loadReleases();
-const description = `Every ${product} release, newest first: the app, the desktop app and the mobile app.`;
+const description = `Every ${product} release, newest first: the app, the server CLI, the desktop app and the mobile app.`;
 const counts = Object.fromEntries(
   TRACKS.map((track) => [track, releases.filter((release) => release.track === track).length]),
 );

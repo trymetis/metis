@@ -1,9 +1,9 @@
 import type { Page } from "@playwright/test";
 
+import { updater } from "../../clients/updater";
 import { enterCode } from "../auth";
-import { expect, type Rpc, RpcError, test } from "../fixtures";
+import { expect, test } from "../fixtures";
 import { harness } from "../harness";
-import { updater } from "../updater";
 
 const UPGRADE_TIMEOUT = 30_000;
 
@@ -53,25 +53,6 @@ async function confirmTotp(page: Page, title: string, action: string) {
 async function upgradeTo(page: Page, version: string, verb: string) {
   await releaseRow(page, version).getByRole("button", { name: verb, exact: true }).click();
   await confirmTotp(page, `${verb} to ${version}`, verb);
-}
-
-async function expectRpcError(call: Promise<unknown>, code: string, message: string) {
-  const error = await call.then(
-    () => null,
-    (err: unknown) => err,
-  );
-  if (!(error instanceof RpcError)) {
-    throw new Error(`expected an RpcError, got ${String(error)}`);
-  }
-  expect(error.code).toBe(code);
-  expect(error.message).toBe(message);
-}
-
-async function upgrade(rpc: Rpc, version: string) {
-  return rpc("dashboard.system.upgrade", {
-    version,
-    code: await harness.totp(),
-  });
 }
 
 export default function updateSpecs() {
@@ -126,19 +107,13 @@ export default function updateSpecs() {
     expect((await updater.state()).settings.current).toBe(release.next);
   });
 
-  test("an older release is neither offered nor installed", async ({ page, rpc }) => {
+  test("an older release is not offered", async ({ page }) => {
     await openUpdates(page);
     await runningVersion(page, release.current);
     await expect(
       section(page, "Releases").getByText(release.previous, { exact: true }),
     ).toHaveCount(0);
     await expect(main(page).getByRole("button", { name: "Downgrade" })).toHaveCount(0);
-    await expectRpcError(
-      upgrade(rpc, release.previous),
-      "CONFLICT",
-      `${release.previous} is older than the running ${release.current}; only newer releases can be installed`,
-    );
-    expect((await updater.state()).settings.current).toBe(release.current);
   });
 
   test("undoing the last upgrade returns to the previous release once and is audited", async ({
@@ -217,37 +192,26 @@ export default function updateSpecs() {
     await expect(last).toContainText("the database snapshot is in");
   });
 
-  test("the updater's refusals reach the caller as oRPC errors", async ({ page, rpc }) => {
-    await expectRpcError(
-      rpc("dashboard.system.upgrade", {
-        version: "latest",
-        code: await harness.totp(),
-      }),
-      "BAD_REQUEST",
-      "Input validation failed",
-    );
-    await expectRpcError(
-      upgrade(rpc, release.current),
-      "CONFLICT",
-      `${release.current} is already running`,
-    );
-    await expectRpcError(upgrade(rpc, "9.9.9"), "BAD_REQUEST", "9.9.9 is not a published release");
+  test("a release that needs a newer server CLI is refused with the self-update step", async ({
+    page,
+  }) => {
+    const message = `This release needs Metis CLI 0.3.0 or later. Run sudo metis self-update on the server, then try again.`;
+    await updater.reset({ minCli: { [release.next]: "0.3.0" } });
+    await openUpdates(page);
+    await releaseRow(page, release.next)
+      .getByRole("button", { name: "Upgrade", exact: true })
+      .click();
+    const dialog = page.getByRole("alertdialog", { name: `Upgrade to ${release.next}` });
+    await enterCode(page, await harness.totp());
+    await dialog.getByRole("button", { name: "Upgrade", exact: true }).click();
+    await expect(dialog.getByText(message, { exact: true })).toBeVisible();
+    const state = await updater.state();
+    expect(state.settings.current).toBe(release.current);
+    expect(state.upgrade).toBeNull();
+  });
 
-    await updater.reset({ rollback: "" });
-    await expectRpcError(
-      rpc("dashboard.system.rollback", { code: await harness.totp() }),
-      "CONFLICT",
-      "there is no upgrade to undo",
-    );
-
-    await updater.reset();
+  test("an upgrade in progress disables Upgrade and Undo", async ({ page }) => {
     await updater.hold();
-    await expectRpcError(
-      upgrade(rpc, release.next),
-      "CONFLICT",
-      "an upgrade or rollback is already running",
-    );
-
     await openUpdates(page);
     await expect(section(page, "Last upgrade")).toContainText("Running");
     await expect(

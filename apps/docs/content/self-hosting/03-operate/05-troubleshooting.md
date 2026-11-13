@@ -69,15 +69,11 @@ If the LLM is set up but AI features fail, look for the **LLM** group on the **D
 
 ### The app does not start after a change to .env
 
-A setting has a wrong value. The app refuses to start and names the setting. Read the preflight log:
+A setting has a wrong value. Preflight refuses it and names the setting, and the app that was running keeps running. On a server the `metis` CLI runs, the end of preflight's output is in the error of the command you ran, `metis apply` or `metis config set`, after "preflight failed:". Fix the value in `.env`, then run `sudo metis apply` again.
 
-```bash
-sudo docker compose --project-directory /opt/metis-suite logs preflight
-```
+### An older release cannot run on the database
 
-### The app does not start after pinning an older release
-
-The preflight log says the database has changes "which this release does not ship: a newer release migrated it." A newer release already changed your database, and an older release cannot run on it. Pin that newer release again, or a newer one. To go back, use **Undo last upgrade** while it is offered, or restore a backup taken before the newer release. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo#going-back-further).
+Releases install forward only, and an older release cannot run on a database that a newer release changed: preflight refuses it with "which this release does not ship: a newer release migrated it." To go back, use **Undo last upgrade** while it is offered, or restore a backup taken before the newer release. See [Going back further](/self-hosting/operate/upgrade-and-undo#going-back-further).
 
 ### An upgrade or undo failed
 
@@ -93,7 +89,17 @@ The owner or an admin banned their account. Open **Dashboard**, **Accounts**, **
 
 ### The app does not start: METIS_OWNER_EMAIL is required
 
-The preflight log shows "Invalid configuration" with the line "app.ownerEmail: METIS_OWNER_EMAIL is required: set it to the instance owner's email address". Every instance needs an owner email. Add a line such as `METIS_OWNER_EMAIL=you@example.com` to `.env`, then start the stack again with `sudo docker compose --project-directory /opt/metis-suite up -d`. Use the address of the account that should own the instance. If that account does not exist yet, create it at `/setup` with your setup code. See [First run](/self-hosting/install/first-run).
+Preflight's output shows "Invalid configuration" with the line "app.ownerEmail: METIS_OWNER_EMAIL is required: set it to the instance owner's email address". Every instance needs an owner email. On a server the `metis` CLI runs, set it with `sudo metis config set METIS_OWNER_EMAIL=alice@example.com`. Use the address of the account that should own the instance. If that account does not exist yet, create it at `/setup` with your setup code. See [First run](/self-hosting/install/first-run).
+
+### A metis command stops at once
+
+| Message                                                                               | What to do                                                                                                                                                        |
+| ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "metis add changes the server; run it with sudo"                                      | Run the command with `sudo`. Other commands say, for example, "metis domain changes the server; run it as root".                                                  |
+| "This machine has no Metis install"                                                   | You are not on the server, or Metis Suite is not installed there yet. See [CLI commands](/self-hosting/reference/cli-commands#on-the-server-or-on-your-computer). |
+| "An upgrade is running (started 14:02). Run metis status to follow it."               | Wait until the upgrade ends. `sudo metis status` shows it.                                                                                                        |
+| A message that ends with "was written by Metis CLI 0.4.0; run sudo metis self-update" | A newer CLI changed this install. Run `sudo metis self-update`.                                                                                                   |
+| "Go ahead? Pass --yes to go ahead without a terminal"                                 | The command asks a question, and there is no terminal to answer it. Add `--yes`.                                                                                  |
 
 ### Invites fail with "The invite email couldn't be sent"
 
