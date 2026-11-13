@@ -7,6 +7,7 @@ export const CONNECTION_PROVIDERS = [
   "carddav",
   "cloudflare",
   "resend",
+  "ses",
   "s3",
   "webdav",
   "ftp",
@@ -20,6 +21,7 @@ const CREDENTIAL_PROVIDERS = [
   "carddav",
   "cloudflare",
   "resend",
+  "ses",
   "s3",
   "webdav",
   "ftp",
@@ -27,7 +29,7 @@ const CREDENTIAL_PROVIDERS = [
 ] as const;
 export type CredentialProvider = (typeof CREDENTIAL_PROVIDERS)[number];
 
-export const GATEWAY_PROVIDERS = ["cloudflare", "resend"] as const;
+export const GATEWAY_PROVIDERS = ["cloudflare", "resend", "ses"] as const;
 export type GatewayProvider = (typeof GATEWAY_PROVIDERS)[number];
 
 export function isGatewayProvider(provider: ConnectionProvider): provider is GatewayProvider {
@@ -54,6 +56,7 @@ export const PROVIDER_RESOURCES = {
   carddav: ["addressbook"],
   cloudflare: ["mailbox"],
   resend: ["mailbox"],
+  ses: ["mailbox"],
   s3: ["drive"],
   webdav: ["drive"],
   ftp: ["drive"],
@@ -197,6 +200,7 @@ export type StoredConnectionCredentials =
   | ({ provider: "carddav" } & StoredCaldavCredentials)
   | ({ provider: "cloudflare" } & StoredGatewayCredentials)
   | ({ provider: "resend" } & StoredGatewayCredentials)
+  | ({ provider: "ses" } & StoredGatewayCredentials)
   | ({ provider: "s3" } & StoredS3Credentials)
   | ({ provider: "webdav" } & StoredFileServerCredentials)
   | ({ provider: "ftp" } & StoredFileServerCredentials)
@@ -302,6 +306,7 @@ export type ConnectionCredentials =
   | ({ provider: "carddav" } & CaldavCredentials)
   | ({ provider: "cloudflare" } & GatewayCredentials)
   | ({ provider: "resend" } & GatewayCredentials)
+  | ({ provider: "ses" } & GatewayCredentials)
   | ({ provider: "s3" } & S3Credentials)
   | ({ provider: "webdav" } & WebdavCredentials)
   | ({ provider: "ftp" } & FtpCredentials)

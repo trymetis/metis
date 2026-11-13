@@ -63,6 +63,15 @@ CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ZONE_ID=... \
 Re-run it with more `MAIL_ADDRESSES` whenever an address is added. Override
 the worker name with `WORKER_NAME=...`.
 
+## Published build
+
+Every Metis release publishes the built Worker as
+`https://sh.trymetis.email/vVERSION/gateway-cloudflare.zip`, listed in
+`vVERSION/SHA256SUMS`: wrangler's bundled `index.js` and its source map, built
+with `bun run build` and `bun run package` here. It carries no bindings; whoever
+deploys it supplies the D1 database, the R2 bucket, `send_email`, `MAIL_DOMAIN`
+and `API_TOKEN` as in `wrangler.jsonc`.
+
 ## Minting mailbox tokens (once per address)
 
 ```sh

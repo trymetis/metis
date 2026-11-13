@@ -72,6 +72,7 @@ export interface GatewayTarget {
 export const GATEWAY_LABELS: Record<GatewayProvider, string> = {
   cloudflare: "Cloudflare Email Worker",
   resend: "Resend gateway",
+  ses: "Amazon SES gateway",
 };
 
 export function gatewayTarget(credentials: GatewayConnectionCredentials): GatewayTarget {

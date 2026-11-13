@@ -40,6 +40,7 @@ const CONFIGURED_PROVIDERS: Record<string, number> = {
   carddav: 1,
   cloudflare: 1,
   resend: 1,
+  ses: 1,
   s3: 2,
   webdav: 1,
   ftp: 3,

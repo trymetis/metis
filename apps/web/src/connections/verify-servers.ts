@@ -414,6 +414,10 @@ export function serverChecks(cfg: InstanceConfig = getInstanceConfig()): ServerC
       kind: "resend" as const,
       server,
     })),
+    ...cfg.sesServers.map((server) => ({
+      kind: "ses" as const,
+      server,
+    })),
   ];
 
   for (const { kind, server } of gateways) {

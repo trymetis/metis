@@ -34,5 +34,13 @@ issue harness/tls/models.key harness/tls/models.crt openrouter.ai \
 issue "$work/resend-gateway.key" "$work/resend-gateway.crt" resend-gateway.localhost \
   "DNS:resend-gateway.localhost,DNS:localhost"
 cat "$work/resend-gateway.crt" "$work/resend-gateway.key" >proxy/tls/resend-gateway.pem
+issue ses/tls/email.us-east-1.amazonaws.com.key ses/tls/email.us-east-1.amazonaws.com.crt \
+  email.us-east-1.amazonaws.com "DNS:email.us-east-1.amazonaws.com"
+issue "$work/ses-gateway.key" "$work/ses-gateway.crt" ses-gateway.localhost \
+  "DNS:ses-gateway.localhost,DNS:localhost"
+cat "$work/ses-gateway.crt" "$work/ses-gateway.key" >proxy/tls/ses-gateway.pem
+issue "$work/s3-amazonaws.key" "$work/s3-amazonaws.crt" s3.us-east-1.amazonaws.com \
+  "DNS:s3.us-east-1.amazonaws.com"
+cat "$work/s3-amazonaws.crt" "$work/s3-amazonaws.key" >proxy/tls/s3-amazonaws.pem
 
 echo "[tls] issued certificates under $(cat tls/ca.crt | openssl x509 -noout -subject)"

@@ -289,6 +289,11 @@ const LIST_FIELDS: Partial<Record<ListSection, DashboardConfigField[]>> = {
     field("domain", "Domain", "text"),
     field("endpoint", "Gateway endpoint", "url"),
   ],
+  sesServers: [
+    field("name", "Name", "text"),
+    field("domain", "Domain", "text"),
+    field("endpoint", "Gateway endpoint", "url"),
+  ],
   s3Servers: [
     field("name", "Name", "text"),
     field("endpoint", "Endpoint", "url"),

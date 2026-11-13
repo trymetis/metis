@@ -35,7 +35,7 @@ Actions in search follow the same rules as everywhere else. For example, only th
 ## Mail
 
 - **Mailboxes connected over IMAP** show **Load more** only when you name one folder with `mail-folder:`, such as `mail-folder:inbox`. Without a folder, they return one set of the newest matches from Inbox, Archive and Sent, with no **Load more**. With `mail-folder:starred`, they also return one set of the newest matches, with no **Load more**.
-- **Cloudflare Email and Resend mailboxes** search for one word at a time.
+- **Cloudflare Email, Resend and Amazon SES mailboxes** search for one word at a time.
 - **Outlook and Zoho mailboxes** filter by folder reliably only when `mail-folder:` stands on its own in the search, and not inside `OR`, `NOT` or parentheses.
 - **Read later** and **muted** results show the subject and sender as they were when you marked them.
 

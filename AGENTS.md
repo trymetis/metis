@@ -6,7 +6,7 @@
 
 - **Metis Suite (`trymetis/metis`, AGPL-3.0-or-later) is a mail, calendar, drive and contacts client over provider APIs, with an AI agent and phishing detection.** Product copy is written for open source and self-hosting: "bring your own model" means the operator's own model.
 - **Self-hosted and Metis Cloud run the same released app.** The only Cloud-specific code here is the `console` mail driver ([configuration.md](agent-docs/configuration.md)).
-- **Workspaces:** `apps/web` (the product), `apps/desktop` and `apps/mobile` (shells onto a user's instance), `apps/www` (marketing site), `apps/docs` (customer docs, rules in `apps/docs/AGENTS.md`), `apps/gateway-{cloudflare,resend}`, `packages/*`, `e2e/`.
+- **Workspaces:** `apps/web` (the product), `apps/desktop` and `apps/mobile` (shells onto a user's instance), `apps/www` (marketing site), `apps/docs` (customer docs, rules in `apps/docs/AGENTS.md`), `apps/gateway-{cloudflare,resend,ses}`, `packages/*`, `e2e/`.
   - `apps/updater` is a Go module outside the bun workspaces; `proto/` is its protocol.
   - The Next.js rules `next dev` generates live in `apps/web/AGENTS.md`.
 - **`src/…` means `apps/web/src/…`** unless a path names another workspace.

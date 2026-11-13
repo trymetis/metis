@@ -112,6 +112,7 @@ export const SERVER_LIST_PROVIDERS = [
   "carddav",
   "cloudflare",
   "resend",
+  "ses",
   "s3",
   "webdav",
   "ftp",
@@ -322,6 +323,7 @@ export const SERVER_ENTRY_SCHEMAS = {
   carddavServers: carddavServerSchema,
   cloudflareServers: gatewayServerSchema,
   resendServers: gatewayServerSchema,
+  sesServers: gatewayServerSchema,
   s3Servers: s3ServerSchema,
   webdavServers: webdavServerSchema,
   ftpServers: ftpServerSchema,
@@ -333,6 +335,7 @@ export const caldavServersSchema = serverListSchema("caldav", caldavServerSchema
 export const carddavServersSchema = serverListSchema("carddav", carddavServerSchema);
 export const cloudflareServersSchema = serverListSchema("cloudflare", gatewayServerSchema);
 export const resendServersSchema = serverListSchema("resend", gatewayServerSchema);
+export const sesServersSchema = serverListSchema("ses", gatewayServerSchema);
 export const s3ServersSchema = serverListSchema("s3", s3ServerSchema);
 export const webdavServersSchema = serverListSchema("webdav", webdavServerSchema);
 export const ftpServersSchema = serverListSchema("ftp", ftpServerSchema);
@@ -688,6 +691,7 @@ export const instanceConfigSchema = z.object({
   carddavServers: carddavServersSchema,
   cloudflareServers: cloudflareServersSchema,
   resendServers: resendServersSchema,
+  sesServers: sesServersSchema,
   s3Servers: s3ServersSchema,
   webdavServers: webdavServersSchema,
   ftpServers: ftpServersSchema,

@@ -1,0 +1,54 @@
+---
+title: Mailbox tokens
+description: Create, list and revoke the per-address tokens people use to connect gateway mailboxes.
+---
+
+Each address on a gateway has its own mailbox token. The token lets one person read and send mail for that address only. You create tokens with the gateway's admin token, then give each token to the person who owns the address.
+
+## Create a token
+
+Token commands run from the gateway's folder in the source code: `apps/gateway-cloudflare`, `apps/gateway-resend` or `apps/gateway-ses`. Each command needs the gateway's admin token (the `API_TOKEN` you set when you deployed it) and the gateway's address:
+
+| Gateway          | Example address                                                        |
+| ---------------- | ---------------------------------------------------------------------- |
+| Cloudflare Email | `https://metis-cf-mail.you.workers.dev`                                |
+| Resend           | `https://resend-gateway.example.com`                                   |
+| Amazon SES       | `https://abcdefghijklmnopqrstuvwxyz012345.lambda-url.us-east-1.on.aws` |
+
+To create a token for `alice@example.com` on a Resend gateway, run:
+
+```bash
+ADMIN_TOKEN=... bun run token https://resend-gateway.example.com create alice@example.com
+```
+
+Put your admin token in place of `...`, and your gateway's address in place of the example address.
+
+The token is printed once. Copy it and send it to the person in a safe way. Creating a token again for the same address replaces the old one, so the old token stops working.
+
+## List and revoke tokens
+
+```bash
+ADMIN_TOKEN=... bun run token https://resend-gateway.example.com list
+ADMIN_TOKEN=... bun run token https://resend-gateway.example.com revoke alice@example.com
+```
+
+`list` shows which addresses have a token, and when the first token for each address was created. Creating a new token for an address does not change this date. `revoke` stops the token for an address at once.
+
+If a command fails, it prints the reason:
+
+- "The address must be on @example.com": the address is not on the gateway's domain.
+- "Unauthorized": the admin token is wrong.
+- "Token management needs the admin API_TOKEN": you used a mailbox token instead of the admin token.
+
+:::warning
+With the Resend and Amazon SES gateways, an address with no token does not receive mail. The Resend gateway drops mail sent to it, and the Amazon SES gateway deletes it from the bucket. Revoking an address's token stops its mail. With the Amazon SES gateway, mail the address already received is kept, and it appears again if you create a new token for that address. With the Cloudflare gateway in catch-all mode, mail for an address with no token is kept until you create one.
+:::
+
+## What the person does
+
+The person connects a new mailbox, picks your gateway by its name, and enters:
+
+- **Email address**: the address the token was created for.
+- **Mailbox token**: the token you gave them.
+
+Metis Suite refuses the gateway's admin token in this field, and a token shorter than 16 characters. It also checks that the token belongs to the address entered. For the user side, see [Mail](/guide/mail).

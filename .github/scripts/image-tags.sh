@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-image="ghcr.io/${GITHUB_REPOSITORY}"
+image="ghcr.io/${IMAGE_NAME:-$GITHUB_REPOSITORY}"
 {
   echo "tags<<EOF"
   echo "${image}:${GITHUB_SHA}${SUFFIX}"

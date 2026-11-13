@@ -12,13 +12,13 @@ See also [AGENTS.md](../AGENTS.md), [updater.md](updater.md), [self-host.md](sel
 | Driving it                      | `bootstrap.sh` → `cmd_deploy` · release pins `pin_release`, `latest_release` · the compose download `fetch_compose`                                                                               |
 | Health endpoints                | `apps/web/src/app/api/livez/route.ts`, `apps/web/src/app/api/readyz/route.ts` · the database probe `apps/web/src/db/readiness.ts` → `databasesReady`                                              |
 | Images                          | `Dockerfile` (`runner`, `worker`, `updater`) · `preflight.Dockerfile` (the preflight image)                                                                                                       |
-| Publishing                      | `.github/workflows/docker.yml` → jobs `release`, `build`, `publish` · tags `.github/scripts/image-tags.sh`                                                                                        |
+| Publishing                      | `.github/workflows/docker.yml` → jobs `release`, `build`, `publish` · tags `.github/scripts/image-tags.sh` (`IMAGE_NAME` for an image with its own package)                                       |
 | Release notes                   | `releases/` · each track's `CHANGELOG.md` · `packages/releases/src/index.ts` (`releaseFieldsSchema`, `readReleases`, `publishedNotes`) · `packages/releases/src/cli.ts` (`cut`, `check`, `notes`) |
 | Standalone output and tracing   | `apps/web/next.config.ts` → `output` (when `NEXT_BUILD_OUTPUT=standalone`), `outputFileTracingIncludes`                                                                                           |
 | One-shot preflight              | `apps/web/scripts/preflight.ts`                                                                                                                                                                   |
 | Worker entry                    | `apps/web/scripts/workflow-worker.ts`                                                                                                                                                             |
 | License file                    | `apps/web/scripts/licenses.ts` (run by the `tools` stage)                                                                                                                                         |
-| Other images built the same way | `e2e/Dockerfile`, `apps/gateway-resend/Dockerfile`                                                                                                                                                |
+| Other images built the same way | `e2e/Dockerfile`, `apps/gateway-resend/Dockerfile`, `e2e/gateway-resend/Dockerfile`, `e2e/gateway-ses/Dockerfile`                                                                                 |
 
 ## Rules
 
@@ -142,5 +142,6 @@ See also [AGENTS.md](../AGENTS.md), [updater.md](updater.md), [self-host.md](sel
   - `worker` carries the full install and `workflow-worker.mjs`.
   - `updater` is the `metis-updater` binary on `docker:29-cli`, which ships the Docker CLI and the compose plugin it calls.
   - `docker.yml` builds one matrix job per image, each with its own build cache scope.
+  - `gateway-resend` is the Resend gateway (`apps/gateway-resend/Dockerfile`), published as its own GHCR package, `ghcr.io/trymetis/metis-gateway-resend`, with the same tags as the release's other images; its package is public like the `metis` image's ([gateways.md](gateways.md)).
 - **A deployment needs `runner`, `preflight` and `updater`, plus sqld unless the databases are elsewhere.**
 - **A platform that builds from source uses `apps/web` as the project root and `bun run preflight && bun run start` as the start command**; the images build from the repository root (`docker build --target runner .`).

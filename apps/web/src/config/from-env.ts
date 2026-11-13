@@ -58,6 +58,7 @@ export function connectionsConfigFromEnv(e: Env): Record<string, unknown> {
     carddavServers: e.METIS_CARDDAV_SERVERS,
     cloudflareServers: e.METIS_CLOUDFLARE_SERVERS,
     resendServers: e.METIS_RESEND_SERVERS,
+    sesServers: e.METIS_SES_SERVERS,
     s3Servers: e.METIS_S3_SERVERS,
     webdavServers: e.METIS_WEBDAV_SERVERS,
     ftpServers: e.METIS_FTP_SERVERS,

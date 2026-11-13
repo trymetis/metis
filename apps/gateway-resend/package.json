@@ -10,9 +10,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "catalog:",
+    "@libsql/client": "catalog:",
     "@metis/gateway-contract": "workspace:*",
-    "aws4fetch": "^1.0.20",
-    "postgres": "^3.4.9",
     "zod": "catalog:"
   },
   "devDependencies": {

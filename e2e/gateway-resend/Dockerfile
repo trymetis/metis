@@ -7,7 +7,8 @@ FROM oven/bun:1-alpine@sha256:d888c0ae6c86d7866ff10c5aafdd9077b36aee6455b33dd270
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=pruner /app/out/json/ .
-RUN bun install --frozen-lockfile --production
+RUN bun install --frozen-lockfile --production \
+ && find node_modules -path '*libsql*' -name '*-gnu*' -prune -exec rm -rf {} +
 COPY --from=pruner /app/out/full/ .
 COPY e2e/tls/ca.crt /e2e/tls/ca.crt
 WORKDIR /app/apps/gateway-resend

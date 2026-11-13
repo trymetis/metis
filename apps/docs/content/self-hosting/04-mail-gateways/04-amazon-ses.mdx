@@ -1,0 +1,422 @@
+---
+title: Set up the Amazon SES gateway
+description: Run a gateway on AWS Lambda that receives mail through Amazon SES, keeps it in your own database and S3 bucket, and sends through Amazon SES.
+---
+
+The Amazon SES gateway is an AWS Lambda function you run for one domain. Amazon SES receives mail for the domain and writes each message to an S3 bucket you own. Amazon SES then calls the function, which records the message in a libSQL database. libSQL is an open-source database built on SQLite.
+
+The same function serves the gateway on its function URL. A function URL is the web address AWS gives a Lambda function. It is the gateway endpoint you register in Metis Suite. The function sends mail through Amazon SES. Metis Suite talks only to the gateway, never to AWS.
+
+## How it handles mail
+
+- **One gateway serves every mailbox on its domain.** One receipt rule sends every address on the domain to the function. A receipt rule is an Amazon SES setting that says what to do with incoming mail.
+- **Mail is kept only for addresses that have a mailbox token.** Mail for an address with no token is deleted from the bucket. Creating a token for an address is what turns it on. After you revoke a token, new mail for that address is deleted again.
+- **One copy per recipient.** A message sent to several addresses on the domain that have tokens appears in each of those mailboxes.
+- **Spam and viruses.** When the spam or virus scan of Amazon SES marks a message `FAIL`, it goes to the **Spam** folder. Other mail goes to the **Inbox**.
+- **The same message delivered twice is stored once.**
+- **Mail is sent only from the token's own address.** Amazon SES gives each sent message its Message-ID. In us-east-1 it ends in `@email.amazonses.com`. In other regions it ends in the region followed by `.amazonses.com`, such as `@eu-west-1.amazonses.com`.
+
+Search in an Amazon SES gateway mailbox ignores upper and lower case only for the letters A to Z. For other letters, such as accented ones, the case must match. For the other limits all gateways share, see [What to expect](/self-hosting/mail-gateways/what-is-a-gateway-mailbox#what-to-expect).
+
+## Before you start
+
+- **An AWS account and a recent version 2 of the AWS CLI.** Older versions do not have the `--invoked-via-function-url` option that step 7 uses. Receipt rule sets and receipt rules use the `aws ses` commands. The domain, sending and account settings use the `aws sesv2` commands.
+- **A region where Amazon SES can receive mail.** These are us-east-1, us-east-2, us-west-1, us-west-2, ca-central-1, eu-central-1, eu-west-1, eu-west-2, eu-west-3, eu-south-1, eu-north-1, ap-south-1, ap-southeast-1, ap-southeast-2, ap-southeast-3, ap-northeast-1, ap-northeast-2, ap-northeast-3, af-south-1, il-central-1, me-south-1 and sa-east-1. The receipt rule set, the function and its role live in that region. The bucket may be in another of these regions.
+- **A domain whose DNS you control.** If the domain already has MX records for another mail service, use a subdomain. Write the domain in lowercase everywhere. The permission to send from it is case-sensitive.
+- **Production access for Amazon SES, to send to anyone.** In a new AWS account, Amazon SES starts in the sandbox in each region. In the sandbox, it sends only to addresses you have verified, at most 200 messages per 24 hours and 1 per second. AWS reviews a request for production access for each region. Until it is granted, the gateway receives mail but sends only to verified addresses. Step 2 shows how to check and request production access.
+- **A libSQL database of its own** that the function can reach over HTTP or WebSockets. It can be on a libSQL server (sqld) or on Turso. A local `file:` database cannot be used. You create its tables in step 4.
+- **One S3 bucket** for raw mail and attachments. Step 3 creates it.
+- **The `curl`, `sha256sum` and `openssl` commands.** `curl` and `sha256sum` download and check the gateway's package. `openssl` creates the admin token.
+- **[Bun](https://bun.sh) and a copy of the Metis Suite source code**, to create the tables (step 4) and mailbox tokens (step 11):
+
+```bash
+git clone https://github.com/trymetis/metis.git
+cd metis
+bun install
+cd apps/gateway-ses
+```
+
+## The gateway package
+
+Each Metis Suite server release publishes the gateway as a ready-made package, `gateway-ses.zip`, in its own folder. For release 1.2.3, the package is at `https://sh.trymetis.email/v1.2.3/gateway-ses.zip`. The folder also holds `SHA256SUMS`, a list of checksums you use to check the download.
+
+- The folder name is `v` followed by the release number.
+- There is no address without a release number, so you always name a release. Pre-releases have their own folders too.
+- A release's folder never changes after it is published.
+
+Use the release your instance runs. Older releases have no package. If the download fails for your release, upgrade first or build the package yourself (step 6).
+
+To find the release your instance runs:
+
+- Every page of Metis Suite shows a **Source code** link with the version, for example "Source code · v1.2.3". It is in the left rail, at the bottom of the account settings and dashboard sidebars, and in the footer of the pages before sign-in. See [Source code link](/self-hosting/configure/source-code-link).
+- With the Compose stack, open **Dashboard**, **System**, **Updates**. The **Version** row of **Running release** shows the release, such as `1.2.3`. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo). If it shows **Not a pinned release**, use the **Source code** link instead.
+
+You can also build the package yourself from the source code. Step 6 shows both ways.
+
+## Run the gateway
+
+<Steps>
+  <Step title="Set the shell variables">
+    The commands on this page use these shell variables. Replace the values
+    with your own, and keep the domain in lowercase.
+
+    ```bash
+    REGION=us-east-1
+    ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+    DOMAIN=example.com
+    BUCKET=example-com-metis-mail
+    FUNCTION=metis-ses-mail
+    RULE=metis-ses-mail
+    VERSION=1.2.3
+    ```
+
+    Set `VERSION` to the release your instance runs, without the leading
+    `v`: `1.2.3`, not `v1.2.3`.
+
+  </Step>
+
+  <Step title="Verify the domain">
+    ```bash
+    aws sesv2 create-email-identity --region "$REGION" --email-identity "$DOMAIN"
+    ```
+
+    The output lists three DKIM tokens. For each token, add a CNAME record
+    named `TOKEN._domainkey.example.com` that points to
+    `TOKEN.dkim.amazonses.com`, with the token in place of `TOKEN`.
+
+    Then add an MX record to the domain: `10 inbound-smtp.us-east-1.amazonaws.com`,
+    with your region in place of `us-east-1`.
+
+    Check whether the account has production access. If the answer is
+    `false`, request it. AWS reviews the request for this region. Until it
+    is granted, the gateway receives mail but sends only to verified
+    addresses.
+
+    ```bash
+    aws sesv2 get-account --region "$REGION" --query ProductionAccessEnabled
+    aws sesv2 put-account-details --region "$REGION" \
+      --production-access-enabled --mail-type TRANSACTIONAL \
+      --website-url https://example.com --contact-language EN \
+      --use-case-description "Personal and team mailboxes on example.com"
+    ```
+
+  </Step>
+
+  <Step title="Create the bucket">
+    Create the bucket, and let Amazon SES write mail into it for your receipt
+    rule:
+
+    ```bash
+    aws s3api create-bucket --region "$REGION" --bucket "$BUCKET"
+
+    aws s3api put-bucket-policy --bucket "$BUCKET" --policy "$(cat <<EOF
+    {
+      "Version": "2012-10-17",
+      "Statement": [{
+        "Sid": "AllowSESPuts",
+        "Effect": "Allow",
+        "Principal": { "Service": "ses.amazonaws.com" },
+        "Action": "s3:PutObject",
+        "Resource": "arn:aws:s3:::$BUCKET/*",
+        "Condition": {
+          "StringEquals": { "AWS:SourceAccount": "$ACCOUNT" },
+          "ArnLike": { "AWS:SourceArn": "arn:aws:ses:$REGION:$ACCOUNT:receipt-rule-set/*:receipt-rule/$RULE" }
+        }
+      }]
+    }
+    EOF
+    )"
+    ```
+
+    Outside us-east-1, add
+    `--create-bucket-configuration LocationConstraint=$REGION` to the
+    `create-bucket` command.
+
+  </Step>
+
+  <Step title="Create the tables">
+    From `apps/gateway-ses`, create the gateway's tables in your libSQL
+    database. Use your database's address and, if it needs one, its token:
+
+    ```bash
+    DATABASE_URL=libsql://... DATABASE_AUTH_TOKEN=... bun run db:apply
+    ```
+
+    Put your database's address in place of `libsql://...` and its token in
+    place of `...`.
+
+    The function does not create its tables, so run this before the first
+    mail arrives. Run it again after you upgrade the gateway, in case the
+    tables changed. It is safe to run at any time and keeps your data.
+
+  </Step>
+
+  <Step title="Create the execution role">
+    The execution role is what the function may do in your account. Create it
+    and give it its permissions:
+
+    ```bash
+    aws iam create-role --role-name "$FUNCTION" --assume-role-policy-document '{
+      "Version": "2012-10-17",
+      "Statement": [{
+        "Effect": "Allow",
+        "Principal": { "Service": "lambda.amazonaws.com" },
+        "Action": "sts:AssumeRole"
+      }]
+    }'
+
+    aws iam put-role-policy --role-name "$FUNCTION" --policy-name gateway \
+      --policy-document "$(cat <<EOF
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"],
+          "Resource": "arn:aws:s3:::$BUCKET/*"
+        },
+        {
+          "Effect": "Allow",
+          "Action": "s3:ListBucket",
+          "Resource": "arn:aws:s3:::$BUCKET"
+        },
+        {
+          "Effect": "Allow",
+          "Action": ["ses:SendEmail", "ses:SendRawEmail"],
+          "Resource": [
+            "arn:aws:ses:$REGION:$ACCOUNT:identity/$DOMAIN",
+            "arn:aws:ses:$REGION:$ACCOUNT:identity/*@$DOMAIN"
+          ],
+          "Condition": { "StringLike": { "ses:FromAddress": "*@$DOMAIN" } }
+        },
+        {
+          "Effect": "Allow",
+          "Action": ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+          "Resource": "*"
+        }
+      ]
+    }
+    EOF
+    )"
+    ```
+
+    The role lets the function read, write, delete and list mail in the
+    bucket, send as any address on the domain, and write its logs. A new
+    mailbox needs no change to the role.
+
+  </Step>
+
+  <Step title="Create the function">
+    Download the package for your release, and check it:
+
+    ```bash
+    curl -fsSLO "https://sh.trymetis.email/v$VERSION/gateway-ses.zip"
+    curl -fsSL "https://sh.trymetis.email/v$VERSION/SHA256SUMS" | grep ' gateway-ses.zip$' | sha256sum -c -
+    ```
+
+    The first command saves `gateway-ses.zip` in the current folder. The
+    second compares it with its checksum and prints `gateway-ses.zip: OK`
+    when they match. This shows the download is complete and unchanged. It
+    does not prove who published the file, because the checksums come from
+    the same place as the package.
+
+    To build the package yourself instead, run this in `apps/gateway-ses`.
+    It needs the `zip` command, and makes `dist/gateway-ses.zip`. Then use
+    `fileb://dist/gateway-ses.zip` in the `create-function` command below.
+
+    ```bash
+    bun run build && bun run package
+    ```
+
+    Create the admin token and print it. Keep this value: you need it to
+    create mailbox tokens.
+
+    ```bash
+    API_TOKEN=$(openssl rand -hex 32)
+    echo "$API_TOKEN"
+    ```
+
+    Create the function from the package, with your database's address and
+    token:
+
+    ```bash
+    aws lambda create-function --region "$REGION" --function-name "$FUNCTION" \
+      --runtime nodejs24.x --architectures arm64 --handler index.handler \
+      --role "arn:aws:iam::$ACCOUNT:role/$FUNCTION" \
+      --zip-file fileb://gateway-ses.zip --timeout 60 --memory-size 1024 \
+      --environment "Variables={MAIL_DOMAIN=$DOMAIN,API_TOKEN=$API_TOKEN,DATABASE_URL=libsql://...,DATABASE_AUTH_TOKEN=...,MAIL_BUCKET=$BUCKET}"
+    ```
+
+    Put your database's address in place of `libsql://...` and its token in
+    place of `...`. If your database needs no token, remove
+    `DATABASE_AUTH_TOKEN=...,` from the command.
+
+    If AWS answers that the role cannot be assumed by Lambda, wait a few
+    seconds and run the command again.
+
+    These are the function's variables:
+
+    | Variable | Required | What it is |
+    | --- | --- | --- |
+    | `MAIL_DOMAIN` | yes | The domain this gateway serves, such as `example.com`. |
+    | `API_TOKEN` | yes | The admin token. |
+    | `DATABASE_URL` | yes | The libSQL address of the database. It starts with `libsql://`, `https://`, `http://`, `wss://` or `ws://`. |
+    | `DATABASE_AUTH_TOKEN` | no | The database's token, when it needs one, such as for a Turso database. Leave it out if your database needs none. |
+    | `MAIL_BUCKET` | yes | The bucket's name. |
+
+    If a required variable is missing, the function stops when it starts. Its
+    log names the variable, for example "MAIL_DOMAIN is required".
+
+    You can also use the `nodejs22.x` runtime, and the `x86_64`
+    architecture. The same package runs on both architectures. `arm64` costs
+    less. Keep the timeout at 60 seconds and the memory at 1024 MB.
+
+    Do not attach the function to a VPC. Function URLs do not stream their
+    responses inside a VPC.
+
+  </Step>
+
+  <Step title="Give it a function URL">
+    Create the function URL, with response streaming, and the two
+    permissions that let anyone call it:
+
+    ```bash
+    aws lambda create-function-url-config --region "$REGION" --function-name "$FUNCTION" \
+      --auth-type NONE --invoke-mode RESPONSE_STREAM
+
+    aws lambda add-permission --region "$REGION" --function-name "$FUNCTION" \
+      --statement-id function-url-public --action lambda:InvokeFunctionUrl \
+      --principal '*' --function-url-auth-type NONE
+
+    aws lambda add-permission --region "$REGION" --function-name "$FUNCTION" \
+      --statement-id function-url-invoke --action lambda:InvokeFunction \
+      --principal '*' --invoked-via-function-url
+    ```
+
+    The gateway checks its own tokens, so the URL needs no AWS sign-in.
+    Response streaming lets raw messages and attachments over 6 MB download
+    from the same address.
+
+  </Step>
+
+  <Step title="Let Amazon SES call the function">
+    Find the active receipt rule set, and let Amazon SES call the function
+    for your rule only:
+
+    ```bash
+    SET=$(aws ses describe-active-receipt-rule-set --region "$REGION" --query Metadata.Name --output text)
+
+    aws lambda add-permission --region "$REGION" --function-name "$FUNCTION" \
+      --statement-id ses-receipt --action lambda:InvokeFunction \
+      --principal ses.amazonaws.com --source-account "$ACCOUNT" \
+      --source-arn "arn:aws:ses:$REGION:$ACCOUNT:receipt-rule-set/$SET:receipt-rule/$RULE"
+    ```
+
+    If `SET` is `None`, no rule set is active yet. Create and activate one
+    first, then run the `add-permission` command above:
+
+    ```bash
+    SET=metis
+    aws ses create-receipt-rule-set --region "$REGION" --rule-set-name "$SET"
+    aws ses set-active-receipt-rule-set --region "$REGION" --rule-set-name "$SET"
+    ```
+
+    Only one rule set is active per account and region. Turning it off stops
+    all receiving in that region, so the gateway's rule joins the set that is
+    already active.
+
+    Then set how often a failed delivery to the function is tried again:
+
+    ```bash
+    aws lambda put-function-event-invoke-config --region "$REGION" --function-name "$FUNCTION" \
+      --maximum-retry-attempts 2
+    ```
+
+    You can also add a failure destination, such as an SQS queue or an SNS
+    topic the role may write to. If delivery to the function keeps failing,
+    the raw message still stays in the bucket. This gateway has no catch-up
+    check for missed mail.
+
+  </Step>
+
+  <Step title="Add the receipt rule">
+    ```bash
+    aws ses create-receipt-rule --region "$REGION" --rule-set-name "$SET" --rule "$(cat <<EOF
+    {
+      "Name": "$RULE",
+      "Enabled": true,
+      "ScanEnabled": true,
+      "TlsPolicy": "Optional",
+      "Recipients": ["$DOMAIN"],
+      "Actions": [
+        { "S3Action": { "BucketName": "$BUCKET" } },
+        { "LambdaAction": {
+            "FunctionArn": "arn:aws:lambda:$REGION:$ACCOUNT:function:$FUNCTION",
+            "InvocationType": "Event" } }
+      ]
+    }
+    EOF
+    )"
+    ```
+
+    The rule turns on spam and virus scanning. It first saves each message
+    to the bucket, then calls the function. Do not set an object key prefix
+    on the S3 action: the gateway then cannot find the messages.
+
+    When Amazon SES checks the rule's permissions, it writes an object named
+    `AMAZON_SES_SETUP_NOTIFICATION` to the bucket. This is expected.
+
+  </Step>
+
+  <Step title="Register it in Metis Suite">
+    Get the function URL:
+
+    ```bash
+    aws lambda get-function-url-config --region "$REGION" --function-name "$FUNCTION" --query FunctionUrl
+    ```
+
+    It looks like
+    `https://abcdefghijklmnopqrstuvwxyz012345.lambda-url.us-east-1.on.aws`.
+
+    Open **Dashboard**, **System**, **Amazon SES** under **Providers**.
+    Click **Add server** and fill in:
+
+    - **Name**: what users see in the connect dialog.
+    - **Domain**: your domain, such as `example.com`.
+    - **Gateway endpoint**: the function URL. Any address that does not
+      start with `https://` is refused with "The Worker endpoint must be an
+      https:// URL".
+
+    Click **Save changes** and enter your authenticator code.
+
+    You can also set the starting list before the first start:
+
+    ```bash
+    METIS_SES_SERVERS=[{"name":"Example Mail","domain":"example.com","endpoint":"https://abcdefghijklmnopqrstuvwxyz012345.lambda-url.us-east-1.on.aws"}]
+    ```
+
+  </Step>
+
+  <Step title="Create mailbox tokens">
+    Create a token for each address and give it to its owner. Until you do,
+    mail for that address is deleted. See
+    [Mailbox tokens](/self-hosting/mail-gateways/mailbox-tokens).
+  </Step>
+</Steps>
+
+## Remove the gateway
+
+Delete only the gateway's receipt rule, and leave the rule set alone. In a new shell, set `REGION` and `RULE` again as in step 1, and find the active rule set:
+
+```bash
+SET=$(aws ses describe-active-receipt-rule-set --region "$REGION" --query Metadata.Name --output text)
+aws ses delete-receipt-rule --region "$REGION" --rule-set-name "$SET" --rule-name "$RULE"
+```
+
+Turning off the rule set would stop all receiving in that region.
+
+## Amazon SES limits
+
+- Amazon SES stores received messages up to 40 MB. Raw messages and attachments download through the function URL's streamed responses, so large ones work too.
+- A request to the function URL is at most 6 MB. Attachments are sent base64-encoded inside that request, so the attachments of one message you send total at most about 4.5 MB.
+- Message bodies are kept up to 1,000,000 characters. The raw message stays in the bucket in full.

@@ -40,7 +40,7 @@ Good to know:
 - **Add signature** "Adds the default signature of the person the workflow runs as." **Create a draft** and **Send mail** use their default for new messages. **Reply** and **Forward** use their default for replies and forwards. In the signature, `{{name}}` becomes that person's account name. See [Signatures and the mail footer](/guide/mail/signatures).
 - **Send mail**, **Reply** and **Forward** also add the workspace's [mail footer](/guide/mail/signatures#the-workspace-mail-footer), when it is on. **Create a draft** does not. In **Forward**, the signature and the footer come after the forwarded message.
 - In a [test run](/guide/workflows/test-a-workflow), what these steps report they would send does not show the signature or the footer.
-- To move a message, use **Archive**, **Move to trash** or **Move to Inbox**. On Cloudflare Email and Resend mailboxes, **Move to Inbox** returns the message to the folder it was in before it was archived or deleted, which may not be the Inbox.
+- To move a message, use **Archive**, **Move to trash** or **Move to Inbox**. On Cloudflare Email, Resend and Amazon SES mailboxes, **Move to Inbox** returns the message to the folder it was in before it was archived or deleted, which may not be the Inbox.
 
 ## Calendar
 

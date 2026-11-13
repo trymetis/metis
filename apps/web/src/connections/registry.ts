@@ -5,6 +5,7 @@ import { ftpDriver } from "./drivers/ftp";
 import { imapDriver } from "./drivers/imap";
 import { resendDriver } from "./drivers/resend";
 import { s3Driver } from "./drivers/s3";
+import { sesDriver } from "./drivers/ses";
 import { sftpDriver } from "./drivers/sftp";
 import { webdavDriver } from "./drivers/webdav";
 import { OAUTH_DRIVERS } from "./oauth-drivers";
@@ -23,6 +24,7 @@ const DRIVERS: Record<ConnectionProvider, ProviderDriver> = {
   carddav: carddavDriver,
   cloudflare: cloudflareDriver,
   resend: resendDriver,
+  ses: sesDriver,
   s3: s3Driver,
   webdav: webdavDriver,
   ftp: ftpDriver,

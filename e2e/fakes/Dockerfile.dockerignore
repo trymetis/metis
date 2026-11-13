@@ -3,5 +3,6 @@
 !e2e/fakes
 !e2e/mcp-client/tls
 !e2e/resend/tls
+!e2e/ses/tls
 !apps/web/package.json
 !releases

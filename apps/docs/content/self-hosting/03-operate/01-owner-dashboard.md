@@ -381,7 +381,7 @@ Under **System** in the sidebar are these pages:
 - **History:** every stored version of the configuration (below).
 - **Updates:** upgrading to a newer release and undoing the last upgrade. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo).
 - **Drivers:** **LLM** (with the decision model), **Phishing detection**, **Mail**, **Cache**, **Workflow runner** and **Database**.
-- **Providers:** **Google**, **Microsoft**, **Zoho**, **IMAP**, **CalDAV**, **CardDAV**, **Cloudflare Email**, **Resend**, **S3**, **WebDAV**, **FTP** and **SFTP**.
+- **Providers:** **Google**, **Microsoft**, **Zoho**, **IMAP**, **CalDAV**, **CardDAV**, **Cloudflare Email**, **Resend**, **Amazon SES**, **S3**, **WebDAV**, **FTP** and **SFTP**.
 
 Every field on these pages is listed in [Dashboard settings](/self-hosting/reference/dashboard-settings).
 

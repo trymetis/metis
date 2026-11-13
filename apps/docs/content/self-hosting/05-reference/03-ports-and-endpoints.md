@@ -14,7 +14,7 @@ description: The ports the Compose stack uses, the outbound access it needs, and
 
 The updater publishes no port. The app reaches it inside the stack.
 
-A Resend gateway listens on port `8787` by default (`PORT`).
+A Resend gateway listens on port `8787` by default (`PORT`). An Amazon SES gateway has no port: it runs on AWS Lambda and you reach it on its function URL.
 
 ## Outbound access
 
@@ -53,3 +53,5 @@ Every release publishes these images to `ghcr.io/trymetis/metis`, beside rolling
 | `1.2.3-preflight` | The check that runs before the app on every deploy |
 | `1.2.3-worker`    | The background worker, for the `bullmq` runner     |
 | `1.2.3-updater`   | The updater                                        |
+
+Each Metis Suite server release also publishes the Resend gateway image, `ghcr.io/trymetis/metis-gateway-resend`. It is tagged with the release number, such as `1.2.3`, and `latest` follows the newest release that is not a pre-release. See [Set up the Resend gateway](/self-hosting/mail-gateways/resend#the-gateway-image).

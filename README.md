@@ -66,15 +66,15 @@ Everything after the install, from AI models to updates and rollbacks, happens i
 
 ## Supported providers
 
-| Provider                                                                                           | Mail | Calendar | Drive |
-| -------------------------------------------------------------------------------------------------- | :--: | :------: | :---: |
-| Google                                                                                             |  ✅  |    ✅    |  ✅   |
-| Microsoft 365 / Outlook                                                                            |  ✅  |    ✅    |  ✅   |
-| Zoho                                                                                               |  ✅  |    ✅    |       |
-| IMAP / SMTP                                                                                        |  ✅  |          |       |
-| CalDAV                                                                                             |      |    ✅    |       |
-| S3, WebDAV, FTP, SFTP                                                                              |      |          |  ✅   |
-| Cloudflare Email, Resend ([mail gateways](https://docs.trymetis.email/self-hosting/mail-gateways)) |  ✅  |          |       |
+| Provider                                                                                                       | Mail | Calendar | Drive |
+| -------------------------------------------------------------------------------------------------------------- | :--: | :------: | :---: |
+| Google                                                                                                         |  ✅  |    ✅    |  ✅   |
+| Microsoft 365 / Outlook                                                                                        |  ✅  |    ✅    |  ✅   |
+| Zoho                                                                                                           |  ✅  |    ✅    |       |
+| IMAP / SMTP                                                                                                    |  ✅  |          |       |
+| CalDAV                                                                                                         |      |    ✅    |       |
+| S3, WebDAV, FTP, SFTP                                                                                          |      |          |  ✅   |
+| Cloudflare Email, Resend, Amazon SES ([mail gateways](https://docs.trymetis.email/self-hosting/mail-gateways)) |  ✅  |          |       |
 
 The instance owner decides which of these are offered. [Supported providers](https://docs.trymetis.email/guide/reference/supported-providers) lists how they differ.
 
@@ -113,19 +113,19 @@ Open <http://localhost:3000/setup> and enter your setup code. The local SQLite f
 
 This is a Bun workspace with Turborepo, and every command runs from the repository root.
 
-| Path                                                                                               | What it is                                            |
-| -------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
-| [`apps/web`](apps/web)                                                                             | The Metis Suite app (Next.js)                         |
-| [`apps/desktop`](apps/desktop), [`apps/mobile`](apps/mobile)                                       | Desktop (Electron) and mobile (Expo) apps             |
-| [`apps/docs`](apps/docs)                                                                           | The [documentation site](https://docs.trymetis.email) |
-| [`apps/www`](apps/www)                                                                             | The [website](https://www.trymetis.email)             |
-| [`apps/gateway-cloudflare`](apps/gateway-cloudflare), [`apps/gateway-resend`](apps/gateway-resend) | Mail gateways for Cloudflare Email and Resend         |
-| [`apps/updater`](apps/updater)                                                                     | The updater service (Go)                              |
-| [`packages/ui`](packages/ui)                                                                       | Shared components and theme                           |
-| [`packages/shell-core`](packages/shell-core)                                                       | Logic the desktop and mobile apps share               |
-| [`packages/gateway-contract`](packages/gateway-contract)                                           | The API between the app and its mail gateways         |
-| [`packages/updater-proto`](packages/updater-proto)                                                 | The updater's protocol, generated for TypeScript      |
-| [`e2e`](e2e)                                                                                       | End-to-end tests                                      |
+| Path                                                                                                                                       | What it is                                                |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| [`apps/web`](apps/web)                                                                                                                     | The Metis Suite app (Next.js)                             |
+| [`apps/desktop`](apps/desktop), [`apps/mobile`](apps/mobile)                                                                               | Desktop (Electron) and mobile (Expo) apps                 |
+| [`apps/docs`](apps/docs)                                                                                                                   | The [documentation site](https://docs.trymetis.email)     |
+| [`apps/www`](apps/www)                                                                                                                     | The [website](https://www.trymetis.email)                 |
+| [`apps/gateway-cloudflare`](apps/gateway-cloudflare), [`apps/gateway-resend`](apps/gateway-resend), [`apps/gateway-ses`](apps/gateway-ses) | Mail gateways for Cloudflare Email, Resend and Amazon SES |
+| [`apps/updater`](apps/updater)                                                                                                             | The updater service (Go)                                  |
+| [`packages/ui`](packages/ui)                                                                                                               | Shared components and theme                               |
+| [`packages/shell-core`](packages/shell-core)                                                                                               | Logic the desktop and mobile apps share                   |
+| [`packages/gateway-contract`](packages/gateway-contract)                                                                                   | The API between the app and its mail gateways             |
+| [`packages/updater-proto`](packages/updater-proto)                                                                                         | The updater's protocol, generated for TypeScript          |
+| [`e2e`](e2e)                                                                                                                               | End-to-end tests                                          |
 
 [AGENTS.md](AGENTS.md) and [`agent-docs/`](agent-docs) explain the architecture and the rules every change follows.
 

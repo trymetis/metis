@@ -7,9 +7,10 @@ import {
   truncate,
 } from "@metis/gateway-contract/text";
 import type { AttachmentMeta } from "@metis/gateway-contract/wire";
+import { z } from "zod";
 
 import { blobs, deleteBlobs } from "./blob";
-import { jsonb, sql } from "./db";
+import { query, run } from "./db";
 import { download, getReceived, getReceivedAttachment, type ReceivedEmail } from "./resend";
 
 function headerValue(
@@ -28,19 +29,41 @@ function envelopeRecipient(email: ReceivedEmail): string | null {
   return candidate ? normalizeAddress(candidate) : null;
 }
 
+const addressRowSchema = z.object({ address: z.string() });
+const idRowSchema = z.object({ id: z.string() });
+
 async function addressIsClaimed(address: string): Promise<boolean> {
-  const rows = await sql<{ address: string }[]>`
-    SELECT address FROM tokens WHERE address = ${address}
-  `;
+  const rows = await query(addressRowSchema, "SELECT address FROM tokens WHERE address = ?", [
+    address,
+  ]);
   return rows.length > 0;
+}
+
+function validDate(value: Date): Date | null {
+  return Number.isNaN(value.getTime()) ? null : value;
+}
+
+function isoDate(value: string | null | undefined): string {
+  if (value) {
+    const direct = validDate(new Date(value));
+    if (direct) return direct.toISOString();
+    const rewritten = value
+      .trim()
+      .replace(" ", "T")
+      .replace(/(\.\d{3})\d+/, "$1")
+      .replace(/([+-]\d{2})$/, "$1:00");
+    const postgresStyle = validDate(new Date(rewritten));
+    if (postgresStyle) return postgresStyle.toISOString();
+  }
+  return new Date().toISOString();
 }
 
 export async function ingestReceived(
   resendEmailId: string,
 ): Promise<"stored" | "duplicate" | "unclaimed"> {
-  const existing = await sql<{ id: string }[]>`
-    SELECT id FROM messages WHERE resend_email_id = ${resendEmailId}
-  `;
+  const existing = await query(idRowSchema, "SELECT id FROM messages WHERE resend_email_id = ?", [
+    resendEmailId,
+  ]);
   if (existing.length > 0) return "duplicate";
 
   const email = await getReceived(resendEmailId);
@@ -79,31 +102,41 @@ export async function ingestReceived(
   const messageIdHeader = email.message_id ?? null;
   const threadSource = firstMessageId(references) ?? messageIdHeader ?? id;
 
-  const inserted = await sql`
-    INSERT INTO messages (
+  const inserted = await run(
+    `INSERT INTO messages (
       id, thread_id, to_address, folder, from_email, from_name, to_json,
       cc_json, bcc_json, subject, snippet, body_html, body_text, date,
       is_read, is_starred, message_id_header, references_header, in_reply_to,
       list_unsubscribe, list_unsubscribe_post, attachments_json, raw_key,
       resend_email_id
-    ) VALUES (
-      ${id}, ${normalizeThreadKey(threadSource)}, ${toAddress}, 'inbox',
-      ${email.from}, ${null}, ${jsonb(email.to ?? [])},
-      ${jsonb(email.cc ?? [])}, ${jsonb(email.bcc ?? [])},
-      ${email.subject ?? ""}, ${snippetOf(email.text, email.html)},
-      ${truncate(email.html)}, ${truncate(email.text)},
-      ${email.created_at ?? new Date().toISOString()},
-      false, false, ${messageIdHeader}, ${references},
-      ${headerValue(email.headers, "in-reply-to")},
-      ${headerValue(email.headers, "list-unsubscribe")},
-      ${headerValue(email.headers, "list-unsubscribe-post")},
-      ${jsonb(attachments)}, ${rawKey}, ${resendEmailId}
-    )
-    ON CONFLICT DO NOTHING
-    RETURNING id
-  `;
+    ) VALUES (?, ?, ?, 'inbox', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT DO NOTHING`,
+    [
+      id,
+      normalizeThreadKey(threadSource),
+      toAddress,
+      email.from,
+      null,
+      JSON.stringify(email.to ?? []),
+      JSON.stringify(email.cc ?? []),
+      JSON.stringify(email.bcc ?? []),
+      email.subject ?? "",
+      snippetOf(email.text, email.html),
+      truncate(email.html),
+      truncate(email.text),
+      isoDate(email.created_at),
+      messageIdHeader,
+      references,
+      headerValue(email.headers, "in-reply-to"),
+      headerValue(email.headers, "list-unsubscribe"),
+      headerValue(email.headers, "list-unsubscribe-post"),
+      JSON.stringify(attachments),
+      rawKey,
+      resendEmailId,
+    ],
+  );
 
-  if (inserted.length === 0) {
+  if (inserted === 0) {
     await deleteBlobs(writtenKeys);
     return "duplicate";
   }

@@ -57,6 +57,12 @@ const envSchema = z
     E2E_RESEND_API_KEY: text,
     E2E_RESEND_CONTROL_URL: z.url(),
 
+    E2E_SES_GATEWAY_URL: z.url(),
+    E2E_SES_DOMAIN: text,
+    E2E_SES_GATEWAY_ADMIN_TOKEN: text,
+    E2E_SES_CONTROL_URL: z.url(),
+    E2E_SES_BUCKET: text,
+
     E2E_REDIS_URL: text,
     E2E_UPSTASH_URL: z.url(),
     E2E_UPSTASH_TOKEN: text,
@@ -147,6 +153,13 @@ const envSchema = z
       adminToken: e.E2E_RESEND_GATEWAY_ADMIN_TOKEN,
       apiKey: e.E2E_RESEND_API_KEY,
       controlUrl: e.E2E_RESEND_CONTROL_URL.replace(/\/+$/, ""),
+    },
+    ses: {
+      gatewayUrl: e.E2E_SES_GATEWAY_URL.replace(/\/+$/, ""),
+      domain: e.E2E_SES_DOMAIN,
+      adminToken: e.E2E_SES_GATEWAY_ADMIN_TOKEN,
+      controlUrl: e.E2E_SES_CONTROL_URL.replace(/\/+$/, ""),
+      bucket: e.E2E_SES_BUCKET,
     },
     cache: {
       redisUrl: e.E2E_REDIS_URL,

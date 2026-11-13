@@ -47,4 +47,4 @@ The folder holds a full copy of your database, so protect it as you protect the 
 
 ## Mailbox gateways
 
-If you run a Cloudflare Email or Resend gateway, it keeps its mail in its own storage, separate from your instance. Back it up there. See [Mail gateways](/self-hosting/mail-gateways).
+If you run a Cloudflare Email, Resend or Amazon SES gateway, it keeps its mail in its own storage, separate from your instance. Back it up there. For the Resend gateway, that is its libSQL database and its folder or S3-compatible storage. For the Amazon SES gateway, that is its libSQL database and its S3 bucket. See [Mail gateways](/self-hosting/mail-gateways).

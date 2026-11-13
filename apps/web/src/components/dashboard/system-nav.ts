@@ -138,6 +138,7 @@ const PROVIDER_COPY: Record<ConnectionProvider, { label: string; description: st
     description: "Gateway Workers, one per domain.",
   },
   resend: { label: "Resend", description: "Resend gateways, one per domain." },
+  ses: { label: "Amazon SES", description: "Amazon SES gateways on Lambda, one per domain." },
   s3: {
     label: "S3",
     description: "Buckets on operator-held keys. Users pick only a bucket and prefix.",

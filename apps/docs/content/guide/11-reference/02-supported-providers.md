@@ -15,6 +15,7 @@ Metis Suite works with the providers below. You see only the ones your instance 
 | IMAP mail server        | Yes       | No               | No           | No               | Email address, username and password, with an optional separate login for sending |
 | Cloudflare Email        | Yes       | No               | No           | No               | Email address and a mailbox token from your server operator                       |
 | Resend                  | Yes       | No               | No           | No               | Email address and a mailbox token from your server operator                       |
+| Amazon SES              | Yes       | No               | No           | No               | Email address and a mailbox token from your server operator                       |
 | CalDAV calendar server  | No        | Yes              | No           | No               | Email address, username and password                                              |
 | CardDAV contacts server | No        | No               | No           | Yes              | Email address, username and password                                              |
 | S3 storage              | No        | No               | Yes          | No               | Email address, bucket and an optional folder prefix                               |
@@ -30,10 +31,10 @@ Some things to know:
 
 ## Mail
 
-| Feature                             | Gmail                          | Outlook                          | Zoho Mail                          | IMAP, Cloudflare Email, Resend |
-| ----------------------------------- | ------------------------------ | -------------------------------- | ---------------------------------- | ------------------------------ |
-| When Trash is emptied               | After 30 days (Gmail's policy) | After 30 days (Outlook's policy) | After 30 days (Zoho Mail's policy) | Your mail server decides       |
-| Gmail categories turned into labels | Yes                            | No                               | No                                 | No                             |
+| Feature                             | Gmail                          | Outlook                          | Zoho Mail                          | IMAP, Cloudflare Email, Resend, Amazon SES |
+| ----------------------------------- | ------------------------------ | -------------------------------- | ---------------------------------- | ------------------------------------------ |
+| When Trash is emptied               | After 30 days (Gmail's policy) | After 30 days (Outlook's policy) | After 30 days (Zoho Mail's policy) | Your mail server decides                   |
+| Gmail categories turned into labels | Yes                            | No                               | No                                 | No                                         |
 
 - **Trash.** When you open a message in Trash, a banner tells you when messages there are deleted for good, as in the table above.
 - **Gmail categories.** Messages in Gmail's Promotions, Updates, Social and Forums categories get the Metis Suite labels Promotional, Updates, Social and Newsletter.

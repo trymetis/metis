@@ -13,6 +13,7 @@ Each release's notes are in [`releases/`](releases/), listed under Releases belo
 - Contains a database migration that moves sign-up and workspace invites into one invite table, keeping every pending and accepted invite (older duplicate pending invites to the same workspace collapse into the newest), adds instance roles and account bans to each account, and records each account's last sign-in, starting from its newest session.
 - Sign-up invite emails sent before this release link to `/invite/signup`, which no longer exists. Revoke and resend those invites from Dashboard → Accounts → Invites.
 - Settings → Invites is gone. Account invites are sent from the dashboard's new Accounts → Invites page by the owner or an instance admin; workspace invites stay under each workspace's Settings → Members.
+- The Resend mail gateway stores its mail in libSQL instead of Postgres, so a Resend gateway that ran on Postgres starts empty after the upgrade, with no mail and no mailbox tokens: create each address's token again. Point `DATABASE_URL` at a libSQL database (sqld, Turso or a local file) and set `DATABASE_AUTH_TOKEN` when it needs one; `DB_SCHEMA` is gone.
 
 ### Added
 
@@ -26,6 +27,8 @@ Each release's notes are in [`releases/`](releases/), listed under Releases belo
 - Invites can be declined, and one page now handles every invite: accept or decline when signed in, sign in to accept, or create the account with the invited email filled in.
 - Custom labels can be renamed and recolored from the mail sidebar, and take any color from a picker as well as a brighter palette with pink, indigo and cyan added. Renaming keeps the label on its emails and in workflows. The Workspace Assistant and MCP clients get a matching **Edit label** tool.
 - The drive grid view is an icon view: large icons, image thumbnails, names under each item, folders first and arrow-key navigation.
+- An Amazon SES mail gateway: a Lambda function that receives mail for a domain through SES and an S3 bucket, keeps it in a libSQL database and sends through SES. Register it under Dashboard → System → Amazon SES or with `METIS_SES_SERVERS`, and connect its addresses with mailbox tokens like the Cloudflare and Resend gateways.
+- Each release publishes the mail gateways: the Resend gateway as the image `ghcr.io/trymetis/metis-gateway-resend`, and the Amazon SES and Cloudflare Email gateways as `gateway-ses.zip` and `gateway-cloudflare.zip` under `https://sh.trymetis.email/vVERSION/`, listed in that folder's `SHA256SUMS`.
 
 ### Changed
 
@@ -41,6 +44,7 @@ Each release's notes are in [`releases/`](releases/), listed under Releases belo
 - An invite is checked again when it creates an account: invites sent before sign-up turned invite-only, or by someone who has since lost their instance role, stop working.
 - Self sign-up refuses the owner's address; the owner account is created only at `/setup`.
 - Invites sent, accepted, declined and revoked, instance role changes and removed users are recorded in the audit log.
+- The Resend mail gateway keeps its mail in a libSQL database and raw mail and attachments in a directory (`BLOB_DIR`) or S3-compatible storage, instead of Postgres.
 
 ### Fixed
 

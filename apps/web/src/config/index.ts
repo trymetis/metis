@@ -141,6 +141,7 @@ function seedRaw(raw: Raw): Record<string, unknown> {
     carddavServers: connections.carddavServers,
     cloudflareServers: connections.cloudflareServers,
     resendServers: connections.resendServers,
+    sesServers: connections.sesServers,
     s3Servers: connections.s3Servers,
     webdavServers: connections.webdavServers,
     ftpServers: connections.ftpServers,

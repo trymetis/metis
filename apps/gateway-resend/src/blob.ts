@@ -1,98 +1,111 @@
-import { AwsClient } from "aws4fetch";
+import { mkdir, rm, rmdir } from "node:fs/promises";
+import path from "node:path";
 
-import { sql } from "./db";
+import {
+  DeleteObjectsCommand,
+  GetObjectCommand,
+  NoSuchKey,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
+import type { BlobBody } from "@metis/gateway-contract/router";
+
 import { type BlobConfig, env } from "./env";
 
-export interface StoredBlob {
-  bytes: Uint8Array<ArrayBuffer>;
-  contentType: string | null;
-}
+const S3_MAX_DELETE_KEYS = 1000;
+const KEY_SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 interface BlobStore {
   put(key: string, bytes: Uint8Array, contentType: string): Promise<void>;
-  get(key: string): Promise<StoredBlob | null>;
+  get(key: string): Promise<BlobBody | null>;
   delete(keys: string[]): Promise<void>;
 }
 
-function postgresStore(): BlobStore {
+function directoryStore(root: string): BlobStore {
+  const base = path.resolve(root);
+  const fileFor = (key: string) => {
+    const segments = key.split("/");
+    if (segments.length === 0 || !segments.every((segment) => KEY_SEGMENT.test(segment))) {
+      throw new Error(`blob key "${key}" is not a safe path`);
+    }
+    return path.join(base, ...segments);
+  };
+
   return {
-    async put(key, bytes, contentType) {
-      await sql`
-        INSERT INTO blobs (key, content_type, bytes)
-        VALUES (${key}, ${contentType}, ${Buffer.from(bytes)})
-        ON CONFLICT (key) DO UPDATE SET
-          content_type = excluded.content_type,
-          bytes = excluded.bytes
-      `;
+    async put(key, bytes) {
+      const file = fileFor(key);
+      await mkdir(path.dirname(file), { recursive: true });
+      await Bun.write(file, bytes);
     },
 
     async get(key) {
-      const rows = await sql<{ content_type: string | null; bytes: Buffer }[]>`
-        SELECT content_type, bytes FROM blobs WHERE key = ${key}
-      `;
-      const row = rows[0];
-      if (!row) return null;
-      return {
-        bytes: new Uint8Array(row.bytes),
-        contentType: row.content_type,
-      };
+      const file = Bun.file(fileFor(key));
+      return (await file.exists()) ? file.stream() : null;
     },
 
     async delete(keys) {
-      if (keys.length === 0) return;
-      await sql`DELETE FROM blobs WHERE key = ANY(${keys})`;
+      const files = keys.map(fileFor);
+      await Promise.all(files.map((file) => rm(file, { force: true })));
+      const parents = new Set(
+        files.map((file) => path.dirname(file)).filter((dir) => dir !== base),
+      );
+      await Promise.all([...parents].map((dir) => rmdir(dir).catch(() => undefined)));
     },
   };
 }
 
 function s3Store(cfg: BlobConfig): BlobStore {
-  const client = new AwsClient({
-    accessKeyId: cfg.keyId,
-    secretAccessKey: cfg.secret,
+  const client = new S3Client({
+    endpoint: cfg.endpoint,
     region: cfg.region,
-    service: "s3",
+    forcePathStyle: true,
+    credentials: { accessKeyId: cfg.keyId, secretAccessKey: cfg.secret },
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
   });
-  const url = (key: string) =>
-    `${cfg.endpoint}/${cfg.bucket}/${key.split("/").map(encodeURIComponent).join("/")}`;
 
   return {
     async put(key, bytes, contentType) {
-      const res = await client.fetch(url(key), {
-        method: "PUT",
-        body: bytes,
-        headers: { "Content-Type": contentType },
-      });
-      if (!res.ok) {
-        throw new Error(`blob store rejected PUT ${key}: ${res.status}`);
-      }
+      await client.send(
+        new PutObjectCommand({
+          Bucket: cfg.bucket,
+          Key: key,
+          Body: bytes,
+          ContentType: contentType,
+        }),
+      );
     },
 
     async get(key) {
-      const res = await client.fetch(url(key));
-      if (res.status === 404) return null;
-      if (!res.ok) {
-        throw new Error(`blob store rejected GET ${key}: ${res.status}`);
+      try {
+        const object = await client.send(new GetObjectCommand({ Bucket: cfg.bucket, Key: key }));
+        return object.Body ? object.Body.transformToWebStream() : null;
+      } catch (err) {
+        if (err instanceof NoSuchKey) return null;
+        throw err;
       }
-      return {
-        bytes: new Uint8Array(await res.arrayBuffer()),
-        contentType: res.headers.get("content-type"),
-      };
     },
 
     async delete(keys) {
+      const batches: string[][] = [];
+      for (let index = 0; index < keys.length; index += S3_MAX_DELETE_KEYS) {
+        batches.push(keys.slice(index, index + S3_MAX_DELETE_KEYS));
+      }
       await Promise.all(
-        keys.map(async (key) => {
-          const res = await client.fetch(url(key), { method: "DELETE" });
-          if (!res.ok && res.status !== 404) {
-            console.error(`[metis-resend] blob store rejected DELETE ${key}: ${res.status}`);
-          }
-        }),
+        batches.map((batch) =>
+          client.send(
+            new DeleteObjectsCommand({
+              Bucket: cfg.bucket,
+              Delete: { Objects: batch.map((Key) => ({ Key })), Quiet: true },
+            }),
+          ),
+        ),
       );
     },
   };
 }
 
-export const blobs: BlobStore = env.blob ? s3Store(env.blob) : postgresStore();
+export const blobs: BlobStore = env.blob ? s3Store(env.blob) : directoryStore(env.blobDir);
 
 export async function deleteBlobs(keys: string[]): Promise<void> {
   if (keys.length === 0) return;

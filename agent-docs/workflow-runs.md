@@ -66,7 +66,7 @@ Paths are relative to `apps/web/`. See also [AGENTS.md](../AGENTS.md), [workflow
   - **Date:** between `CLOCK_SKEW_MS` before and `DISPATCH_GRACE_MS` after the send step's `started_at` (`dispatchWindow`). That column is written only when a step run is created or reclaimed, and a `dispatching` or `unknown` one is never reclaimed, so later re-marks cannot move it.
   - **Unique:** it is not another run's receipt, and not indistinguishable from an id-less completed send in that mailbox (Microsoft returns a `null` id) that settled within `CLOCK_SKEW_MS` of it with the same `fingerprint`.
 - **Whether a Sent copy shows Bcc depends on the provider.**
-  - The Resend and Cloudflare gateways store Bcc on sent mail; Gmail, Microsoft and Zoho list none.
+  - The Resend, Amazon SES and Cloudflare gateways store Bcc on sent mail; Gmail, Microsoft and Zoho list none.
   - On IMAP a copy shows it only if its raw message carries a Bcc header, and the copy Metis files itself (`MailComposer` in `src/mail/providers/imap.ts`) omits it.
   - On a copy that hides Bcc an extra Bcc goes unnoticed, which is why To, Cc, subject, sender and time must each match on their own.
 

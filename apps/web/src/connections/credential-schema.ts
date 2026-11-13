@@ -46,6 +46,13 @@ const resendCredentialsSchema = z.object({
   token: gatewayTokenSchema,
 });
 
+const sesCredentialsSchema = z.object({
+  provider: z.literal("ses"),
+  serverId: serverIdRefSchema,
+  server: serverRefSchema,
+  token: gatewayTokenSchema,
+});
+
 const s3CredentialsSchema = z.object({
   provider: z.literal("s3"),
   serverId: serverIdRefSchema,
@@ -120,6 +127,7 @@ export const connectionCredentialsSchema = z.discriminatedUnion("provider", [
   carddavCredentialsSchema,
   cloudflareCredentialsSchema,
   resendCredentialsSchema,
+  sesCredentialsSchema,
   s3CredentialsSchema,
   webdavCredentialsSchema,
   ftpCredentialsSchema,

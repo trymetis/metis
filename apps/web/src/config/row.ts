@@ -22,6 +22,7 @@ interface StoredServers {
   carddav: InstanceConfig["carddavServers"];
   cloudflare: InstanceConfig["cloudflareServers"];
   resend: InstanceConfig["resendServers"];
+  ses: InstanceConfig["sesServers"];
   s3: InstanceConfig["s3Servers"];
   webdav: InstanceConfig["webdavServers"];
   ftp: InstanceConfig["ftpServers"];
@@ -44,6 +45,7 @@ export function instanceConfigToRow(rt: InstanceConfig): InstanceConfigSettings 
     carddav: rt.carddavServers,
     cloudflare: rt.cloudflareServers,
     resend: rt.resendServers,
+    ses: rt.sesServers,
     s3: rt.s3Servers,
     webdav: rt.webdavServers,
     ftp: rt.ftpServers,
@@ -230,6 +232,7 @@ export function rowToInstanceConfig(row: InstanceConfigSettings): InstanceConfig
     carddavServers: servers.carddav ?? [],
     cloudflareServers: servers.cloudflare ?? [],
     resendServers: servers.resend ?? [],
+    sesServers: servers.ses ?? [],
     s3Servers: servers.s3 ?? [],
     webdavServers: servers.webdav ?? [],
     ftpServers: servers.ftp ?? [],

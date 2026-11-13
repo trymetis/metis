@@ -1,4 +1,5 @@
 import {
+  AmazonSes,
   type BrandMark,
   CaldavServer,
   CarddavServer,
@@ -46,6 +47,7 @@ export const ACCOUNT_PROVIDER_META: Record<ConnectionProvider, ProviderMeta> = {
   carddav: { label: "CardDAV", Mark: CarddavServer },
   cloudflare: { label: "Cloudflare", Mark: Cloudflare },
   resend: { label: "Resend", Mark: ResendMail },
+  ses: { label: "Amazon SES", Mark: AmazonSes },
   s3: { label: "S3", Mark: ObjectStorage },
   webdav: { label: "WebDAV", Mark: WebdavServer },
   ftp: { label: "FTP", Mark: FtpServer },
@@ -62,6 +64,7 @@ export const RESOURCE_PROVIDER_META: {
     imap: { label: "IMAP", Mark: ImapServer },
     cloudflare: { label: "Cloudflare Email", Mark: Cloudflare },
     resend: { label: "Resend", Mark: ResendMail },
+    ses: { label: "Amazon SES", Mark: AmazonSes },
   },
   calendar: {
     google: { label: CALENDAR_PROVIDER_LABELS.google, Mark: GoogleCalendar },

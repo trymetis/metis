@@ -91,6 +91,7 @@ export const SECTION_ENV_VARS: Record<InstanceSection, string[]> = {
   carddavServers: ["METIS_CARDDAV_SERVERS"],
   cloudflareServers: ["METIS_CLOUDFLARE_SERVERS"],
   resendServers: ["METIS_RESEND_SERVERS"],
+  sesServers: ["METIS_SES_SERVERS"],
   s3Servers: ["METIS_S3_SERVERS"],
   webdavServers: ["METIS_WEBDAV_SERVERS"],
   ftpServers: ["METIS_FTP_SERVERS"],
@@ -151,6 +152,7 @@ const SECTION_FILE_PATHS: Record<InstanceSection, string[][]> = {
   carddavServers: [["connections", "carddavServers"]],
   cloudflareServers: [["connections", "cloudflareServers"]],
   resendServers: [["connections", "resendServers"]],
+  sesServers: [["connections", "sesServers"]],
   s3Servers: [["connections", "s3Servers"]],
   webdavServers: [["connections", "webdavServers"]],
   ftpServers: [["connections", "ftpServers"]],
@@ -179,6 +181,7 @@ function anyProviderConfigured(instance: InstanceConfig): boolean {
     instance.carddavServers.length > 0 ||
     instance.cloudflareServers.length > 0 ||
     instance.resendServers.length > 0 ||
+    instance.sesServers.length > 0 ||
     instance.s3Servers.length > 0 ||
     instance.webdavServers.length > 0 ||
     instance.ftpServers.length > 0 ||

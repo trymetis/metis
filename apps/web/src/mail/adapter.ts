@@ -68,6 +68,7 @@ const MAIL_ADAPTERS: Record<MailProvider, (auth: ConnectionAuth) => MailAdapter>
   imap: (auth) => imapMail(imapCredentials(auth), credentialEmail(auth)),
   cloudflare: gateway,
   resend: gateway,
+  ses: gateway,
 };
 
 export function getMailAdapter(

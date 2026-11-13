@@ -10,8 +10,8 @@ const server = Bun.serve({
 
 console.log(
   `[metis-resend] listening on :${server.port} for @${env.mailDomain} (blobs: ${
-    env.blob ? "object storage" : "postgres"
-  }, schema: ${env.dbSchema})`,
+    env.blob ? "object storage" : env.blobDir
+  })`,
 );
 
 startPolling(env.pollIntervalSec);

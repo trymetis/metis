@@ -9,6 +9,8 @@ import {
   Inbox,
 } from "lucide-react";
 
+import { AwsDark } from "./svgs/awsDark";
+import { AwsLight } from "./svgs/awsLight";
 import { ResendIconBlack } from "./svgs/resendIconBlack";
 import { ResendIconWhite } from "./svgs/resendIconWhite";
 
@@ -18,6 +20,13 @@ export const ResendMail: BrandMark = ({ className }) => (
   <>
     <ResendIconBlack className={cn(className, "dark:hidden")} />
     <ResendIconWhite className={cn(className, "hidden dark:block")} />
+  </>
+);
+
+export const AmazonSes: BrandMark = ({ className }) => (
+  <>
+    <AwsLight className={cn(className, "dark:hidden")} />
+    <AwsDark className={cn(className, "hidden dark:block")} />
   </>
 );
 

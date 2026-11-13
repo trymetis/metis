@@ -30,6 +30,7 @@ export function connectServers(c: InstanceConfig = getInstanceConfig()): Connect
     ...listed("carddav", c.carddavServers),
     ...listed("cloudflare", c.cloudflareServers),
     ...listed("resend", c.resendServers),
+    ...listed("ses", c.sesServers),
     ...listed("s3", c.s3Servers),
     ...listed("webdav", c.webdavServers),
     ...listed("ftp", c.ftpServers),
@@ -169,7 +170,12 @@ export function resolveServerCredentials(
     };
   }
 
-  const entries = stored.provider === "cloudflare" ? c.cloudflareServers : c.resendServers;
+  const gatewayEntries = {
+    cloudflare: c.cloudflareServers,
+    resend: c.resendServers,
+    ses: c.sesServers,
+  };
+  const entries = gatewayEntries[stored.provider];
   const entry = findEntry(entries, stored);
   if (!entry) return null;
   return {

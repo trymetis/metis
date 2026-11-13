@@ -1,3 +1,4 @@
+import type { InStatement } from "@libsql/client";
 import {
   error,
   type Gateway,
@@ -6,11 +7,20 @@ import {
   handleRequest as handleGatewayRequest,
   json,
 } from "@metis/gateway-contract/router";
-import { SEARCH_LIMIT } from "@metis/gateway-contract/wire";
+import { type Folder, SEARCH_LIMIT } from "@metis/gateway-contract/wire";
 import { z } from "zod";
 
 import { blobs, deleteBlobs } from "./blob";
-import { jsonb, type MessageRow, sql, toStored } from "./db";
+import {
+  idBatches,
+  messageRowSchema,
+  parseAttachments,
+  placeholders,
+  query,
+  run,
+  runBatch,
+  toStored,
+} from "./db";
 import { env } from "./env";
 import { ingestReceived } from "./ingest";
 import { ResendError, sendEmail } from "./resend";
@@ -23,128 +33,134 @@ const webhookEventSchema = z.object({
   data: z.object({ email_id: z.string().optional() }).optional(),
 });
 
-function folderFilter(address: string, folder: string) {
+const addressRowSchema = z.object({ address: z.string() });
+const tokenRowSchema = z.object({ address: z.string(), created_at: z.string() });
+const idRowSchema = z.object({ id: z.string() });
+const totalRowSchema = z.object({ total: z.number() });
+const attachmentsRowSchema = z.object({ attachments_json: z.string() });
+const purgeRowSchema = z.object({
+  id: z.string(),
+  folder: z.string(),
+  raw_key: z.string().nullable(),
+  attachments_json: z.string(),
+});
+
+function folderCondition(address: string, folder: Folder): { where: string; args: string[] } {
   if (folder === "starred") {
-    return sql`to_address = ${address} AND is_starred = true
-      AND folder NOT IN ('trash', 'spam', 'drafts')`;
+    return {
+      where: "to_address = ? AND is_starred = 1 AND folder NOT IN ('trash', 'spam', 'drafts')",
+      args: [address],
+    };
   }
-  return sql`to_address = ${address} AND folder = ${folder}`;
+  return { where: "to_address = ? AND folder = ?", args: [address, folder] };
 }
 
 const store: GatewayStore = {
   async tokenAddress(tokenHash) {
-    const rows = await sql<{ address: string }[]>`
-      SELECT address FROM tokens WHERE token_hash = ${tokenHash}
-    `;
+    const rows = await query(addressRowSchema, "SELECT address FROM tokens WHERE token_hash = ?", [
+      tokenHash,
+    ]);
     return rows[0]?.address ?? null;
   },
 
   async listTokens() {
-    const rows = await sql<{ address: string; created_at: Date }[]>`
-      SELECT address, created_at FROM tokens ORDER BY address
-    `;
-    return rows.map((row) => ({
-      address: row.address,
-      created_at: row.created_at.toISOString(),
-    }));
+    return query(tokenRowSchema, "SELECT address, created_at FROM tokens ORDER BY address");
   },
 
   async saveToken(address, tokenHash) {
-    await sql`
-      INSERT INTO tokens (address, token_hash)
-      VALUES (${address}, ${tokenHash})
-      ON CONFLICT (address) DO UPDATE SET token_hash = excluded.token_hash
-    `;
+    await run(
+      `INSERT INTO tokens (address, token_hash) VALUES (?, ?)
+       ON CONFLICT (address) DO UPDATE SET token_hash = excluded.token_hash`,
+      [address, tokenHash],
+    );
   },
 
   async revokeToken(address) {
-    await sql`DELETE FROM tokens WHERE address = ${address}`;
+    await run("DELETE FROM tokens WHERE address = ?", [address]);
   },
 
   async getMessage(address, id) {
-    const rows = await sql<MessageRow[]>`
-      SELECT * FROM messages WHERE id = ${id} AND to_address = ${address}
-    `;
+    const rows = await query(
+      messageRowSchema,
+      "SELECT * FROM messages WHERE id = ? AND to_address = ?",
+      [id, address],
+    );
     const row = rows[0];
     return row ? toStored(row) : null;
   },
 
   async listMessages(address, { folder, limit, after }) {
-    const keyset = after
-      ? sql`AND (date < ${after.date} OR (date = ${after.date} AND id < ${after.id}))`
-      : sql``;
+    const { where, args } = folderCondition(address, folder);
+    const keyset = after ? " AND (date < ? OR (date = ? AND id < ?))" : "";
+    const keysetArgs = after ? [after.date, after.date, after.id] : [];
     const [rows, count] = await Promise.all([
-      sql<MessageRow[]>`
-        SELECT * FROM messages WHERE ${folderFilter(address, folder)} ${keyset}
-        ORDER BY date DESC, id DESC LIMIT ${limit}
-      `,
-      sql<{ total: string }[]>`
-        SELECT COUNT(*) AS total FROM messages
-        WHERE ${folderFilter(address, folder)}
-      `,
+      query(
+        messageRowSchema,
+        `SELECT * FROM messages WHERE ${where}${keyset} ORDER BY date DESC, id DESC LIMIT ?`,
+        [...args, ...keysetArgs, limit],
+      ),
+      query(totalRowSchema, `SELECT COUNT(*) AS total FROM messages WHERE ${where}`, args),
     ]);
     return {
       messages: rows.map(toStored),
-      total: Number(count[0]?.total ?? rows.length),
+      total: count[0]?.total ?? rows.length,
     };
   },
 
   async searchMessages(address, pattern) {
-    const rows = await sql<MessageRow[]>`
-      SELECT * FROM messages
-      WHERE to_address = ${address} AND folder NOT IN ('trash', 'spam', 'drafts')
-        AND (
-          subject ILIKE ${pattern} OR from_email ILIKE ${pattern}
-          OR from_name ILIKE ${pattern} OR snippet ILIKE ${pattern}
-          OR body_text ILIKE ${pattern}
-        )
-      ORDER BY date DESC LIMIT ${SEARCH_LIMIT}
-    `;
+    const rows = await query(
+      messageRowSchema,
+      `SELECT * FROM messages
+       WHERE to_address = ? AND folder NOT IN ('trash', 'spam', 'drafts')
+         AND (
+           subject LIKE ? ESCAPE '\\' OR from_email LIKE ? ESCAPE '\\'
+           OR from_name LIKE ? ESCAPE '\\' OR snippet LIKE ? ESCAPE '\\'
+           OR body_text LIKE ? ESCAPE '\\'
+         )
+       ORDER BY date DESC LIMIT ${SEARCH_LIMIT}`,
+      [address, pattern, pattern, pattern, pattern, pattern],
+    );
     return rows.map(toStored);
   },
 
   async folderIds(address, folder, limit) {
-    const rows = await sql<{ id: string }[]>`
-      SELECT id FROM messages WHERE ${folderFilter(address, folder)}
-      ORDER BY date DESC LIMIT ${limit}
-    `;
+    const { where, args } = folderCondition(address, folder);
+    const rows = await query(
+      idRowSchema,
+      `SELECT id FROM messages WHERE ${where} ORDER BY date DESC LIMIT ?`,
+      [...args, limit],
+    );
     return rows.map((row) => row.id);
   },
 
   async thread(address, threadId) {
-    const rows = await sql<MessageRow[]>`
-      SELECT * FROM messages
-      WHERE to_address = ${address}
-        AND thread_id = ${threadId}
-        AND folder != 'trash'
-      ORDER BY date ASC
-    `;
+    const rows = await query(
+      messageRowSchema,
+      `SELECT * FROM messages
+       WHERE to_address = ? AND thread_id = ? AND folder != 'trash'
+       ORDER BY date ASC`,
+      [address, threadId],
+    );
     return rows.map(toStored);
   },
 
   async outgoingAttachments(address, id) {
-    const rows = await sql<Pick<MessageRow, "attachments_json">[]>`
-      SELECT attachments_json FROM messages
-      WHERE id = ${id} AND to_address = ${address}
-    `;
-    return rows[0]?.attachments_json ?? null;
+    const rows = await query(
+      attachmentsRowSchema,
+      "SELECT attachments_json FROM messages WHERE id = ? AND to_address = ?",
+      [id, address],
+    );
+    const row = rows[0];
+    return row ? parseAttachments(row.attachments_json) : null;
   },
 
   async upsertOutgoing(record) {
-    await sql`
-      INSERT INTO messages (
+    await run(
+      `INSERT INTO messages (
         id, thread_id, to_address, folder, from_email, to_json, cc_json,
         bcc_json, subject, snippet, body_html, body_text, date, is_read,
         is_starred, references_header, in_reply_to, attachments_json
-      ) VALUES (
-        ${record.id}, ${record.threadId}, ${record.address}, ${record.folder},
-        ${record.fromEmail}, ${jsonb(record.to)},
-        ${jsonb(record.cc)}, ${jsonb(record.bcc)},
-        ${record.subject}, ${record.snippet},
-        ${record.bodyHtml}, ${record.bodyText}, ${record.date}, true,
-        false, ${record.references}, ${record.inReplyTo},
-        ${jsonb(record.attachments)}
-      )
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?, ?)
       ON CONFLICT (id) DO UPDATE SET
         folder = excluded.folder, from_email = excluded.from_email,
         to_json = excluded.to_json, cc_json = excluded.cc_json,
@@ -154,62 +170,98 @@ const store: GatewayStore = {
         references_header = excluded.references_header,
         in_reply_to = excluded.in_reply_to,
         thread_id = excluded.thread_id,
-        attachments_json = excluded.attachments_json
-    `;
+        attachments_json = excluded.attachments_json`,
+      [
+        record.id,
+        record.threadId,
+        record.address,
+        record.folder,
+        record.fromEmail,
+        JSON.stringify(record.to),
+        JSON.stringify(record.cc),
+        JSON.stringify(record.bcc),
+        record.subject,
+        record.snippet,
+        record.bodyHtml,
+        record.bodyText,
+        record.date,
+        record.references,
+        record.inReplyTo,
+        JSON.stringify(record.attachments),
+      ],
+    );
   },
 
   async setRead(address, ids, read) {
-    await sql`
-      UPDATE messages SET is_read = ${read}
-      WHERE to_address = ${address} AND id = ANY(${ids})
-    `;
+    await runBatch(
+      idBatches(ids, 2).map((batch) => ({
+        sql: `UPDATE messages SET is_read = ? WHERE to_address = ? AND id IN (${placeholders(batch)})`,
+        args: [read ? 1 : 0, address, ...batch],
+      })),
+    );
   },
 
   async setFlags(id, { isRead, isStarred }) {
+    const statements: InStatement[] = [];
     if (isStarred !== undefined) {
-      await sql`UPDATE messages SET is_starred = ${isStarred} WHERE id = ${id}`;
+      statements.push({
+        sql: "UPDATE messages SET is_starred = ? WHERE id = ?",
+        args: [isStarred ? 1 : 0, id],
+      });
     }
     if (isRead !== undefined) {
-      await sql`UPDATE messages SET is_read = ${isRead} WHERE id = ${id}`;
+      statements.push({
+        sql: "UPDATE messages SET is_read = ? WHERE id = ?",
+        args: [isRead ? 1 : 0, id],
+      });
     }
+    await runBatch(statements);
   },
 
   async purgeTargets(address, ids) {
-    const rows = await sql<Pick<MessageRow, "id" | "folder" | "raw_key" | "attachments_json">[]>`
-      SELECT id, folder, raw_key, attachments_json FROM messages
-      WHERE to_address = ${address} AND id = ANY(${ids})
-    `;
-    return rows.map((row) => ({
+    const found = await Promise.all(
+      idBatches(ids, 1).map((batch) =>
+        query(
+          purgeRowSchema,
+          `SELECT id, folder, raw_key, attachments_json FROM messages
+           WHERE to_address = ? AND id IN (${placeholders(batch)})`,
+          [address, ...batch],
+        ),
+      ),
+    );
+    return found.flat().map((row) => ({
       id: row.id,
       folder: row.folder,
       rawKey: row.raw_key,
-      attachments: row.attachments_json,
+      attachments: parseAttachments(row.attachments_json),
     }));
   },
 
   async moveToTrash(address, ids) {
-    await sql`
-      UPDATE messages SET prev_folder = folder, folder = 'trash'
-      WHERE to_address = ${address} AND id = ANY(${ids})
-    `;
+    await runBatch(
+      idBatches(ids, 1).map((batch) => ({
+        sql: `UPDATE messages SET prev_folder = folder, folder = 'trash'
+              WHERE to_address = ? AND id IN (${placeholders(batch)})`,
+        args: [address, ...batch],
+      })),
+    );
   },
 
   async archive(id) {
-    await sql`
-      UPDATE messages SET prev_folder = folder, folder = 'archive'
-      WHERE id = ${id}
-    `;
+    await run("UPDATE messages SET prev_folder = folder, folder = 'archive' WHERE id = ?", [id]);
   },
 
   async restore(id, folder) {
-    await sql`
-      UPDATE messages SET folder = ${folder}, prev_folder = NULL
-      WHERE id = ${id}
-    `;
+    await run("UPDATE messages SET folder = ?, prev_folder = NULL WHERE id = ?", [folder, id]);
   },
 
   async deleteMessages(ids) {
-    await sql`DELETE FROM messages WHERE id = ANY(${ids})`;
+    await runBatch(
+      idBatches(ids, 0).map((batch) => ({
+        sql: `DELETE FROM messages WHERE id IN (${placeholders(batch)})`,
+        args: batch,
+      })),
+    );
   },
 
   async putBlob(key, bytes, contentType) {
@@ -217,8 +269,7 @@ const store: GatewayStore = {
   },
 
   async getBlob(key) {
-    const object = await blobs.get(key);
-    return object ? object.bytes : null;
+    return blobs.get(key);
   },
 
   async deleteBlobs(keys) {

@@ -1,0 +1,29 @@
+{
+  "name": "@metis/gateway-ses",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun build src/lambda.ts --target=node --format=esm --outfile=dist/index.mjs",
+    "package": "cd dist && rm -f gateway-ses.zip && zip -qX gateway-ses.zip index.mjs",
+    "db:apply": "bun run scripts/apply-schema.ts",
+    "token": "metis-gateway-token",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "catalog:",
+    "@aws-sdk/client-sesv2": "^3.1156.0",
+    "@libsql/client": "catalog:",
+    "@metis/gateway-contract": "workspace:*",
+    "nodemailer": "catalog:",
+    "postal-mime": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:",
+    "@types/nodemailer": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:"
+  }
+}

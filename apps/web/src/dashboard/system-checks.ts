@@ -436,6 +436,7 @@ const SECTION_PROVIDERS: Partial<Record<InstanceSection, ConnectionProvider>> = 
   carddavServers: "carddav",
   cloudflareServers: "cloudflare",
   resendServers: "resend",
+  sesServers: "ses",
   s3Servers: "s3",
   webdavServers: "webdav",
   ftpServers: "ftp",

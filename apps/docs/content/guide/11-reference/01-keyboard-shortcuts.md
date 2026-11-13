@@ -49,23 +49,23 @@ Inside the search window:
 
 Press **m**, then:
 
-| Keys             | Action                                                                                                                                                                                       |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **m** then **i** | Go to Inbox                                                                                                                                                                                  |
-| **m** then **s** | Go to Sent                                                                                                                                                                                   |
-| **m** then **d** | Go to Drafts                                                                                                                                                                                 |
-| **m** then **f** | Go to Starred                                                                                                                                                                                |
-| **m** then **t** | Go to Trash                                                                                                                                                                                  |
-| **m** then **v** | Go to Archive                                                                                                                                                                                |
-| **m** then **p** | Go to Spam                                                                                                                                                                                   |
-| **m** then **c** | Compose a new message                                                                                                                                                                        |
-| **m** then **r** | When a message is open, opens a new blank message. It does not fill in a reply. To reply, use the **Reply** bar at the bottom of the reading pane.                                           |
-| **m** then **x** | Star or unstar the open message                                                                                                                                                              |
-| **m** then **u** | Mark the open message read or unread                                                                                                                                                         |
-| **m** then **e** | Archive the open message                                                                                                                                                                     |
-| **m** then **#** | Delete the open message, without asking first. Most mailboxes move it to Trash; Cloudflare Email and Resend mailboxes, and messages already in Trash on a mail server, are deleted for good. |
-| **m** then **/** | Jump to the search box                                                                                                                                                                       |
-| **m** then **a** | Open or close the **Mail AI** panel                                                                                                                                                          |
+| Keys             | Action                                                                                                                                                                                                   |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **m** then **i** | Go to Inbox                                                                                                                                                                                              |
+| **m** then **s** | Go to Sent                                                                                                                                                                                               |
+| **m** then **d** | Go to Drafts                                                                                                                                                                                             |
+| **m** then **f** | Go to Starred                                                                                                                                                                                            |
+| **m** then **t** | Go to Trash                                                                                                                                                                                              |
+| **m** then **v** | Go to Archive                                                                                                                                                                                            |
+| **m** then **p** | Go to Spam                                                                                                                                                                                               |
+| **m** then **c** | Compose a new message                                                                                                                                                                                    |
+| **m** then **r** | When a message is open, opens a new blank message. It does not fill in a reply. To reply, use the **Reply** bar at the bottom of the reading pane.                                                       |
+| **m** then **x** | Star or unstar the open message                                                                                                                                                                          |
+| **m** then **u** | Mark the open message read or unread                                                                                                                                                                     |
+| **m** then **e** | Archive the open message                                                                                                                                                                                 |
+| **m** then **#** | Delete the open message, without asking first. Most mailboxes move it to Trash; Cloudflare Email, Resend and Amazon SES mailboxes, and messages already in Trash on a mail server, are deleted for good. |
+| **m** then **/** | Jump to the search box                                                                                                                                                                                   |
+| **m** then **a** | Open or close the **Mail AI** panel                                                                                                                                                                      |
 
 Without a prefix:
 

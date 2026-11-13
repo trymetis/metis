@@ -42,6 +42,7 @@ const PROVIDER_SECTION: Record<ConnectionProvider, InstanceSection> = {
   carddav: "carddavServers",
   cloudflare: "cloudflareServers",
   resend: "resendServers",
+  ses: "sesServers",
   s3: "s3Servers",
   webdav: "webdavServers",
   ftp: "ftpServers",
@@ -60,6 +61,7 @@ const SERVER_LIST_ENV: Record<Exclude<ConnectionProvider, OAuthProviderId>, stri
   carddav: "METIS_CARDDAV_SERVERS",
   cloudflare: "METIS_CLOUDFLARE_SERVERS",
   resend: "METIS_RESEND_SERVERS",
+  ses: "METIS_SES_SERVERS",
   s3: "METIS_S3_SERVERS",
   webdav: "METIS_WEBDAV_SERVERS",
   ftp: "METIS_FTP_SERVERS",
@@ -427,14 +429,17 @@ function providerEntries(
       }));
     case "cloudflare":
     case "resend":
-      return (provider === "cloudflare" ? servers.cloudflareServers : servers.resendServers).map(
-        (server) => ({
-          kind: "gateway",
-          ...base(server),
-          domain: server.domain,
-          endpoint: publicUrl(server.endpoint),
-        }),
-      );
+    case "ses":
+      return {
+        cloudflare: servers.cloudflareServers,
+        resend: servers.resendServers,
+        ses: servers.sesServers,
+      }[provider].map((server) => ({
+        kind: "gateway",
+        ...base(server),
+        domain: server.domain,
+        endpoint: publicUrl(server.endpoint),
+      }));
     case "s3":
       return servers.s3Servers.map((server) => ({
         kind: "s3",

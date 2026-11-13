@@ -52,6 +52,44 @@ services:
       timeout: 2s
       retries: 30
 
+  sqld-resend:
+    image: ghcr.io/tursodatabase/libsql-server:latest@sha256:6dd3eb276d9d3604e4a48ac4a999a2e267814732d57d7e94c04ba71482333a67
+    environment:
+      SQLD_AUTH_JWT_KEY: ${SQLD_AUTH_JWT_KEY:?set in e2e/.env.fixture}
+    tmpfs:
+      - /var/lib/sqld:size=512m,mode=1777
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 256
+    healthcheck:
+      test:
+        - CMD
+        - bash
+        - -c
+        - 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf "GET /health HTTP/1.0\r\n\r\n" >&3 && read -r status <&3 && [[ $$status == *" 200 "* ]]'
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  sqld-ses:
+    image: ghcr.io/tursodatabase/libsql-server:latest@sha256:6dd3eb276d9d3604e4a48ac4a999a2e267814732d57d7e94c04ba71482333a67
+    environment:
+      SQLD_AUTH_JWT_KEY: ${SQLD_AUTH_JWT_KEY:?set in e2e/.env.fixture}
+    tmpfs:
+      - /var/lib/sqld:size=512m,mode=1777
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 256
+    healthcheck:
+      test:
+        - CMD
+        - bash
+        - -c
+        - 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf "GET /health HTTP/1.0\r\n\r\n" >&3 && read -r status <&3 && [[ $$status == *" 200 "* ]]'
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
   mail:
     build:
       context: .
@@ -183,23 +221,6 @@ services:
       redis:
         condition: service_healthy
 
-  postgres:
-    image: postgres:18-alpine@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
-    environment:
-      POSTGRES_USER: metis
-      POSTGRES_PASSWORD: ${E2E_RESEND_DB_PASSWORD:?set in e2e/.env.fixture}
-      POSTGRES_DB: resend_gateway
-    tmpfs:
-      - /var/lib/postgresql:size=256m,mode=1777
-    mem_limit: 512m
-    cpus: 0.5
-    pids_limit: 128
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "metis", "-d", "resend_gateway"]
-      interval: 2s
-      timeout: 2s
-      retries: 30
-
   resend:
     build:
       context: ..
@@ -229,18 +250,22 @@ services:
       context: ..
       dockerfile: e2e/gateway-resend/Dockerfile
     environment:
-      DATABASE_URL: postgres://metis:${E2E_RESEND_DB_PASSWORD:?set in e2e/.env.fixture}@postgres:5432/resend_gateway
+      DATABASE_URL: http://sqld-resend:8080
+      DATABASE_AUTH_TOKEN: ${E2E_RESEND_DATABASE_AUTH_TOKEN:?set in e2e/.env.fixture}
+      BLOB_DIR: /data/blobs
       MAIL_DOMAIN: ${E2E_RESEND_DOMAIN:?set in e2e/.env.fixture}
       API_TOKEN: ${E2E_RESEND_GATEWAY_ADMIN_TOKEN:?set in e2e/.env.fixture}
       RESEND_API_KEY: ${E2E_RESEND_API_KEY:?set in e2e/.env.fixture}
       RESEND_WEBHOOK_SECRET: ${E2E_RESEND_WEBHOOK_SECRET:?set in e2e/.env.fixture}
       PORT: "8787"
       NODE_EXTRA_CA_CERTS: /e2e/tls/ca.crt
+    tmpfs:
+      - /data:size=256m,mode=1777
     mem_limit: 512m
     cpus: 0.5
     pids_limit: 128
     depends_on:
-      postgres:
+      sqld-resend:
         condition: service_healthy
       resend:
         condition: service_healthy
@@ -250,6 +275,87 @@ services:
         - bun
         - -e
         - 'fetch("http://127.0.0.1:8787/v1/health").then(r=>process.exit(r.status===401?0:1),()=>process.exit(1))'
+      interval: 2s
+      timeout: 3s
+      retries: 60
+
+  ses:
+    build:
+      context: ..
+      dockerfile: e2e/fakes/Dockerfile
+    image: metis-e2e-fakes
+    command: ["ses"]
+    environment:
+      SES_DOMAIN: ${E2E_SES_DOMAIN:?set in e2e/.env.fixture}
+      SES_REGION: us-east-1
+      SES_BUCKET: ${E2E_SES_BUCKET:?set in e2e/.env.fixture}
+      SES_ACCESS_KEY_ID: e2e-access-key
+      S3_ENDPOINT: http://s3:9000
+      S3_ACCESS_KEY: e2e-access-key
+      S3_SECRET_KEY: e2e-secret-key-0001
+      LAMBDA_INVOKE_URL: http://gateway-ses:8080/2015-03-31/functions/function/invocations
+    networks:
+      default:
+        aliases:
+          - email.us-east-1.amazonaws.com
+    mem_limit: 64m
+    cpus: 0.5
+    pids_limit: 64
+    depends_on:
+      s3:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/fakes", "health", "http://127.0.0.1:8080/health"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  gateway-ses-schema:
+    build:
+      context: ..
+      dockerfile: e2e/gateway-ses/Dockerfile
+      target: schema
+    environment:
+      DATABASE_URL: http://sqld-ses:8080
+      DATABASE_AUTH_TOKEN: ${E2E_SES_DATABASE_AUTH_TOKEN:?set in e2e/.env.fixture}
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 64
+    depends_on:
+      sqld-ses:
+        condition: service_healthy
+
+  gateway-ses:
+    build:
+      context: ..
+      dockerfile: e2e/gateway-ses/Dockerfile
+      target: lambda
+    environment:
+      MAIL_DOMAIN: ${E2E_SES_DOMAIN:?set in e2e/.env.fixture}
+      API_TOKEN: ${E2E_SES_GATEWAY_ADMIN_TOKEN:?set in e2e/.env.fixture}
+      DATABASE_URL: http://sqld-ses:8080
+      DATABASE_AUTH_TOKEN: ${E2E_SES_DATABASE_AUTH_TOKEN:?set in e2e/.env.fixture}
+      MAIL_BUCKET: ${E2E_SES_BUCKET:?set in e2e/.env.fixture}
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: e2e-access-key
+      AWS_SECRET_ACCESS_KEY: e2e-secret-key-0001
+      AWS_LAMBDA_FUNCTION_TIMEOUT: "60"
+      AWS_LAMBDA_FUNCTION_MEMORY_SIZE: "1024"
+      NODE_EXTRA_CA_CERTS: /e2e/tls/ca.crt
+    mem_limit: 1g
+    cpus: 0.5
+    pids_limit: 128
+    depends_on:
+      gateway-ses-schema:
+        condition: service_completed_successfully
+      proxy:
+        condition: service_started
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - 'require("node:net").connect(8080,"127.0.0.1").on("connect",()=>process.exit(0)).on("error",()=>process.exit(1))'
       interval: 2s
       timeout: 3s
       retries: 60
@@ -344,6 +450,10 @@ services:
       gateway-cloudflare:
         condition: service_healthy
       gateway-resend:
+        condition: service_healthy
+      gateway-ses:
+        condition: service_healthy
+      ses:
         condition: service_healthy
       proxy:
         condition: service_started
@@ -448,6 +558,8 @@ services:
     volumes:
       - ./proxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
       - ./proxy/tls/resend-gateway.pem:/usr/local/etc/haproxy/resend-gateway.pem:ro
+      - ./proxy/tls/ses-gateway.pem:/usr/local/etc/haproxy/ses-gateway.pem:ro
+      - ./proxy/tls/s3-amazonaws.pem:/usr/local/etc/haproxy/s3-amazonaws.pem:ro
     mem_limit: 128m
     cpus: 0.5
     pids_limit: 64
@@ -462,6 +574,8 @@ services:
           - sftp.localhost
           - gateway.localhost
           - resend-gateway.localhost
+          - ses-gateway.localhost
+          - s3.us-east-1.amazonaws.com
       egress: {}
     ports:
       - 127.0.0.1:3000:3000
@@ -488,7 +602,10 @@ services:
       - "[::1]:8787:8787"
       - 127.0.0.1:8788:8788
       - "[::1]:8788:8788"
+      - 127.0.0.1:8789:8789
+      - "[::1]:8789:8789"
       - 127.0.0.1:8079:8079
       - 127.0.0.1:8096:8096
+      - 127.0.0.1:8095:8095
       - 127.0.0.1:30000-30019:30000-30019
       - "[::1]:30000-30019:30000-30019"

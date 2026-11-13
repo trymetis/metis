@@ -19,6 +19,8 @@ bun install
 cd apps/gateway-cloudflare
 ```
 
+Each Metis Suite server release also publishes the built Worker, without its bindings, so you can deploy it with your own tools. For release 1.2.3, it is at `https://sh.trymetis.email/v1.2.3/gateway-cloudflare.zip`, and the folder's `SHA256SUMS` lists its checksum. Use the release your instance runs. You supply the bindings yourself, as `wrangler.jsonc` in the source code names them: the D1 database as `DB`, the R2 bucket as `RAW`, the sending binding as `EMAIL`, and the `MAIL_DOMAIN` variable. You also set the `API_TOKEN` secret.
+
 ## Deploy the Worker
 
 <Steps>

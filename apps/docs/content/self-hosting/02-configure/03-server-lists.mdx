@@ -5,16 +5,16 @@ description: Offer your own IMAP, CalDAV, CardDAV, S3, WebDAV, FTP, FTPS and SFT
 
 Besides Google, Microsoft and Zoho, users can connect to servers that you list. You decide the servers. Users pick one by its name in the connect dialog and bring only their own login. Metis Suite never connects to a server address that a user types in.
 
-| Provider                 | What users connect                                                | Page under **System**, **Providers**             |
-| ------------------------ | ----------------------------------------------------------------- | ------------------------------------------------ |
-| IMAP                     | A mailbox over IMAP, sending over SMTP                            | **IMAP**                                         |
-| CalDAV                   | A calendar account                                                | **CalDAV**                                       |
-| CardDAV                  | An address book account                                           | **CardDAV**                                      |
-| S3                       | A bucket, on keys you hold. Users pick only a bucket and a prefix | **S3**                                           |
-| WebDAV                   | A drive, relayed through your server                              | **WebDAV**                                       |
-| FTP and FTPS             | A drive, relayed through your server                              | **FTP**                                          |
-| SFTP                     | A drive, relayed through your server, with a pinned host key      | **SFTP**                                         |
-| Cloudflare Email, Resend | A mailbox on your own domain                                      | See [Mail gateways](/self-hosting/mail-gateways) |
+| Provider                             | What users connect                                                | Page under **System**, **Providers**             |
+| ------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------------ |
+| IMAP                                 | A mailbox over IMAP, sending over SMTP                            | **IMAP**                                         |
+| CalDAV                               | A calendar account                                                | **CalDAV**                                       |
+| CardDAV                              | An address book account                                           | **CardDAV**                                      |
+| S3                                   | A bucket, on keys you hold. Users pick only a bucket and a prefix | **S3**                                           |
+| WebDAV                               | A drive, relayed through your server                              | **WebDAV**                                       |
+| FTP and FTPS                         | A drive, relayed through your server                              | **FTP**                                          |
+| SFTP                                 | A drive, relayed through your server, with a pinned host key      | **SFTP**                                         |
+| Cloudflare Email, Resend, Amazon SES | A mailbox on your own domain                                      | See [Mail gateways](/self-hosting/mail-gateways) |
 
 ## Add a server in the dashboard
 
@@ -39,6 +39,7 @@ These fields are the connection settings for each provider:
 | WebDAV                 | **WebDAV URL**, **Accept invalid TLS certificates**  |
 | Cloudflare Email       | **Worker endpoint**                                  |
 | Resend                 | **Gateway endpoint**                                 |
+| Amazon SES             | **Gateway endpoint**                                 |
 | S3, FTP and FTPS, SFTP | Every field                                          |
 
 An IMAP entry has two checks, one for IMAP and one for SMTP. Each one runs again only when its own side changes:

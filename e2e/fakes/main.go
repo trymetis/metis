@@ -11,6 +11,7 @@ const usage = `usage: fakes <role>
 roles:
   updater     the fake updater: the updater protocol on a Unix socket, control on :8080
   resend      the fake Resend API on :443 (api.resend.com), control on :8080
+  ses         the fake SESv2 API on :443, control on :8080, a Lambda function URL front on :8081
   mcp-client  Client ID Metadata Documents on :443, hits on :8080
   cron        POSTs the app's workflow tick route every minute
   health URL  exits 0 when URL answers 2xx (for scratch healthchecks)
@@ -29,6 +30,8 @@ func main() {
 		err = runUpdater()
 	case "resend":
 		err = runResend()
+	case "ses":
+		err = runSes()
 	case "mcp-client":
 		err = runMcpClient()
 	case "cron":

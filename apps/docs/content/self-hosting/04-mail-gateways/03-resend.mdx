@@ -3,16 +3,23 @@ title: Set up the Resend gateway
 description: Run a gateway that receives mail through Resend, keeps it in your own database, and sends through Resend.
 ---
 
-The Resend gateway is a small service you run for one domain. It receives mail through Resend's inbound webhook and sends through Resend. It stores messages in Postgres, with raw mail and attachments in S3-compatible storage or in Postgres. Resend deletes received mail after 30 days, so the gateway keeps its own permanent copy.
+The Resend gateway is a small service you run for one domain. It receives mail through Resend's inbound webhook and sends through Resend. It stores messages in a libSQL database. libSQL is an open-source database built on SQLite. It keeps raw mail and attachments in a folder or in S3-compatible storage. Resend deletes received mail after 30 days, so the gateway keeps its own permanent copy.
 
 Mail for an address with no mailbox token is dropped. Creating a token for an address is what turns it on.
+
+Search in a Resend gateway mailbox ignores upper and lower case only for the letters A to Z. For other letters, such as accented ones, the case must match.
+
+:::note[Moving from Postgres]
+Earlier versions of the Resend gateway stored mail in Postgres. A gateway that ran on Postgres starts empty on libSQL, with no mail and no mailbox tokens. There is no way to import mail from Postgres. Create a token again for each address and give it to its owner. Until you do, mail for that address is dropped.
+:::
 
 ## Before you start
 
 - A Resend account with your domain verified and receiving turned on, including Resend's inbound MX record on the domain. If the domain already has MX records, use a subdomain.
 - A Resend API key with full access. It stays inside the gateway.
-- A Postgres database. You can share one with other apps: set `DB_SCHEMA` to keep the gateway's tables apart. The gateway creates its schema and tables itself, so its database user needs permission to create them. On Neon and Supabase, click **Connect** to see the connection string. Supabase's direct connection uses IPv6; on a network with IPv4 only, use its session mode string. See [Neon](https://neon.com/docs/connect/connect-from-any-app) and [Supabase](https://supabase.com/docs/guides/database/connecting-to-postgres).
-- [Bun](https://bun.sh) and a copy of the Metis Suite source code:
+- A libSQL database of its own, not one of your Metis Suite databases. It can be on a libSQL server (sqld), on Turso, or a local file. The gateway creates its tables itself.
+- Docker, to run the published image. To run the gateway with Bun instead, see step 2.
+- [Bun](https://bun.sh) and a copy of the Metis Suite source code, to create mailbox tokens (step 5) and to run the gateway from the source code:
 
 ```bash
 git clone https://github.com/trymetis/metis.git
@@ -21,42 +28,80 @@ bun install
 cd apps/gateway-resend
 ```
 
-No ready-made image of the gateway is published. You build or run it yourself.
+## The gateway image
+
+Each Metis Suite server release publishes a ready-made image of the gateway: `ghcr.io/trymetis/metis-gateway-resend`. It is public, so you need no sign-in to download it.
+
+| Tag      | What it is                                                                            |
+| -------- | ------------------------------------------------------------------------------------- |
+| `1.2.3`  | Release 1.2.3.                                                                        |
+| `latest` | The newest release that is not a pre-release. A pre-release does not change `latest`. |
+
+You can use any tag. A good choice is the release your instance runs. Older releases have no image. If your release has none, use a newer tag or build the image yourself (step 2).
+
+To find the release your instance runs:
+
+- Every page of Metis Suite shows a **Source code** link with the version, for example "Source code · v1.2.3". It is in the left rail, at the bottom of the account settings and dashboard sidebars, and in the footer of the pages before sign-in. See [Source code link](/self-hosting/configure/source-code-link).
+- With the Compose stack, open **Dashboard**, **System**, **Updates**. The **Version** row of **Running release** shows the release, such as `1.2.3`. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo). If it shows **Not a pinned release**, use the **Source code** link instead.
+
+Write the tag without the leading `v`: `1.2.3`, not `v1.2.3`.
 
 ## Run the gateway
 
 <Steps>
   <Step title="Set its variables">
-    Write the gateway's settings to `apps/gateway-resend/.env`.
+    Write the gateway's settings to a file named `.env`. With the published
+    image, the file can be in any folder. When you build the image yourself
+    or use Bun, put it in `apps/gateway-resend`.
 
     | Variable | Required | What it is |
     | --- | --- | --- |
-    | `DATABASE_URL` | yes | The Postgres connection string. Percent-encode special characters in the password. |
-    | `DB_SCHEMA` | no | The schema for the gateway's tables, a plain name such as `resend_gw`. Default `public`. |
+    | `DATABASE_URL` | yes | The libSQL address of the database. It starts with `http://`, `https://`, `libsql://`, `ws://`, `wss://` or `file:`. For a local file, use for example `file:gateway.db`. |
+    | `DATABASE_AUTH_TOKEN` | no | The database's token, when it needs one, such as for a Turso database. |
     | `MAIL_DOMAIN` | yes | The domain this gateway serves. |
     | `API_TOKEN` | yes | The admin token, for example from `openssl rand -hex 32`. |
     | `RESEND_API_KEY` | yes | Your full-access Resend key. |
     | `RESEND_WEBHOOK_SECRET` | yes, in practice | The webhook's signing secret (next step). Without it, the webhook refuses deliveries, and only the catch-up check (`POLL_INTERVAL_SEC`) receives mail. |
     | `PORT` | no | Default `8787`. |
     | `POLL_INTERVAL_SEC` | no | Seconds between catch-up checks for received mail. `0` (the default) turns them off. Useful when Resend cannot reach the webhook, and as a backstop. |
-    | `BLOB_ENDPOINT`, `BLOB_BUCKET`, `BLOB_KEY_ID`, `BLOB_SECRET` | no | S3-compatible storage (such as R2 or S3) for raw mail and attachments. Set all four or none. With none, they are stored in Postgres. |
-    | `BLOB_REGION` | no | Default `auto`, which suits R2. |
+    | `BLOB_DIR` | no | The folder for raw mail and attachments when you use no S3-compatible storage. Default `data/blobs`, inside the folder the gateway runs in. In the Docker image, the default is `/data/blobs`. |
+    | `BLOB_ENDPOINT`, `BLOB_BUCKET`, `BLOB_KEY_ID`, `BLOB_SECRET` | no | S3-compatible storage (such as R2 or S3) for raw mail and attachments. Set all four or none. With none, they are stored in `BLOB_DIR`. If you set only some of them, the gateway stops when it starts, with an error that says they must be set together. |
+    | `BLOB_REGION` | no | Used only with S3-compatible storage. Default `auto`, which suits R2. |
 
   </Step>
 
   <Step title="Start it">
     Use one of these:
 
-    - Docker, built from the root of the source code. The container
-      creates its schema and tables every time it starts.
+    - Docker, with the published image. Run this from the folder that holds
+      your `.env` file, with your instance's release in place of `1.2.3`.
+      Each time the container starts, it creates any tables that are
+      missing. Then it serves on port 8787.
+
+      ```bash
+      docker run -d --name metis-resend --env-file .env -p 8787:8787 \
+        -v metis-resend-data:/data ghcr.io/trymetis/metis-gateway-resend:1.2.3
+      ```
+
+      The container keeps its files under `/data`. The named volume
+      `metis-resend-data` keeps them when you recreate the container. If
+      you use a local file as the database, put it under `/data` too, for
+      example `DATABASE_URL=file:/data/gateway.db`, so it is kept as well.
+
+    - Docker, with an image you build from the source code. Run this from
+      the root of the source code (run `cd ../..` first if you are still in
+      `apps/gateway-resend`):
 
       ```bash
       docker build -f apps/gateway-resend/Dockerfile -t metis-resend .
-      docker run --env-file apps/gateway-resend/.env -p 8787:8787 metis-resend
+      docker run -d --name metis-resend --env-file apps/gateway-resend/.env -p 8787:8787 -v metis-resend-data:/data metis-resend
       ```
 
-    - Bun, from `apps/gateway-resend`. Create the schema and tables first,
-      then start it:
+      It works like the published image.
+
+    - Bun, from `apps/gateway-resend` in the source code. Create the tables
+      first, then start it. You can run `bun run db:apply` again at any
+      time. It keeps your data.
 
       ```bash
       bun run db:apply
@@ -68,12 +113,11 @@ No ready-made image of the gateway is published. You build or run it yourself.
 
   </Step>
 
-  <Step title="Add the webhook in Resend">
-    In the Resend dashboard, add a webhook for the `email.received` event,
-    pointing at `https://<your gateway>/webhooks/resend`. Copy its signing
-    secret, which starts with `whsec_`, into `RESEND_WEBHOOK_SECRET`, and
-    restart the gateway.
-  </Step>
+<Step title="Add the webhook in Resend">
+  In the Resend dashboard, add a webhook for the `email.received` event, pointing at
+  `https://resend-gateway.example.com/webhooks/resend`. Copy its signing secret, which starts with
+  `whsec_`, into `RESEND_WEBHOOK_SECRET`, and restart the gateway.
+</Step>
 
   <Step title="Register it in Metis Suite">
     Open **Dashboard**, **System**, **Resend** under **Providers**. Click
@@ -90,7 +134,7 @@ No ready-made image of the gateway is published. You build or run it yourself.
     You can also set the starting list before the first start:
 
     ```bash
-    METIS_RESEND_SERVERS=[{"name":"Example Mail","domain":"example.com","endpoint":"https://metis-resend-mail.example.com"}]
+    METIS_RESEND_SERVERS=[{"name":"Example Mail","domain":"example.com","endpoint":"https://resend-gateway.example.com"}]
     ```
 
   </Step>

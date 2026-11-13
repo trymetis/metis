@@ -125,7 +125,7 @@ The keys `in:` and `folder:` do not exist. Search marks them and shows "Use mail
 
 ## Providers
 
-`provider:` takes `google`, `microsoft`, `zoho`, `imap`, `caldav`, `carddav`, `cloudflare`, `resend`, `s3`, `webdav`, `ftp` or `sftp`.
+`provider:` takes `google`, `microsoft`, `zoho`, `imap`, `caldav`, `carddav`, `cloudflare`, `resend`, `ses`, `s3`, `webdav`, `ftp` or `sftp`.
 
 ## Dates
 

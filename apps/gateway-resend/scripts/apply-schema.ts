@@ -1,4 +1,4 @@
-import postgres from "postgres";
+import { createClient } from "@libsql/client";
 
 const url = process.env.DATABASE_URL?.trim();
 if (!url) {
@@ -6,22 +6,15 @@ if (!url) {
   process.exit(1);
 }
 
-const schema = process.env.DB_SCHEMA?.trim() || "public";
-if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(schema)) {
-  console.error(`DB_SCHEMA "${schema}" is not a plain identifier`);
-  process.exit(1);
-}
-
-const sql = postgres(url, { onnotice: () => {} });
+const authToken = process.env.DATABASE_AUTH_TOKEN?.trim();
+const client = createClient({ url, ...(authToken ? { authToken } : {}) });
 
 try {
-  await sql.unsafe(`CREATE SCHEMA IF NOT EXISTS "${schema}"`);
-  await sql.unsafe(`SET search_path TO "${schema}"`);
-  await sql.unsafe(await Bun.file("schema.sql").text());
-  console.log(`[metis-resend] schema applied to "${schema}"`);
+  await client.executeMultiple(await Bun.file(new URL("../schema.sql", import.meta.url)).text());
+  console.log("[metis-resend] schema applied");
 } catch (err) {
   console.error("[metis-resend] could not apply the schema", err);
   process.exit(1);
 } finally {
-  await sql.end();
+  client.close();
 }

@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "package": "cd dist && rm -f gateway-cloudflare.zip && zip -qX gateway-cloudflare.zip index.js index.js.map",
     "db:create": "wrangler d1 create metis-suite",
     "db:apply": "wrangler d1 execute metis-suite --remote --file=schema.sql",
     "r2:create": "wrangler r2 bucket create metis-suite-raw",

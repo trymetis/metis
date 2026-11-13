@@ -55,7 +55,7 @@ You see only the providers and servers your instance owner has set up. You canno
 
 | You are connecting | Sign in with your provider                                   | Fill in a login form (the button shows the server's name) |
 | ------------------ | ------------------------------------------------------------ | --------------------------------------------------------- |
-| A mailbox          | **Gmail**, **Outlook**, **Zoho Mail**                        | IMAP mail servers, Cloudflare Email, Resend               |
+| A mailbox          | **Gmail**, **Outlook**, **Zoho Mail**                        | IMAP mail servers, Cloudflare Email, Resend, Amazon SES   |
 | A calendar account | **Google Calendar**, **Outlook Calendar**, **Zoho Calendar** | CalDAV calendar servers                                   |
 | A drive            | **Google Drive**, **OneDrive**                               | S3 storage, WebDAV, FTP, SFTP                             |
 | An address book    | **Google Contacts**, **Outlook Contacts**, **Zoho Contacts** | CardDAV contacts servers                                  |
@@ -121,7 +121,7 @@ Sometimes Metis Suite shows a "Nothing was connected" card instead of the confir
 
 The messages name your provider: Gmail, Outlook or Zoho Mail.
 
-Logins for a server (IMAP, CalDAV, CardDAV, WebDAV, FTP, SFTP, S3, Cloudflare Email and Resend) have no confirmation page. See [Fill in the login form](#fill-in-the-login-form).
+Logins for a server (IMAP, CalDAV, CardDAV, WebDAV, FTP, SFTP, S3, Cloudflare Email, Resend and Amazon SES) have no confirmation page. See [Fill in the login form](#fill-in-the-login-form).
 
 ### After you connect
 
@@ -152,14 +152,14 @@ When you pick a server, Metis Suite shows "Enter your login for this server. It 
 
 Every form asks for your **Email address**. The other fields depend on the kind of server:
 
-| Server                     | Fields                                                                                                                                                                                                                      |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| IMAP mail server           | **Username** (if you leave it empty, your email address is used) and **Password**. Turn on **SMTP uses a different login** if your outgoing mail needs its own login, then fill in **SMTP username** and **SMTP password**. |
-| CalDAV calendar server     | **Username** (your email address if left empty) and **Password**.                                                                                                                                                           |
-| CardDAV contacts server    | **Username** (your email address if left empty) and **Password**.                                                                                                                                                           |
-| WebDAV, FTP or SFTP        | **Username** (your email address if left empty), **Password**, and an optional **Folder**. A folder limits this connection to that one folder.                                                                              |
-| S3 storage                 | **Bucket**, and an optional **Folder prefix** that limits this connection to one folder.                                                                                                                                    |
-| Cloudflare Email or Resend | **Mailbox token**. Your server operator creates this token for your address and gives it to you.                                                                                                                            |
+| Server                                 | Fields                                                                                                                                                                                                                      |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| IMAP mail server                       | **Username** (if you leave it empty, your email address is used) and **Password**. Turn on **SMTP uses a different login** if your outgoing mail needs its own login, then fill in **SMTP username** and **SMTP password**. |
+| CalDAV calendar server                 | **Username** (your email address if left empty) and **Password**.                                                                                                                                                           |
+| CardDAV contacts server                | **Username** (your email address if left empty) and **Password**.                                                                                                                                                           |
+| WebDAV, FTP or SFTP                    | **Username** (your email address if left empty), **Password**, and an optional **Folder**. A folder limits this connection to that one folder.                                                                              |
+| S3 storage                             | **Bucket**, and an optional **Folder prefix** that limits this connection to one folder.                                                                                                                                    |
+| Cloudflare Email, Resend or Amazon SES | **Mailbox token**. Your server operator creates this token for your address and gives it to you.                                                                                                                            |
 
 Click **Connect mailbox**, **Connect calendar**, **Connect drive** or **Connect address book**. Metis Suite checks your login with the server before it saves anything.
 

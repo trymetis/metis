@@ -54,6 +54,7 @@ const CONNECTION_SECTIONS = new Set<InstanceSection>([
   "carddavServers",
   "cloudflareServers",
   "resendServers",
+  "sesServers",
   "s3Servers",
   "webdavServers",
   "ftpServers",
