@@ -93,7 +93,7 @@ jobs:
           set -o pipefail
           if sudo metis setup --yes --owner-email owner@example.com --with updater 2>&1 | tee setup.log; then
             echo "skip=false" >> "$GITHUB_OUTPUT"
-          elif grep -qE "no published release|needs Metis CLI" setup.log; then
+          elif grep -qiE "no published release|needs Metis CLI" setup.log; then
             echo "::notice::No published app release runs on this CLI yet, so the smoke test is skipped"
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
