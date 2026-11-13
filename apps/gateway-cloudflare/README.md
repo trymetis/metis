@@ -30,7 +30,7 @@ only mail received after setup exists — there is no history import.
 ## Setup with the metis CLI
 
 On a Metis server, one command creates everything below (the D1 database, the
-R2 bucket, the Worker from the release's `gateway-cloudflare.zip`, its
+R2 bucket, the Worker from the newest release's `gateway-cloudflare.zip`, its
 workers.dev route, Email Routing and Email Sending with their DNS records) and
 registers the gateway in Metis:
 
@@ -40,9 +40,9 @@ sudo CLOUDFLARE_API_TOKEN=... metis add gateway-cloudflare --domain example.com
 
 `--addresses alice@example.com,bob@example.com` routes only those addresses
 instead of the whole domain. From any other machine, `metis add
-gateway-cloudflare --remote --domain example.com --version 1.4.0` does the same
-for the release your instance runs and prints the admin token and the server
-entry. `metis remove gateway-cloudflare --domain example.com` undoes it, and
+gateway-cloudflare --remote --domain example.com` does the same and prints the
+admin token and the server entry; `--version 0.2.0` deploys that release instead
+of the newest. `metis remove gateway-cloudflare --domain example.com` undoes it, and
 `--purge` also deletes the D1 database and the R2 bucket. Mint mailbox tokens
 with `metis gateway token create alice@example.com`.
 
@@ -86,9 +86,10 @@ the worker name with `WORKER_NAME=...`.
 
 ## Published build
 
-Every Metis release publishes the built Worker as
-`https://sh.trymetis.email/vVERSION/gateway-cloudflare.zip`, listed in
-`vVERSION/SHA256SUMS`: wrangler's bundled `index.js` and its source map, built
+Every `gateway-cloudflare-v` release publishes the built Worker as
+`https://sh.trymetis.email/gateway-cloudflare/vVERSION/gateway-cloudflare.zip`,
+listed in that folder's `SHA256SUMS` (`gateway-cloudflare/version.txt` names
+the newest release; any release works with any Metis server): wrangler's bundled `index.js` and its source map, built
 with `bun run build` and `bun run package` here. It carries no bindings; whoever
 deploys it supplies the D1 database, the R2 bucket, `send_email`, `MAIL_DOMAIN`
 and `API_TOKEN` as in `wrangler.jsonc`.

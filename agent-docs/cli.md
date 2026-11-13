@@ -37,7 +37,9 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [updater.md]
   - Remote commands touch only outside services: `connect google`, `config set` and `unset` with `--env-file`, the gateway commands with `--remote` or `--endpoint`, `gateway token` with `--endpoint`, `sqld-auth`, `version` and `self-update`.
   - The export commands run in both modes: `keygen`, `db export` with `--env-file`, `db load`, `export decrypt` and `export inspect` ([export.md](export.md)); `db export` without `--env-file`, `db move` and `export recipients` run only on a server, as root.
   - The macOS and Windows builds always run in remote mode.
-- **A remote command takes what it needs from flags or `--env-file` and caches nothing.** Commands that pick a release artifact away from a server take `--version X.Y.Z`, because the app does not expose its version.
+- **A remote command takes what it needs from flags or `--env-file` and caches nothing.**
+  - Commands that run a server release's artifact away from a server (the preflight image for `config set`) take `--version X.Y.Z`, because the app does not expose its version.
+  - The gateway commands take the gateway's own newest release unless `--version` names one.
 - **Fresh installs only.** `metis setup` refuses a folder that is not empty and a machine that already has an install; nothing reads or converts a bootstrap or compose install.
 
 ### The install folder
@@ -94,7 +96,7 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [updater.md]
 | `gateway-ses`        | an AWS account          | See Integrations                                                                                                                                               | Deletes its rule and resources; `--purge` also the bucket                                                                                   |
 
 - **Every change runs in one order**: under the lock, the component edits `metis.json` and the env files, the Caddyfile is rewritten, then one apply runs, with one preflight forcing the keys the change owns ([configuration.md](configuration.md)).
-- **Re-running `metis add` changes a component in place** and moves a gateway to the running app version.
+- **Re-running `metis add` changes a component in place** and moves a gateway to its newest release, or to the one `--version` names.
 - **The runner switch forces the whole `workflowRunner` section**, so runner settings changed on the dashboard return to their `.env` values or defaults; `add worker` and `remove worker` say so before they run, and `--yes` accepts it.
 - **CLI-owned server entries carry `metis-` ids** (`metis-objstore`, `metis-cloudflare-DOMAIN`, `metis-resend-DOMAIN`, `metis-ses-DOMAIN`), so forcing a server list replaces only them.
 
@@ -108,11 +110,32 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [updater.md]
 ### Integrations
 
 - **Cloud credentials are read from the environment, otherwise asked for, and never written to disk:** `CLOUDFLARE_API_TOKEN`; the AWS SDK's default chain; `RESEND_API_KEY` (which the Resend gateway's own env file then holds, because the gateway needs it).
-- **Gateway artifacts are downloaded or pulled, never built on the server**, for the running app version: the Resend image, and `gateway-cloudflare.zip` and `gateway-ses.zip` checked against that version's `SHA256SUMS`; schemas and `wrangler.jsonc` come from the `app-vVERSION` tag on GitHub.
+- **Gateway artifacts are downloaded or pulled, never built on the server**, from each gateway's own release track ([gateways.md](gateways.md)): the newest release named by `GATEWAY/version.txt`, or `--version` (`apps/cli/internal/gateways` → `Resolve`, `Artifact`, `SourceFile`).
+  - The Resend image is pulled by that version's tag.
+  - `gateway-cloudflare.zip` and `gateway-ses.zip` are checked against `GATEWAY/vVERSION/SHA256SUMS` and cached under `cache/gateways/GATEWAY/VERSION/`.
+  - Schemas and `wrangler.jsonc` come from the `GATEWAY-vVERSION` tag on GitHub.
 - **DNS records go through Cloudflare when a token is set and the zone is on that account; otherwise they are printed.** Resend and SES verification is polled every 15 s for up to 10 minutes, and re-running the command resumes.
+- **Every resource a gateway command creates is named from the domain** (`metis-mail-DOMAIN` for Cloudflare, `metis-ses-DOMAIN` for SES, with dots as dashes), so `metis remove` finds them even in remote mode, where there is no `metis.json`.
+- **`metis add gateway-cloudflare` builds the gateway on the zone's account** (`apps/cli/internal/cloudflare/cloudflare.go` → `DeployGateway`).
+  - It creates or reuses the D1 database `metis-mail-DOMAIN` (and runs the tag's `schema.sql` in it), the R2 bucket `metis-mail-DOMAIN-raw` and the Worker `metis-mail-DOMAIN` with its bindings, then turns on the Worker's workers.dev address, which becomes the endpoint.
+  - Email Routing gets its DNS records; with `--addresses`, one literal rule per address points at the Worker and the catch-all goes off, otherwise the catch-all points at it. Email Sending gets the domain and its DNS records.
+  - The Worker's `API_TOKEN` goes to `env/gateway-cloudflare-DOMAIN.env`. `metis remove` deletes the routing rules and catch-all that point at the Worker, and the Worker; `--purge` also D1 and R2.
+- **`metis add gateway-resend` runs the gateway in the stack and wires Resend to it** (`apps/cli/internal/components/gateways.go` → `resendGateway`).
+  - `--database own` (default) runs `sqld-resend` with its own key in `env/sqld-resend.env`; `stack` uses the `resend` namespace on the server's sqld, which Undo last upgrade then rolls back with the app.
+  - `--blobs dir` (default) keeps raw mail in `/data/blobs` on the gateway's volume; `objstore` uses a `gateway-resend` bucket on the server's RustFS.
+  - `--host` defaults to `resend.` plus the app's domain, which Caddy serves. The key must have full access; receiving is turned on for the domain, and the webhook's id stays in `metis.json` so a re-run keeps it.
+  - `env/gateway-resend.env` holds the database, blobs, `MAIL_DOMAIN`, `API_TOKEN`, `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET` and `POLL_INTERVAL_SEC=300`, the polling backstop for missed webhooks.
+- **`metis add gateway-ses` creates the deployment `apps/gateway-ses/README.md` lists** (`apps/cli/internal/ses/ses.go`).
+  - The bucket, the IAM role, the function (`nodejs24.x`, `arm64`) and its function URL in `RESPONSE_STREAM` mode with the public invoke permission.
+  - The `-failed` SQS queue for receipts that keep failing (two retries, kept up to six hours), and the receipt rule.
+  - It refuses a region that receives no SES mail and, while the account is in the sandbox, offers the production access request.
+  - The function's `API_TOKEN` goes to `env/gateway-ses-DOMAIN.env`; `metis remove` deletes the rule, function, URL, queue and role, and `--purge` also the bucket.
 - **The SES gateway's rule joins the active rule set; a set is created only when none is active, and removing deletes only that rule.**
 - **The SES database must be reachable from Lambda over the internet**; the server's own sqld is never offered.
+- **In remote mode the gateway commands print instead of storing.** They print the admin token once, the server entry and its `METIS_*_SERVERS` variable, for Dashboard → System or `metis config set --env-file`. `gateway-resend --endpoint` does only the Resend side for a gateway that runs elsewhere and prints the values to set on it.
+- **The objstore server entry, `metis-objstore`, uses the relay**: `http://objstore:9000` with path-style requests, so files pass through the app. With `--direct` it points at `https://storage.` plus the domain and moves files straight between browsers and storage, which is why RustFS then allows the app's origin ([drive.md](drive.md)).
 - **Google OAuth clients cannot be created by API.** `metis connect google` uses `gcloud`'s token, when gcloud is signed in, only to create the project and turn on the APIs, then guides the consent screen and the client with deep links and checks the pasted pair against Google's token endpoint (`invalid_grant` means it is right).
+  - The audience step says Internal for a Google Workspace (only its members connect), otherwise External and then Publish app, with Google's unverified-app screen and its lifetime limit of 100 new users; it never suggests Testing, whose tokens expire after 7 days.
 
 ### Releases
 
@@ -125,13 +148,13 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [updater.md]
   - It pins the release, writes `.env` (the auth and relay secrets, the encryption key, the setup code, the owner, the database) and `metis.json`, records `/etc/metis/install-dir` and applies.
   - It prints the URL, the setup code and the encryption key warning; gateways and Google chosen in the form are set up after the first apply.
 - **The shim** (`bootstrap.sh`) downloads `metis-linux-ARCH` and `SHA256SUMS` from `cli/` (or `cli/vMETIS_CLI_VERSION/`), checks it, installs it as `/usr/local/bin/metis` and runs `metis setup` with its own arguments.
-- **Status.** `metis status` lists each component with its health, every managed container, the app version and the last upgrade; each gateway shows its version against the app's, and an SES gateway its failed receipts.
+- **Status.** `metis status` lists each component with its health, every managed container, the app version and the last upgrade; each gateway shows its version and, when its folder's `version.txt` answers within 3 s, a newer release that is out; an SES gateway also shows its failed receipts.
 - **Domain.** `metis domain HOST` also creates the A record for the server's public address (from `https://1.1.1.1/cdn-cgi/trace`) through Cloudflare when it can.
 
 ## Deliberate limits
 
 - **One server.** The CLI manages the Docker Engine it runs on; workers scale with `--replicas` on the same host.
-- **Gateways move to a new app version only when an operator re-runs `metis add`**; `metis status` shows the gap. The Cloudflare and SES gateways need cloud credentials the server does not keep.
+- **Gateways move to a newer release only when an operator re-runs `metis add`**; `metis status` says when one is out. The Cloudflare and SES gateways need cloud credentials the server does not keep.
 - **Google stays partly manual**: the consent screen, publishing and the client are made in the Cloud Console.
 - **`--direct` object storage needs a domain**, because browsers fetch files from its public host.
 - **Self-update is manual**, so a compromised app cannot make root replace its own binary.

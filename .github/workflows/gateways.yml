@@ -1,0 +1,124 @@
+name: Mail gateways
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  release:
+    if: startsWith(github.event.release.tag_name, 'gateway-')
+    runs-on: ubuntu-latest
+    outputs:
+      gateway: ${{ steps.release.outputs.gateway }}
+      version: ${{ steps.release.outputs.version }}
+      latest: ${{ steps.release.outputs.latest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Parse the tag
+        id: release
+        run: |
+          tag=$(jq -r .release.tag_name "$GITHUB_EVENT_PATH")
+          if [[ ! "$tag" =~ ^(gateway-resend|gateway-ses|gateway-cloudflare)-v(.+)$ ]]; then
+            echo "::error::$tag names no mail gateway"
+            exit 1
+          fi
+          latest=true
+          if [[ $(jq -r .release.prerelease "$GITHUB_EVENT_PATH") == true ]]; then
+            latest=false
+          fi
+          printf 'gateway=%s\nversion=%s\nlatest=%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}" "$latest" >> "$GITHUB_OUTPUT"
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+
+      - name: Install the release tooling
+        run: bun install --frozen-lockfile --filter @metis/releases
+
+      - name: Check the release notes exist
+        run: bun run --silent release:notes "${{ steps.release.outputs.gateway }}-v${{ steps.release.outputs.version }}" > /dev/null
+
+  image:
+    needs: release
+    if: needs.release.outputs.gateway == 'gateway-resend'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Image tags
+        id: tags
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+          LATEST: ${{ needs.release.outputs.latest }}
+          SUFFIX: ""
+          IMAGE_NAME: ${{ github.repository }}-gateway-resend
+        run: .github/scripts/image-tags.sh
+
+      - name: Log in to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build and push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: apps/gateway-resend/Dockerfile
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+          cache-from: type=gha,scope=gateway-resend
+          cache-to: type=gha,scope=gateway-resend,mode=max
+
+  publish:
+    needs: [release, image]
+    if: ${{ !cancelled() && needs.release.result == 'success' && needs.image.result != 'failure' }}
+    runs-on: ubuntu-latest
+    env:
+      GATEWAY: ${{ needs.release.outputs.gateway }}
+      VERSION: ${{ needs.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+
+      - name: Install the release tooling and the gateway
+        run: |
+          if [[ "$GATEWAY" == gateway-resend ]]; then
+            bun install --frozen-lockfile --filter @metis/releases
+          else
+            bun install --frozen-lockfile --filter @metis/releases --filter "@metis/$GATEWAY"
+          fi
+
+      - name: Build the published file
+        env:
+          WRANGLER_SEND_METRICS: "false"
+        run: |
+          mkdir out
+          if [[ "$GATEWAY" == gateway-resend ]]; then
+            printf 'ghcr.io/%s-gateway-resend:%s\n' "$GITHUB_REPOSITORY" "$VERSION" > out/image.txt
+            echo "file=image.txt" >> "$GITHUB_ENV"
+          else
+            bun run --cwd "apps/$GATEWAY" build
+            bun run --cwd "apps/$GATEWAY" package
+            cp "apps/$GATEWAY/dist/$GATEWAY.zip" "out/$GATEWAY.zip"
+            echo "file=$GATEWAY.zip" >> "$GITHUB_ENV"
+          fi
+
+      - name: Upload to R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.SH_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.SH_R2_SECRET_ACCESS_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET: ${{ secrets.SH_R2_BUCKET }}
+          LATEST: ${{ needs.release.outputs.latest }}
+          TRACK: ${{ needs.release.outputs.gateway }}
+          VERSION_MANIFEST: true
+        run: .github/scripts/r2-upload.sh out "$GATEWAY/v$VERSION/" "$GATEWAY/" "$file"

@@ -48,7 +48,7 @@ function dropLeadingBlank(lines: string[]) {
 function cut(tag: string | undefined) {
   const parsed = tag ? parseTag(tag) : null;
   if (!tag || !parsed) {
-    throw new Error(`${tag ?? "(none)"} is not <app|cli|desktop|mobile>-v<X.Y.Z or X.Y.Z-rc.N>`);
+    throw new Error(`${tag ?? "(none)"} is not <${TRACKS.join("|")}>-v<X.Y.Z or X.Y.Z-rc.N>`);
   }
   const { track, version } = parsed;
   const file = join(root, RELEASES_DIR, `${tag}.md`);
@@ -122,7 +122,7 @@ function check() {
 
 function notes(tag: string | undefined) {
   if (!tag || !parseTag(tag)) {
-    throw new Error(`${tag ?? "(none)"} is not <app|cli|desktop|mobile>-v<version>`);
+    throw new Error(`${tag ?? "(none)"} is not <${TRACKS.join("|")}>-v<version>`);
   }
   process.stdout.write(`${publishedNotes(readRelease(root, tag))}\n`);
 }

@@ -38,9 +38,9 @@ func TestArtifactChecksAndCaches(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		requests++
 		switch r.URL.Path {
-		case "/v1.4.0/SHA256SUMS":
+		case "/gateway-cloudflare/v0.2.0/SHA256SUMS":
 			_, _ = w.Write([]byte(sums))
-		case "/v1.4.0/gateway-cloudflare.zip":
+		case "/gateway-cloudflare/v0.2.0/gateway-cloudflare.zip":
 			_, _ = w.Write(archive)
 		default:
 			w.WriteHeader(http.StatusNotFound)
@@ -49,7 +49,7 @@ func TestArtifactChecksAndCaches(t *testing.T) {
 	defer server.Close()
 	bucketOrigin = server.URL
 	cache := t.TempDir()
-	body, err := Artifact(context.Background(), "1.4.0", "gateway-cloudflare.zip", cache)
+	body, err := Artifact(context.Background(), Cloudflare, "0.2.0", "gateway-cloudflare.zip", cache)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,12 +58,41 @@ func TestArtifactChecksAndCaches(t *testing.T) {
 		t.Fatalf("module %q %v", module, err)
 	}
 	requests = 0
-	if _, err := Artifact(context.Background(), "1.4.0", "gateway-cloudflare.zip", cache); err != nil || requests != 1 {
+	if _, err := Artifact(context.Background(), Cloudflare, "0.2.0", "gateway-cloudflare.zip", cache); err != nil || requests != 1 {
 		t.Fatalf("cached download made %d requests: %v", requests, err)
 	}
 	sums = strings.Repeat("0", 64) + "  gateway-cloudflare.zip\n"
-	if _, err := Artifact(context.Background(), "1.4.0", "gateway-cloudflare.zip", ""); err == nil || !strings.Contains(err.Error(), "does not match") {
+	if _, err := Artifact(context.Background(), Cloudflare, "0.2.0", "gateway-cloudflare.zip", ""); err == nil || !strings.Contains(err.Error(), "does not match") {
 		t.Fatalf("a tampered zip: %v", err)
+	}
+}
+
+func TestLatestAndResolve(t *testing.T) {
+	manifest := "0.3.0\n"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/gateway-ses/version.txt" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		_, _ = w.Write([]byte(manifest))
+	}))
+	defer server.Close()
+	bucketOrigin = server.URL
+	if release, err := Resolve(context.Background(), SES, ""); err != nil || release != "0.3.0" {
+		t.Fatalf("newest release %q %v", release, err)
+	}
+	if release, err := Resolve(context.Background(), SES, "v0.2.1"); err != nil || release != "0.2.1" {
+		t.Fatalf("chosen release %q %v", release, err)
+	}
+	if _, err := Resolve(context.Background(), SES, "latest"); err == nil {
+		t.Fatal("a version that is not X.Y.Z")
+	}
+	manifest = "not a version\n"
+	if _, err := Latest(context.Background(), SES); err == nil {
+		t.Fatal("a manifest that names no version")
+	}
+	if _, err := Latest(context.Background(), Resend); err == nil {
+		t.Fatal("a track with no manifest")
 	}
 }
 

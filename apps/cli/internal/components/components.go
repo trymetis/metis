@@ -32,6 +32,7 @@ type Options struct {
 	Region        string
 	DatabaseURL   string
 	DatabaseToken string
+	Version       string
 }
 
 type Component interface {

@@ -37,6 +37,7 @@ An unknown name is refused with, for example, "redis2 is not a component; the co
 - `worker` without `--replicas` goes back to one worker.
 - `objstore` without `--data-dir` moves back to the Docker volume, and without `--direct` back to relayed transfers.
 - `gateway-resend` without `--database` and `--blobs` goes back to `own` and `dir`.
+- A mail gateway without `--version` moves to its newest release.
 
 Nothing copies data when a component moves, for example from a folder to a volume.
 
@@ -105,7 +106,7 @@ S3-compatible object storage on the server, listed as **Server storage** for dri
 - [Set up the Resend gateway](/self-hosting/mail-gateways/resend)
 - [Set up the Amazon SES gateway](/self-hosting/mail-gateways/amazon-ses)
 
-A gateway stays on the release it was set up for. After you upgrade, run its `metis add` command again to move it to the new release. `metis status` shows the gap, for example "1.3.2, app 1.4.0: run metis add again to move it".
+Mail gateways have their own releases, separate from Metis Suite releases, and any gateway release works with any Metis Suite release. Upgrading your instance never changes a gateway. To move a gateway to its newest release, run its `metis add` command again. To stay on one release, pass `--version`, such as `--version 0.1.0`. `metis status` compares each gateway with its newest release and shows when a newer one is out, for example "0.1.0, 0.2.0 is out: run metis add again to move it".
 
 ## While a change runs
 

@@ -336,11 +336,11 @@ The name has two underscores in the middle, on each side of `UPDATER`. It is a c
 
 - The whole card is stored, from the environment and the defaults. A variable that several cards share stores each of them.
 - On a server list, only the entries whose id starts with `metis-` are replaced. Entries added in the dashboard stay.
-- A name that is not a dashboard setting stops preflight before anything changes, for example: "METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS names FOO, which is not an instance setting".
+- A name that is not a dashboard setting stops preflight before anything changes, for example: "`METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS` names FOO, which is not an instance setting".
 - A value that fails its checks also stops preflight, and nothing is stored.
 - **History** shows the result as a **Server** version.
 
-The `metis` CLI passes it to one preflight run. Never set it yourself in `.env` or in a platform's environment, and above all never on a platform whose build or start command runs preflight on every deploy: every later preflight would overwrite what the owner or an admin changed in the dashboard. The only time you type it is the one-off `docker run` command that `metis config set --env-file` prints when Docker is not running on your computer.
+The `metis` CLI passes it to one preflight run. Never set it yourself in `.env` or in a platform's environment, and above all never on a platform whose build or start command runs preflight on every deploy: every later preflight would overwrite what the owner or an admin changed in the dashboard. You type it yourself only for a one-off run: the `docker run` command that `metis config set --env-file` prints when Docker is not running on your computer, or a single preflight run from a checkout of a deployment that is not a release. See [Use the metis CLI from your computer](/self-hosting/install/deploy-on-vercel#use-the-metis-cli-from-your-computer).
 
 ## The metis CLI
 

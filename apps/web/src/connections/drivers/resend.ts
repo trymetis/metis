@@ -6,6 +6,6 @@ export const resendDriver = createGatewayDriver({
   provider: "resend",
   label: "Resend",
   adminTokenHint:
-    "That is the gateway's admin token — mint a mailbox token with token.ts and use that instead.",
+    "That is the gateway's admin token, not a mailbox token. Ask whoever runs the gateway for this address's mailbox token and use that instead.",
   verify: resendVerify,
 });

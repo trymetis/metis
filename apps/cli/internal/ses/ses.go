@@ -399,7 +399,7 @@ func (client *Client) Deploy(ctx context.Context, params Params, progress func(s
 		return Gateway{}, err
 	}
 	progress("IAM role " + name)
-	zip, err := gateways.Artifact(ctx, params.Release, "gateway-ses.zip", params.CacheDir)
+	zip, err := gateways.Artifact(ctx, gateways.SES, params.Release, "gateway-ses.zip", params.CacheDir)
 	if err != nil {
 		return Gateway{}, err
 	}

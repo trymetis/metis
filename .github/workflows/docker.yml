@@ -66,14 +66,6 @@ jobs:
               suffix: -worker,
               build-args: NEXT_BUILD_OUTPUT=standalone,
             }
-          - {
-              image: gateway-resend,
-              name: "${{ github.repository }}-gateway-resend",
-              file: apps/gateway-resend/Dockerfile,
-              target: "",
-              suffix: "",
-              build-args: "",
-            }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -83,7 +75,6 @@ jobs:
           VERSION: ${{ needs.release.outputs.version }}
           LATEST: ${{ needs.release.outputs.latest }}
           SUFFIX: ${{ matrix.suffix }}
-          IMAGE_NAME: ${{ matrix.name }}
         run: .github/scripts/image-tags.sh
 
       - name: Log in to GHCR
@@ -117,17 +108,8 @@ jobs:
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
 
-      - name: Install the release tooling and the gateways
-        run: bun install --frozen-lockfile --filter @metis/releases --filter @metis/gateway-ses --filter @metis/gateway-cloudflare
-
-      - name: Build the gateway zips
-        env:
-          WRANGLER_SEND_METRICS: "false"
-        run: |
-          bun run --cwd apps/gateway-ses build
-          bun run --cwd apps/gateway-ses package
-          bun run --cwd apps/gateway-cloudflare build
-          bun run --cwd apps/gateway-cloudflare package
+      - name: Install the release tooling
+        run: bun install --frozen-lockfile --filter @metis/releases
 
       - name: Collect the published files
         env:
@@ -135,8 +117,6 @@ jobs:
         run: |
           mkdir out
           bun run --silent release:meta "app-v$VERSION" > out/metis.json
-          cp apps/gateway-ses/dist/gateway-ses.zip out/gateway-ses.zip
-          cp apps/gateway-cloudflare/dist/gateway-cloudflare.zip out/gateway-cloudflare.zip
 
       - name: Upload to R2
         env:
@@ -147,4 +127,4 @@ jobs:
           VERSION: ${{ needs.release.outputs.version }}
           LATEST: "false"
           TRACK: app
-        run: .github/scripts/r2-upload.sh out "v$VERSION/" "" metis.json gateway-ses.zip gateway-cloudflare.zip
+        run: .github/scripts/r2-upload.sh out "v$VERSION/" "" metis.json

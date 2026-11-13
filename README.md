@@ -91,7 +91,7 @@ flowchart LR
     app -. "only when AI is on" .-> llm["Your AI model"]
 ```
 
-Everything runs in Docker Compose on one server. Scheduled sends, snooze and workflows run inside the app by default, so the server has to stay on; on serverless hosts, use an external scheduler or a separate worker instead ([Background work](https://docs.trymetis.email/self-hosting/configure/background-work)).
+Everything runs in Docker containers on one server, installed and managed by the `metis` CLI. Scheduled sends, snooze and workflows run inside the app by default, so the server has to stay on; on serverless hosts, use an external scheduler or a separate worker instead ([Background work](https://docs.trymetis.email/self-hosting/configure/background-work)).
 
 ## Develop locally
 

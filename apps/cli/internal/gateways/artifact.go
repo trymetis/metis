@@ -51,8 +51,39 @@ func checksum(sums []byte, name string) (string, error) {
 	return "", fmt.Errorf("SHA256SUMS lists no %s", name)
 }
 
-func Artifact(ctx context.Context, release, name, cacheDir string) ([]byte, error) {
-	folder := fmt.Sprintf("%s/v%s/", bucketOrigin, release)
+const (
+	Resend     = "gateway-resend"
+	SES        = "gateway-ses"
+	Cloudflare = "gateway-cloudflare"
+)
+
+var releaseVersion = regexp.MustCompile(`^\d+\.\d+\.\d+$`)
+
+func Latest(ctx context.Context, track string) (string, error) {
+	body, err := fetch(ctx, fmt.Sprintf("%s/%s/version.txt", bucketOrigin, track), 1<<10)
+	if err != nil {
+		return "", fmt.Errorf("finding the newest %s release: %w", track, err)
+	}
+	release := strings.TrimSpace(string(body))
+	if !releaseVersion.MatchString(release) {
+		return "", fmt.Errorf("%s/%s/version.txt names no release version: %q", bucketOrigin, track, release)
+	}
+	return release, nil
+}
+
+func Resolve(ctx context.Context, track, requested string) (string, error) {
+	requested = strings.TrimPrefix(strings.TrimSpace(requested), "v")
+	if requested == "" {
+		return Latest(ctx, track)
+	}
+	if !releaseVersion.MatchString(requested) {
+		return "", fmt.Errorf("--version %q is not a release version such as 0.1.0", requested)
+	}
+	return requested, nil
+}
+
+func Artifact(ctx context.Context, track, release, name, cacheDir string) ([]byte, error) {
+	folder := fmt.Sprintf("%s/%s/v%s/", bucketOrigin, track, release)
 	sums, err := fetch(ctx, folder+"SHA256SUMS", 64<<10)
 	if err != nil {
 		return nil, err
@@ -63,7 +94,7 @@ func Artifact(ctx context.Context, release, name, cacheDir string) ([]byte, erro
 	}
 	cached := ""
 	if cacheDir != "" {
-		cached = filepath.Join(cacheDir, "gateways", release, name)
+		cached = filepath.Join(cacheDir, "gateways", track, release, name)
 		if body, err := os.ReadFile(cached); err == nil {
 			sum := sha256.Sum256(body)
 			if hex.EncodeToString(sum[:]) == want {
@@ -106,8 +137,8 @@ func ZipFile(archive []byte, name string) ([]byte, error) {
 	return nil, fmt.Errorf("the zip has no %s", name)
 }
 
-func SourceFile(ctx context.Context, release, path string) ([]byte, error) {
-	return fetch(ctx, fmt.Sprintf("%s/app-v%s/%s", sourceOrigin, release, path), 1<<20)
+func SourceFile(ctx context.Context, track, release, path string) ([]byte, error) {
+	return fetch(ctx, fmt.Sprintf("%s/%s-v%s/%s", sourceOrigin, track, release, path), 1<<20)
 }
 
 var nonName = regexp.MustCompile(`[^a-z0-9]+`)

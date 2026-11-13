@@ -100,10 +100,10 @@ Without Docker, it prints "Docker is not running here. Store the dashboard setti
 docker run --rm --env-file production.env -e METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS=GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET ghcr.io/trymetis/metis:1.2.3-preflight
 ```
 
-If none of the variables is a dashboard setting, it prints "None of them is a dashboard setting, so the next deploy picks them up." Without `--version`, it updates the file, then stops with, for example, "GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET are dashboard settings; pass --version X.Y.Z, the release the deployment runs, to store them once through its preflight image".
+If none of the variables is a dashboard setting, it prints "None of them is a dashboard setting, so the next deploy picks them up." Without `--version`, it updates the file, then stops with, for example, "GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET are dashboard settings; pass `--version X.Y.Z`, the release the deployment runs, to store them once through its preflight image".
 
-:::danger[Never set METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS yourself]
-The CLI passes this variable to one preflight run only. Never put it in `.env` or in a platform's environment, and above all never on a platform whose build or start command runs preflight on every deploy. Every later preflight would store those settings from the environment again, and overwrite what the owner or an admin changed in the dashboard. The CLI warns: "Never set METIS**UPDATER**FORCE_UPDATE_CONFIG_KEYS on the platform itself; every deploy would then overwrite the dashboard."
+:::danger[Never set `METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS` yourself]
+The CLI passes this variable to one preflight run only. Never put it in `.env` or in a platform's environment, and above all never on a platform whose build or start command runs preflight on every deploy. Every later preflight would store those settings from the environment again, and overwrite what the owner or an admin changed in the dashboard. The CLI warns: "Never set `METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS` on the platform itself; every deploy would then overwrite the dashboard."
 :::
 
 ## Saving a change in the dashboard

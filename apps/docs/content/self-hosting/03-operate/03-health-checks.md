@@ -49,7 +49,7 @@ sudo metis status
 It prints:
 
 - A heading with the release, such as "Metis 1.4.0".
-- One line for each component, marked "ok" or "NOT HEALTHY", with a detail. For example, the app shows its version, sqld "namespaces app and mastra", Caddy the hosts it serves (such as "serving mail.example.com"), and Redis "Valkey, noeviction". A mail gateway shows its release. When that differs from the app's, it adds, for example, "app 1.4.0: run metis add again to move it". An Amazon SES gateway also shows, when the command has AWS credentials, how many mails failed to reach it, for example ", 2 failed receipt(s) in metis-ses-example-com-failed".
+- One line for each component, marked "ok" or "NOT HEALTHY", with a detail. For example, the app shows its version, sqld "namespaces app and mastra", Caddy the hosts it serves (such as "serving mail.example.com"), and Redis "Valkey, noeviction". A mail gateway shows its domain and its release, such as "example.com 0.1.0". When a newer gateway release is out, it adds, for example, ", 0.2.0 is out: run metis add again to move it". An Amazon SES gateway also shows, when the command has AWS credentials, how many mails failed to reach it, for example ", 2 failed receipt(s) in metis-ses-example-com-failed".
 - A table of the containers, with their state and health.
 - The last upgrade or undo, such as "Last upgrade: 1.3.2 → 1.4.0, succeeded", with its error if it failed.
 

@@ -41,15 +41,16 @@ sudo AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE AWS_SECRET_ACCESS_KEY=your-secret-ac
 
 `sudo` does not pass on your own AWS settings, such as `AWS_PROFILE` or the files in your home folder, so name the key on the line as above. The CLI never stores it. You can also run the command from your computer instead (see below).
 
-| Flag               | What it does                                                       |
-| ------------------ | ------------------------------------------------------------------ |
-| `--domain`         | The mail domain.                                                   |
-| `--region`         | The Amazon SES receiving region, such as `eu-west-1`.              |
-| `--database-url`   | The libSQL URL of the gateway's database, which Lambda must reach. |
-| `--database-token` | The token for `--database-url`.                                    |
-| `--yes`            | Go ahead without asking.                                           |
+| Flag               | What it does                                                                                        |
+| ------------------ | --------------------------------------------------------------------------------------------------- |
+| `--domain`         | The mail domain.                                                                                    |
+| `--region`         | The Amazon SES receiving region, such as `eu-west-1`.                                               |
+| `--database-url`   | The libSQL URL of the gateway's database, which Lambda must reach.                                  |
+| `--database-token` | The token for `--database-url`.                                                                     |
+| `--version`        | The gateway release to deploy, such as `0.1.0`. Without it, the command deploys the newest release. |
+| `--yes`            | Go ahead without asking.                                                                            |
 
-The command deploys the gateway for the release your instance runs. Each resource is named after the domain, such as `metis-ses-example-com` for `example.com`:
+The command deploys the newest release of the Amazon SES gateway, or the release you name with `--version`. Each resource is named after the domain, such as `metis-ses-example-com` for `example.com`:
 
 1. Checks the key: "AWS account 123456789012, eu-west-1".
 2. Creates the gateway's tables in the database: "Database schema".
@@ -57,7 +58,7 @@ The command deploys the gateway for the release your instance runs. Each resourc
 4. Waits for Amazon SES to check the domain: "Waiting for SES to verify example.com (up to 10 minutes)…", then "SES verified example.com". If it takes longer, it says "Run the same command again once DNS has spread". Running it again continues where it stopped.
 5. If the account is in the sandbox, it warns "SES in eu-west-1 is in the sandbox: it sends only to verified addresses, at most 200 messages per 24 hours and 1 per second." and asks "Ask AWS for production access now?" ("AWS answers within 96 hours; mail still arrives meanwhile."). On a server, the request names your instance's address and the owner email.
 6. Creates the S3 bucket ("S3 bucket metis-ses-example-com"), a queue for failed deliveries (`metis-ses-example-com-failed`) and the function's role ("IAM role metis-ses-example-com").
-7. Creates the function: "Lambda function metis-ses-example-com (1.4.0)", on Node.js 24 and arm64, with 1024 MB of memory and a 60-second timeout.
+7. Creates the function: "Lambda function metis-ses-example-com (0.1.0)", on Node.js 24 and arm64, with 1024 MB of memory and a 60-second timeout.
 8. Gives it a function URL ("Function URL https://abcdefghijklmnopqrstuvwxyz012345.lambda-url.eu-west-1.on.aws"). A failed delivery to the function is tried twice more, for up to 6 hours, and then goes to the queue.
 9. Adds the receipt rule to the active rule set: "Receipt rule metis-ses-example-com in metis". Only when no rule set is active, it creates one first: "Created and activated the rule set metis".
 10. Adds the gateway to the **Amazon SES** server list, named after the domain, and stores it at once.
@@ -66,16 +67,20 @@ Then create a mailbox token for each address with `sudo metis gateway token crea
 
 `sudo metis status` shows the gateway, with the number of deliveries in the failure queue, for example ", 2 failed receipt(s) in metis-ses-example-com-failed".
 
-The gateway stays on its release when you upgrade your instance. To move it to the release your instance runs, run the same `metis add` command again.
+Mail gateways have their own releases, separate from Metis Suite releases. Any gateway release works with any Metis Suite release. Upgrading your instance never changes the gateway. To move the gateway to its newest release, run the same `metis add` command again. To stay on one release, pass `--version`, such as `--version 0.1.0`.
+
+`sudo metis status` also shows the release the gateway runs, for example "example.com in eu-west-1 0.1.0". When a newer one is out, it adds, for example, ", 0.2.0 is out: run metis add again to move it".
 
 ### From your computer
 
-Add `--remote` and the release your instance runs. On your computer, the CLI finds your AWS credentials the usual way, so `AWS_PROFILE` works too:
+Add `--remote`. On your computer, the CLI finds your AWS credentials the usual way, so `AWS_PROFILE` works too:
 
 ```bash
-metis add gateway-ses --remote --domain example.com --region eu-west-1 --version 1.4.0 \
+metis add gateway-ses --remote --domain example.com --region eu-west-1 \
   --database-url libsql://metis-ses-acme.turso.io --database-token your-database-token
 ```
+
+It deploys the newest gateway release. To deploy another one, add `--version`, such as `--version 0.1.0`.
 
 It works against your AWS account only, and then prints the gateway's admin token ("The gateway's admin token (API_TOKEN), shown once; metis gateway token needs it:") and the server entry to add under **Dashboard**, **System**, **Amazon SES**. Keep the admin token: you need it to create mailbox tokens.
 
@@ -95,12 +100,12 @@ From your computer, run `metis remove gateway-ses --remote --domain example.com 
 | Message                                                                                                                | What to do                                                              |
 | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | "loading AWS credentials:" or "checking the AWS credentials (AWS_PROFILE, AWS_ACCESS_KEY_ID, …):" followed by a reason | Check the access key. On the server, pass it on the line after `sudo`.  |
-| "pass --region, one of" followed by the regions                                                                        | Add `--region`.                                                         |
+| "pass `--region`, one of" followed by the regions                                                                      | Add `--region`.                                                         |
 | "eu-west-9 is not an SES receiving region; use one of" followed by the regions                                         | Pick one of the listed regions.                                         |
-| "pass --database-url and --database-token: a libSQL database Lambda can reach over the internet, such as Turso"        | Add the database flags.                                                 |
+| "pass `--database-url` and `--database-token`: a libSQL database Lambda can reach over the internet, such as Turso"    | Add the database flags.                                                 |
 | "Run the same command again once DNS has spread"                                                                       | DNS changes take time to spread. Wait, then run the same command again. |
 | "The request failed (…); ask from the SES console's Account dashboard"                                                 | Ask AWS for production access in the Amazon SES console.                |
-| "no SES gateway serves example.org; pass --domain"                                                                     | No gateway on this server serves that domain. Check the domain.         |
+| "no SES gateway serves example.org; pass `--domain`"                                                                   | No gateway on this server serves that domain. Check the domain.         |
 
 ## Set it up by hand
 
@@ -116,26 +121,26 @@ From your computer, run `metis remove gateway-ses --remote --domain example.com 
 - **[Bun](https://bun.sh) and a copy of the Metis Suite source code**, to create the tables (step 4) and mailbox tokens (step 11):
 
 ```bash
+VERSION=$(curl -fsSL https://sh.trymetis.email/gateway-ses/version.txt)
 git clone https://github.com/trymetis/metis.git
 cd metis
+git checkout "gateway-ses-v$VERSION"
 bun install
 cd apps/gateway-ses
 ```
 
+`VERSION` is the gateway release you deploy. The first line sets it to the newest release. To use another one, set it to a gateway release without the leading `v`, such as `VERSION=0.1.0`, not `v0.1.0`. `git checkout` then picks the source code of that release, so the tables you create match the package you download in step 6. Keep the same shell open for the steps below, which use `VERSION` too.
+
 ### The gateway package
 
-Each Metis Suite server release publishes the gateway as a ready-made package, `gateway-ses.zip`, in its own folder. For release 1.2.3, the package is at `https://sh.trymetis.email/v1.2.3/gateway-ses.zip`. The folder also holds `SHA256SUMS`, a list of checksums you use to check the download.
+The Amazon SES gateway has its own releases, separate from Metis Suite releases. Any gateway release works with any Metis Suite release. Each gateway release publishes the gateway as a ready-made package, `gateway-ses.zip`, in its own folder. For gateway release 0.1.0, the package is at `https://sh.trymetis.email/gateway-ses/v0.1.0/gateway-ses.zip`. The folder also holds `SHA256SUMS`, a list of checksums you use to check the download.
 
 - The folder name is `v` followed by the release number.
-- There is no address without a release number, so you always name a release. Pre-releases have their own folders too.
+- The newest release that is not a pre-release is also at `https://sh.trymetis.email/gateway-ses/gateway-ses.zip`. `https://sh.trymetis.email/gateway-ses/version.txt` names that release.
+- A pre-release has only its own folder.
 - A release's folder never changes after it is published.
 
-Use the release your instance runs. Older releases have no package. If the download fails for your release, upgrade first or build the package yourself (step 6).
-
-To find the release your instance runs:
-
-- Every page of Metis Suite shows a **Source code** link with the version, for example "Source code · v1.2.3". It is in the left rail, at the bottom of the account settings and dashboard sidebars, and in the footer of the pages before sign-in. See [Source code link](/self-hosting/configure/source-code-link).
-- On a server the `metis` CLI runs, open **Dashboard**, **System**, **Updates**. The **Version** row of **Running release** shows the release, such as `1.2.3`. `sudo metis status` shows it too. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo).
+To see the gateway's releases, open the **Amazon SES gateway** tab of the [changelog](/changelog?platform=gateway-ses).
 
 You can also build the package yourself from the source code. Step 6 shows both ways.
 
@@ -153,11 +158,10 @@ You can also build the package yourself from the source code. Step 6 shows both 
     BUCKET=example-com-metis-mail
     FUNCTION=metis-ses-mail
     RULE=metis-ses-mail
-    VERSION=1.2.3
     ```
 
-    Set `VERSION` to the release your instance runs, without the leading
-    `v`: `1.2.3`, not `v1.2.3`.
+    The commands also use `VERSION`, which you set before you checked out
+    the source code. In a new shell, set it again to the same release.
 
   </Step>
 
@@ -296,8 +300,8 @@ You can also build the package yourself from the source code. Step 6 shows both 
     Download the package for your release, and check it:
 
     ```bash
-    curl -fsSLO "https://sh.trymetis.email/v$VERSION/gateway-ses.zip"
-    curl -fsSL "https://sh.trymetis.email/v$VERSION/SHA256SUMS" | grep ' gateway-ses.zip$' | sha256sum -c -
+    curl -fsSLO "https://sh.trymetis.email/gateway-ses/v$VERSION/gateway-ses.zip"
+    curl -fsSL "https://sh.trymetis.email/gateway-ses/v$VERSION/SHA256SUMS" | grep ' gateway-ses.zip$' | sha256sum -c -
     ```
 
     The first command saves `gateway-ses.zip` in the current folder. The
@@ -470,7 +474,7 @@ You can also build the package yourself from the source code. Step 6 shows both 
     - **Name**: what users see in the connect dialog.
     - **Domain**: your domain, such as `example.com`.
     - **Gateway endpoint**: the function URL. Any address that does not
-      start with `https://` is refused with "The Worker endpoint must be an
+      start with `https://` is refused with "The gateway endpoint must be an
       https:// URL".
 
     Click **Save changes** and enter your authenticator code.

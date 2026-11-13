@@ -34,7 +34,7 @@ With a domain, browsers can transfer files with the storage directly, without pa
 sudo metis add objstore --direct
 ```
 
-The storage is then served on `storage.` followed by your domain, such as `storage.mail.example.com`, through Caddy. The CLI also sets the storage's CORS rule for the app's address. The CLI creates no DNS record for `storage.mail.example.com`: point it at the server yourself. `--direct` needs a domain first. Without one, it is refused with "--direct serves files from storage. plus the domain; run metis domain HOST first". See [Domain and HTTPS](/self-hosting/install/domain-and-https).
+The storage is then served on `storage.` followed by your domain, such as `storage.mail.example.com`, through Caddy. The CLI also sets the storage's CORS rule for the app's address. The CLI creates no DNS record for `storage.mail.example.com`: point it at the server yourself. `--direct` needs a domain first. Without one, it is refused with "`--direct` serves files from storage. plus the domain; run `metis domain HOST` first". See [Domain and HTTPS](/self-hosting/install/domain-and-https).
 
 To go back to relayed transfers, run `sudo metis add objstore` again without `--direct`.
 

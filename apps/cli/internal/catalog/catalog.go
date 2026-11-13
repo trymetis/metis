@@ -86,7 +86,7 @@ func Environment(st *state.State, installDir string, dotenv map[string]string) m
 	if st.Components.Objstore != nil && st.Components.Objstore.DataDir != "" {
 		objstore = st.Components.Objstore.DataDir
 	}
-	resendVersion := st.App.Version
+	resendVersion := "latest"
 	if st.Components.GatewayResend != nil && st.Components.GatewayResend.Version != "" {
 		resendVersion = st.Components.GatewayResend.Version
 	}

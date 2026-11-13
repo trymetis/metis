@@ -29,7 +29,7 @@
 - **A schema change ships a hand-written, data-preserving migration in `apps/web/migrations/` and passes `bun run db:check`** ([database.md](agent-docs/database.md)).
 - **Migrations reach a database only through preflight or `bun run db:migrate`, which the project owner runs**, never an agent.
 - **A user-visible change adds a line under `## Unreleased` in its release track's changelog; a release is cut with `bun run release`, never by hand.**
-  - The tracks: `apps/web/CHANGELOG.md` for the server (app, images, gateways), `apps/cli/CHANGELOG.md` for the `metis` CLI (commands, components, the service catalog, the `bootstrap` shim), `apps/desktop/CHANGELOG.md`, `apps/mobile/CHANGELOG.md`; the root `CHANGELOG.md` only links to them.
+  - The tracks: `apps/web/CHANGELOG.md` for the server (app, worker and preflight images), `apps/cli/CHANGELOG.md` for the `metis` CLI (commands, components, the service catalog, the `bootstrap` shim), `apps/gateway-{resend,ses,cloudflare}/CHANGELOG.md` for each mail gateway, `apps/desktop/CHANGELOG.md`, `apps/mobile/CHANGELOG.md`; the root `CHANGELOG.md` only links to them.
   - A line describes something users can do or find differently; purely visual polish (spacing, alignment) gets no line.
   - Each release's notes are one file in the root `releases/` folder, named after its tag (`app-v0.3.1.md`), and are never edited once published ([deployment.md](agent-docs/deployment.md)).
 - **Never commit secrets.** `.env*` is gitignored except `apps/web/.env.example` and `e2e/.env.fixture`.

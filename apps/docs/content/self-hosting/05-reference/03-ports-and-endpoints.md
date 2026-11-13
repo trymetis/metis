@@ -62,7 +62,7 @@ See [Health checks](/self-hosting/operate/health-checks) and [Background work](/
 
 ## Images
 
-Every release publishes these images to `ghcr.io/trymetis/metis`, beside rolling `latest` tags. For release `1.2.3`, the tags are:
+Every server release publishes these images to `ghcr.io/trymetis/metis`, beside rolling `latest` tags. For release `1.2.3`, the tags are:
 
 | Tag               | What it is                                         |
 | ----------------- | -------------------------------------------------- |
@@ -70,4 +70,4 @@ Every release publishes these images to `ghcr.io/trymetis/metis`, beside rolling
 | `1.2.3-preflight` | The check that runs before the app on every deploy |
 | `1.2.3-worker`    | The background worker, for the `bullmq` runner     |
 
-Each Metis Suite server release also publishes the Resend gateway image, `ghcr.io/trymetis/metis-gateway-resend`. It is tagged with the release number, such as `1.2.3`, and `latest` follows the newest release that is not a pre-release. See [Set up the Resend gateway](/self-hosting/mail-gateways/resend#the-gateway-image).
+Each Resend gateway release publishes the Resend gateway image, `ghcr.io/trymetis/metis-gateway-resend`. The gateway has its own releases, separate from server releases. The image is tagged with the gateway release, such as `0.1.0`, and `latest` follows the newest release that is not a pre-release. See [Set up the Resend gateway](/self-hosting/mail-gateways/resend#the-gateway-image).

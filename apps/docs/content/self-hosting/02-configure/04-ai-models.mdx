@@ -51,23 +51,23 @@ You can also set the starting values before the first start:
 
 ```bash
 METIS_LLM_DRIVER=openai
-OPENAI_API_KEY=<key>
-METIS_LLM_CHAT_MODEL=<model>
-METIS_LLM_SMART_REPLY_MODEL=<model>
-METIS_LLM_CLASSIFIER_MODEL=<model>
-METIS_LLM_SUMMARY_MODEL=<model>
+OPENAI_API_KEY=your-openai-api-key
+METIS_LLM_CHAT_MODEL=your-chat-model
+METIS_LLM_SMART_REPLY_MODEL=your-smart-reply-model
+METIS_LLM_CLASSIFIER_MODEL=your-classifier-model
+METIS_LLM_SUMMARY_MODEL=your-summary-model
 ```
 
 Use `ANTHROPIC_API_KEY` for `anthropic`. For `openai-compatible`, use `METIS_LLM_BASE_URL`, `METIS_LLM_API_KEY` and, optionally, `METIS_LLM_NAME` and `METIS_LLM_STRUCTURED_OUTPUTS`.
 
 ### Where to get a key
 
-| Provider   | **Driver**          | **API key**                                                                                                                             | **Base URL**                    |
-| ---------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| OpenAI     | `openai`            | Create one on OpenAI's [API keys page](https://platform.openai.com/settings/organization/api-keys).                                     | Not used.                       |
-| Anthropic  | `anthropic`         | In the Claude Console, open [API keys](https://platform.claude.com/settings/keys) and click **Create key**. The key is shown only once. | Not used.                       |
-| OpenRouter | `openai-compatible` | Create one on OpenRouter's [keys page](https://openrouter.ai/keys).                                                                     | `https://openrouter.ai/api/v1`  |
-| Ollama     | `openai-compatible` | Leave it empty. Ollama ignores the key.                                                                                                 | `http://<ollama host>:11434/v1` |
+| Provider   | **Driver**          | **API key**                                                                                                                             | **Base URL**                         |
+| ---------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| OpenAI     | `openai`            | Create one on OpenAI's [API keys page](https://platform.openai.com/settings/organization/api-keys).                                     | Not used.                            |
+| Anthropic  | `anthropic`         | In the Claude Console, open [API keys](https://platform.claude.com/settings/keys) and click **Create key**. The key is shown only once. | Not used.                            |
+| OpenRouter | `openai-compatible` | Create one on OpenRouter's [keys page](https://openrouter.ai/keys).                                                                     | `https://openrouter.ai/api/v1`       |
+| Ollama     | `openai-compatible` | Leave it empty. Ollama ignores the key.                                                                                                 | `http://ollama.example.com:11434/v1` |
 
 For Ollama, use an address your Metis Suite server can reach. Ollama's own guide uses `http://localhost:11434/v1`, the address on the machine where Ollama runs. See the guides from [OpenAI](https://developers.openai.com/api/docs/quickstart), [Anthropic](https://platform.claude.com/docs/en/get-api-key), [OpenRouter](https://openrouter.ai/docs/quickstart) and [Ollama](https://docs.ollama.com/api/openai-compatibility).
 

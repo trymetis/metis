@@ -317,7 +317,7 @@ sudo metis self-update
 
 It downloads the newest CLI, checks it against its published checksum and replaces `/usr/local/bin/metis`, printing, for example, "Metis CLI 0.2.0 is installed at /usr/local/bin/metis". It then restarts the updater, prints "The new CLI may define the containers differently." and runs `metis apply`, which shows what changes and asks "Apply these changes?". Pass `--yes` to apply without asking. If you run the newest CLI already, it says, for example, "Metis CLI 0.1.0 is the newest". To install a given version, name it: `sudo metis self-update 0.2.0`.
 
-Mail gateways stay on their release until you run their `metis add` command again. `metis status` shows such a gap, for example "1.3.2, app 1.4.0: run metis add again to move it".
+An upgrade never changes a mail gateway. Gateways have their own releases, and any gateway release works with any Metis Suite release. To move a gateway to its newest release, run its `metis add` command again. `metis status` shows when a newer gateway release is out, for example "0.1.0, 0.2.0 is out: run metis add again to move it". See [Mail gateways](/self-hosting/operate/manage-components#mail-gateways).
 
 ## Going back further
 

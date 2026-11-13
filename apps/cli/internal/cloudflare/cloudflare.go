@@ -243,7 +243,7 @@ func (client *Client) DeployGateway(ctx context.Context, params GatewayParams, p
 	}
 	account := zone.AccountID
 
-	archive, err := gateways.Artifact(ctx, params.Release, "gateway-cloudflare.zip", params.CacheDir)
+	archive, err := gateways.Artifact(ctx, gateways.Cloudflare, params.Release, "gateway-cloudflare.zip", params.CacheDir)
 	if err != nil {
 		return Gateway{}, err
 	}
@@ -255,7 +255,7 @@ func (client *Client) DeployGateway(ctx context.Context, params GatewayParams, p
 	if err != nil {
 		return Gateway{}, err
 	}
-	wrangler, err := gateways.SourceFile(ctx, params.Release, "apps/gateway-cloudflare/wrangler.jsonc")
+	wrangler, err := gateways.SourceFile(ctx, gateways.Cloudflare, params.Release, "apps/gateway-cloudflare/wrangler.jsonc")
 	if err != nil {
 		return Gateway{}, err
 	}
@@ -263,7 +263,7 @@ func (client *Client) DeployGateway(ctx context.Context, params GatewayParams, p
 	if date == nil {
 		return Gateway{}, errors.New("the release's wrangler.jsonc names no compatibility_date")
 	}
-	schema, err := gateways.SourceFile(ctx, params.Release, "apps/gateway-cloudflare/schema.sql")
+	schema, err := gateways.SourceFile(ctx, gateways.Cloudflare, params.Release, "apps/gateway-cloudflare/schema.sql")
 	if err != nil {
 		return Gateway{}, err
 	}

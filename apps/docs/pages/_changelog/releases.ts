@@ -10,6 +10,9 @@ import { Marked } from "marked";
 export const TRACK_LABELS: Record<Track, string> = {
   app: "App",
   cli: "Server CLI",
+  "gateway-resend": "Resend gateway",
+  "gateway-ses": "Amazon SES gateway",
+  "gateway-cloudflare": "Cloudflare Email gateway",
   desktop: "Desktop",
   mobile: "Mobile",
 };

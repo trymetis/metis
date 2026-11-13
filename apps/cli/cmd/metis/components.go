@@ -16,7 +16,6 @@ import (
 	"github.com/trymetis/metis/apps/cli/internal/secrets"
 	"github.com/trymetis/metis/apps/cli/internal/state"
 	"github.com/trymetis/metis/apps/cli/internal/ui"
-	"github.com/trymetis/metis/apps/cli/internal/updater"
 )
 
 type componentFlags struct {
@@ -45,6 +44,7 @@ func (flags componentFlags) options() (components.Options, error) {
 		Replicas: flags.replicas, DataDir: flags.dataDir, Direct: flags.direct, Purge: flags.purge,
 		Domain: flags.domain, Addresses: flags.addresses, Host: flags.host, Database: flags.database,
 		Blobs: flags.blobs, Region: flags.region, DatabaseURL: flags.databaseURL, DatabaseToken: flags.databaseToken,
+		Version: flags.version,
 	}
 	switch {
 	case flags.systemd && flags.docker:
@@ -72,14 +72,6 @@ func componentNames() []string {
 	return names
 }
 
-func remoteRelease(flags componentFlags) (string, error) {
-	release := strings.TrimPrefix(flags.version, "v")
-	if !updater.IsReleaseVersion(release) {
-		return "", errors.New("away from the server, pass --version X.Y.Z: the release the instance runs, so the gateway matches it")
-	}
-	return release, nil
-}
-
 func addRemote(ctx context.Context, name string, flags componentFlags, opts components.Options) error {
 	opts.Domain = gateways.NormalizeDomain(opts.Domain)
 	if opts.Domain == "" {
@@ -89,7 +81,7 @@ func addRemote(ctx context.Context, name string, flags componentFlags, opts comp
 	endpoint := ""
 	switch name {
 	case "gateway-cloudflare":
-		release, err := remoteRelease(flags)
+		release, err := gateways.Resolve(ctx, gateways.Cloudflare, flags.version)
 		if err != nil {
 			return err
 		}
@@ -104,7 +96,7 @@ func addRemote(ctx context.Context, name string, flags componentFlags, opts comp
 		}
 		endpoint = deployed.Endpoint
 	case "gateway-ses":
-		release, err := remoteRelease(flags)
+		release, err := gateways.Resolve(ctx, gateways.SES, flags.version)
 		if err != nil {
 			return err
 		}
@@ -204,7 +196,7 @@ func addComponentFlags(cmd *cobra.Command, flags *componentFlags, adding bool) {
 	cmd.Flags().StringVar(&flags.blobs, "blobs", "", "gateway-resend: dir (the default) or objstore")
 	cmd.Flags().StringVar(&flags.databaseURL, "database-url", "", "gateway-ses: a libSQL URL Lambda can reach")
 	cmd.Flags().StringVar(&flags.databaseToken, "database-token", "", "gateway-ses: the token for --database-url")
-	cmd.Flags().StringVar(&flags.version, "version", "", "away from the server: the release the instance runs")
+	cmd.Flags().StringVar(&flags.version, "version", "", "gateways: the gateway release to deploy (default: its newest)")
 }
 
 func newAddCommand() *cobra.Command {

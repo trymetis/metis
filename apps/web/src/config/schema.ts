@@ -197,7 +197,7 @@ const gatewayServerSchema = z.object({
   endpoint: z
     .string()
     .trim()
-    .refine((value) => /^https:\/\//i.test(value), "The Worker endpoint must be an https:// URL")
+    .refine((value) => /^https:\/\//i.test(value), "The gateway endpoint must be an https:// URL")
     .refine((value) => URL.canParse(value), "That is not a valid URL")
     .transform((value) => value.replace(/\/+$/, "")),
 });

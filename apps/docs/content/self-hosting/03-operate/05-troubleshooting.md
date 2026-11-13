@@ -30,6 +30,26 @@ Warnings are grouped as follows.
 
 **Reset to environment** uses the environment as it was when the app last started. If you edit `.env` or the config file before you reset, apply the change first, as for [settings fixed at startup](/self-hosting/configure/how-configuration-works#settings-fixed-at-startup).
 
+## Read the logs
+
+Some problems show only in a log. On a server the `metis` CLI runs, read the app's log with:
+
+```bash
+sudo metis logs app
+```
+
+To read another component's log, name it instead of `app`: `sqld`, `worker`, `redis`, `objstore`, `caddy`, `gateway-resend` or `updater`.
+
+- `-f` or `--follow` keeps printing new lines. Press Ctrl+C to stop.
+- `--tail` sets how many lines to start from, or `all`. The default is `100`.
+- When a component has several containers, such as several workers, each line starts with the container's name, for example `worker-1 | `.
+- The Cloudflare Email and Amazon SES gateways run outside the server, so they have no log here. The command says, for example, "gateway-cloudflare has no containers".
+- An updater that runs under systemd has no container either. The command says "the updater runs under systemd: `journalctl -u metis-updater.service`". Run `sudo journalctl -u metis-updater.service` to read its log.
+
+When `/api/readyz` answers `503`, the reason is only in the app's log, never in the response. See [Health checks](/self-hosting/operate/health-checks).
+
+On a container platform or Vercel, there is no `metis logs`: use the platform's own log view.
+
 ## Common problems
 
 ### Nobody can connect an account
@@ -69,7 +89,7 @@ If the LLM is set up but AI features fail, look for the **LLM** group on the **D
 
 ### The app does not start after a change to .env
 
-A setting has a wrong value. Preflight refuses it and names the setting, and the app that was running keeps running. On a server the `metis` CLI runs, the end of preflight's output is in the error of the command you ran, `metis apply` or `metis config set`, after "preflight failed:". Fix the value in `.env`, then run `sudo metis apply` again.
+A setting has a wrong value. Preflight refuses it and names the setting, and the app that was running keeps running. On a server the `metis` CLI runs, the end of preflight's output is in the error of the command you ran, `metis apply` or `metis config set`, after "preflight failed:". Fix the value in `.env`, then run `sudo metis apply` again. If the app still does not start, read its log with `sudo metis logs app`, or the platform's log view on a container platform or Vercel. See [Read the logs](#read-the-logs).
 
 ### An older release cannot run on the database
 

@@ -41,8 +41,10 @@ domain identity, sending and account details use SESv2 (`aws sesv2`).
   ap-northeast-3, af-south-1, il-central-1, me-south-1, sa-east-1. The rule
   set, the function and its role live there; the bucket may be in another
   receiving region.
-- **Artifact:** `https://sh.trymetis.email/vVERSION/gateway-ses.zip`, listed
-  in `vVERSION/SHA256SUMS` (or built from this directory with `bun run build`
+- **Artifact:** `https://sh.trymetis.email/gateway-ses/vVERSION/gateway-ses.zip`,
+  listed in that folder's `SHA256SUMS`, where `VERSION` is a `gateway-ses-v`
+  release (`gateway-ses/version.txt` names the newest; any release works with
+  any Metis server) (or built from this directory with `bun run build`
   and `bun run package`). Handler `index.handler`, runtime `nodejs22.x` or
   `nodejs24.x`, architecture `arm64` or `x86_64` (the zip is plain JavaScript
   and runs on both; `arm64` costs less per GB-second). Timeout 60 seconds,
@@ -111,8 +113,9 @@ sudo metis add gateway-ses --domain example.com --region eu-west-1 \
 ```
 
 It puts its rule into the active rule set and creates a set only when none is
-active. From any other machine, add `--remote --version 1.4.0` (the release
-your instance runs): it prints the admin token and the server entry instead.
+active. It deploys the gateway's newest release; `--version 0.2.0` picks
+another. From any other machine, add `--remote`: it prints the admin token and
+the server entry instead.
 `metis remove gateway-ses --domain example.com` deletes only this gateway's
 rule and resources; `--purge` also deletes the bucket and its objects. Mint
 mailbox tokens with `metis gateway token create alice@example.com`.
@@ -131,7 +134,7 @@ DOMAIN=example.com
 BUCKET=example-com-metis-mail
 FUNCTION=metis-ses-mail
 RULE=metis-ses-mail
-VERSION=1.2.3             # the Metis Suite release your instance runs
+VERSION=$(curl -fsSL https://sh.trymetis.email/gateway-ses/version.txt)   # the newest gateway release
 ```
 
 ### 1. Verify the domain
@@ -250,8 +253,8 @@ which is why the domain is lowercase. A new mailbox needs no IAM change.
 Download the release's zip, check it, and create the function from it:
 
 ```sh
-curl -fsSLO "https://sh.trymetis.email/v$VERSION/gateway-ses.zip"
-curl -fsSL "https://sh.trymetis.email/v$VERSION/SHA256SUMS" | grep ' gateway-ses.zip$' | sha256sum -c -
+curl -fsSLO "https://sh.trymetis.email/gateway-ses/v$VERSION/gateway-ses.zip"
+curl -fsSL "https://sh.trymetis.email/gateway-ses/v$VERSION/SHA256SUMS" | grep ' gateway-ses.zip$' | sha256sum -c -
 
 aws lambda create-function --region "$REGION" --function-name "$FUNCTION" \
   --runtime nodejs24.x --architectures arm64 --handler index.handler \

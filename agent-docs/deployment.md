@@ -34,13 +34,13 @@ See also [AGENTS.md](../AGENTS.md), [cli.md](cli.md), [updater.md](updater.md), 
 - **Every release is addressable by its version.** On a GitHub release tagged `app-v<version>`, `docker.yml` pushes `:<version>`, `:<version>-preflight` and `:<version>-worker` beside the `<sha>*` tags.
   - It also pushes the `latest*` tags unless the release is a pre-release.
   - A run by hand (`workflow_dispatch`) pushes `latest*` and `<sha>*` only, and skips `publish`.
-  - Releases tagged `desktop-v*`, `mobile-v*` ([downloads.md](downloads.md)) or `cli-v*` ([self-host.md](self-host.md)) build no images.
+  - Releases tagged `desktop-v*`, `mobile-v*` ([downloads.md](downloads.md)) or `cli-v*` ([self-host.md](self-host.md)) build no images; `gateway-*-v*` releases go through `gateways.yml` ([gateways.md](gateways.md)).
 - **A pre-release image is reachable only by pinning it.** `latest_release` and the updater's `fetchReleases` accept only `X.Y.Z` tags.
 - **An `app-v*` tag must match `apps/web/package.json` → `version`, and `releases/app-v<version>.md` must exist with notes; `docker.yml` fails the run before building otherwise.**
   - `bun run release:notes <tag>` checks the file and prints its published notes, which is also how the release body is written (`gh release create app-v<version> --verify-tag --notes-file …`).
   - The updater shows that body as the release's notes on Dashboard → Updates ([updater.md](updater.md)).
   - That field is the version the app shows beside its source link on every platform, including hosts no tag reaches ([ui.md](ui.md)).
-- **Every release's notes are one file in the root `releases/` folder, `<track>-v<version>.md` for the `app`, `cli`, `desktop` and `mobile` tracks; the track and version come from the file name, and the YAML frontmatter holds the fields `releaseFieldsSchema` allows (`date` is required).**
+- **Every release's notes are one file in the root `releases/` folder, `<track>-v<version>.md` for the `app`, `cli`, `gateway-resend`, `gateway-ses`, `gateway-cloudflare`, `desktop` and `mobile` tracks; the track and version come from the file name, and the YAML frontmatter holds the fields `releaseFieldsSchema` allows (`date` is required).**
   - Each track's `CHANGELOG.md` holds `## Unreleased`, then `## Releases`, a list of that track's files, newest first.
   - `@metis/releases` is the only reader: the docs changelog page, the CLI and CI all parse files through `readReleases`, so a new field is one schema line.
   - `bun run release <tag>` moves `## Unreleased` into the new file and adds its list line; it never bumps versions, commits or tags.
@@ -123,6 +123,6 @@ See also [AGENTS.md](../AGENTS.md), [cli.md](cli.md), [updater.md](updater.md), 
   - `runner` serves `node apps/web/server.js` from the standalone output, which mirrors the repository layout because `outputFileTracingRoot` is the repository root.
   - `worker` carries the full install and `workflow-worker.mjs`.
   - `docker.yml` builds one matrix job per image, each with its own build cache scope.
-  - `gateway-resend` is the Resend gateway (`apps/gateway-resend/Dockerfile`), published as its own GHCR package, `ghcr.io/trymetis/metis-gateway-resend`, with the same tags as the release's other images; its package is public like the `metis` image's ([gateways.md](gateways.md)).
+  - The Resend gateway's image is not a server image: `gateways.yml` publishes it on its own track ([gateways.md](gateways.md)).
 - **A deployment needs `runner` and `preflight`, plus sqld unless the databases are elsewhere.** The updater is the `metis` binary's `updater serve` command, not an image ([updater.md](updater.md)).
 - **A platform that builds from source uses `apps/web` as the project root and `bun run preflight && bun run start` as the start command**; the images build from the repository root (`docker build --target runner .`).

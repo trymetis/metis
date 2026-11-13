@@ -77,8 +77,9 @@ The steps below do the same by hand.
 ## Setup
 
 The published image is `ghcr.io/trymetis/metis-gateway-resend`, tagged with
-each Metis release's version (`latest` follows the newest release that is not a
-pre-release). The container applies `schema.sql` to `DATABASE_URL` on every
+each `gateway-resend-v` release's version (`latest` follows the newest release
+that is not a pre-release; `https://sh.trymetis.email/gateway-resend/version.txt`
+names it). Any release works with any Metis server, because both speak `/v1`. The container applies `schema.sql` to `DATABASE_URL` on every
 start, then serves on port `8787`. Blobs in `BLOB_DIR` live under `/data`, a
 volume, so mount one to keep them across a recreated container:
 

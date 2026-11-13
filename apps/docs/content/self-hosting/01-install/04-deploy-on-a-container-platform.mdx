@@ -314,7 +314,7 @@ Workflows can start from a webhook, or from a push message that Google Calendar,
 
 The `metis` CLI also runs on your own computer, away from the platform. There it changes only outside services and an environment file you keep, such as `production.env` with the same variables as the app. To download it, see [Install the CLI on your computer](/self-hosting/reference/cli-commands#install-the-cli-on-your-computer).
 
-Pass `--version` with the release your deployment runs, such as `1.2.3`.
+For `metis config set`, `metis config unset` and `metis connect google`, pass `--version` with the Metis Suite release your deployment runs, such as `1.2.3`. On `metis add` for the Cloudflare Email and Amazon SES gateways, `--version` names a gateway release instead, and you can leave it out to get the newest one. For the Resend gateway, the image tag you run picks the release.
 
 - **Change dashboard settings**, such as an OAuth client, without opening the dashboard. The command updates the file, lists what to set on the platform, and stores the dashboard settings in the database once, through that release's preflight image:
 
@@ -330,13 +330,13 @@ Pass `--version` with the release your deployment runs, such as `1.2.3`.
   metis connect google --env-file production.env --version 1.2.3
   ```
 
-- **Set up a mail gateway.** For the Resend gateway, run the image `ghcr.io/trymetis/metis-gateway-resend:1.2.3` on your platform first, then set up the Resend side and print the gateway's values:
+- **Set up a mail gateway.** For the Resend gateway, run the image `ghcr.io/trymetis/metis-gateway-resend:0.1.0` (a gateway release) or `ghcr.io/trymetis/metis-gateway-resend:latest` on your platform first, then set up the Resend side and print the gateway's values:
 
   ```bash
   metis add gateway-resend --endpoint https://resend-gateway.example.com --domain example.com
   ```
 
-  The Cloudflare Email and Amazon SES gateways run on Cloudflare and AWS, so you set them up with `--remote`, for example `metis add gateway-cloudflare --remote --domain example.com --version 1.2.3`. See [Mail gateways](/self-hosting/mail-gateways).
+  The Cloudflare Email and Amazon SES gateways run on Cloudflare and AWS, so you set them up with `--remote`, for example `metis add gateway-cloudflare --remote --domain example.com`. See [Mail gateways](/self-hosting/mail-gateways).
 
 - **Create mailbox tokens** on a gateway:
 
@@ -344,7 +344,7 @@ Pass `--version` with the release your deployment runs, such as `1.2.3`.
   metis gateway token create alice@example.com --endpoint https://resend-gateway.example.com --admin-token your-admin-token
   ```
 
-:::danger[Never set METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS on the platform]
+:::danger[Never set `METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS` on the platform]
 The CLI stores dashboard settings by passing `METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS` to one preflight run. Never set this variable yourself in the platform's environment. Every later preflight would then store those settings from the environment again, and overwrite what the owner or an admin changed in the dashboard.
 :::
 

@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"golang.org/x/mod/semver"
 
 	"github.com/trymetis/metis/apps/cli/internal/cloudflare"
 	"github.com/trymetis/metis/apps/cli/internal/gateways"
@@ -61,11 +62,17 @@ func PrintEntry(key string, entry map[string]any) {
 	ui.Info("  %s=%s", key, list)
 }
 
-func versionNote(version, app string) string {
-	if version == "" || version == app {
+func versionNote(ctx context.Context, track, version string) string {
+	if version == "" {
 		return version
 	}
-	return version + ", app " + app + ": run metis add again to move it"
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	newest, err := gateways.Latest(ctx, track)
+	if err != nil || newest == version || semver.Compare("v"+newest, "v"+version) <= 0 {
+		return version
+	}
+	return version + ", " + newest + " is out: run metis add again to move it"
 }
 
 func cloudflareClient(ctx context.Context, required bool) (*cloudflare.Client, error) {
@@ -118,13 +125,13 @@ func (cloudflareGateway) Requires() []string            { return nil }
 func (cloudflareGateway) Validate(*state.State) error   { return nil }
 func (cloudflareGateway) Warning(*Install, bool) string { return "" }
 
-func (cloudflareGateway) Status(_ context.Context, st *state.State) (string, bool) {
+func (cloudflareGateway) Status(ctx context.Context, st *state.State) (string, bool) {
 	if len(st.Components.GatewayCloudflare) == 0 {
 		return "", false
 	}
 	var parts []string
 	for domain, gateway := range st.Components.GatewayCloudflare {
-		parts = append(parts, domain+" "+versionNote(gateway.Version, st.App.Version))
+		parts = append(parts, domain+" "+versionNote(ctx, gateways.Cloudflare, gateway.Version))
 	}
 	slices.Sort(parts)
 	return strings.Join(parts, "; "), true
@@ -160,7 +167,11 @@ func (cloudflareGateway) Add(ctx context.Context, in *Install, opts Options) err
 		env.Set("API_TOKEN", secrets.Hex(32))
 	}
 	opts.Domain = domain
-	deployed, err := DeployCloudflare(ctx, opts, in.State.App.Version, filepath.Join(in.Dir, "cache"), env.Value("API_TOKEN"))
+	release, err := gateways.Resolve(ctx, gateways.Cloudflare, opts.Version)
+	if err != nil {
+		return err
+	}
+	deployed, err := DeployCloudflare(ctx, opts, release, filepath.Join(in.Dir, "cache"), env.Value("API_TOKEN"))
 	if err != nil {
 		return err
 	}
@@ -169,7 +180,7 @@ func (cloudflareGateway) Add(ctx context.Context, in *Install, opts Options) err
 	}
 	in.State.Components.GatewayCloudflare[domain] = state.GatewayCloudflare{
 		AccountID: deployed.AccountID, ZoneID: deployed.ZoneID, D1ID: deployed.D1ID,
-		Endpoint: deployed.Endpoint, Addresses: opts.Addresses, Version: in.State.App.Version,
+		Endpoint: deployed.Endpoint, Addresses: opts.Addresses, Version: release,
 	}
 	return SetServerEntry(in, cloudflareServersKey, "metis-cloudflare-"+gateways.Slug(domain), gatewayEntry("metis-cloudflare-"+gateways.Slug(domain), domain, deployed.Endpoint))
 }
@@ -217,12 +228,12 @@ func (resendGateway) Warning(in *Install, adding bool) string {
 	return "Mailboxes connected through this gateway are quarantined when the app restarts."
 }
 
-func (resendGateway) Status(_ context.Context, st *state.State) (string, bool) {
+func (resendGateway) Status(ctx context.Context, st *state.State) (string, bool) {
 	gateway := st.Components.GatewayResend
 	if gateway == nil {
 		return "", false
 	}
-	return fmt.Sprintf("%s on https://%s, %s", gateway.Domain, gateway.Host, versionNote(gateway.Version, st.App.Version)), true
+	return fmt.Sprintf("%s on https://%s, %s", gateway.Domain, gateway.Host, versionNote(ctx, gateways.Resend, gateway.Version)), true
 }
 
 func resendKey(ctx context.Context, stored string) (string, error) {
@@ -410,8 +421,12 @@ func (resendGateway) Add(ctx context.Context, in *Install, opts Options) error {
 		env.Set("RESEND_WEBHOOK_SECRET", webhook.SigningSecret)
 		progress("Resend webhook to https://" + host + "/webhooks/resend")
 	}
+	release, err := gateways.Resolve(ctx, gateways.Resend, opts.Version)
+	if err != nil {
+		return err
+	}
 	in.State.Components.GatewayResend = &state.GatewayResend{
-		Domain: domain, Host: host, Database: database, Blobs: blobs, Version: in.State.App.Version,
+		Domain: domain, Host: host, Database: database, Blobs: blobs, Version: release,
 		ResendDomainID: setUp.Domain.ID, WebhookID: webhookID,
 	}
 	apiToken := env.Value("API_TOKEN")
@@ -474,7 +489,7 @@ func (sesGateway) Status(ctx context.Context, st *state.State) (string, bool) {
 	}
 	var parts []string
 	for domain, gateway := range st.Components.GatewaySES {
-		part := fmt.Sprintf("%s in %s %s", domain, gateway.Region, versionNote(gateway.Version, st.App.Version))
+		part := fmt.Sprintf("%s in %s %s", domain, gateway.Region, versionNote(ctx, gateways.SES, gateway.Version))
 		if client, err := ses.New(ctx, gateway.Region); err == nil {
 			if failed, err := client.FailedReceipts(ctx, domain); err == nil && failed > 0 {
 				part += fmt.Sprintf(", %d failed receipt(s) in %s-failed", failed, ses.ResourceName(domain))
@@ -502,7 +517,7 @@ func DeploySES(ctx context.Context, opts Options, release, cacheDir, apiToken, w
 		return nil, ses.Gateway{}, err
 	}
 	progress(fmt.Sprintf("AWS account %s, %s", client.Account, client.Region))
-	schema, err := gateways.SourceFile(ctx, release, "apps/gateway-ses/schema.sql")
+	schema, err := gateways.SourceFile(ctx, gateways.SES, release, "apps/gateway-ses/schema.sql")
 	if err != nil {
 		return nil, ses.Gateway{}, err
 	}
@@ -563,7 +578,11 @@ func (sesGateway) Add(ctx context.Context, in *Install, opts Options) error {
 	if origin := AppOrigin(in); origin != "" {
 		website = origin
 	}
-	client, deployed, err := DeploySES(ctx, opts, in.State.App.Version, filepath.Join(in.Dir, "cache"), env.Value("API_TOKEN"), website, in.Env.Value("METIS_OWNER_EMAIL"))
+	release, err := gateways.Resolve(ctx, gateways.SES, opts.Version)
+	if err != nil {
+		return err
+	}
+	client, deployed, err := DeploySES(ctx, opts, release, filepath.Join(in.Dir, "cache"), env.Value("API_TOKEN"), website, in.Env.Value("METIS_OWNER_EMAIL"))
 	if err != nil {
 		return err
 	}
@@ -571,7 +590,7 @@ func (sesGateway) Add(ctx context.Context, in *Install, opts Options) error {
 		in.State.Components.GatewaySES = map[string]state.GatewaySES{}
 	}
 	in.State.Components.GatewaySES[domain] = state.GatewaySES{
-		Region: client.Region, Account: client.Account, Endpoint: deployed.Endpoint, RuleSet: deployed.RuleSet, Version: in.State.App.Version,
+		Region: client.Region, Account: client.Account, Endpoint: deployed.Endpoint, RuleSet: deployed.RuleSet, Version: release,
 	}
 	id := ses.ResourceName(domain)
 	return SetServerEntry(in, sesServersKey, id, gatewayEntry(id, domain, deployed.Endpoint))

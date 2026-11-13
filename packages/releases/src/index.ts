@@ -4,13 +4,24 @@ import { dirname, join } from "node:path";
 import { parse } from "yaml";
 import { z } from "zod";
 
-export const TRACKS = ["app", "cli", "desktop", "mobile"] as const;
+export const TRACKS = [
+  "app",
+  "cli",
+  "gateway-resend",
+  "gateway-ses",
+  "gateway-cloudflare",
+  "desktop",
+  "mobile",
+] as const;
 
 export type Track = (typeof TRACKS)[number];
 
 export const CHANGELOGS: Record<Track, string> = {
   app: "apps/web/CHANGELOG.md",
   cli: "apps/cli/CHANGELOG.md",
+  "gateway-resend": "apps/gateway-resend/CHANGELOG.md",
+  "gateway-ses": "apps/gateway-ses/CHANGELOG.md",
+  "gateway-cloudflare": "apps/gateway-cloudflare/CHANGELOG.md",
   desktop: "apps/desktop/CHANGELOG.md",
   mobile: "apps/mobile/CHANGELOG.md",
 };
@@ -34,7 +45,8 @@ export type Release = ReleaseFields & {
   body: string;
 };
 
-const TAG = /^(app|cli|desktop|mobile)-v(\d+\.\d+\.\d+(?:-rc\.\d+)?)$/;
+const TAG =
+  /^(app|cli|gateway-resend|gateway-ses|gateway-cloudflare|desktop|mobile)-v(\d+\.\d+\.\d+(?:-rc\.\d+)?)$/;
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n/;
 
@@ -74,8 +86,7 @@ export function findRoot(from: string) {
 export function parseRelease(name: string, source: string): Release {
   const tag = name.replace(/\.md$/, "");
   const parsed = name.endsWith(".md") ? parseTag(tag) : null;
-  if (!parsed)
-    throw new Error(`releases/${name} is not named <app|cli|desktop|mobile>-v<version>.md`);
+  if (!parsed) throw new Error(`releases/${name} is not named <${TRACKS.join("|")}>-v<version>.md`);
   const frontmatter = FRONTMATTER.exec(source);
   if (!frontmatter) throw new Error(`releases/${name} has no frontmatter block`);
   let data: unknown;

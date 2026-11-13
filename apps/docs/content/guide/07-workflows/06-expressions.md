@@ -31,13 +31,13 @@ The workflow cannot be saved until every expression is correct.
 
 ## What an expression can read
 
-| Name              | What it is                                                                                                                                       |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `item`            | The item that reached this step, such as a message, an event or a file.                                                                          |
-| `trigger`         | What started the run, such as the new message or the webhook's body. See [Triggers](/guide/workflows/triggers) for what each trigger passes on.  |
-| `steps.<step id>` | The result of an earlier step, by the step's id, for example `steps.s1a2b3c4d.summary`. Only steps that come before this one on every path work. |
-| `run`             | The run: `run.id`, `run.workflow` and `run.startedAt`.                                                                                           |
-| `now`             | The current date and time.                                                                                                                       |
+| Name              | What it is                                                                                                                                                                          |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `item`            | The item that reached this step, such as a message, an event or a file.                                                                                                             |
+| `trigger`         | What started the run, such as the new message or the webhook's body. See [Triggers](/guide/workflows/triggers) for what each trigger passes on.                                     |
+| `steps.s1a2b3c4d` | The result of an earlier step, by its id. For a step with the id `s1a2b3c4d`, `steps.s1a2b3c4d.summary` reads its summary. Only steps that come before this one on every path work. |
+| `run`             | The run: `run.id`, `run.workflow` and `run.startedAt`.                                                                                                                              |
+| `now`             | The current date and time.                                                                                                                                                          |
 
 The step id shows in the Inspector when you select a step. See [Use the editor](/guide/workflows/use-the-editor#settings-every-step-has).
 

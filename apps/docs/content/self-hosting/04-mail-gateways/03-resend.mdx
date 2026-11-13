@@ -9,10 +9,6 @@ Mail for an address with no mailbox token is dropped. Creating a token for an ad
 
 Search in a Resend gateway mailbox ignores upper and lower case only for the letters A to Z. For other letters, such as accented ones, the case must match.
 
-:::note[Moving from Postgres]
-Earlier versions of the Resend gateway stored mail in Postgres. A gateway that ran on Postgres starts empty on libSQL, with no mail and no mailbox tokens. There is no way to import mail from Postgres. Create a token again for each address and give it to its owner. Until you do, mail for that address is dropped.
-:::
-
 You can set it up with the `metis` CLI, or by hand.
 
 ## Set it up with the metis CLI
@@ -52,9 +48,12 @@ Then create a mailbox token for each address with `sudo metis gateway token crea
 | `--database` | `own`: the gateway keeps its mail in its own database server. `stack`: it keeps it in the server's sqld, next to your instance's databases. With `stack`, **Undo last upgrade** also rolls back the gateway's mail and tokens. | `own`                                        |
 | `--blobs`    | Where raw mail and attachments go. `dir`: a Docker volume. `objstore`: the server's object storage, in a bucket named `gateway-resend`. `objstore` needs `sudo metis add objstore` first.                                      | `dir`                                        |
 | `--region`   | The Resend region: `us-east-1`, `eu-west-1`, `sa-east-1` or `ap-northeast-1`.                                                                                                                                                  | `us-east-1`                                  |
+| `--version`  | The gateway release to run, such as `0.1.0`.                                                                                                                                                                                   | The newest release                           |
 | `--yes`      | Go ahead without asking.                                                                                                                                                                                                       |                                              |
 
-The gateway stays on its release when you upgrade your instance. To move it to the release your instance runs, run the same `metis add` command again. A flag you leave out then goes back to its default.
+Mail gateways have their own releases, separate from Metis Suite releases. Any gateway release works with any Metis Suite release. Upgrading your instance never changes the gateway. To move the gateway to its newest release, run the same `metis add` command again. To stay on one release, pass `--version`, such as `--version 0.1.0`. A flag you leave out then goes back to its default.
+
+`sudo metis status` shows the release the gateway runs. When a newer one is out, it says so, for example "example.com on https://resend.mail.example.com, 0.1.0, 0.2.0 is out: run metis add again to move it".
 
 ### With the gateway elsewhere
 
@@ -64,7 +63,7 @@ If your instance runs on a container platform or Vercel, run the gateway image t
 RESEND_API_KEY=your-resend-api-key metis add gateway-resend --endpoint https://resend-gateway.example.com --domain example.com
 ```
 
-`--endpoint` is the gateway's address. The command sets up the domain and the webhook as above, then prints "Set these on the gateway at https://resend-gateway.example.com:", followed by `MAIL_DOMAIN`, `API_TOKEN`, `RESEND_API_KEY` and `RESEND_WEBHOOK_SECRET` with their values. Set them on the gateway and restart it. It also prints the server entry, with "Add this server under Dashboard → System, or store it with metis config set --env-file:". Keep the `API_TOKEN`: you need it to create mailbox tokens.
+`--endpoint` is the gateway's address. The command sets up the domain and the webhook as above, then prints "Set these on the gateway at https://resend-gateway.example.com:", followed by `MAIL_DOMAIN`, `API_TOKEN`, `RESEND_API_KEY` and `RESEND_WEBHOOK_SECRET` with their values. Set them on the gateway and restart it. It also prints the server entry, with "Add this server under Dashboard → System, or store it with `metis config set --env-file`:". Keep the `API_TOKEN`: you need it to create mailbox tokens.
 
 ### Remove it
 
@@ -84,14 +83,14 @@ It deletes the webhooks to that address and prints, for example, "Deleted 1 Rese
 
 ### If something goes wrong
 
-| Message                                                                                                    | What to do                                                                                        |
-| ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| "the Resend gateway needs a public HTTPS address for its webhook; run metis domain mail.example.com first" | Give the instance a domain first. See [Domain and HTTPS](/self-hosting/install/domain-and-https). |
-| "--database stack needs the server's sqld"                                                                 | Your instance's databases are elsewhere. Use `--database own`.                                    |
-| "--blobs objstore needs metis add objstore first"                                                          | Run `sudo metis add objstore` first, or use `--blobs dir`.                                        |
-| "--region takes us-east-1, eu-west-1, sa-east-1, ap-northeast-1"                                           | Pick one of these regions.                                                                        |
-| "Run the same command again once DNS has spread"                                                           | DNS changes take time to spread. Wait, then run the same command again.                           |
-| "the Resend gateway is not on"                                                                             | There is no Resend gateway on this server.                                                        |
+| Message                                                                                                      | What to do                                                                                        |
+| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| "the Resend gateway needs a public HTTPS address for its webhook; run `metis domain mail.example.com` first" | Give the instance a domain first. See [Domain and HTTPS](/self-hosting/install/domain-and-https). |
+| "`--database stack` needs the server's sqld"                                                                 | Your instance's databases are elsewhere. Use `--database own`.                                    |
+| "`--blobs objstore` needs `metis add objstore` first"                                                        | Run `sudo metis add objstore` first, or use `--blobs dir`.                                        |
+| "`--region` takes us-east-1, eu-west-1, sa-east-1, ap-northeast-1"                                           | Pick one of these regions.                                                                        |
+| "Run the same command again once DNS has spread"                                                             | DNS changes take time to spread. Wait, then run the same command again.                           |
+| "the Resend gateway is not on"                                                                               | There is no Resend gateway on this server.                                                        |
 
 ## Set it up by hand
 
@@ -112,21 +111,16 @@ cd apps/gateway-resend
 
 ### The gateway image
 
-Each Metis Suite server release publishes a ready-made image of the gateway: `ghcr.io/trymetis/metis-gateway-resend`. It is public, so you need no sign-in to download it.
+Each release of the Resend gateway publishes a ready-made image of it: `ghcr.io/trymetis/metis-gateway-resend`. It is public, so you need no sign-in to download it.
 
 | Tag      | What it is                                                                            |
 | -------- | ------------------------------------------------------------------------------------- |
-| `1.2.3`  | Release 1.2.3.                                                                        |
+| `0.1.0`  | Release 0.1.0 of the gateway.                                                         |
 | `latest` | The newest release that is not a pre-release. A pre-release does not change `latest`. |
 
-You can use any tag. A good choice is the release your instance runs. Older releases have no image. If your release has none, use a newer tag or build the image yourself (step 2).
+The gateway has its own releases, separate from Metis Suite releases. You can use any tag: any gateway release works with any Metis Suite release. To see the gateway's releases, open the **Resend gateway** tab of the [changelog](/changelog?platform=gateway-resend). `https://sh.trymetis.email/gateway-resend/version.txt` names the newest release that is not a pre-release.
 
-To find the release your instance runs:
-
-- Every page of Metis Suite shows a **Source code** link with the version, for example "Source code · v1.2.3". It is in the left rail, at the bottom of the account settings and dashboard sidebars, and in the footer of the pages before sign-in. See [Source code link](/self-hosting/configure/source-code-link).
-- On a server the `metis` CLI runs, open **Dashboard**, **System**, **Updates**. The **Version** row of **Running release** shows the release, such as `1.2.3`. `sudo metis status` shows it too. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo).
-
-Write the tag without the leading `v`: `1.2.3`, not `v1.2.3`.
+Write the tag without the leading `v`: `0.1.0`, not `v0.1.0`.
 
 ### Run the gateway
 
@@ -156,13 +150,13 @@ Write the tag without the leading `v`: `1.2.3`, not `v1.2.3`.
     Use one of these:
 
     - Docker, with the published image. Run this from the folder that holds
-      your `.env` file, with your instance's release in place of `1.2.3`.
+      your `.env` file. Use a gateway release, such as `0.1.0`, or `latest`.
       Each time the container starts, it creates any tables that are
       missing. Then it serves on port 8787.
 
       ```bash
       docker run -d --name metis-resend --env-file .env -p 8787:8787 \
-        -v metis-resend-data:/data ghcr.io/trymetis/metis-gateway-resend:1.2.3
+        -v metis-resend-data:/data ghcr.io/trymetis/metis-gateway-resend:0.1.0
       ```
 
       The container keeps its files under `/data`. The named volume
@@ -208,7 +202,7 @@ Write the tag without the leading `v`: `1.2.3`, not `v1.2.3`.
     - **Name**: what users see in the connect dialog.
     - **Domain**: your domain, such as `example.com`.
     - **Gateway endpoint**: the gateway's `https://` address. Any other
-      address is refused with "The Worker endpoint must be an https://
+      address is refused with "The gateway endpoint must be an https://
       URL".
 
     Click **Save changes** and enter your authenticator code.

@@ -31,9 +31,9 @@ By default, every address on the domain goes to the gateway (a catch-all). Alias
 sudo CLOUDFLARE_API_TOKEN=your-cloudflare-token metis add gateway-cloudflare --domain example.com --addresses alice@example.com,bob@example.com
 ```
 
-The command first prints "Needs: the domain's zone on this Cloudflare account, Workers Paid (Email Sending to any recipient), and Email Sending, which is in beta." Then it deploys the gateway for the release your instance runs. Each resource is named after the domain, such as `metis-mail-example-com` for `example.com`:
+The command first prints "Needs: the domain's zone on this Cloudflare account, Workers Paid (Email Sending to any recipient), and Email Sending, which is in beta." Then it deploys the newest release of the Cloudflare Email gateway, or the release you name with `--version`, such as `--version 0.1.0`. Each resource is named after the domain, such as `metis-mail-example-com` for `example.com`:
 
-1. "Downloaded the gateway for 1.4.0"
+1. "Downloaded the gateway for 0.1.0"
 2. "D1 database metis-mail-example-com", with the gateway's tables
 3. "R2 bucket metis-mail-example-com-raw"
 4. "Worker https://metis-mail-example-com.example-account.workers.dev", with its admin token
@@ -42,20 +42,24 @@ The command first prints "Needs: the domain's zone on this Cloudflare account, W
 
 The admin token is kept on the server, in `/opt/metis-suite/env/`. The command adds the gateway to the **Cloudflare Email** server list, named after the domain, and stores it at once. Then create a mailbox token for each address with `sudo metis gateway token create alice@example.com`. See [Mailbox tokens](/self-hosting/mail-gateways/mailbox-tokens).
 
-The gateway stays on its release when you upgrade your instance. To move it to the release your instance runs, run the same `metis add` command again.
+Mail gateways have their own releases, separate from Metis Suite releases. Any gateway release works with any Metis Suite release. Upgrading your instance never changes the gateway. To move the gateway to its newest release, run the same `metis add` command again. To stay on one release, pass `--version`, such as `--version 0.1.0`.
+
+`sudo metis status` shows the release each gateway runs. When a newer one is out, it says so, for example "example.com 0.1.0, 0.2.0 is out: run metis add again to move it".
 
 ### From your computer
 
-To set up the gateway for an instance on a container platform or Vercel, run the command on your computer with `--remote`, and the release your instance runs:
+To set up the gateway for an instance on a container platform or Vercel, run the command on your computer with `--remote`:
 
 ```bash
-CLOUDFLARE_API_TOKEN=your-cloudflare-token metis add gateway-cloudflare --remote --domain example.com --version 1.4.0
+CLOUDFLARE_API_TOKEN=your-cloudflare-token metis add gateway-cloudflare --remote --domain example.com
 ```
+
+It deploys the newest gateway release. To deploy another one, add `--version`, such as `--version 0.1.0`.
 
 It works against your Cloudflare account only, and then prints:
 
 - "The gateway's admin token (API_TOKEN), shown once; metis gateway token needs it:", followed by the token. Keep it: you need it to create mailbox tokens. Each run sets a new admin token, so keep the one from your last run.
-- "Add this server under Dashboard → System, or store it with metis config set --env-file:", followed by the server entry, and the same entry as a line such as `METIS_CLOUDFLARE_SERVERS=[{"id":"metis-cloudflare-example-com","name":"example.com","domain":"example.com","endpoint":"https://metis-mail-example-com.example-account.workers.dev"}]`.
+- "Add this server under Dashboard → System, or store it with `metis config set --env-file`:", followed by the server entry, and the same entry as a line such as `METIS_CLOUDFLARE_SERVERS=[{"id":"metis-cloudflare-example-com","name":"example.com","domain":"example.com","endpoint":"https://metis-mail-example-com.example-account.workers.dev"}]`.
 
 Add the server under **Dashboard**, **System**, **Cloudflare Email**, or store it with `metis config set --env-file`. See [Change settings away from the server](/self-hosting/configure/how-configuration-works#change-settings-away-from-the-server).
 
@@ -76,8 +80,8 @@ From your computer, use `CLOUDFLARE_API_TOKEN=your-cloudflare-token metis remove
 | "no zone for example.com is on this Cloudflare account"                                           | Add the domain to the Cloudflare account the token belongs to, or use a token for that account. |
 | "Email Routing works on a zone apex; mail.example.com is inside the zone example.com"             | Use the zone itself, such as `example.com`.                                                     |
 | "checking the Cloudflare API token:" or "the Cloudflare API token is" followed by a reason        | Check the token in the Cloudflare dashboard, or create a new one.                               |
-| "pass --domain example.com"                                                                       | Add `--domain`.                                                                                 |
-| "no Cloudflare gateway serves example.org; pass --domain"                                         | No gateway on this server serves that domain. Check the domain.                                 |
+| "pass `--domain example.com`"                                                                     | Add `--domain`.                                                                                 |
+| "no Cloudflare gateway serves example.org; pass `--domain`"                                       | No gateway on this server serves that domain. Check the domain.                                 |
 | "deleting the R2 bucket metis-mail-example-com-raw (empty it in the Cloudflare dashboard first):" | Empty the bucket in the Cloudflare dashboard, then run the command again.                       |
 
 ## Set it up by hand
@@ -90,13 +94,17 @@ From your computer, use `CLOUDFLARE_API_TOKEN=your-cloudflare-token metis remove
 - You have [Bun](https://bun.sh) and a copy of the Metis Suite source code:
 
 ```bash
+VERSION=$(curl -fsSL https://sh.trymetis.email/gateway-cloudflare/version.txt)
 git clone https://github.com/trymetis/metis.git
 cd metis
+git checkout "gateway-cloudflare-v$VERSION"
 bun install
 cd apps/gateway-cloudflare
 ```
 
-Each Metis Suite server release also publishes the built Worker, without its bindings, so you can deploy it with your own tools. For release 1.2.3, it is at `https://sh.trymetis.email/v1.2.3/gateway-cloudflare.zip`, and the folder's `SHA256SUMS` lists its checksum. Use the release your instance runs. You supply the bindings yourself, as `wrangler.jsonc` in the source code names them: the D1 database as `DB`, the R2 bucket as `RAW`, the sending binding as `EMAIL`, and the `MAIL_DOMAIN` variable. You also set the `API_TOKEN` secret.
+`VERSION` is the gateway release you deploy. The first line sets it to the newest release. To use another one, set it to a gateway release without the leading `v`, such as `VERSION=0.1.0`. `git checkout` then picks the source code of that release, such as the tag `gateway-cloudflare-v0.1.0`, so the files match the release you deploy.
+
+Each release of the Cloudflare Email gateway also publishes the built Worker, without its bindings, so you can deploy it with your own tools. For the release in `VERSION`, it is at `https://sh.trymetis.email/gateway-cloudflare/v$VERSION/gateway-cloudflare.zip`, such as `https://sh.trymetis.email/gateway-cloudflare/v0.1.0/gateway-cloudflare.zip` for 0.1.0, and the folder's `SHA256SUMS` lists its checksum. The newest release that is not a pre-release is also at `https://sh.trymetis.email/gateway-cloudflare/gateway-cloudflare.zip`, and `https://sh.trymetis.email/gateway-cloudflare/version.txt` names it. A pre-release has only its own folder. Any gateway release works with any Metis Suite release. To see the gateway's releases, open the **Cloudflare Email gateway** tab of the [changelog](/changelog?platform=gateway-cloudflare). You supply the bindings yourself, as `wrangler.jsonc` in the source code names them: the D1 database as `DB`, the R2 bucket as `RAW`, the sending binding as `EMAIL`, and the `MAIL_DOMAIN` variable. You also set the `API_TOKEN` secret.
 
 ### Deploy the Worker
 

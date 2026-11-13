@@ -33,6 +33,7 @@ See also [AGENTS.md](../AGENTS.md), [configuration.md](configuration.md) (mainte
 
 - **Keys are P-256 key pairs in standard PEM**: the public key as SubjectPublicKeyInfo (`PUBLIC KEY`), the private key as PKCS#8 (`PRIVATE KEY`) or SEC1 (`EC PRIVATE KEY`, what `openssl ecparam -genkey` writes, after its `EC PARAMETERS` block). Any other key type is refused, naming the type found.
 - **A fingerprint is the first 16 bytes of SHA-256 over the uncompressed public point, in lowercase hex.**
+- **Decrypting picks the recipient by fingerprint** (`apps/cli/internal/archive/read.go`): `--identity` opens the entry whose fingerprint matches its key, and `--passphrase` tries each passphrase recipient by re-deriving its key from the entry's parameters.
 - **A passphrase key is an opt-in recipient, not a mode.** Argon2id (t=3, m=64 MiB, p=4, RFC 9106's second recommended set) turns the passphrase and a random 16-byte salt into a seed; HKDF-SHA256 with info `metis-export/v1/p256/` plus a counter turns it into a P-256 key, taking the first counter `ecdh.P256().NewPrivateKey` accepts.
   - `metis keygen --from-passphrase` writes only the `.pub`, with PEM headers `Metis-KDF`, `Metis-KDF-Params` and `Metis-KDF-Salt`; the recipient entry in each archive carries the same parameters, so `--passphrase` re-derives the key from the archive alone.
 - **The CLI never stores keys, passphrases or database tokens.**
@@ -148,6 +149,7 @@ See also [AGENTS.md](../AGENTS.md), [configuration.md](configuration.md) (mainte
 - **`setup --from-export` does not restore the Resend gateway's database.** The archive carries it, and `export decrypt` writes it out, but the gateway is set up after the first apply.
 - **A failed restore removes the half-made install** (`undoFailedRestore`: the `metis-*` containers and volumes, the install folder, `/etc/metis/install-dir`), so `setup` can run again; the loader runs before the app exists, so nothing else was made.
 - **An archive in `exports/` sits on the same disk as the server** and does not survive losing it; the CLI and the dashboard both say so.
+- **A restored Metis Cloud export needs outgoing mail set again**, because its stored mailer names the `console` driver, which works only on Cloud; the CLI warns when it restores one.
 - **A record says where an archive was written, not that it is still there.** Nothing deletes or checks a record when a file is moved or removed.
 
 - **The CLI cannot freeze a serverless or container-platform app itself.** The operator sets `METIS_MAINTENANCE` on the platform and redeploys; the CLI only checks it.

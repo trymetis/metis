@@ -165,7 +165,7 @@
     },
     "apps/web": {
       "name": "@metis/web",
-      "version": "0.3.1",
+      "version": "0.4.0",
       "dependencies": {
         "@ai-sdk/anthropic": "4.0.82",
         "@ai-sdk/openai": "4.0.96",
