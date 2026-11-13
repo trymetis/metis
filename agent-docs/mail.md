@@ -132,6 +132,9 @@ See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mai
 - **`undo-send-toast.tsx` is presentational and imports no store.** `startSend` schedules `fire()` and calls `showUndoSendToast` itself, so the send does not depend on a mounted component and the two stay out of an import cycle.
 - **Codes, OTPs and links in mail are stored and cached like any other content.** An "Expires in X min" label is display only; a derived copy adds no protection to a mailbox that has leaked.
 - **IMAP needs a long-lived process** (Docker / `next start`): the pool lives in module memory, so on a serverless host every invocation reconnects.
+- **The list row shows `snippet` as the adapter returns it, so every adapter returns plain text.**
+  - IMAP builds it with the gateways' `snippetOf` ([gateways.md](gateways.md)).
+  - Gmail's API returns `snippet` HTML-escaped, so `gmail.ts` decodes it with `decodeHTML`; Graph's `bodyPreview` and Zoho's decoded `summary` are already plain text.
 - **Adding a provider**: implement `MailAdapter` (including `searchAst` with a `Dialect` for what its search can express, [search.md](search.md)), add it to `MAIL_ADAPTERS` in `src/mail/adapter.ts`, add a connections driver ([connections.md](connections.md) or [servers.md](servers.md)) and extend `CONNECTION_PROVIDERS`.
 
 ## How it works

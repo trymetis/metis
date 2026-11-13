@@ -1,4 +1,5 @@
 import "server-only";
+import { snippetOf } from "@metis/gateway-contract/text";
 import type { FetchMessageObject, FetchQueryObject, MessageStructureObject } from "imapflow";
 import { createTransport } from "nodemailer";
 import MailComposer from "nodemailer/lib/mail-composer";
@@ -489,13 +490,6 @@ function collectParts(node: MessageStructureObject | undefined, found: PartIndex
 
   if (type === "text/html" && !found.html) found.html = node.part ?? "1";
   else if (type === "text/plain" && !found.text) found.text = node.part ?? "1";
-}
-
-function snippetOf(text: string, html: string): string {
-  const visible = html
-    .replace(/<(script|style)\b[\s\S]*?<\/\1\s*>/gi, " ")
-    .replace(/<[^>]+>/g, " ");
-  return (text || visible).replace(/\s+/g, " ").trim().slice(0, 200);
 }
 
 async function getMessage(credentials: ImapCredentials, id: string): Promise<Partial<Email>> {

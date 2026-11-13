@@ -227,7 +227,7 @@
         "defu": "^6.1.7",
         "domhandler": "^6.0.1",
         "drizzle-orm": "^0.45.4",
-        "entities": "^8.1.0",
+        "entities": "catalog:",
         "fetch-to-node": "^2.1.0",
         "fflate": "catalog:",
         "htmlparser2": "^12.0.0",
@@ -360,6 +360,7 @@
         "metis-gateway-token": "./src/token-cli.ts",
       },
       "dependencies": {
+        "entities": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -464,6 +465,7 @@
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.0",
     "electron": "^45.0.0",
+    "entities": "^8.1.0",
     "fflate": "^0.8.3",
     "imapflow": "^2.9.1",
     "lucide-react": "^1.61.0",

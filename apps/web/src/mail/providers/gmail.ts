@@ -1,4 +1,5 @@
 import { auth, gmail as gmailApi } from "@googleapis/gmail";
+import { decodeHTML } from "entities";
 
 import { bind } from "@/lib/bind";
 import { errorStatus } from "@/lib/token-map";
@@ -288,7 +289,7 @@ async function listPage(
       toRecipients: toEntries,
       ccRecipients: ccEntries,
       subject: decodeMimeHeader(getHeader(headers, "Subject")) || "(no subject)",
-      snippet: msg.snippet ?? "",
+      snippet: decodeHTML(msg.snippet ?? ""),
       date: getHeader(headers, "Date"),
       isRead: !(msg.labelIds ?? []).includes("UNREAD"),
       isStarred: (msg.labelIds ?? []).includes("STARRED"),
@@ -546,7 +547,7 @@ async function getThread(accessToken: string, threadId: string): Promise<Email[]
       toRecipients: toEntries,
       cc: parseRecipientList(getHeader(headers, "Cc")).map((r) => r.email),
       subject: decodeMimeHeader(getHeader(headers, "Subject")) || "(no subject)",
-      snippet: msg.snippet ?? "",
+      snippet: decodeHTML(msg.snippet ?? ""),
       date: getHeader(headers, "Date"),
       isRead: !(msg.labelIds ?? []).includes("UNREAD"),
       isStarred: (msg.labelIds ?? []).includes("STARRED"),
@@ -665,7 +666,7 @@ async function search(
       to: toEntries.map((r) => r.email),
       toRecipients: toEntries,
       subject: decodeMimeHeader(getHeader(headers, "Subject")) || "(no subject)",
-      snippet: msg.snippet ?? "",
+      snippet: decodeHTML(msg.snippet ?? ""),
       date: getHeader(headers, "Date"),
       isRead: !(msg.labelIds ?? []).includes("UNREAD"),
       isStarred: (msg.labelIds ?? []).includes("STARRED"),

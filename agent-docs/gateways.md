@@ -29,6 +29,9 @@ The two mail backends that are separate services speaking one HTTP contract, and
 - **A third backend is a new gateway**: a `GATEWAY_PROVIDERS` entry, a `MAIL_ADAPTERS` entry and a driver, all reusing the gateway pieces above.
 - **The contract is written once, in `packages/gateway-contract`, using only APIs both the Workers runtime and Bun have.** A gateway supplies its storage behind `GatewayStore` (D1 + R2, or Postgres + blob storage), its sending through `Gateway.send`, its ingest, and any extra routes of its own (Resend's webhook).
 - **The gateway owns its storage**; Metis's schema and migrations never include it.
+- **`snippetOf` builds every gateway snippet from the HTML's visible text, and from the plain text only when that is empty.**
+  - It reads at most 64 KB from `<body>`, drops `head`, `title`, `style`, `script`, `noscript`, `template`, `xml`, `svg` and comments, decodes entities, and strips the invisible filler characters newsletters pad their preview text with.
+  - It runs once at ingest and at send with a bounded cost, so it fits the Workers CPU limit; the list serves the stored snippet as is.
 
 ### Tokens
 

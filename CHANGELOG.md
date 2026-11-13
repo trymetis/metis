@@ -42,6 +42,10 @@ Each release's notes are in [`releases/`](releases/), listed under Releases belo
 - Self sign-up refuses the owner's address; the owner account is created only at `/setup`.
 - Invites sent, accepted, declined and revoked, instance role changes and removed users are recorded in the audit log.
 
+### Fixed
+
+- Mail list previews for Cloudflare Email, Resend and IMAP mailboxes show the message's text instead of raw HTML, CSS and codes like `&nbsp;`, and Gmail previews show `'` and `&` instead of `&#39;` and `&amp;`.
+
 ## Releases
 
 - [0.3.1](releases/app-v0.3.1.md) - 2026-11-08
