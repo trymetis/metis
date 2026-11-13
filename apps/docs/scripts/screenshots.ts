@@ -15,6 +15,7 @@ import sharp from "sharp";
 import { z } from "zod";
 
 const APP = process.env.DOCS_APP_URL ?? "http://localhost:3000";
+const MAINTENANCE = process.env.DOCS_MAINTENANCE === "1";
 const HARNESS = process.env.DOCS_HARNESS_URL ?? "http://localhost:8099";
 const CLOCK = new Date(process.env.DOCS_CLOCK ?? "2026-10-08T12:00:00Z");
 const ROOT = join(import.meta.dirname, "..");
@@ -59,6 +60,7 @@ const shotsSchema = z.array(
     name: z.string(),
     path: z.string(),
     signedOut: z.boolean().optional(),
+    maintenance: z.boolean().optional(),
     observer: z.boolean().optional(),
     invite: z
       .object({
@@ -370,13 +372,14 @@ async function main() {
   const shots = readdirSync(dir)
     .filter((f) => f.endsWith(".json"))
     .flatMap((f) => shotsSchema.parse(JSON.parse(readFileSync(join(dir, f), "utf8"))))
+    .filter((s) => (s.maintenance ?? false) === MAINTENANCE)
     .filter((s) => only.length === 0 || only.some((o) => s.name.startsWith(o)));
   const account = accountSchema.parse(await (await harness("/account")).json());
   const browser = await chromium.launch({ channel: "chrome", headless: true });
-  const state: StorageState = await signIn(browser, account, totp);
+  const state = MAINTENANCE ? undefined : await signIn(browser, account, totp);
   const failed: string[] = [];
 
-  async function take(shot: Shot, path: string, as: StorageState = state) {
+  async function take(shot: Shot, path: string, as: StorageState | undefined = state) {
     const context = await browser.newContext({
       ...contextOptions(),
       ...(shot.viewport ? { viewport: shot.viewport } : {}),
@@ -408,6 +411,10 @@ async function main() {
   }
 
   for (const shot of shots) {
+    if (!state) {
+      await take(shot, shot.path);
+      continue;
+    }
     const { invite } = shot;
     if (shot.observer) {
       try {

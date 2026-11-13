@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"sync"
 	"time"
 
@@ -196,6 +197,9 @@ func (manager *Manager) acquire() (*state.Lock, error) {
 			if _, running := st.RunningUpgradeStart(); running {
 				return nil, connect.NewError(connect.CodeAborted, "an upgrade or rollback is already running")
 			}
+			if what, _, running := st.RunningOperation(); running {
+				return nil, connect.Errorf(connect.CodeAborted, "%s is running; try again once it ends", strings.ToLower(what[:1])+what[1:])
+			}
 		}
 		return nil, connect.NewError(connect.CodeAborted, "another metis command is changing this install; try again in a moment")
 	}
@@ -315,11 +319,15 @@ func (manager *Manager) current() *state.State {
 }
 
 func (manager *Manager) upgrade(from, to Images, snapshots bool) {
-	ctx := manager.ctx
-	if err := manager.backend.Pull(ctx, to); err != nil {
+	if err := manager.backend.Pull(manager.ctx, to); err != nil {
 		manager.finish(updaterv1.UpgradeState_UPGRADE_STATE_FAILED, false, fmt.Errorf("pulling %s: %w", to.App, err), nil)
 		return
 	}
+	if err := manager.ctx.Err(); err != nil {
+		manager.finish(updaterv1.UpgradeState_UPGRADE_STATE_FAILED, false, fmt.Errorf("stopped before anything changed: %w", err), nil)
+		return
+	}
+	ctx := context.WithoutCancel(manager.ctx)
 
 	var takenAt time.Time
 	if snapshots {
@@ -373,8 +381,8 @@ func (manager *Manager) upgrade(from, to Images, snapshots bool) {
 }
 
 func (manager *Manager) takeSnapshot(ctx context.Context) error {
-	if err := manager.backend.StopApp(ctx); err != nil {
-		return fmt.Errorf("stopping the app: %w", err)
+	if err := manager.backend.Maintenance(ctx, manager.current(), true); err != nil {
+		return fmt.Errorf("putting the app in maintenance: %w", err)
 	}
 	return manager.backend.SaveSnapshot(ctx, manager.current(), pendingSnapshot)
 }
@@ -382,7 +390,7 @@ func (manager *Manager) takeSnapshot(ctx context.Context) error {
 func (manager *Manager) resume(ctx context.Context, from Images, cause error) {
 	err := manager.backend.StartSqld(ctx)
 	if err == nil {
-		err = manager.backend.StartApp(ctx)
+		err = manager.backend.Maintenance(ctx, manager.current(), false)
 	}
 	if err == nil {
 		err = manager.backend.WaitReady(ctx, manager.current())
@@ -403,7 +411,7 @@ func (manager *Manager) restore(ctx context.Context, from Images, cause error, s
 	manager.step(updaterv1.UpgradeStep_UPGRADE_STEP_RESTORE)
 	var err error
 	if snapshot {
-		err = manager.backend.StopApp(ctx)
+		err = manager.backend.Maintenance(ctx, manager.current(), true)
 		if err == nil {
 			err = manager.backend.RestoreSnapshot(ctx, manager.current(), pendingSnapshot)
 		}
@@ -435,15 +443,29 @@ func (manager *Manager) restore(ctx context.Context, from Images, cause error, s
 }
 
 func (manager *Manager) undo(to Images) {
-	ctx := manager.ctx
-	if err := manager.backend.Pull(ctx, to); err != nil {
+	if err := manager.backend.Pull(manager.ctx, to); err != nil {
 		manager.finish(updaterv1.UpgradeState_UPGRADE_STATE_FAILED, false, fmt.Errorf("pulling %s: %w", to.App, err), nil)
 		return
 	}
+	if err := manager.ctx.Err(); err != nil {
+		manager.finish(updaterv1.UpgradeState_UPGRADE_STATE_FAILED, false, fmt.Errorf("stopped before anything changed: %w", err), nil)
+		return
+	}
+	ctx := context.WithoutCancel(manager.ctx)
 
 	manager.step(updaterv1.UpgradeStep_UPGRADE_STEP_RESTORE)
-	if err := manager.backend.StopApp(ctx); err != nil {
-		manager.finish(updaterv1.UpgradeState_UPGRADE_STATE_FAILED, false, fmt.Errorf("stopping the app: %w", err), nil)
+	if err := manager.backend.Maintenance(ctx, manager.current(), true); err != nil {
+		cause := fmt.Errorf("putting the app in maintenance: %w", err)
+		if offErr := manager.backend.Maintenance(ctx, manager.current(), false); offErr != nil {
+			manager.finish(
+				updaterv1.UpgradeState_UPGRADE_STATE_ROLLBACK_FAILED,
+				false,
+				fmt.Errorf("%w; taking the app out of maintenance also failed: %v", cause, offErr),
+				nil,
+			)
+			return
+		}
+		manager.finish(updaterv1.UpgradeState_UPGRADE_STATE_FAILED, false, cause, nil)
 		return
 	}
 	if err := manager.backend.RestoreSnapshot(ctx, manager.current(), currentSnapshot); err != nil {

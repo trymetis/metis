@@ -27,6 +27,7 @@ Invalid configuration:
 | `db.mastra.url`, `db.mastra.authToken` | `MASTRA_DATABASE_URL`, `MASTRA_DATABASE_AUTH_TOKEN` |
 | `app.ownerEmail`                       | `METIS_OWNER_EMAIL`                                 |
 | `app.setupCode`                        | `METIS_SETUP_CODE`                                  |
+| `maintenance.since`                    | `METIS_MAINTENANCE`                                 |
 
 ## Core
 
@@ -266,6 +267,60 @@ See [Owner dashboard](/self-hosting/operate/owner-dashboard#audit-log).
 | Variable                     | Kind    | What it does                                                                                                                                                                                                                                                                           | Default |
 | ---------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `METIS_AUDIT_RETENTION_DAYS` | Startup | How many days the audit log keeps each event. A whole number, 1 or more. Every day at 03:30 UTC, events older than this are deleted, so lowering it removes older events at the next run. It cannot be changed in the dashboard. In the config file, the key is `audit.retentionDays`. | `365`   |
+
+## Maintenance mode
+
+| Variable            | Kind    | What it does                                                                                                                                                                                                    | Default |
+| ------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `METIS_MAINTENANCE` | Startup | Puts the app in maintenance mode while it is set. The value is the time maintenance began, such as `2026-11-11T10:00:00Z`. In the config file, the key is `maintenance.since`. See [below](#metis_maintenance). | Not set |
+
+### METIS_MAINTENANCE
+
+Maintenance mode closes your instance for a while, for example while you copy or move its database. While the variable is set, a browser that opens a page gets the maintenance page with the status `200`, every other request gets the status `503`, and the app writes nothing. The two health endpoints, `/api/livez` and `/api/readyz`, answer as usual. So do the site icons (`/favicon.ico`, `/icon.svg`, `/apple-icon.png`) and the app's built script, style and font files.
+
+The value is the time maintenance began, as an ISO 8601 date and time with a time zone offset, for example `2026-11-11T10:00:00Z` or `2026-11-11T11:00:00+01:00`. An empty value counts as not set. In a TOML config file, put the value in quotes, such as `since = "2026-11-11T10:00:00Z"` under `[maintenance]`. Without quotes, the app refuses to start. A value in another format, or a time later than the server's clock, stops the app from starting:
+
+```
+Invalid configuration:
+  - maintenance.since: METIS_MAINTENANCE must be an ISO 8601 date-time with an offset, such as 2026-11-11T10:00:00Z
+```
+
+For a time in the future, the line reads "maintenance.since: METIS_MAINTENANCE must not be later than now".
+
+What people and services get while it is set:
+
+- **A browser that opens a page** gets the maintenance page, with the status `200`. The page says **Down for maintenance**, the time maintenance began (for example "Since 10:00 UTC on 11 November 2026") and "Try again in a few minutes." The **Source code** link shows at the bottom, for example "Source code · v1.4.0". The browser tab reads **Down for maintenance • Metis Suite**, and the page asks search engines not to index it. It uses the default Metis Suite colors, never a workspace's brand. It is light or dark as the visitor last chose in Metis Suite in that browser, and dark if they never chose.
+- **Every other request** gets the status `503` and a short JSON answer, such as `{"error":"maintenance","since":"2026-11-11T10:00:00.000Z"}`. This covers API and MCP calls, the sign-in requests the app sends itself, webhooks and push under `/api/inbound/`, the cron tick and [relayed drive transfers](/self-hosting/configure/drive-transfers). The app's own data requests and relayed transfers get this answer even from a browser. A browser that opens another address under `/api/`, such as a file download or a sign-in callback, gets the maintenance page instead. The app tells the two apart by the request's `Accept` header: a request that accepts `text/html` gets the page. A plain `curl` request gets the JSON answer.
+
+Both kinds of answer carry these headers, so a script can tell maintenance from a failure:
+
+| Header              | Value                                  |
+| ------------------- | -------------------------------------- |
+| `Retry-After`       | `300` (seconds)                        |
+| `Metis-Maintenance` | The time maintenance began, in UTC     |
+| `Metis-Version`     | The release that runs, such as `1.4.0` |
+
+The `503` answer also carries `Cache-Control: no-store`.
+
+No background work runs in maintenance mode. Under the `internal` runner, the app does not start it. A `bullmq` worker that has the variable stays idle. Under `cron`, the tick endpoint answers `503`. See [Background work](/self-hosting/configure/background-work).
+
+The health endpoints do not change, so a load balancer that checks them keeps sending traffic to the instance while the databases answer. To check for maintenance, see [Health checks](/self-hosting/operate/health-checks#maintenance-mode).
+
+On a container platform or Vercel, set the variable on the app (and on the worker, if you run one) and redeploy. To end maintenance, remove it and redeploy. Set it before you stop or move the database, and remove it only once the database answers again.
+
+On a server the `metis` CLI runs, the CLI puts the app and the workers in maintenance on its own during an upgrade or an undo, and takes them out again when it switches releases. It does this without writing to `.env`. `sudo metis db export` and `sudo metis db move` also put the app in maintenance on their own. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo) and [On a server the metis CLI runs](/self-hosting/operate/export-and-import#on-a-server-the-metis-cli-runs).
+
+To hold a server in maintenance yourself, for example while you work on its database, set the variable with `metis config set`:
+
+```bash
+sudo metis config set METIS_MAINTENANCE=2026-11-11T10:00:00Z
+```
+
+It warns "METIS_MAINTENANCE goes into .env, so the app stays in maintenance through every metis update, undo and apply until sudo metis config unset METIS_MAINTENANCE. Upgrades and undo put the app in maintenance on their own." Then it stores the variable and applies it as for any other variable. To end maintenance, run:
+
+```bash
+sudo metis config unset METIS_MAINTENANCE
+```
 
 ## Other
 

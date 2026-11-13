@@ -3,9 +3,11 @@ title: Backups
 description: Where your instance keeps its data and secrets, so you know what to back up.
 ---
 
-Metis Suite has no built-in backup or restore. Back up the data below with the tools you already use for Docker volumes and files on your server.
+For a deployment on a container platform, Vercel or another Node host, the `metis` CLI on your computer can copy the whole instance into one encrypted file, and load it into new databases later. See [Export and import](/self-hosting/operate/export-and-import).
 
-On Metis Cloud, the Cloud service (not Metis Suite itself) backs up every running instance each night, keeps the two most recent backups and deletes them with the instance. The console has no button to restore them, so for a copy of your own, download an [export](/cloud/your-instance/export-your-data).
+On a server the `metis` CLI runs, `sudo metis db export` makes the same encrypted file on the server, in `/opt/metis-suite/exports`. Copy it off the server, because it is lost with the server's disk, or let the CLI upload it to S3 with `--out s3://example-backups/metis`. See [Upload to S3](/self-hosting/operate/export-and-import#upload-to-s3). The owner sees every export, and where each archive went, under **Dashboard**, **System**, **Exports**. The file does not hold the files on **Server storage**, the files under `/opt/metis-suite/env/`, Caddy's HTTPS certificates or the messages the Resend gateway stores. Back those up with the tools you already use for Docker volumes and files on your server. See [On a server the metis CLI runs](/self-hosting/operate/export-and-import#on-a-server-the-metis-cli-runs).
+
+On Metis Cloud, the Cloud service (not Metis Suite itself) backs up every running instance each night, keeps the two most recent backups and deletes them with the instance. The console has no button to restore them, so for a copy of your own, download one from the console. See [Export your data](/cloud/your-instance/export-your-data).
 
 The updater keeps one copy of the database from before your last upgrade, so that you can undo it. That copy is not a backup. See [The upgrade snapshot is not a backup](#the-upgrade-snapshot-is-not-a-backup).
 
@@ -37,6 +39,7 @@ You have only the volumes of the components you added. See [Manage components](/
 | `/opt/metis-suite/env/`       | The keys of the server's object storage and of the Resend gateway's database, each gateway's admin token (`API_TOKEN`), and the Resend API key. |
 | `/opt/metis-suite/Caddyfile`  | Caddy's settings. The CLI writes it again on every change.                                                                                      |
 | `/opt/metis-suite/snapshots/` | The upgrade snapshot (see below).                                                                                                               |
+| `/opt/metis-suite/exports/`   | The encrypted exports `sudo metis db export` writes, unless it uploaded them to S3. Copy them off the server.                                   |
 
 The folder also holds the CLI's record of which components are on, their options and the release you run. Back up the whole folder. `/etc/metis/install-dir` tells the CLI where the folder is.
 

@@ -102,13 +102,42 @@ type UpdaterRecord struct {
 	Last       json.RawMessage `json:"last"`
 }
 
+type Operation struct {
+	Kind      string `json:"kind"`
+	StartedAt string `json:"startedAt"`
+}
+
 type State struct {
-	SchemaVersion int           `json:"schemaVersion"`
-	WrittenBy     string        `json:"writtenBy"`
-	AppPort       int           `json:"appPort"`
-	App           App           `json:"app"`
-	Components    Components    `json:"components"`
-	Updater       UpdaterRecord `json:"updater"`
+	SchemaVersion    int           `json:"schemaVersion"`
+	WrittenBy        string        `json:"writtenBy"`
+	AppPort          int           `json:"appPort"`
+	App              App           `json:"app"`
+	Components       Components    `json:"components"`
+	Updater          UpdaterRecord `json:"updater"`
+	ExportRecipients []string      `json:"exportRecipients,omitempty"`
+	Running          *Operation    `json:"running,omitempty"`
+}
+
+const (
+	OperationExport = "export"
+	OperationMove   = "move"
+)
+
+func (st *State) RunningOperation() (string, time.Time, bool) {
+	if st.Running == nil {
+		return "", time.Time{}, false
+	}
+	started, err := time.Parse(time.RFC3339Nano, st.Running.StartedAt)
+	if err != nil {
+		return "", time.Time{}, false
+	}
+	switch st.Running.Kind {
+	case OperationExport:
+		return "An export", started, true
+	case OperationMove:
+		return "A database move", started, true
+	}
+	return "", time.Time{}, false
 }
 
 var ErrNotFound = errors.New("metis.json does not exist")

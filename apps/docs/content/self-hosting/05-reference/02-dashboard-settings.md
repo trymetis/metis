@@ -125,4 +125,4 @@ For what each field does, see [OAuth providers](/self-hosting/configure/sign-in-
 
 ## Not in the dashboard
 
-These are set only in the environment, and need a restart: the app address and secret, the encryption key, the setup code, the owner email, the source code link, the databases, how long the audit log keeps events (`METIS_AUDIT_RETENTION_DAYS`) and the drive relay secret. See [Environment variables](/self-hosting/reference/environment-variables).
+These are set only in the environment, and need a restart: the app address and secret, the encryption key, the setup code, the owner email, the source code link, the databases, how long the audit log keeps events (`METIS_AUDIT_RETENTION_DAYS`), the drive relay secret and maintenance mode (`METIS_MAINTENANCE`). See [Environment variables](/self-hosting/reference/environment-variables).

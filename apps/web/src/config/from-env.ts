@@ -78,6 +78,10 @@ export function updaterConfigFromEnv(e: Env): Record<string, unknown> {
   return { socketPath: e.METIS_UPDATER_SOCKET };
 }
 
+export function maintenanceConfigFromEnv(e: Env): Record<string, unknown> {
+  return { since: e.METIS_MAINTENANCE };
+}
+
 export function mailConfigFromEnv(e: Env): Record<string, unknown> {
   return {
     imageProxy: e.METIS_MAIL_IMAGE_PROXY,

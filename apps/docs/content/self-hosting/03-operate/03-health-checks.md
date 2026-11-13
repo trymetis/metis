@@ -24,6 +24,20 @@ When `/api/readyz` answers `503`, the reason is written only to the app's log, n
 sudo metis logs app
 ```
 
+## Maintenance mode
+
+In maintenance mode, both health endpoints answer as usual: `/api/livez` answers `200`, and `/api/readyz` answers `200` when the databases answer. So a load balancer that checks them keeps sending traffic to the instance while the databases answer. A browser that opens a page gets the maintenance page with the status `200`. Every other request gets `503`. Both answers carry a `Metis-Maintenance` header. The site icons (`/favicon.ico`, `/icon.svg`, `/apple-icon.png`) and the app's built script, style and font files load as usual. See [Maintenance mode](/self-hosting/reference/environment-variables#maintenance-mode).
+
+To alert on maintenance, check a page such as `/` instead. A `Metis-Maintenance` header means the instance is in maintenance mode, whatever the status. A monitor that requests `/` like a browser gets `200` in maintenance, so it must look for the header. To get the `503` instead, request the page with `Accept: application/json`. A `503` without the header is a failure. For example, this prints the status and the header:
+
+```bash
+curl -sS -o /dev/null -D - -H "Accept: application/json" https://mail.example.com/ | grep -i -E "^HTTP|^metis-maintenance"
+```
+
+On a server the `metis` CLI runs, the app is in maintenance mode during part of an upgrade or an undo. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo).
+
+During an upgrade or undo on a server, `/api/readyz` answers `503` while the database is copied or restored, because the database server is stopped. A load balancer that checks `/api/readyz` stops sending traffic to the instance during that part.
+
 ## Check the server with the metis CLI
 
 On a server the `metis` CLI runs, `metis status` shows the state of everything at once:

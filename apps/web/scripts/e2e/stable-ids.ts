@@ -143,6 +143,9 @@ function naturalKeys(path: string): Map<string, string> {
   )) {
     keys.set(r.id, `workflow_blob:${keyOf(r.workflow_id)}:${r.kind}:${r.name ?? ""}`);
   }
+  for (const r of rows({ id: text, file_name: text }, `SELECT id, file_name FROM "export_record"`)) {
+    keys.set(r.id, `export_record:${r.file_name}`);
+  }
   db.close();
   return keys;
 }

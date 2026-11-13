@@ -8,6 +8,7 @@ export default defineMeta({
     "upgrade-and-undo",
     "health-checks",
     "backups",
+    "export-and-import",
     "troubleshooting",
     "manage-components",
   ],

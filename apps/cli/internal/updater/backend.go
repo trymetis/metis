@@ -33,8 +33,7 @@ type Backend interface {
 	Pull(ctx context.Context, images Images) error
 	Preflight(ctx context.Context, st *state.State, images Images) error
 	Switch(ctx context.Context, lock *state.Lock, images Images) error
-	StopApp(ctx context.Context) error
-	StartApp(ctx context.Context) error
+	Maintenance(ctx context.Context, st *state.State, on bool) error
 	StartSqld(ctx context.Context) error
 	SaveSnapshot(ctx context.Context, st *state.State, name string) error
 	RestoreSnapshot(ctx context.Context, st *state.State, name string) error
@@ -110,46 +109,8 @@ func (backend *StackBackend) Switch(ctx context.Context, lock *state.Lock, image
 	return err
 }
 
-func (backend *StackBackend) appContainers(ctx context.Context) ([]string, error) {
-	managed, err := backend.Stack.Managed(ctx)
-	if err != nil {
-		return nil, err
-	}
-	var names []string
-	for name, summary := range managed {
-		component := summary.Labels[stack.LabelComponent]
-		if (component == "app" || component == "worker") && name != stack.ContainerName("preflight", 1) {
-			names = append(names, name)
-		}
-	}
-	slices.Sort(names)
-	return names, nil
-}
-
-func (backend *StackBackend) StopApp(ctx context.Context) error {
-	names, err := backend.appContainers(ctx)
-	if err != nil {
-		return err
-	}
-	for _, name := range names {
-		if _, err := backend.Stack.Engine.ContainerStop(ctx, name, client.ContainerStopOptions{}); err != nil {
-			return fmt.Errorf("stopping %s: %w", name, err)
-		}
-	}
-	return nil
-}
-
-func (backend *StackBackend) StartApp(ctx context.Context) error {
-	names, err := backend.appContainers(ctx)
-	if err != nil {
-		return err
-	}
-	for _, name := range names {
-		if _, err := backend.Stack.Engine.ContainerStart(ctx, name, client.ContainerStartOptions{}); err != nil {
-			return fmt.Errorf("starting %s: %w", name, err)
-		}
-	}
-	return nil
+func (backend *StackBackend) Maintenance(ctx context.Context, st *state.State, on bool) error {
+	return backend.Stack.Maintenance(ctx, st, on)
 }
 
 func (backend *StackBackend) StartSqld(ctx context.Context) error {

@@ -93,13 +93,15 @@ Preflight's output shows "Invalid configuration" with the line "app.ownerEmail: 
 
 ### A metis command stops at once
 
-| Message                                                                               | What to do                                                                                                                                                        |
-| ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| "metis add changes the server; run it with sudo"                                      | Run the command with `sudo`. Other commands say, for example, "metis domain changes the server; run it as root".                                                  |
-| "This machine has no Metis install"                                                   | You are not on the server, or Metis Suite is not installed there yet. See [CLI commands](/self-hosting/reference/cli-commands#on-the-server-or-on-your-computer). |
-| "An upgrade is running (started 14:02). Run metis status to follow it."               | Wait until the upgrade ends. `sudo metis status` shows it.                                                                                                        |
-| A message that ends with "was written by Metis CLI 0.4.0; run sudo metis self-update" | A newer CLI changed this install. Run `sudo metis self-update`.                                                                                                   |
-| "Go ahead? Pass --yes to go ahead without a terminal"                                 | The command asks a question, and there is no terminal to answer it. Add `--yes`.                                                                                  |
+| Message                                                                                                | What to do                                                                                                                                                                        |
+| ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "metis add changes the server; run it with sudo"                                                       | Run the command with `sudo`. Other commands say, for example, "metis domain changes the server; run it as root".                                                                  |
+| "This machine has no Metis install"                                                                    | You are not on the server, or Metis Suite is not installed there yet. See [CLI commands](/self-hosting/reference/cli-commands#on-the-server-or-on-your-computer).                 |
+| "An upgrade is running (started 14:02). Run metis status to follow it."                                | Wait until the upgrade ends. `sudo metis status` shows it.                                                                                                                        |
+| "An export is running (started 14:02); the app is in maintenance until it ends. Try again then."       | Wait until `sudo metis db export` ends, then run the command again. See [While an export or a move runs](/self-hosting/operate/export-and-import#while-an-export-or-a-move-runs). |
+| "A database move is running (started 14:02); the app is in maintenance until it ends. Try again then." | Wait until `sudo metis db move` ends, then run the command again.                                                                                                                 |
+| A message that ends with "was written by Metis CLI 0.4.0; run sudo metis self-update"                  | A newer CLI changed this install. Run `sudo metis self-update`.                                                                                                                   |
+| "Go ahead? Pass `--yes` to go ahead without a terminal"                                                | The command asks a question, and there is no terminal to answer it. Add `--yes`.                                                                                                  |
 
 ### Invites fail with "The invite email couldn't be sent"
 

@@ -348,6 +348,12 @@ Pass `--version` with the release your deployment runs, such as `1.2.3`.
 The CLI stores dashboard settings by passing `METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS` to one preflight run. Never set this variable yourself in the platform's environment. Every later preflight would then store those settings from the environment again, and overwrite what the owner or an admin changed in the dashboard.
 :::
 
+## Back up or move
+
+The `metis` CLI on your computer can copy the whole instance into one encrypted file: both databases and the deployment's environment. You make a key once with `metis keygen`, then make the file with `metis db export --env-file production.env --recipient metis-export.pub` while the app is in maintenance. Later you can load it into two new, empty databases with `metis db load`, to restore the instance or move it to another platform or address. See [Export and import](/self-hosting/operate/export-and-import).
+
+The owner sees every export under **Dashboard**, **System**, **Exports**. To send the file straight to a bucket, add `--out s3://example-backups/metis`. See [Upload to S3](/self-hosting/operate/export-and-import#upload-to-s3).
+
 ## Upgrade
 
 <Steps>
@@ -361,7 +367,9 @@ The CLI stores dashboard settings by passing `METIS__UPDATER__FORCE_UPDATE_CONFI
   <Step title="Back up both databases">
     Back up the app database and the AI memory database, and keep your
     encryption key with the backup. See
-    [Backups](/self-hosting/operate/backups).
+    [Backups](/self-hosting/operate/backups). To make one encrypted file
+    of both databases and the environment, see
+    [Export and import](/self-hosting/operate/export-and-import).
 
   </Step>
 

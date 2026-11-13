@@ -21,6 +21,8 @@ import (
 	"github.com/trymetis/metis/apps/cli/internal/state"
 )
 
+const MaintenanceVariable = "METIS_MAINTENANCE"
+
 const (
 	pollEvery   = 2 * time.Second
 	waitFor     = 60 * time.Second
@@ -323,6 +325,48 @@ func (stack *Stack) Apply(ctx context.Context, st *state.State, opts Options) (P
 		}
 	}
 	return plan, nil
+}
+
+func (stack *Stack) Maintenance(ctx context.Context, st *state.State, on bool) error {
+	cat, err := stack.Catalog(ctx, st)
+	if err != nil {
+		return err
+	}
+	current, err := stack.Managed(ctx)
+	if err != nil {
+		return err
+	}
+	var overrides map[string]string
+	if on {
+		overrides = map[string]string{MaintenanceVariable: time.Now().UTC().Format(time.RFC3339)}
+		stack.Logf("putting the app in maintenance")
+	} else {
+		stack.Logf("taking the app out of maintenance")
+	}
+	for _, service := range cat.Services {
+		if service.OneShot || (service.Component != "app" && service.Component != "worker") {
+			continue
+		}
+		for replica := 1; replica <= service.Replicas; replica++ {
+			spec, err := BuildSpec(service, replica, cat.Volumes, overrides)
+			if err != nil {
+				return err
+			}
+			image, err := stack.imageID(ctx, spec.Config.Image)
+			if err != nil {
+				return err
+			}
+			hash, err := Hash(spec, image)
+			if err != nil {
+				return err
+			}
+			spec.Config.Labels[LabelSpec] = hash
+			if err := stack.ensure(ctx, desired{spec: spec, hash: hash}, current); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (stack *Stack) runPreflight(ctx context.Context, spec Spec, overrides map[string]string) error {

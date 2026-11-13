@@ -12,7 +12,7 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [updater.md]
 | Mode detection                  | `internal/mode/mode.go` → `Detect`, `Record` (`/etc/metis/install-dir`)                                                                                                                                  |
 | `metis.json` and its lock       | `internal/state/state.go` → `State`, `Load`, `Update`, `Create` · `lock_unix.go` → `Acquire`, `TryAcquire`                                                                                               |
 | The service catalog             | `internal/catalog/services.yml` (embedded, compose format) · `catalog.go` → `Load`, `Environment`, `Order`, `Pins`                                                                                       |
-| The stack engine                | `internal/stack/stack.go` → `Plan`, `Apply`, `RunOnce`, `Wait`, `Pull`, `Exec` · `spec.go` → `BuildSpec`, `Hash`, labels · `engine.go` → `Engine`                                                        |
+| The stack engine                | `internal/stack/stack.go` → `Plan`, `Apply`, `Maintenance`, `RunOnce`, `Wait`, `Pull`, `Exec` · `spec.go` → `BuildSpec`, `Hash`, labels · `engine.go` → `Engine`                                         |
 | Env files                       | `internal/envfile/envfile.go` (raw `KEY=VALUE`, mode 600)                                                                                                                                                |
 | Secrets and the sqld key        | `internal/secrets/secrets.go` → `Token`, `EncryptionKey`, `NewSqldAuth`                                                                                                                                  |
 | sqld namespaces                 | `internal/sqld/sqld.go` → `CreateNamespaces`, `DeleteNamespace`                                                                                                                                          |
@@ -21,6 +21,7 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [updater.md]
 | The Caddyfile                   | `internal/caddy/caddy.go` → `Sites`, `Write`                                                                                                                                                             |
 | Docker install                  | `internal/docker/docker.go` → `Ensure`, `Install`                                                                                                                                                        |
 | Integrations                    | `internal/google`, `internal/cloudflare`, `internal/resend`, `internal/ses` · artifacts and tokens `internal/gateways`                                                                                   |
+| Export and import               | `cmd/metis/export.go` · `internal/keys`, `internal/archive`, `internal/hrana`, `internal/dbcopy`, `internal/export` ([export.md](export.md))                                                             |
 | Config, Google, gateway tokens  | `cmd/metis/config.go` → `runConfig`, `runRemoteConfig` · `google.go` → `connectGoogle` · `components.go` → `newGatewayCommand`                                                                           |
 | Self-update                     | `cmd/metis/selfupdate.go`                                                                                                                                                                                |
 | Forms and output                | `internal/ui/ui.go`                                                                                                                                                                                      |
@@ -34,6 +35,7 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [updater.md]
   - **Server mode**: Linux (amd64 or arm64) with Docker; every command that changes the server runs as root.
   - **Remote mode**: any machine, no root, no Docker needed. Anything but the commands below stops with "This machine has no Metis install".
   - Remote commands touch only outside services: `connect google`, `config set` and `unset` with `--env-file`, the gateway commands with `--remote` or `--endpoint`, `gateway token` with `--endpoint`, `sqld-auth`, `version` and `self-update`.
+  - The export commands run in both modes: `keygen`, `db export` with `--env-file`, `db load`, `export decrypt` and `export inspect` ([export.md](export.md)); `db export` without `--env-file`, `db move` and `export recipients` run only on a server, as root.
   - The macOS and Windows builds always run in remote mode.
 - **A remote command takes what it needs from flags or `--env-file` and caches nothing.** Commands that pick a release artifact away from a server take `--version X.Y.Z`, because the app does not expose its version.
 - **Fresh installs only.** `metis setup` refuses a folder that is not empty and a machine that already has an install; nothing reads or converts a bootstrap or compose install.
@@ -48,10 +50,12 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [updater.md]
 | `env/objstore.env`, `env/sqld-resend.env`                                                   | RustFS's keys; `sqld-resend`'s JWT key                                                                       |
 | `env/gateway-resend.env`, `env/gateway-cloudflare-DOMAIN.env`, `env/gateway-ses-DOMAIN.env` | Each gateway's environment or admin `API_TOKEN`                                                              |
 | `Caddyfile`                                                                                 | Written from the components that need a public host                                                          |
+| `exports/`                                                                                  | Export archives `sudo metis db export` writes, mode 700 ([export.md](export.md))                             |
 | `snapshots/pending`, `snapshots/current`                                                    | The updater's sqld snapshots ([updater.md](updater.md))                                                      |
 | `cache/gateways/VERSION/`                                                                   | Downloaded gateway zips                                                                                      |
 
 - **Secrets live only in the env files.** `metis.json` holds names, versions, ids and options.
+- **`metis.json` also holds `exportRecipients` (public key PEMs) and `running` (an export or a database move in progress)**, so a command that finds the lock taken says which one runs instead of waiting through it.
 - **`metis.json` is written by one package** (`internal/state`): under `metis.lock`, re-read, changed, written to `metis.json.tmp` and renamed.
   - Reads take no lock, because the rename is atomic; the updater holds the lock for a whole upgrade, so a shared lock would block the dashboard's status reads.
   - A file with a newer `schemaVersion` is refused with `metis.json was written by Metis CLI 0.4.0; run sudo metis self-update`.
@@ -70,6 +74,10 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [updater.md]
   - Managed containers of components that are off are removed last.
 - **Volumes are removed only by `metis remove … --purge`.**
 - **Preflight runs once before a new app container, and a failed preflight leaves the old app running** with the last 2000 bytes of its log in the error.
+- **`stack.Maintenance` puts the app and every worker in maintenance, or takes them out, by recreating them** ([configuration.md](configuration.md)).
+  - On: each is recreated from its catalog spec with `METIS_MAINTENANCE` set to the current UTC time in the container's environment only; `.env` never holds it.
+  - Off: each is recreated from its catalog spec as it is, which is the spec an apply wants, so an unchanged container is only started if stopped.
+  - It never runs preflight and touches nothing but `app` and `worker`; any later apply also ends maintenance, because the spec hash differs.
 
 ### Components
 
@@ -93,6 +101,7 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [updater.md]
 ### Configuration
 
 - **`metis config set` and `unset` force only the dashboard settings among their keys**, because preflight refuses anything else; `InstanceKeys` is the CLI's copy of `SECTION_ENV_VARS`, and a test fails when they drift.
+- **`metis config set METIS_MAINTENANCE=…` on a server warns and goes ahead.** The value lands in `.env`, so the app stays in maintenance through every update, undo and apply until `config unset`; the updater's own maintenance lives only in the container environment ([updater.md](updater.md)).
 - **`METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS` reaches one preflight container and no file**, so later preflights, upgrades included, never re-apply it ([configuration.md](configuration.md)).
 - **Remote `config set --env-file` updates the file, lists the values to set on the platform, and stores dashboard settings once** through the release's preflight image when Docker runs on the machine, or prints that `docker run` line.
 

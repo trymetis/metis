@@ -21,17 +21,18 @@ const ForceKeysVariable = "METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS"
 type Hook func(ctx context.Context) error
 
 type Install struct {
-	Stack   *stack.Stack
-	Dir     string
-	State   *state.State
-	Env     *envfile.File
-	files   map[string]*envfile.File
-	removed []string
-	Forced  []string
-	Purge   []string
-	Notices []string
-	Before  []Hook
-	After   []Hook
+	Stack     *stack.Stack
+	Dir       string
+	State     *state.State
+	Env       *envfile.File
+	files     map[string]*envfile.File
+	removed   []string
+	Forced    []string
+	Purge     []string
+	Notices   []string
+	Before    []Hook
+	AfterSqld []Hook
+	After     []Hook
 }
 
 func EnvPath(dir string) string {
@@ -167,7 +168,25 @@ func (runner *Runner) apply(ctx context.Context, in *Install) (stack.Plan, error
 			return stack.Plan{}, err
 		}
 	}
-	plan, err := runner.Stack.Apply(ctx, in.State, runner.Options(in.State, in.Env, in.Forced))
+	opts := runner.Options(in.State, in.Env, in.Forced)
+	if len(in.AfterSqld) > 0 {
+		namespaces := opts.AfterSqld
+		hooks := in.AfterSqld
+		opts.AfterSqld = func(ctx context.Context) error {
+			if namespaces != nil {
+				if err := namespaces(ctx); err != nil {
+					return err
+				}
+			}
+			for _, hook := range hooks {
+				if err := hook(ctx); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}
+	plan, err := runner.Stack.Apply(ctx, in.State, opts)
 	if err != nil {
 		return plan, err
 	}

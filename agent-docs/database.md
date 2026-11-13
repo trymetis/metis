@@ -56,6 +56,10 @@ Where the schema lives and how it reaches a database through migrations, the one
   - After the run it compares `PRAGMA foreign_key_check` with the count before and fails when the migrations added violations.
 - **Migrations are bundled, not read from disk.** Preflight, `db:migrate` and `db:check` import `MIGRATIONS`, so `preflight.mjs` carries every migration and the preflight image ships no migration files.
 
+- **Exports read and write databases only through Hrana and restore only into empty databases** ([export.md](export.md)).
+- **`export_record` is the one table the `metis` CLI writes directly**, while the app is frozen; changing its columns changes `RecordColumns` in `apps/cli/internal/export/record.go` in the same change, and a Go test reads the migration to keep them equal.
+  - The archive carries `schema_migration`, so preflight on the restored database sees every applied migration and refuses one newer than its release.
+
 ## Deliberate limits
 
 - **There are no down migrations.** Going back past a migration means restoring a database backup or the updater's snapshot, which only undoes the last upgrade ([updater.md](updater.md)).

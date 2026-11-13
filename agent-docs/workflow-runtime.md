@@ -30,6 +30,7 @@ See also [AGENTS.md](../AGENTS.md), [workflow-graph.md](workflow-graph.md), [wor
 - **The driver, its tuning, the Redis URL and the cron secret come from the config snapshot**, so switching drivers needs no redeploy as long as the processes the target needs exist ([configuration.md](configuration.md)).
   - Batch size, concurrency, budget and cadence are read per tick (`runTick` reads `getInstanceConfig()`).
   - The cron route checks the driver and secret per request.
+- **Nothing ticks in maintenance** (`METIS_MAINTENANCE`, [configuration.md](configuration.md)): a web process never starts the `internal` runner, the worker logs that it is idle and takes no ticks, and the cron route answers 503 from the proxy.
 - **Two transports ticking at once during a switch is safe**: claims are leased and trigger events are unique, so overlap only costs a redundant tick.
 - **Redis only wakes the tick.** Definitions, schedules, events, waits, run ownership, retries and history live in the app database in every mode, so a cron or internal deployment needs no Redis and a Redis outage loses no work. Due times are persisted, never enqueued.
 

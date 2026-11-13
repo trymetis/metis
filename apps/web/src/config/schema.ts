@@ -357,6 +357,22 @@ export const updaterConfigSchema = z.object({
     .optional(),
 });
 
+export const maintenanceConfigSchema = z.object({
+  since: z.iso
+    .datetime({
+      offset: true,
+      error:
+        "METIS_MAINTENANCE must be an ISO 8601 date-time with an offset, such as 2026-11-11T10:00:00Z",
+    })
+    .transform((value) => new Date(value))
+    .refine(
+      (since) => since.getTime() <= Date.now(),
+      "METIS_MAINTENANCE must not be later than now",
+    )
+    .optional()
+    .transform((since) => since ?? null),
+});
+
 export const imageProxySectionSchema = z.object({
   enabled: envBoolSchema(false),
   maxMb: z.coerce.number().positive().max(100).default(10),
@@ -662,6 +678,7 @@ export const bootConfigSchema = z.object({
   audit: auditConfigSchema,
   drive: driveConfigSchema,
   updater: updaterConfigSchema,
+  maintenance: maintenanceConfigSchema,
 });
 
 export const oauthClientSchema = providerCredsSchema;

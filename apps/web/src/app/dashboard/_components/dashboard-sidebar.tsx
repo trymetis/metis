@@ -13,6 +13,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 
 import { dashboardNav, type NavEntry } from "@/components/dashboard/dashboard-nav";
+import { useDashboardRole } from "@/components/dashboard/dashboard-role";
 import { GuardedLink } from "@/components/dashboard/guarded-link";
 import { ResponsiveAside } from "@/components/mobile-aside";
 import { SourceLink } from "@/components/source-link";
@@ -152,6 +153,7 @@ export function DashboardSidebar({ source }: { source: SourceInfo }) {
   const pathname = usePathname();
   const updatesEnabled =
     useQuery(rpc.dashboard.system.updatesEnabled.queryOptions()).data?.enabled ?? false;
+  const owner = useDashboardRole().role === "owner";
 
   return (
     <ResponsiveAside label="Dashboard">
@@ -173,7 +175,7 @@ export function DashboardSidebar({ source }: { source: SourceInfo }) {
 
           <nav className="flex flex-col gap-px">
             <NavEntries
-              entries={dashboardNav({ updatesEnabled })}
+              entries={dashboardNav({ updatesEnabled, owner })}
               pathname={pathname}
               nested={false}
             />

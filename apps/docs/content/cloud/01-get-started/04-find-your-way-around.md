@@ -43,7 +43,7 @@ The sidebar on the left lists the instance's tabs:
 | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [**Overview**](https://console.trymetis.email/instances/~)          | The state of the instance and what to do next, its details and its included AI. See [Overview](/cloud/your-instance/overview).                              |
 | [**Mail**](https://console.trymetis.email/instances/~/mail)         | The email your instance sends, such as sign-in links and invites. See [Instance mail](/cloud/your-instance/instance-mail).                                  |
-| [**Exports**](https://console.trymetis.email/instances/~/exports)   | Downloadable copies of the instance. See [Export your data](/cloud/your-instance/export-your-data).                                                         |
+| [**Exports**](https://console.trymetis.email/instances/~/exports)   | Encrypted copies of the instance that you download. See [Export your data](/cloud/your-instance/export-your-data).                                          |
 | [**Billing**](https://console.trymetis.email/instances/~/billing)   | The subscription, the included AI, the values for your own AI provider, and the invoices. See [Billing](/cloud/billing).                                    |
 | [**Settings**](https://console.trymetis.email/instances/~/settings) | Automatic updates and deleting the instance. See [Updates](/cloud/your-instance/updates) and [Delete an instance](/cloud/your-instance/delete-an-instance). |
 

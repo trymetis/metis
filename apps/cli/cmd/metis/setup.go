@@ -47,6 +47,9 @@ type setupFlags struct {
 	databaseRemote bool
 	gateways       []string
 	googleNow      bool
+	recipients     []string
+	fromExport     string
+	identity       identityFlags
 }
 
 func validEmail(value string) error {
@@ -81,7 +84,7 @@ func parseEnvPairs(pairs []string) (map[string]string, []string, error) {
 	return values, order, nil
 }
 
-func setupForm(ctx context.Context, flags *setupFlags, mastraURL, mastraToken *string) error {
+func setupForm(ctx context.Context, flags *setupFlags, mastraURL, mastraToken, recipient *string) error {
 	database := "sqld"
 	if flags.databaseURL != "" {
 		database = "remote"
@@ -116,6 +119,9 @@ func setupForm(ctx context.Context, flags *setupFlags, mastraURL, mastraToken *s
 		huh.NewGroup(
 			huh.NewMultiSelect[string]().Title("Components").Description("Add or remove any of them later with metis add and metis remove. Gateways are set up once Metis runs.").Options(options...).Value(&selected),
 		),
+		huh.NewGroup(
+			huh.NewInput().Title("Export key").Description("A public key (.pub) this server's exports are encrypted to. Make the pair on your own computer with metis keygen and copy only the .pub here, or add one later with sudo metis export recipients add. Leave it blank to skip.").Value(recipient).Validate(validRecipientFile),
+		).WithHideFunc(func() bool { return len(flags.recipients) > 0 }),
 		huh.NewGroup(
 			huh.NewSelect[string]().Title("Google sign-in").Description("Lets people connect Gmail, Google Calendar, Drive and Contacts.").Options(
 				huh.NewOption("Later, with metis connect google", "later"),
@@ -216,10 +222,33 @@ func runSetup(ctx context.Context, flags *setupFlags) error {
 	mastraURL, mastraToken := extra["MASTRA_DATABASE_URL"], extra["MASTRA_DATABASE_AUTH_TOKEN"]
 	flags.databaseRemote = flags.databaseURL != ""
 
-	if ui.Interactive() && !flags.yes {
-		if err := setupForm(ctx, flags, &mastraURL, &mastraToken); err != nil {
+	var fx *fromExport
+	if flags.fromExport != "" {
+		if fx, err = openExport(ctx, flags.fromExport, flags.identity, filepath.Dir(dir)); err != nil {
 			return err
 		}
+		defer fx.close()
+		ui.Done("Opened the export of Metis %s from %s", fx.meta.Header.AppVersion, fx.meta.Header.CreatedAt)
+		if flags.ownerEmail == "" {
+			flags.ownerEmail = fx.boot.Get("METIS_OWNER_EMAIL")
+		}
+		if flags.domain == "" {
+			flags.domain = exportDomain(fx.boot.Get("BETTER_AUTH_URL"))
+		}
+	}
+
+	recipient := ""
+	if ui.Interactive() && !flags.yes {
+		if err := setupForm(ctx, flags, &mastraURL, &mastraToken, &recipient); err != nil {
+			return err
+		}
+	}
+	if recipient != "" {
+		flags.recipients = append(flags.recipients, recipient)
+	}
+	recipientPEMs, err := readRecipientPEMs(flags.recipients)
+	if err != nil {
+		return err
 	}
 	var missing []string
 	if validEmail(flags.ownerEmail) != nil {
@@ -274,10 +303,16 @@ func runSetup(ctx context.Context, flags *setupFlags) error {
 	if err != nil {
 		return err
 	}
+	if fx != nil {
+		if err := fx.checkRelease(meta.Version); err != nil {
+			return err
+		}
+	}
 	ui.Done("Using Metis %s", meta.Version)
 
 	st := state.New()
 	st.AppPort = flags.appPort
+	st.ExportRecipients = recipientPEMs
 	images := updater.ReleaseImages(meta.Version)
 	st.App = state.App{Version: meta.Version, Images: state.Images{App: images.App, Preflight: images.Preflight, Worker: images.Worker}}
 	if err := os.MkdirAll(dir, 0o700); err != nil {
@@ -288,12 +323,22 @@ func runSetup(ctx context.Context, flags *setupFlags) error {
 		return err
 	}
 	env := in.Env
+	if fx != nil {
+		fx.applyTo(env)
+		env.Unset("METIS_DOMAIN")
+	}
 	env.Set("METIS_OWNER_EMAIL", strings.TrimSpace(flags.ownerEmail))
 	env.Set("BETTER_AUTH_URL", "http://localhost:"+strconv.Itoa(flags.appPort))
-	env.Set("BETTER_AUTH_SECRET", secrets.Token())
-	env.Set("METIS_ENCRYPTION_KEY", secrets.EncryptionKey())
-	env.Set("METIS_DRIVE_RELAY_SECRET", secrets.Token())
-	env.Set("METIS_SETUP_CODE", secrets.Token())
+	for key, generate := range map[string]func() string{
+		"BETTER_AUTH_SECRET":       secrets.Token,
+		"METIS_ENCRYPTION_KEY":     secrets.EncryptionKey,
+		"METIS_DRIVE_RELAY_SECRET": secrets.Token,
+		"METIS_SETUP_CODE":         secrets.Token,
+	} {
+		if env.Value(key) == "" {
+			env.Set(key, generate())
+		}
+	}
 	if flags.databaseRemote {
 		env.Set("METIS_DB_DRIVER", driverFor(flags.databaseURL))
 		env.Set("DATABASE_URL", flags.databaseURL)
@@ -320,14 +365,20 @@ func runSetup(ctx context.Context, flags *setupFlags) error {
 	}
 	in.Forced = nil
 
-	_, runner, err := serverStack(dir)
+	stk, runner, err := serverStack(dir)
 	if err != nil {
 		return err
+	}
+	if fx != nil {
+		in.AfterSqld = append(in.AfterSqld, fx.loader(stk, env))
 	}
 	if err := mode.Record(dir); err != nil {
 		return err
 	}
 	if _, err := runner.First(ctx, in); err != nil {
+		if fx != nil {
+			return undoFailedRestore(ctx, stk, dir, err)
+		}
 		return fmt.Errorf("%w\nFix the cause, then run sudo metis apply", err)
 	}
 	for _, notice := range in.Notices {
@@ -336,13 +387,18 @@ func runSetup(ctx context.Context, flags *setupFlags) error {
 	url := env.Value("BETTER_AUTH_URL")
 	ui.Done("Metis is running")
 	ui.Info("")
-	if flags.domain != "" {
+	switch {
+	case fx != nil:
+		fx.notices(env)
+		ui.Info("Sign in at %s with an account from the export.", url)
+	case flags.domain != "":
 		ui.Info("Open %s/setup once DNS for %s points at this server.", url, flags.domain)
-	} else {
+		ui.Info("Setup code: %s", env.Value("METIS_SETUP_CODE"))
+	default:
 		ui.Info("Metis listens on 127.0.0.1:%d. Reach it with ssh -L %d:127.0.0.1:%d, then open %s/setup,", flags.appPort, flags.appPort, flags.appPort, url)
 		ui.Info("or give it a domain with sudo metis domain mail.example.com.")
+		ui.Info("Setup code: %s", env.Value("METIS_SETUP_CODE"))
 	}
-	ui.Info("Setup code: %s", env.Value("METIS_SETUP_CODE"))
 	ui.Warn(encryptionWarning, components.EnvPath(dir))
 	detected = mode.Detected{Mode: mode.Server, InstallDir: dir}
 	for _, name := range flags.gateways {
@@ -413,5 +469,8 @@ func newSetupCommand() *cobra.Command {
 	cmd.Flags().StringArrayVar(&flags.env, "env", nil, "an extra KEY=VALUE for .env (repeatable)")
 	cmd.Flags().StringVar(&flags.envFile, "env-file", "", "a file of extra KEY=VALUE lines for .env")
 	cmd.Flags().BoolVar(&flags.yes, "yes", false, "skip the questions and use the flags")
+	cmd.Flags().StringArrayVar(&flags.recipients, "recipient", nil, "a public key (.pub) this server's exports are encrypted to (repeatable)")
+	cmd.Flags().StringVar(&flags.fromExport, "from-export", "", "restore an export archive onto this new server")
+	flags.identity.add(cmd)
 	return needsRoot(modes(cmd, modeInstall))
 }

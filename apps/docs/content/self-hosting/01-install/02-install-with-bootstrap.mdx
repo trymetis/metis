@@ -71,6 +71,13 @@ Everything is installed in `/opt/metis-suite`. Your settings go in `/opt/metis-s
       with Redis: run workflows outside the app**, **Object storage: a
       drive on this server**, and the three mail gateways. The Resend
       gateway needs a domain.
+    - **Export key**: "A public key (.pub) this server's exports are
+      encrypted to. Make the pair on your own computer with metis keygen
+      and copy only the .pub here, or add one later with sudo metis export
+      recipients add. Leave it blank to skip." Enter the path of the file on
+      the server, such as `metis-export.pub`. If you pass `--recipient`,
+      setup skips this question. See
+      [On a server the metis CLI runs](/self-hosting/operate/export-and-import#on-a-server-the-metis-cli-runs).
     - **Google sign-in**: **Later, with metis connect google**, or **Now,
       once Metis runs**. This lets people connect Gmail, Google Calendar,
       Drive and Contacts. See
@@ -184,14 +191,14 @@ With `--yes`, or when there is no terminal (for example in cloud-init), setup as
 sudo sh bootstrap.sh --yes --owner-email alice@example.com --domain mail.example.com --with updater,worker
 ```
 
-If a value is missing or wrong, setup stops at once and lists what it needs, for example "setup needs --owner-email you@example.com; --domain mail.example.com".
+If a value is missing or wrong, setup stops at once and lists what it needs, for example "setup needs `--owner-email you@example.com`; `--domain mail.example.com`".
 
 - **Mail gateways and Google** cannot be set up without questions. Add them once Metis runs, with `sudo metis add` and `sudo metis connect google`.
 - **Starting values** for other settings, such as OAuth clients, the AI model, server lists or the workflow runner, go in with `--env` or `--env-file`. They are written to `.env` last, and the first preflight stores them as the starting values of those dashboard settings. See [Environment variables](/self-hosting/reference/environment-variables).
 
 | Flag               | What it does                                                                                                                                                                                              | Default            |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| `--owner-email`    | The instance owner's email address. Required.                                                                                                                                                             | None               |
+| `--owner-email`    | The instance owner's email address. Required, unless `--from-export` restores an export that holds it.                                                                                                    | None               |
 | `--domain`         | The hostname people open, such as `mail.example.com`.                                                                                                                                                     | None               |
 | `--with`           | The components to add: `updater`, `worker` and `objstore`, separated by commas. The list replaces the default, so `--with worker` installs without the updater. Write `--with updater,worker` to keep it. | `updater`          |
 | `--database-url`   | A libSQL database URL to use instead of sqld on this server.                                                                                                                                              | None               |
@@ -201,6 +208,10 @@ If a value is missing or wrong, setup stops at once and lists what it needs, for
 | `--env`            | An extra `KEY=VALUE` line for `.env`. Repeat it for each line.                                                                                                                                            | None               |
 | `--env-file`       | A file of extra `KEY=VALUE` lines for `.env`.                                                                                                                                                             | None               |
 | `--dir`            | The install folder. It must be empty, and the path must start with `/`.                                                                                                                                   | `/opt/metis-suite` |
+| `--recipient`      | A public key file (`.pub`) this server's exports are encrypted to, such as `metis-export.pub`. Repeat it for several keys.                                                                                | None               |
+| `--from-export`    | Restore an export onto this new server, such as `metis-export-20261111T100000Z.tar`. See [Restore onto a new server](/self-hosting/operate/export-and-import#restore-onto-a-new-server).                  | None               |
+| `--identity`       | With `--from-export`: the private key file the export was encrypted to, such as `metis-export.key`.                                                                                                       | None               |
+| `--passphrase`     | With `--from-export`: ask for the passphrase the export was encrypted to, instead of `--identity`. It needs a terminal.                                                                                   |                    |
 | `--yes`            | Skip the questions and use the flags.                                                                                                                                                                     |                    |
 
 `--with` takes only `updater`, `worker` and `objstore`. A mail gateway there is refused with, for example, "a running install for gateway-resend: add it after setup with metis add gateway-resend".

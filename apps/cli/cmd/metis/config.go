@@ -38,6 +38,9 @@ func applyConfig(file *envfile.File, set map[string]string, setOrder, unset []st
 
 func runConfig(ctx context.Context, flags configFlags, set map[string]string, setOrder, unset []string) error {
 	if detected.Mode == mode.Server && flags.envFile == "" {
+		if _, ok := set[stack.MaintenanceVariable]; ok {
+			ui.Warn("%s goes into .env, so the app stays in maintenance through every metis update, undo and apply until sudo metis config unset %s. Upgrades and undo put the app in maintenance on their own.", stack.MaintenanceVariable, stack.MaintenanceVariable)
+		}
 		err := change(ctx, flags.yes, nil, func(in *components.Install) error {
 			in.Force(applyConfig(in.Env, set, setOrder, unset)...)
 			return nil

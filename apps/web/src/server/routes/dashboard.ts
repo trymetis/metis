@@ -2,6 +2,7 @@ import "server-only";
 import { ORPCError } from "@orpc/server";
 
 import { appActor } from "@/audit";
+import { listExports } from "@/dashboard/exports";
 import { acknowledgePreflightRun, latestPreflightRun } from "@/dashboard/preflight";
 import {
   dashboardAudit,
@@ -38,7 +39,11 @@ import { rollbackRelease, startUpgrade, updatesEnabled, updatesStatus } from "@/
 import { banUser, listInstanceUsers, removeUser, setUserRole, unbanUser } from "@/dashboard/users";
 import { createInvite, listAccountInvites, revokeAccountInvite } from "@/invites";
 
-import { dashboardOperator, dashboardSession } from "../middlewares/dashboard-session";
+import {
+  dashboardOperator,
+  dashboardOwner,
+  dashboardSession,
+} from "../middlewares/dashboard-session";
 import { requireTotp } from "../require-totp";
 import {
   auditPageInputSchema,
@@ -86,6 +91,7 @@ import {
   dashboardSystemProviderInputSchema,
   dashboardSystemProviderOutputSchema,
   dashboardSystemRunnerOutputSchema,
+  dashboardExportsOutputSchema,
   dashboardUpdatesEnabledOutputSchema,
   dashboardUpdatesOutputSchema,
   dashboardUpgradeInputSchema,
@@ -405,6 +411,8 @@ export const dashboardRouter = {
       .handler(async ({ input, context }) =>
         acknowledgePreflightRun(input.id, context.appUser.userId),
       ),
+
+    exports: dashboardOwner.output(dashboardExportsOutputSchema).handler(async () => listExports()),
 
     updatesEnabled: dashboardSession
       .output(dashboardUpdatesEnabledOutputSchema)

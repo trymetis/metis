@@ -32,6 +32,8 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 - An undo run with `metis undo` on the server is recorded in the audit log like one from Dashboard → Updates, shown as made by the **Server CLI**.
 - Dashboard → System → History marks settings stored by the server CLI with a **Server** badge, so a change made with `metis config set` or `metis add` is told apart from dashboard edits.
 - Preflight can store chosen settings from the environment over the dashboard's for one run, which the server CLI uses to apply `metis config set`, components and gateways without opening the dashboard.
+- Dashboard → System → Exports shows the instance owner every export the `metis` CLI has made: when, from which release, its size and checksum, the keys it is encrypted to, and where each archive went (the server, a computer or an S3 bucket). Admins and observers do not see it.
+- Maintenance mode: set `METIS_MAINTENANCE` to the time maintenance began and the app stops writing, shows visitors a maintenance page and answers every API call, webhook and cron tick with 503, while `/api/livez` and `/api/readyz` keep answering for health checks.
 
 ### Changed
 

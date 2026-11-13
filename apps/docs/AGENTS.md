@@ -46,6 +46,7 @@ Blume owns the Astro layer: `content/`, `pages/` and `blume.config.ts` are the a
   - `{ "drag": <from>, "to": <to> }` presses the mouse on one element and releases it on another in small moves, which is how a workflow step's output handle is wired to the next step; the palette adds steps unconnected.
   - `{ "waitForHidden": <selector> }` waits until a spinner or other transient element is gone, so a capture never shows a loading state.
   - `{ "follow": <selector> }` opens a link's address in the same tab, for links that open a new tab (**Print**, **View original**), since each entry captures one page.
+- **An entry with `"maintenance": true` is captured only by the maintenance run**, so the maintenance page is the real one: from `e2e/`, `bun run up:ss:maintenance` recreates the app with `METIS_MAINTENANCE` set (`e2e/compose.maintenance.yml` over the screenshot stack), then `bun run screenshots:maintenance` here takes those entries alone, without signing in; `bun run up:ss` puts the app back. A plain run skips them.
 - **An entry with `"invite"` captures the invite page from a real emailed link.** The stack sends mail to the harness's console endpoint (the fixture's console mail driver), so before the entry the script signs in as the seeded owner, sends a workspace invite into the seeded workspace (`"workspace": true`) or an account invite (optional `"role"`), reads the link from `/console-mail-hits` (`sentInviteLink` in `e2e/lib/invites.ts`) and substitutes it for `{invite}` in `path`.
   - `"email": "{member}"` is the seeded second account, so a signed-out entry shows **Sign in to accept**; any other address shows the sign-up form.
   - Any pending invite to that address is revoked before and after the capture, so no other screenshot shows it in a pending list.
@@ -63,6 +64,7 @@ Blume owns the Astro layer: `content/`, `pages/` and `blume.config.ts` are the a
 - `bun run typecheck`: `blume check`
 - `bun run validate`: `blume validate --strict` (links, anchors and assets; safe beside a running dev server)
 - `bun run screenshots`: refresh screenshots from a running e2e stack
+- `bun run screenshots:maintenance`: refresh the maintenance-page screenshots from an e2e stack started with `bun run up:ss:maintenance`
 
 `blume build` and `blume check` regenerate `.blume/`, so they conflict with a running `blume dev`; pass `--isolated` to run them alongside it.
 

@@ -51,6 +51,10 @@ func Acquire(dir string) (*Lock, error) {
 				_ = file.Close()
 				return nil, fmt.Errorf("An upgrade is running (started %s). Run metis status to follow it.", started.Local().Format("15:04"))
 			}
+			if what, started, running := st.RunningOperation(); running {
+				_ = file.Close()
+				return nil, fmt.Errorf("%s is running (started %s); the app is in maintenance until it ends. Try again then.", what, started.Local().Format("15:04"))
+			}
 		}
 		err = unix.Flock(int(file.Fd()), unix.LOCK_EX)
 	}

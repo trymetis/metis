@@ -9,11 +9,11 @@ The owner dashboard shows what your instance is carrying and holds its settings.
 
 An instance role decides what someone can do in the dashboard. Every account has one of four roles. Three of them open the dashboard:
 
-| Role         | Who has it                                                                                                                            | What they can do                                                                                                                                                                                                                                                                                                                                   |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Owner**    | The account whose email is `METIS_OWNER_EMAIL`. There is exactly one. Nobody can change, ban, remove or invite it from the dashboard. | Everything in the dashboard. Manages admins, observers and users: changes their role, bans and unbans them, and removes them.                                                                                                                                                                                                                      |
-| **Admin**    | People the owner makes admins.                                                                                                        | Everything the owner can do in the dashboard: change and reset settings, restore versions, run health checks, acknowledge deploy checks, upgrade and undo, send and revoke account invites, and use the [Users](#users) page. Manages observers and users, including banning them. Cannot make anyone an admin, or change, ban or remove an admin. |
-| **Observer** | People the owner or an admin makes observers.                                                                                         | The whole dashboard, read-only, including the **Accounts** pages and the **Audit log**. See [What observers see](#what-observers-see).                                                                                                                                                                                                             |
+| Role         | Who has it                                                                                                                            | What they can do                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Owner**    | The account whose email is `METIS_OWNER_EMAIL`. There is exactly one. Nobody can change, ban, remove or invite it from the dashboard. | Everything in the dashboard. Manages admins, observers and users: changes their role, bans and unbans them, and removes them.                                                                                                                                                                                                                                                        |
+| **Admin**    | People the owner makes admins.                                                                                                        | Everything the owner can do in the dashboard: change and reset settings, restore versions, run health checks, acknowledge deploy checks, upgrade and undo, send and revoke account invites, and use the [Users](#users) page. Cannot open the **Exports** page. Manages observers and users, including banning them. Cannot make anyone an admin, or change, ban or remove an admin. |
+| **Observer** | People the owner or an admin makes observers.                                                                                         | The whole dashboard except the **Exports** page, read-only, including the **Accounts** pages and the **Audit log**. See [What observers see](#what-observers-see).                                                                                                                                                                                                                   |
 
 Every other account has the role **User**. This is the default for a new account. A user works in Metis Suite as usual, but cannot open the dashboard.
 
@@ -45,7 +45,7 @@ The sidebar lists **Overview**, **AI usage**, **Connections**, **Accounts**, **W
 <img src="/images/self-hosting/dashboard-overview.webp" alt="The dashboard Overview page with counts, health cards and the sidebar" class="dark:hidden" />
 <img src="/images/self-hosting/dashboard-overview-dark.webp" alt="The dashboard Overview page with counts, health cards and the sidebar" class="hidden dark:block" />
 
-Every page except **Users**, **Invites** and the **System** pages is read-only.
+Every page except **Users**, **Invites** and the **System** pages is read-only. Under **System**, the **Exports** page is read-only too, and only the owner sees it.
 
 ## What observers see
 
@@ -379,6 +379,7 @@ Under **System** in the sidebar are these pages:
 - **Instance:** the app address, sign-up, the owner, legal consent, drive relay limits, the mail image proxy, how long message bodies are kept, and trusted proxies. See [Sign-up](/self-hosting/configure/sign-up), [Terms and privacy links](/self-hosting/configure/terms-and-privacy), [Drive transfers](/self-hosting/configure/drive-transfers) and [Dashboard settings](/self-hosting/reference/dashboard-settings#instance).
 - **History:** every stored version of the configuration (below).
 - **Updates:** upgrading to a newer release and undoing the last upgrade. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo).
+- **Exports:** every export the `metis` CLI made of this instance, and where each archive went (below). Only the owner sees it.
 - **Drivers:** **LLM** (with the decision model), **Phishing detection**, **Mail**, **Cache**, **Workflow runner** and **Database**.
 - **Providers:** **Google**, **Microsoft**, **Zoho**, **IMAP**, **CalDAV**, **CardDAV**, **Cloudflare Email**, **Resend**, **Amazon SES**, **S3**, **WebDAV**, **FTP** and **SFTP**.
 
@@ -453,6 +454,31 @@ Every saved change and every reset is a version. The **History** page lists them
 <img src="/images/self-hosting/dashboard-history-dark.webp" alt="The History page with the list of stored versions" class="hidden dark:block" />
 
 You can also reach History from the **History** button on any settings page.
+
+### Exports
+
+"Every encrypted export of this instance the metis CLI made, and where it put each archive. Only the owner sees this page."
+
+Only the owner sees this page. Admins and observers do not see it in the sidebar, and its address shows them a page-not-found error. The page has no buttons. You make exports with the `metis` CLI, and copy or delete the archives yourself. Deleting an archive does not remove its row. See [Export and import](/self-hosting/operate/export-and-import).
+
+On a Metis Cloud instance, this page does not list the exports you make in the Cloud console. The console's **Exports** tab lists them. See [Export your data](/cloud/your-instance/export-your-data).
+
+The **Exports** card says: "Newest first. The metis CLI records each export when it makes it: sudo metis db export on a server, or metis db export `--env-file` from any machine." This works on every kind of deployment: a server the `metis` CLI runs, a container platform, Vercel or another Node host. Each export is one row:
+
+| Column            | What it shows                                                                                                                                                                                                                                                                                                                             |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Created**       | When the export was made, in your browser's time zone. Below it, "From" and the instance's address at the time of the export, and "Maintenance since" and when maintenance began. An export made with `--force` shows "Not recorded".                                                                                                     |
+| **Metis version** | The release the instance ran, such as `1.4.0`, with the last database migration below it. An archive loads only on that release or a newer one.                                                                                                                                                                                           |
+| **Archive**       | The file name, such as `metis-export-20261111T100000Z.tar`. Below it, the size and "SHA-256" with the first 12 characters of the file's checksum. To check a copy, compare them with the start of what `sha256sum metis-export-20261111T100000Z.tar` prints.                                                                              |
+| **Where**         | One block for each place the archive was written: **On the server** for `sudo metis db export`, **On a computer** for `metis db export --env-file`, or **In S3**. Each shows the full path or the `s3://` address. Below a path, "Host" and the machine's name. Below an address on an S3-compatible service, "Endpoint" and its address. |
+| **Recipients**    | The fingerprint of each key the export is encrypted to. A passphrase key shows "(passphrase)".                                                                                                                                                                                                                                            |
+
+<img src="/images/self-hosting/dashboard-exports.webp" alt="The Exports page listing recorded exports and where each archive went" class="dark:hidden" />
+<img src="/images/self-hosting/dashboard-exports-dark.webp" alt="The Exports page listing recorded exports and where each archive went" class="hidden dark:block" />
+
+With no exports yet, the card says "No exports yet." Below the list, a note says: "These are the places each archive was written. Metis does not check that a file is still there, and an archive kept on the server's own disk does not survive losing that disk."
+
+The CLI records an export right after it finishes the archive and any upload, so an archive never lists itself. An instance restored or loaded from an archive lists the exports made before that one, with the old address after "From". An instance restored from a Metis Cloud export starts with an empty list.
 
 ### Deploy checks
 

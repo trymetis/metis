@@ -29,6 +29,7 @@ import {
 import { BAN_DURATIONS, BAN_REASON_MAX } from "@/types/ban";
 import { ATTENDEE_RESPONSES, EVENT_STATUSES } from "@/types/calendar";
 import { DRIVE_ENTRY_KINDS, DRIVE_UPLOAD_STRATEGIES } from "@/types/drive";
+import { EXPORT_LOCATION_KINDS } from "@/types/export";
 import {
   CONFIG_FIELD_KINDS,
   CONFIG_SECTIONS,
@@ -2291,6 +2292,33 @@ export const dashboardUpdatesOutputSchema = z.object({
   rollbackSnapshotAt: z.string().nullable(),
   upgrade: dashboardUpgradeSchema.nullable(),
 });
+
+export const dashboardExportSchema = z.object({
+  id: z.string(),
+  createdAt: z.string(),
+  appVersion: z.string(),
+  migration: z.string(),
+  maintenanceSince: z.string().nullable(),
+  fileName: z.string(),
+  size: z.number(),
+  sha256: z.string(),
+  recipients: z.array(z.object({ fingerprint: z.string(), passphrase: z.boolean() })),
+  locations: z.array(
+    z.object({
+      kind: z.enum(EXPORT_LOCATION_KINDS),
+      location: z.string(),
+      host: z.string().nullable(),
+      endpoint: z.string().nullable(),
+    }),
+  ),
+  instanceUrl: z.string(),
+});
+export type DashboardExport = z.infer<typeof dashboardExportSchema>;
+
+export const dashboardExportsOutputSchema = z.object({
+  exports: z.array(dashboardExportSchema),
+});
+export type DashboardExports = z.infer<typeof dashboardExportsOutputSchema>;
 
 export const dashboardUpdatesEnabledOutputSchema = z.object({
   enabled: z.boolean(),

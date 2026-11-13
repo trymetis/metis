@@ -25,3 +25,8 @@ function dashboardGate(requirement: DashboardRequirement) {
 export const dashboardSession = dashboardGate("read");
 
 export const dashboardOperator = dashboardGate("operate");
+
+export const dashboardOwner = dashboardSession.use(async ({ context, next }) => {
+  if (context.instanceRole !== "owner") throw new ORPCError("NOT_FOUND");
+  return next();
+});

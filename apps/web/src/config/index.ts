@@ -21,6 +21,7 @@ import {
   mailCacheConfigFromEnv,
   mailConfigFromEnv,
   mailerConfigFromEnv,
+  maintenanceConfigFromEnv,
   phishingDetectionConfigFromEnv,
   proxiesConfigFromEnv,
   updaterConfigFromEnv,
@@ -82,6 +83,7 @@ function buildRaw() {
     workflowRunner: workflowRunnerConfigFromEnv(env),
     phishingDetection: phishingDetectionConfigFromEnv(env),
     updater: updaterConfigFromEnv(env),
+    maintenance: maintenanceConfigFromEnv(env),
   };
 
   const merged = defu(envRaw, file ?? {});

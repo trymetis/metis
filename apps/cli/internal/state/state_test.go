@@ -70,3 +70,29 @@ func TestRunningUpgradeHoldsTheLock(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestRunningExportAndMoveHoldTheLock(t *testing.T) {
+	for kind, want := range map[string]string{OperationExport: "An export is running (started 14:02)", OperationMove: "A database move is running (started 14:02)"} {
+		dir := t.TempDir()
+		st := New()
+		started := time.Date(2026, 11, 11, 14, 2, 0, 0, time.Local)
+		st.Running = &Operation{Kind: kind, StartedAt: started.UTC().Format(time.RFC3339Nano)}
+		st.ExportRecipients = []string{"-----BEGIN PUBLIC KEY-----"}
+		if err := Create(dir, st); err != nil {
+			t.Fatal(err)
+		}
+		held, err := Acquire(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, err = Update(dir, func(*State) error { return nil })
+		if err == nil || !strings.HasPrefix(err.Error(), want) {
+			t.Fatalf("update during %s: %v", kind, err)
+		}
+		held.Release()
+		loaded, err := Load(dir)
+		if err != nil || len(loaded.ExportRecipients) != 1 || loaded.Running == nil || loaded.Running.Kind != kind {
+			t.Fatalf("loaded %+v %v", loaded, err)
+		}
+	}
+}

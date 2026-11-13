@@ -6,7 +6,7 @@ description: Upgrade your instance to a newer release from the owner dashboard o
 On a server the `metis` CLI runs, you upgrade Metis Suite from the owner dashboard or with `sudo metis update`. The updater (the part of the CLI that changes which release runs) does the work for you:
 
 1. It downloads the release you choose.
-2. It stops the app and takes a snapshot of the database, when your instance supports it (see below). A snapshot is a full copy of the database at that moment.
+2. It puts the app in maintenance mode and takes a snapshot of the database, when your instance supports it (see below). In maintenance mode, visitors see a maintenance page and the app writes nothing to the database. A snapshot is a full copy of the database at that moment.
 3. It runs preflight, the check that runs before the app starts. Preflight applies the new release's changes to your database, then checks your settings.
 4. It switches the app to the new release and waits until it answers.
 
@@ -81,7 +81,7 @@ If you skip releases, read the notes of every release between yours and the one 
     one, and these steps:
 
     1. **Pull the release**
-    2. **Stop the app and snapshot the database**
+    2. **Put the app in maintenance and snapshot the database**
     3. **Run preflight and migrate the database**
     4. **Switch the app**
     5. **Wait until it is ready**
@@ -102,10 +102,27 @@ If you skip releases, read the notes of every release between yours and the one 
 
 Only one upgrade or undo runs at a time. The buttons are turned off while one runs.
 
-While an upgrade runs, your instance is offline for a while:
+While an upgrade runs, your instance is unavailable for a while:
 
-- **With snapshots**, the app stops at the snapshot step and comes back when the new release is ready. A large database takes longer to copy.
-- **Without snapshots**, your current release keeps working while preflight runs. The app is offline only while it switches to the new release.
+- **With snapshots**, the app and any workers go into maintenance mode at the snapshot step. From then until the switch to the new release, visitors see a maintenance page, API calls are refused with the status `503`, and no background work runs. The switch ends maintenance. A large database takes longer to copy.
+- **Without snapshots**, there is no maintenance mode. Your current release keeps working while preflight runs. The app is offline only while it switches to the new release.
+
+The maintenance page says **Down for maintenance**, the time maintenance began (for example "Since 10:00 UTC on 11 November 2026") and "Try again in a few minutes." The **Source code** link shows at the bottom, and the browser tab reads **Down for maintenance • Metis Suite**. The page is light or dark as the visitor last chose in Metis Suite in that browser, and dark if they never chose. If you reload the **Updates** page during that time, you see this page too.
+
+<img
+  src="/images/self-hosting/maintenance-page.webp"
+  alt="The maintenance page with the heading Down for maintenance and the time maintenance began"
+  class="dark:hidden"
+/>
+<img
+  src="/images/self-hosting/maintenance-page-dark.webp"
+  alt="The maintenance page with the heading Down for maintenance and the time maintenance began"
+  class="hidden dark:block"
+/>
+
+Apps, scripts and health checks can tell maintenance from a failure. See [Maintenance mode](/self-hosting/reference/environment-variables#maintenance-mode).
+
+A release older than maintenance mode does not have it. So the first upgrade away from such a release shows no maintenance page. The old release keeps running during the snapshot step. While the database server is stopped for the copy, it can answer with errors.
 
 :::warning[Keep free disk space for the snapshot]
 Each snapshot is a full copy of your database, kept on the server. During an upgrade, the server can hold two copies at once: the one kept for undo and the new one. Make sure the disk has room for both.
@@ -121,11 +138,11 @@ sudo metis update
 
 It installs the newest release. To install a given release, name it, for example `sudo metis update 1.4.0`. This works with or without the updater component, and the dashboard's **Last upgrade** card shows the upgrade too.
 
-The command prints the move, such as "1.3.2 → 1.4.0", then each step as it starts: "Pulling the images", "Stopping the app and snapshotting the database", "Running preflight", "Switching releases" and "Waiting for the app to answer". When it is done, it prints "Now running 1.4.0".
+The command prints the move, such as "1.3.2 → 1.4.0", then each step as it starts: "Pulling the images", "Putting the app in maintenance and snapshotting the database", "Running preflight", "Switching releases" and "Waiting for the app to answer". When it is done, it prints "Now running 1.4.0".
 
-If you press Ctrl+C while it downloads, it stops with "Stopping before anything changed". After that, it keeps going and says "The upgrade continues: stopping now would leave the app down. Follow it with metis status."
+If you press Ctrl+C while it downloads, it stops with "Stopping before anything changed". After that, it keeps going and says "The upgrade continues and can no longer be stopped. Follow it with metis status." The same applies to `sudo metis undo`. Closing the terminal has the same effect as Ctrl+C.
 
-To upgrade without a snapshot, add `--no-backup`. It warns "--no-backup takes no database snapshot, so this upgrade cannot be undone". It also removes the snapshot kept for the previous undo, so neither upgrade can be undone. Back up first. See [Backups](/self-hosting/operate/backups).
+To upgrade without a snapshot, add `--no-backup`. It warns "`--no-backup` takes no database snapshot, so this upgrade cannot be undone". It also removes the snapshot kept for the previous undo, so neither upgrade can be undone. Back up first. See [Backups](/self-hosting/operate/backups).
 
 | Message                                                                                                  | What it means                                                                                |
 | -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
@@ -136,6 +153,8 @@ To upgrade without a snapshot, add `--no-backup`. It warns "--no-backup takes no
 | "This release needs Metis CLI 0.5.0 or later. Run sudo metis self-update on the server, then try again." | Update the CLI first. See [Update the metis CLI](#update-the-metis-cli).                     |
 | "an upgrade or rollback is already running"                                                              | Another upgrade or undo runs. Wait until it ends.                                            |
 | "another metis command is changing this install; try again in a moment"                                  | Another `metis` command is changing the server. Try again in a moment.                       |
+| "an export is running; try again once it ends"                                                           | `sudo metis db export` is running. Wait until it ends.                                       |
+| "a database move is running; try again once it ends"                                                     | `sudo metis db move` is running. Wait until it ends.                                         |
 
 When a step fails, it ends with one of these, followed by the error:
 
@@ -181,11 +200,13 @@ To undo:
     The **Last undo** card shows these steps:
 
     1. **Pull the previous release**
-    2. **Stop the app and restore the database snapshot**
+    2. **Put the app in maintenance and restore the database snapshot**
     3. **Switch the app**
     4. **Wait until it is ready**
 
-    The app is offline until the last step finishes.
+    From the restore step until the switch, the app is in maintenance
+    mode: visitors see the maintenance page and API calls are refused.
+    The switch ends maintenance.
 
   </Step>
 
@@ -202,7 +223,7 @@ To undo from the terminal instead, run this on the server:
 sudo metis undo
 ```
 
-It prints its steps as `metis update` does, and ends with "Now running" and the previous version. If there is nothing to undo, it says "there is no upgrade to undo".
+It prints its steps as `metis update` does, including "Restoring the previous release", and ends with "Now running" and the previous version. If there is nothing to undo, it says "there is no upgrade to undo".
 
 Undo works once. After it, the **Undo** row reads **None** until your next upgrade.
 
@@ -218,12 +239,12 @@ The card shows **Failed**, and a pop-up message says "The upgrade failed" or "Th
 
 In these notes, 1.3.2 stands for the release that was running when the upgrade or undo started, and 1.4.0 for the release you upgraded to.
 
-| Note                                                                                      | What happened                                                                                                           |
-| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| "1.4.0 was not installed; 1.3.2 kept running."                                            | The release could not be downloaded, the snapshot failed, or preflight failed on an instance without snapshots.         |
-| "1.4.0 failed, so the updater restored the database snapshot and switched back to 1.3.2." | Preflight failed, or the new release did not come up. The updater put the snapshot back and returned to your release.   |
-| "1.4.0 failed, so the updater switched back to 1.3.2."                                    | Without snapshots: the new release did not come up, and the updater returned to your release.                           |
-| "The undo did not start; 1.3.2 kept running."                                             | The previous release could not be downloaded, or the app could not be stopped. Your release and database are unchanged. |
+| Note                                                                                      | What happened                                                                                                                                                                                                                                                    |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "1.4.0 was not installed; 1.3.2 kept running."                                            | The release could not be downloaded, the snapshot failed, or preflight failed on an instance without snapshots. When the snapshot failed, the updater took 1.3.2 out of maintenance before it reported the failure.                                              |
+| "1.4.0 failed, so the updater restored the database snapshot and switched back to 1.3.2." | Preflight failed, or the new release did not come up. The updater put the snapshot back and returned to your release.                                                                                                                                            |
+| "1.4.0 failed, so the updater switched back to 1.3.2."                                    | Without snapshots: the new release did not come up, and the updater returned to your release.                                                                                                                                                                    |
+| "The undo did not start; 1.3.2 kept running."                                             | The previous release could not be downloaded, or the app could not be put in maintenance. Your release and database are unchanged. When the app could not be put in maintenance, the updater took 1.3.2 out of maintenance again before it reported the failure. |
 
 :::warning[Without snapshots, a failed preflight can leave changes behind]
 On Turso or your own database server, a release can apply some of its database changes and then fail. Your current release keeps running, but those changes stay in the database. This is why you back up before every upgrade on these instances.
@@ -247,6 +268,14 @@ sudo metis logs app
 ```
 
 `metis status` shows the release, each component with "ok" or "NOT HEALTHY", and the last upgrade with its error. See [Health checks](/self-hosting/operate/health-checks#check-the-server-with-the-metis-cli).
+
+The app may still be in maintenance mode, so visitors see the maintenance page. Once `sudo metis status` shows the release you expect and the database server running, take the app out of maintenance with:
+
+```bash
+sudo metis apply
+```
+
+It shows what changes and asks "Apply these changes?" before it acts.
 
 ### The updater is not answering
 

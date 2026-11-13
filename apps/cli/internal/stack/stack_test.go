@@ -295,3 +295,86 @@ func TestPublishedPort(t *testing.T) {
 		t.Fatalf("admin port %s %v", addr, err)
 	}
 }
+
+func TestMaintenanceRecreatesTheAppAndWorkersWithoutPreflight(t *testing.T) {
+	stack, engine := testStack(t)
+	ctx := context.Background()
+	st := testState()
+	if _, err := stack.Apply(ctx, st, Options{}); err != nil {
+		t.Fatal(err)
+	}
+
+	engine.calls = nil
+	before := time.Now().UTC().Truncate(time.Second)
+	if err := stack.Maintenance(ctx, st, true); err != nil {
+		t.Fatal(err)
+	}
+	if created := engine.callsWith("create "); strings.Join(created, ",") != "metis-app,metis-worker-1,metis-worker-2" {
+		t.Fatalf("created %v", created)
+	}
+	if slices.Contains(engine.callsWith("create "), "metis-preflight") {
+		t.Fatal("maintenance ran preflight")
+	}
+	for _, name := range []string{"metis-app", "metis-worker-1", "metis-worker-2"} {
+		entry := engine.containers[name]
+		value, ok := envValue(entry.config.Env, MaintenanceVariable)
+		if !ok || !entry.running {
+			t.Fatalf("%s env %v running %v", name, entry.config.Env, entry.running)
+		}
+		since, err := time.Parse(time.RFC3339, value)
+		if err != nil || since.Before(before) || since.After(time.Now()) {
+			t.Fatalf("%s %s=%q: %v", name, MaintenanceVariable, value, err)
+		}
+	}
+	if _, ok := envValue(engine.containers["metis-sqld"].config.Env, MaintenanceVariable); ok {
+		t.Fatal("sqld got the maintenance variable")
+	}
+	plan, err := stack.Plan(ctx, st, Options{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Join(plan.Recreate, ",") != "metis-app,metis-worker-1,metis-worker-2" {
+		t.Fatalf("an apply would not leave maintenance: %+v", plan)
+	}
+
+	engine.calls = nil
+	if err := stack.Maintenance(ctx, st, false); err != nil {
+		t.Fatal(err)
+	}
+	if created := engine.callsWith("create "); strings.Join(created, ",") != "metis-app,metis-worker-1,metis-worker-2" || slices.Contains(created, "metis-preflight") {
+		t.Fatalf("created %v", created)
+	}
+	for _, name := range []string{"metis-app", "metis-worker-1", "metis-worker-2"} {
+		if _, ok := envValue(engine.containers[name].config.Env, MaintenanceVariable); ok {
+			t.Fatalf("%s kept %s", name, MaintenanceVariable)
+		}
+	}
+	plan, err = stack.Plan(ctx, st, Options{})
+	if err != nil || !plan.Empty() {
+		t.Fatalf("leaving maintenance did not match the catalog: %+v %v", plan, err)
+	}
+
+	engine.calls = nil
+	if err := stack.Maintenance(ctx, st, false); err != nil {
+		t.Fatal(err)
+	}
+	if created := engine.callsWith("create "); len(created) != 0 {
+		t.Fatalf("leaving maintenance twice recreated %v", created)
+	}
+}
+
+func TestMaintenanceStartsAStoppedApp(t *testing.T) {
+	stack, engine := testStack(t)
+	ctx := context.Background()
+	st := testState()
+	if _, err := stack.Apply(ctx, st, Options{}); err != nil {
+		t.Fatal(err)
+	}
+	engine.containers["metis-app"].running = false
+	if err := stack.Maintenance(ctx, st, false); err != nil {
+		t.Fatal(err)
+	}
+	if !engine.containers["metis-app"].running {
+		t.Fatal("the app was left stopped")
+	}
+}

@@ -64,6 +64,7 @@ test("the dashboard is a 404 without an instance role, read-only for an observer
   try {
     await setRole(rpc, cy.userId, "observer");
     expect(await cy.rpc("dashboard.me")).toEqual({ role: "observer" });
+    expect((await rejection(cy.rpc("dashboard.system.exports"))).status).toBe(404);
     expect((await cy.rpc<Users>("dashboard.users.list", {})).users.length).toBeGreaterThan(1);
     await cy.rpc("dashboard.audit");
     for (const call of [
@@ -83,6 +84,7 @@ test("the dashboard is a 404 without an instance role, read-only for an observer
 
     await setRole(rpc, cy.userId, "admin");
     expect(await cy.rpc("dashboard.me")).toEqual({ role: "admin" });
+    expect((await rejection(cy.rpc("dashboard.system.exports"))).status).toBe(404);
     const owner = await rejection(
       cy.rpc("dashboard.users.setRole", { userId: anaId, role: "observer", code: cy.code() }),
     );

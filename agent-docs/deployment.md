@@ -66,6 +66,7 @@ See also [AGENTS.md](../AGENTS.md), [cli.md](cli.md), [updater.md](updater.md), 
   - `/api/livez` answers 200 while the process serves requests.
   - `/api/readyz` answers 200 only when `config` resolved and `select 1` succeeds on both the app and Mastra connections within `PROBE_TIMEOUT_MS`; otherwise 503.
   - The readiness failure reason goes to the log once per distinct error (`[readyz]`).
+  - Both answer as usual in maintenance, while pages show the maintenance page and every other request answers 503 ([configuration.md](configuration.md)).
   - A verbose form sits behind `dashboardSession`.
 
 ### Build traps

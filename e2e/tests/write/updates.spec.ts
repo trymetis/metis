@@ -88,7 +88,7 @@ export default function updateSpecs() {
     const last = section(page, "Last upgrade");
     await expect(last).toContainText(`${release.current} → ${release.next}`);
     await expect(last).toContainText("Running");
-    await expect(last).toContainText("Stop the app and snapshot the database");
+    await expect(last).toContainText("Put the app in maintenance and snapshot the database");
 
     await expect(last).toContainText("Succeeded", { timeout: UPGRADE_TIMEOUT });
     await expect(

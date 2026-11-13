@@ -53,6 +53,13 @@ func Detect() (Detected, error) {
 	return Detected{Mode: Server, InstallDir: dir}, nil
 }
 
+func Forget() error {
+	if err := os.Remove(InstallDirFile); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	return nil
+}
+
 func Record(dir string) error {
 	if err := os.MkdirAll(filepath.Dir(InstallDirFile), 0o755); err != nil {
 		return err

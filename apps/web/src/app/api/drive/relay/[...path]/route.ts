@@ -12,6 +12,7 @@ import {
 import { type RelayGrant, verifyRelayRequest } from "@/drive/relay-signature";
 import { failureStatus } from "@/lib/errors/provider-error";
 import { sanitizeError } from "@/lib/errors/sanitize-error";
+import { maintenanceResponse } from "@/maintenance/response";
 import { rateLimit, tooManyRequests } from "@/services/rate-limit";
 import type { DriveStream } from "@/types/drive";
 
@@ -46,6 +47,9 @@ async function relayAdapter(grant: RelayGrant): Promise<DriveAdapter | null> {
 }
 
 export async function GET(request: Request) {
+  const closed = maintenanceResponse(false, request.url);
+  if (closed) return closed;
+
   const grant = await verifyRelayRequest("GET", new URL(request.url));
   if (!grant) return Response.json({ error: INVALID_LINK }, { status: 403 });
 
@@ -97,6 +101,9 @@ export async function GET(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const closed = maintenanceResponse(false, request.url);
+  if (closed) return closing(closed);
+
   const grant = await verifyRelayRequest("PUT", new URL(request.url));
   if (!grant) return refuse(403, INVALID_LINK);
 

@@ -41,7 +41,7 @@ Metis Cloud updates your instance to each new release in the hour you pick, and 
 
 ## Backups
 
-Metis Cloud backs up every running instance each night and keeps the two most recent backups. The backups are deleted with the instance. There is no button to restore a backup. For a copy of your own, download an export. See [Export your data](/cloud/your-instance/export-your-data).
+Metis Cloud backs up every running instance each night and keeps the two most recent backups. The backups are deleted with the instance. There is no button to restore a backup. For a copy of your own, download an export. It is an encrypted archive that you open with the `metis` CLI on your own computer, and you can restore it on your own server. See [Export your data](/cloud/your-instance/export-your-data).
 
 ## Self-Hosting pages that do not apply
 

@@ -15,6 +15,7 @@ import { MCP_PRESET_IDS } from "@/mcp/presets";
 import type { McpCapabilityPrefs } from "@/mcp/tools";
 import type { AnalysisResult } from "@/types/analysis";
 import { AUDIT_ACTIONS, AUDIT_RESOURCE_KINDS, AUDIT_VIAS, type AuditDetail } from "@/types/audit";
+import type { ExportLocation, ExportRecipient } from "@/types/export";
 import { INSTANCE_CONFIG_KINDS } from "@/types/instance-config";
 import { GRANTED_INSTANCE_ROLES } from "@/types/instance-role";
 import type { DraftPayload, LabelColor } from "@/types/mail";
@@ -1175,6 +1176,24 @@ export const preflightRun = sqliteTable("preflight_run", {
     onDelete: "set null",
   }),
 });
+
+export const exportRecord = sqliteTable(
+  "export_record",
+  {
+    id: text("id").primaryKey(),
+    createdAt: timestamp("created_at").notNull(),
+    appVersion: text("app_version").notNull(),
+    migration: text("migration").notNull(),
+    maintenanceSince: timestamp("maintenance_since"),
+    fileName: text("file_name").notNull(),
+    size: integer("size").notNull(),
+    sha256: text("sha256").notNull(),
+    recipients: text("recipients", { mode: "json" }).$type<ExportRecipient[]>().notNull(),
+    locations: text("locations", { mode: "json" }).$type<ExportLocation[]>().notNull(),
+    instanceUrl: text("instance_url").notNull(),
+  },
+  (table) => [index("export_record_created_idx").on(table.createdAt)],
+);
 
 export const auditEvent = sqliteTable(
   "audit_event",

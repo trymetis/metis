@@ -35,7 +35,7 @@ type ProgressStep = { step: NonNullable<DashboardUpgrade["step"]>; label: string
 
 const UPGRADE_STEPS: ProgressStep[] = [
   { step: "pull", label: "Pull the release" },
-  { step: "snapshot", label: "Stop the app and snapshot the database" },
+  { step: "snapshot", label: "Put the app in maintenance and snapshot the database" },
   { step: "preflight", label: "Run preflight and migrate the database" },
   { step: "switch", label: "Switch the app" },
   { step: "ready", label: "Wait until it is ready" },
@@ -43,7 +43,7 @@ const UPGRADE_STEPS: ProgressStep[] = [
 
 const UNDO_STEPS: ProgressStep[] = [
   { step: "pull", label: "Pull the previous release" },
-  { step: "restore", label: "Stop the app and restore the database snapshot" },
+  { step: "restore", label: "Put the app in maintenance and restore the database snapshot" },
   { step: "switch", label: "Switch the app" },
   { step: "ready", label: "Wait until it is ready" },
 ];

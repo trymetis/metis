@@ -55,7 +55,8 @@ Some components need another one. Adding `worker` adds `redis` too, with the not
 The database server. It holds the app database and the AI memory database, in the `metis-sqld` volume. `metis setup` adds it unless you choose another database. `metis status` shows it as "namespaces app and mastra".
 
 - `sudo metis add sqld` on an install that uses another database, such as Turso, warns, for example: "DATABASE_URL is libsql://metis-app-acme.turso.io. The app moves to an empty database on the server's sqld; nothing is copied from the current one."
-- `sudo metis remove sqld` is refused while something uses it, for example: "sqld is in use by DATABASE_URL, MASTRA_DATABASE_URL; point them at another database first". The Resend gateway on `--database stack` counts too.
+- `sudo metis remove sqld` is refused while something uses it, for example: "sqld is in use by DATABASE_URL, MASTRA_DATABASE_URL; move the app's databases with sudo metis db move, or point them at another database first". The Resend gateway on `--database stack` counts too.
+- `sudo metis db move` copies both databases to Turso or another sqld and runs the app on them. The old copy stays in sqld until you remove it with `sudo metis remove sqld --purge`. See [Move the databases off the server](/self-hosting/operate/export-and-import#move-the-databases-off-the-server).
 - `--purge` deletes the `metis-sqld` volume, with both databases in it.
 
 ## caddy
@@ -63,7 +64,7 @@ The database server. It holds the app database and the AI memory database, in th
 The web server that serves the app over HTTPS. It comes and goes with your domain, so you never add or remove it yourself:
 
 - `sudo metis add caddy` is refused with "Caddy comes with a domain: run metis domain mail.example.com".
-- `sudo metis remove caddy` is refused with "Caddy goes with the domain: run metis domain --remove".
+- `sudo metis remove caddy` is refused with "Caddy goes with the domain: run metis domain `--remove`".
 
 See [Domain and HTTPS](/self-hosting/install/domain-and-https).
 
@@ -80,7 +81,7 @@ sudo metis add updater
 | `--systemd` | Run it as a systemd service. This is the default when the server runs systemd. |
 | `--docker`  | Run it as a container.                                                         |
 
-Pass one of them, not both ("pass --systemd or --docker, not both"). On a server without systemd, `--systemd` is refused with "--systemd needs systemd as PID 1; use --docker".
+Pass one of them, not both ("pass `--systemd` or `--docker`, not both"). On a server without systemd, `--systemd` is refused with "`--systemd` needs systemd as PID 1; use `--docker`".
 
 `sudo metis remove updater` prints "The Updates page disappears from the dashboard; upgrade with metis update". You can still upgrade and undo with `sudo metis update` and `sudo metis undo`. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo).
 
@@ -109,3 +110,5 @@ A gateway stays on the release it was set up for. After you upgrade, run its `me
 ## While a change runs
 
 Only one command changes the server at a time. While an upgrade runs, every command that changes the server stops at once with, for example, "An upgrade is running (started 14:02). Run metis status to follow it." Wait until it ends, then run the command again.
+
+The same happens while an export or a database move runs, with "An export is running (started 14:02); the app is in maintenance until it ends. Try again then." or "A database move is running (started 14:02); the app is in maintenance until it ends. Try again then." See [While an export or a move runs](/self-hosting/operate/export-and-import#while-an-export-or-a-move-runs).

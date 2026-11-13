@@ -1,0 +1,598 @@
+---
+title: Export and import
+description: Copy a whole instance into one encrypted file with the metis CLI, on its server or from your computer, and load it into new databases to restore it or move it.
+---
+
+An export is one file that holds a whole instance. You make it with the `metis` CLI:
+
+- **On a server the `metis` CLI runs**, you make it on the server with `sudo metis db export`. The CLI puts the app in maintenance and brings it back for you. See [On a server the metis CLI runs](#on-a-server-the-metis-cli-runs).
+- **On a container platform, Vercel or another Node host**, you make it on your own computer, from the deployment's environment file. See [Put the app in maintenance](#put-the-app-in-maintenance) and [Export](#export).
+
+Later you can load it into two new, empty databases, on the same platform or on another one, or restore it onto a new server.
+
+Use it as a backup, or to move your instance to a new platform or a new address. It is the same file either way: what you do with it is your choice.
+
+To download the CLI, see [Install the CLI on your computer](/self-hosting/reference/cli-commands#install-the-cli-on-your-computer).
+
+## What an export holds
+
+An export is a file named after the time it was made, in UTC, such as `metis-export-20261111T100000Z.tar`. It holds:
+
+- **The app database**: accounts, workspaces, connections, settings, workflows and the rest of the instance's data.
+- **The AI memory database**: the assistant's memory. The CLI calls it the Mastra database.
+- **The deployment's environment**: the variables from the environment file, secrets included, such as `METIS_ENCRYPTION_KEY` and `BETTER_AUTH_SECRET`. On a server, these are the variables in `/opt/metis-suite/.env`.
+- **The Resend gateway's database**, only in an export made on a server that runs the [Resend gateway](/self-hosting/mail-gateways/resend). The messages the gateway stores are not in it. They stay in the gateway's own storage.
+
+All of them are encrypted to the public keys you name when you export, called recipients. Only a matching private key or passphrase opens them; whatever makes an export cannot read it.
+
+A small part of the file is not encrypted, so you can check an archive without a key. It shows when the archive was made, the Metis Suite release, the last database migration, where the databases came from (`turso` or `sqld`), when maintenance began, the size and checksum of each file, and the fingerprint of each recipient. See [Check an archive](#check-an-archive).
+
+These variables are left out of the archive, because they belong to the old databases or to the moment of the export:
+
+- `DATABASE_URL`, `DATABASE_AUTH_TOKEN`, `MASTRA_DATABASE_URL` and `MASTRA_DATABASE_AUTH_TOKEN`
+- `METIS_DB_DRIVER`, `SQLD_AUTH_JWT_KEY` and `SQLD_ADMIN_KEY`
+- `METIS_MAINTENANCE`, so a loaded instance starts out of maintenance
+- `METIS_UPDATER_SOCKET` and `METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS`
+- Every variable you name with `--drop-env`
+
+Everything else goes in.
+
+An archive loads only into empty databases, and only on the release it came from or a newer one. The preflight of an older release refuses the database.
+
+## Make a key
+
+Before your first export, make a key pair on your computer:
+
+```bash
+metis keygen
+```
+
+It writes two files:
+
+- `metis-export.key`, the private key. Only you can read it. It opens your exports.
+- `metis-export.pub`, the public key. Exports are encrypted to it.
+
+It prints "Wrote metis-export.key and metis-export.pub (fingerprint 3f2a9c0d4b1e8a7f6c5d2e1b0a9f8e7d)". A fingerprint is a short code that names a key. Then it prints "Give metis-export.pub to whatever makes exports. Keep metis-export.key off the server." and warns "Losing metis-export.key makes every export encrypted only to it unreadable."
+
+To pick other file names, pass `--out`. For example, `metis keygen --out backups` writes `backups.key` and `backups.pub`. If either file already exists, it stops with, for example, "metis-export.pub already exists; pick another name with `--out`".
+
+:::warning[Keep the private key safe]
+Store `metis-export.key` somewhere other than the platform that runs Metis Suite, such as a password manager. Without it, nobody can read the exports made for it, including you.
+:::
+
+### Use a passphrase instead
+
+If you would rather remember a passphrase than keep a key file, make the key from a passphrase:
+
+```bash
+metis keygen --from-passphrase
+```
+
+It needs a terminal. It asks for the **Passphrase**, then for **The passphrase again**. If the two differ, it stops with "the two passphrases differ". It writes only `metis-export.pub`, and prints "Open its exports with `--passphrase`. Anyone with an archive can guess passphrases offline, so use a long one." It warns "Forgetting the passphrase makes every export encrypted only to this key unreadable."
+
+### Use OpenSSL instead
+
+You can also make the key pair with OpenSSL:
+
+```bash
+openssl ecparam -name prime256v1 -genkey -noout -out metis-export.key
+openssl ec -in metis-export.key -pubout -out metis-export.pub
+```
+
+The private key must not be protected with a password. Keys on other curves, and other kinds of keys, are refused.
+
+### Several keys
+
+You can encrypt one export to several keys, for example yours and a colleague's. Any one of them opens the archive. Key files and passphrase keys can be mixed.
+
+The CLI keeps no copy of your keys, your passphrase or your database tokens. It writes them only to the files you ask for.
+
+## On a server the metis CLI runs
+
+On a server you installed with the `metis` CLI, the whole export runs on the server. You set no variable and need no environment file. The CLI puts the app in maintenance, writes the archive into the install's exports folder, `/opt/metis-suite/exports`, and takes the app out of maintenance again. It can also upload the archive to S3. See [Upload to S3](#upload-to-s3).
+
+### Choose the keys
+
+Make the key pair on your own computer with `metis keygen` (see [Make a key](#make-a-key)). Copy only `metis-export.pub` to the server, and keep `metis-export.key` off it. Then, on the server, add the public key as a recipient:
+
+```bash
+sudo metis export recipients add metis-export.pub
+```
+
+It prints "Exports are encrypted to 3f2a9c0d4b1e8a7f6c5d2e1b0a9f8e7d". Add more keys the same way. Every later export is encrypted to all of them.
+
+| Command                                                                | What it does                                                                                                                                                                                                                                                                                                        |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sudo metis export recipients add metis-export.pub`                    | Adds a public key. A key that is there already stops with "3f2a9c0d4b1e8a7f6c5d2e1b0a9f8e7d is already a recipient". A private key file stops with "metis-export.key: no PUBLIC KEY block found; pass a .pub file".                                                                                                 |
+| `sudo metis export recipients list`                                    | Prints the fingerprint of each key, one per line, with "(passphrase)" after a passphrase key. With none, it prints "No export recipients. Add one with sudo metis export recipients add metis-export.pub."                                                                                                          |
+| `sudo metis export recipients remove 3f2a9c0d4b1e8a7f6c5d2e1b0a9f8e7d` | Stops encrypting new exports to that key. It prints "New exports are no longer encrypted to 3f2a9c0d4b1e8a7f6c5d2e1b0a9f8e7d; existing archives still open with it". A fingerprint that is not on the list stops with "3f2a9c0d4b1e8a7f6c5d2e1b0a9f8e7d is not a recipient; see sudo metis export recipients list". |
+
+You can also give a key when you install: in the **Export key** step of the setup form, or with `--recipient metis-export.pub`. See [Install with the metis CLI](/self-hosting/install/install-with-bootstrap).
+
+### Export the server
+
+On the server, run:
+
+```bash
+sudo metis db export
+```
+
+Without `sudo`, it stops with "on the server, db export changes the install; run it as root: sudo metis db export".
+
+It encrypts the archive to the keys you added. To use other keys for one export, pass `--recipient` once for each key, such as `--recipient metis-export.pub`. These replace the stored keys for that export only. With no stored keys and no `--recipient`, it stops with "this install has no export recipients; add one with sudo metis export recipients add metis-export.pub, or pass `--recipient`".
+
+Before it puts the app in maintenance, it checks the required variables, the encryption key and the free space in the exports folder, as an export from your computer does (see [What it checks first](#what-it-checks-first)). If one of them fails, it stops and the app keeps running. It needs no maintenance check, because it puts the app in maintenance itself. Once the app is in maintenance, it waits up to 5 minutes for running background work to finish. If that wait fails, or any later step fails, the Resend gateway starts again and the app comes out of maintenance. The archive records the release the server runs. If the server runs images that are not a release, it stops with "this install runs images that are not a release, so an export could not name the release to restore it on".
+
+It works in this order, and prints a faint line for each step:
+
+1. It puts the app and the workers in maintenance (`putting the app in maintenance`).
+2. If the Resend gateway runs on this server, it stops the gateway and copies the gateway's database (`copying the Resend gateway's database (its stored messages are not copied)`).
+3. It waits for running background work to finish (`waiting for 2 running workflow runs and 0 ticks to finish`, only if there is any), then copies both databases and encrypts the archive (`copying the app database`, `copying the Mastra database`, `encrypting the archive`).
+4. It starts the Resend gateway again and takes the app out of maintenance (`taking the app out of maintenance`).
+
+While it runs, people see the maintenance page. When it is done, it prints:
+
+```
+Exported /opt/metis-suite/exports/metis-export-20261111T100000Z.tar (48.2 MB) from Metis 1.4.0
+Encrypted to 3f2a9c0d4b1e8a7f6c5d2e1b0a9f8e7d
+Recorded on Dashboard → System → Exports.
+Copy it off this server; an export on the server's own disk does not survive losing that disk.
+```
+
+The line after "Encrypted to" says whether the owner's **Exports** page lists the export. See [What it prints](#what-it-prints) for the other lines it can show.
+
+Copy the archive to another place, such as your computer, or let the CLI upload it to S3 (see [Upload to S3](#upload-to-s3)). Only root can read the exports folder, so copy it with `sudo`. The owner sees every export, and where each archive went, under **Dashboard**, **System**, **Exports**. See [Exports](/self-hosting/operate/owner-dashboard#exports).
+
+On the server, `--app-url`, `--drop-env`, `--force`, `--app-version` and an `--out` folder work only with `--env-file`. Without it, they stop the export with "`--app-url`, `--drop-env`, `--force`, `--app-version` and a local `--out` work only with `--env-file`; on the server the export goes to the install's exports folder, or to `--out s3://bucket/prefix`". With `--env-file`, `metis db export` exports the deployment that file names, as on your computer, and needs no `sudo`.
+
+### Keep the app down for a move
+
+To move the instance to a new server, keep the old one in maintenance after the export, so nobody changes data there:
+
+```bash
+sudo metis db export --keep-down
+```
+
+The app stays in maintenance and the Resend gateway stays stopped. The export also prints "The app stays in maintenance (`--keep-down`). Bring it back with sudo metis apply." To bring the old server back, run `sudo metis apply`.
+
+`--keep-down` works only on the server, without `--env-file`. With `--env-file`, it stops with "`--keep-down` works only on the server, without `--env-file`".
+
+### Restore onto a new server
+
+`metis setup` can install Metis Suite from an export, on a server with no install yet. This restores a backup, or finishes a move to a new server.
+
+<Steps>
+  <Step title="Copy the archive and the key">
+    Copy the archive to the new server. Setup also needs the private key,
+    such as `metis-export.key`. For an archive encrypted to a passphrase
+    key, you need the passphrase instead. Delete the private key from the
+    server once the restore is done.
+  </Step>
+
+  <Step title="Run setup with the archive">
+    Run setup with `--from-export` and `--identity`:
+
+    ```bash
+    sudo metis setup --from-export metis-export-20261111T100000Z.tar --identity metis-export.key
+    ```
+
+    For a passphrase key, pass `--passphrase` instead of `--identity`. It
+    asks for the passphrase, so it needs a terminal. To install the CLI and restore in one step, pass the same flags to the
+    install script, as in
+    [Install without questions](/self-hosting/install/install-with-bootstrap#install-without-questions).
+
+  </Step>
+
+<Step title="Check the form">
+  Setup opens the archive first and prints, for example, "Opened the export of Metis 1.4.0 from
+  2026-11-11T10:00:00Z". Setup takes the owner email from the archive, and the domain from the
+  archive's address, unless you pass `--owner-email` or `--domain`. In the form they are filled in
+  already, and with `--yes` you need not pass them. If the old address was `localhost` or an IP
+  address, the domain is left blank. Choose the components for this server. They are not in the
+  archive.
+</Step>
+
+  <Step title="Wait for it to start">
+    Setup installs the newest release this CLI supports, or the one you
+    name with `--version`. If that release is older than the archive's, it stops with
+    "This export needs Metis 1.4.0 or later; run sudo metis self-update".
+
+    Before the app starts for the first time, setup loads both databases
+    and prints a faint line for each:
+    `loading the app database from the export` and
+    `loading the Mastra database from the export`. It prints no setup code. At the end, it
+    prints, for example, "Sign in at https://mail.example.com with an
+    account from the export."
+
+  </Step>
+</Steps>
+
+The restored server keeps the instance's secrets from the archive, such as `METIS_ENCRYPTION_KEY` and `BETTER_AUTH_SECRET`, and adds its own database settings. People sign in with their usual accounts, and their connections keep working.
+
+To restore into Turso or another sqld, pass the databases as for [Use Turso or your own database server](/self-hosting/install/install-with-bootstrap#use-turso-or-your-own-database-server). Setup loads the archive into them instead. Both must be empty.
+
+At the end, setup can print these notes:
+
+- **When the address changes**, it warns, for example: "BETTER_AUTH_URL changes from https://mail.example.com to http://localhost:3000, so register the Google, Microsoft and Zoho redirect URIs again for the new address, and every MCP client must sign in again." Then do the steps in [Move to a new address](#move-to-a-new-address).
+- **When the archive holds the Resend gateway's database**, it prints "The export holds a Resend gateway's database. Setup does not restore it; metis export decrypt writes it as gateway-resend.sqlite."
+
+If the restore fails once setup starts installing, for example while it loads the databases or runs preflight, setup removes what it made and says "Restoring the export failed, so setup removed what it had made; fix the cause and run setup again". Fix the cause and run the same command again.
+
+Setup does not restore:
+
+- **The components.** Choose them in this setup.
+- **The export keys.** Pass `--recipient` to setup, or add them again with `sudo metis export recipients add`.
+- **The files on Server storage.** No export holds them. Copy them yourself.
+- **The Resend gateway's database and its stored messages.** Set up the gateway again. See [Set up the Resend gateway](/self-hosting/mail-gateways/resend).
+
+### Move the databases off the server
+
+To move a server's two databases to Turso or to a sqld server elsewhere, create two new, empty databases there. Then run:
+
+```bash
+sudo metis db move \
+  --to libsql://metis-new-acme.turso.io \
+  --token your-app-db-token \
+  --mastra-url libsql://metis-new-mastra-acme.turso.io \
+  --mastra-token your-mastra-db-token
+```
+
+It asks **Move both databases?**: "The app goes into maintenance, both databases are copied to libsql://metis-new-acme.turso.io and libsql://metis-new-mastra-acme.turso.io, and the app comes back on them. The current databases are left as they are." Answer **Yes**, or pass `--yes`. If you answer **No**, it stops with "nothing changed".
+
+| Flag             | What it does                                                                                                                          |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `--to`           | The empty app database: its `libsql://` address on Turso, or its `http://`, `https://`, `ws://` or `wss://` address on a sqld server. |
+| `--token`        | Its token. Required.                                                                                                                  |
+| `--mastra-url`   | The empty AI memory database, in the same form.                                                                                       |
+| `--mastra-token` | Its token. Required.                                                                                                                  |
+| `--yes`          | Go ahead without asking.                                                                                                              |
+
+Before it changes anything, it checks the two databases, as [`metis db load` does](#when-loading-stops):
+
+- "`--to`: `"postgres://db"` needs a libsql:// address (Turso) or an http(s):// or ws(s):// address (sqld)"
+- "`--to` and `--mastra-url` must both be Turso (libsql://) or both be sqld (http(s):// or ws(s)://), because the app runs one database driver"
+- "pass `--token` and `--mastra-token`: the app needs a token for each database"
+- "`--to`: the target database is not empty", which names something the database already holds
+
+Then it puts the app in maintenance, copies both databases and prints "Copied both databases". It switches the app to the new databases, runs preflight and starts the app on them. Then it prints "Metis runs on the new databases". If the old databases were on the server's sqld, it also prints one of these:
+
+- "sqld keeps the old copy. Once you are sure, remove it with sudo metis remove sqld `--purge`."
+- "sqld keeps the old copy and still serves the Resend gateway.", when the Resend gateway keeps its database on the server's sqld.
+
+If the copy fails, the app comes out of maintenance and keeps running on the old databases. If a new database is no longer empty, empty it before you try again. If the switch fails after the copy, the error ends ".env already names the new databases; fix the cause, then run sudo metis apply". Fix the cause, then run `sudo metis apply`.
+
+### While an export or a move runs
+
+Only one command changes the server at a time. While an export or a database move runs, other commands that change the server stop at once with "An export is running (started 14:02); the app is in maintenance until it ends. Try again then." or "A database move is running (started 14:02); the app is in maintenance until it ends. Try again then."
+
+Upgrades and undo are refused too, with `metis update` and `metis undo`. The message is "an export is running; try again once it ends" or "a database move is running; try again once it ends". Wait until it ends, then try again.
+
+## Put the app in maintenance
+
+On a server the `metis` CLI runs, skip this section and the next two: `sudo metis db export` handles maintenance itself. See [On a server the metis CLI runs](#on-a-server-the-metis-cli-runs).
+
+An export needs the app in maintenance mode, so that nothing changes the databases while the CLI copies them.
+
+<Steps>
+  <Step title="Set METIS_MAINTENANCE">
+    On your platform, set `METIS_MAINTENANCE` on the app to the time
+    maintenance begins, such as `2026-11-11T09:50:00Z`. If you run a
+    worker, set it there too. See
+    [METIS_MAINTENANCE](/self-hosting/reference/environment-variables#metis_maintenance).
+  </Step>
+
+  <Step title="Redeploy">
+    Redeploy the app, and the worker if you run one. Wait until the
+    redeploy has finished before you export.
+  </Step>
+</Steps>
+
+While the app is in maintenance, people see a maintenance page and nothing is written to the databases.
+
+## Export
+
+For a deployment on a container platform, Vercel or another Node host, run the export on your computer, with the deployment's environment file and your public key:
+
+```bash
+metis db export --env-file production.env --recipient metis-export.pub
+```
+
+The environment file, here `production.env`, has the same variables as the app, one `KEY=value` per line. Blank lines and lines that start with `#` are skipped. If a value is in double or single quotes, the quotes are removed. Inside double quotes, `\n` becomes a line break. Windows line endings are fine. A line that starts with `export`, or any other line that is not `KEY=value`, stops it with, for example, "production.env: line 3 is not KEY=VALUE".
+
+Your computer must be able to reach both databases, with the tokens in the file.
+
+The export reads the databases over the network, so it works only with databases on a sqld server or on Turso. Databases on `METIS_DB_DRIVER=local`, which keeps them in files, cannot be exported.
+
+| Flag            | What it does                                                                                                                                                 |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `--env-file`    | The deployment's environment file. Required.                                                                                                                 |
+| `--recipient`   | A public key to encrypt to, such as `metis-export.pub`. Required. Repeat it for several keys.                                                                |
+| `--out`         | The folder to write the archive into, or an `s3://bucket/prefix` address to upload it to. By default, the current folder. See [Upload to S3](#upload-to-s3). |
+| `--s3-endpoint` | With an `s3://` address: an S3-compatible endpoint instead of AWS.                                                                                           |
+| `--s3-region`   | With an `s3://` address: the bucket's region.                                                                                                                |
+| `--keep-local`  | With an `s3://` address: keep the local archive after the upload.                                                                                            |
+| `--app-url`     | The address to check for maintenance. By default, `BETTER_AUTH_URL` from the file.                                                                           |
+| `--drop-env`    | A variable to leave out of the archive. Repeat it for several variables.                                                                                     |
+| `--force`       | Skip the maintenance check, for an app that is already down. It then needs `--app-version`.                                                                  |
+| `--app-version` | With `--force`: the release the app ran, such as `1.4.0`.                                                                                                    |
+
+### What it checks first
+
+The export checks these, in order, and stops at the first problem:
+
+1. **The required variables.** `DATABASE_URL`, `MASTRA_DATABASE_URL`, `METIS_ENCRYPTION_KEY`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` and `METIS_OWNER_EMAIL` must each have a value. It names every one that is missing or empty, for example: "the environment lacks METIS_ENCRYPTION_KEY, BETTER_AUTH_SECRET; a platform that hides sensitive values on pull needs them added to the file by hand". If you downloaded the file from your platform, check it, and add any value the platform did not give you.
+2. **The database addresses.** `DATABASE_URL` and `MASTRA_DATABASE_URL` must be the addresses of databases on a sqld server or on Turso. Otherwise it stops with, for example, "DATABASE_URL: `"file:./metis.db"` is not a libSQL URL; use the sqld or Turso URL (libsql://, https:// or http://)". For the AI memory database, the message starts with "MASTRA_DATABASE_URL:" instead.
+3. **The encryption key.** It must be the key the instance runs with. Otherwise it stops with "METIS_ENCRYPTION_KEY does not open this database's stored settings, so it is not the key this instance runs with; an export made with it could never be read". A key in the wrong format stops it with "METIS_ENCRYPTION_KEY must be 32 bytes, base64-encoded".
+4. **Maintenance.** It asks the app's address whether it is in maintenance. If not, it stops with "the app is not in maintenance. Set METIS_MAINTENANCE on the app and redeploy, then run this again". If you just redeployed, wait for the redeploy to finish and run it again.
+5. **Free space** in the `--out` folder, or in the current folder when you upload to S3. It needs about twice the size of both databases, plus a margin.
+6. **Running background work.** It waits for work that was running when maintenance began to finish, for up to 5 minutes. If work is still running after that, it stops with "work is still running; a worker on another host may be missing METIS_MAINTENANCE". Set the variable on that worker, redeploy it and run the export again.
+
+None of these checks changes anything.
+
+A variable whose value holds a line break cannot go into the archive. The export stops with, for example, "CERT holds a line break, which an env file cannot carry; drop it with `--drop-env CERT` and set it again after loading". Pass `--drop-env CERT`, and set that variable by hand on the new deployment.
+
+### What it prints
+
+While it works, it prints `copying the app database`, `copying the Mastra database` and `encrypting the archive`. Then:
+
+```
+Exported metis-export-20261111T100000Z.tar (48.2 MB) from Metis 1.4.0
+Encrypted to 3f2a9c0d4b1e8a7f6c5d2e1b0a9f8e7d, a1b2c3d4e5f60718293a4b5c6d7e8f90
+Recorded on Dashboard → System → Exports.
+The app stays in maintenance until you remove METIS_MAINTENANCE and redeploy.
+```
+
+The CLI records every export in the instance, so the owner sees it on the **Exports** page. The line after "Encrypted to" is one of these:
+
+- "Recorded on Dashboard → System → Exports." The owner's **Exports** page lists the export. See [Exports](/self-hosting/operate/owner-dashboard#exports).
+- "This release has no export records, so the dashboard does not list it." The instance runs an older release, which does not keep this list.
+- A warning that starts "The export is not listed on the dashboard: recording it failed:", followed by the reason. The export itself still worked, and the archive is complete.
+
+### After the export
+
+The app stays in maintenance. What you do next depends on why you exported:
+
+- **For a backup**, remove `METIS_MAINTENANCE` from the app and the worker, and redeploy. Keep the archive and your private key in different places.
+- **For a move**, leave the old app in maintenance, so nobody changes data there. Then [load the archive](#load-an-export) into the new databases.
+
+### When the app is already down
+
+If the app no longer runs, for example because the platform stopped it, the maintenance check cannot reach it. Pass `--force` with the release the app ran:
+
+```bash
+metis db export \
+  --env-file production.env \
+  --recipient metis-export.pub \
+  --force \
+  --app-version 1.4.0
+```
+
+Use it only when nothing can write to the databases. `metis export inspect` then shows "Maintenance since not recorded (exported with `--force`)".
+
+## Upload to S3
+
+`--out` also takes an S3 address. The CLI then uploads the archive to a bucket, so the copy is off the machine that made it. This works on a server and from your computer:
+
+```bash
+sudo metis db export --out s3://example-backups/metis
+```
+
+```bash
+metis db export --env-file production.env --recipient metis-export.pub --out s3://example-backups/metis
+```
+
+The CLI builds the archive on the machine first: in `/opt/metis-suite/exports` on a server, and in the current folder from your computer. The free-space check is for that folder. Then it uploads the archive, with the faint line `uploading to s3://example-backups/metis/metis-export-20261111T100000Z.tar`, and deletes the local copy.
+
+`s3://example-backups` puts the file at the top of the bucket. `s3://example-backups/metis` puts it under `metis/`, as `metis/metis-export-20261111T100000Z.tar`.
+
+| Flag            | What it does                                                                                                |
+| --------------- | ----------------------------------------------------------------------------------------------------------- |
+| `--s3-endpoint` | An S3-compatible endpoint instead of AWS, such as `https://storage.example.com`.                            |
+| `--s3-region`   | The bucket's region. By default, the region from your AWS configuration, or `us-east-1` when it names none. |
+| `--keep-local`  | Keep the local archive after the upload.                                                                    |
+
+These three flags work only with an `s3://` address. Otherwise the export stops with "`--s3-endpoint`, `--s3-region` and `--keep-local` work only with `--out s3://bucket/prefix`".
+
+### Credentials
+
+The CLI has no flags for S3 credentials. It finds them the way the AWS tools do: from the environment variables, such as `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_PROFILE`; from the `~/.aws` folder of the user who runs it; from AWS single sign-on; or from the role of a cloud server.
+
+On a server, you run the export with `sudo`. `sudo` usually resets the environment, and `~/.aws` is then root's folder, not yours. So credentials you set up for your own user are often not found. You can:
+
+- Give root its own credentials with `sudo aws configure`.
+- Name a profile from root's AWS configuration on the command line: `sudo AWS_PROFILE=backups metis db export --out s3://example-backups/metis`.
+- Give the server a role that can write to the bucket, if your cloud offers one.
+
+### What an upload prints
+
+The "Exported" line names the `s3://` address:
+
+```
+Exported s3://example-backups/metis/metis-export-20261111T100000Z.tar (48.2 MB) from Metis 1.4.0
+```
+
+With `--keep-local`, the "Exported" line names the local file, and the next line says "Also at s3://example-backups/metis/metis-export-20261111T100000Z.tar". On a server, "Copy it off this server; …" shows only while a local copy remains.
+
+### When the upload stops
+
+| Message                                                                                                                                                            | What to do                                                                                                                                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| "`"s3://"` is not an s3://bucket/prefix address"                                                                                                                   | Name a bucket, such as `s3://example-backups`.                                                                                                                           |
+| "loading AWS credentials: …"                                                                                                                                       | Check your AWS configuration. See [Credentials](#credentials). The CLI keeps the archive, and it is not on the **Exports** page.                                         |
+| "uploading to s3://example-backups/metis/metis-export-20261111T100000Z.tar: …; the archive is still at /opt/metis-suite/exports/metis-export-20261111T100000Z.tar" | The archive is complete, and the CLI kept it. Upload it yourself, or fix the cause and export again. It is not on the **Exports** page. See [Credentials](#credentials). |
+
+## Load an export
+
+Loading puts an archive into two new, empty databases: one for the app and one for the AI memory. For example, create two new databases on Turso. Both must be the same kind: both on Turso, or both on a sqld server. See [Create the databases on Turso](/self-hosting/reference/environment-variables#create-the-databases-on-turso).
+
+<Steps>
+  <Step title="Load the archive">
+    On your computer, run `metis db load` with the archive, your private
+    key and the two new databases:
+
+    ```bash
+    metis db load metis-export-20261111T100000Z.tar \
+      --identity metis-export.key \
+      --database-url libsql://metis-new-acme.turso.io \
+      --database-token your-app-db-token \
+      --mastra-url libsql://metis-new-mastra-acme.turso.io \
+      --mastra-token your-mastra-db-token \
+      --write-env production-new.env
+    ```
+
+    For an archive encrypted to a passphrase key, pass `--passphrase`
+    instead of `--identity`. It asks for the passphrase, so it needs a
+    terminal.
+
+  </Step>
+
+  <Step title="Check the environment">
+    The CLI prints "Loaded both databases". With `--write-env`, it writes
+    the environment to deploy with into `production-new.env`, which only
+    you can read, and prints "Wrote the environment to
+    production-new.env". Without it, it prints the environment.
+
+    The environment is the archive's variables, plus the new database
+    variables: `DATABASE_URL`, `DATABASE_AUTH_TOKEN`,
+    `MASTRA_DATABASE_URL`, `MASTRA_DATABASE_AUTH_TOKEN` and
+    `METIS_DB_DRIVER` (`turso` for `libsql://` addresses, `sqld` for the
+    others). Add any variable you left out with `--drop-env`.
+
+  </Step>
+
+<Step title="Set the environment on the new deployment">
+  Set these variables on the platform that will run the instance.
+</Step>
+
+  <Step title="Run preflight, then deploy">
+    The CLI prints, for example, "Run the preflight of Metis 1.4.0 or newer
+    with this environment, then deploy it." Run that release's preflight
+    with the new environment before the app starts. Then deploy the app,
+    and the worker if you run one.
+    See [Deploy on a container platform](/self-hosting/install/deploy-on-a-container-platform)
+    or [Deploy on Vercel or another Node host](/self-hosting/install/deploy-on-vercel).
+  </Step>
+</Steps>
+
+The loaded instance starts out of maintenance, because `METIS_MAINTENANCE` is not in the archive.
+
+| Flag               | What it does                                                                                                                                    |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--identity`       | The private key file the archive was encrypted to, such as `metis-export.key`.                                                                  |
+| `--passphrase`     | Ask for the passphrase the archive was encrypted to. Use it instead of `--identity`.                                                            |
+| `--database-url`   | The empty app database: its `libsql://` address on Turso, or its `http://`, `https://`, `ws://` or `wss://` address on a sqld server. Required. |
+| `--database-token` | Its token. Required.                                                                                                                            |
+| `--mastra-url`     | The empty AI memory database, in the same form. Required.                                                                                       |
+| `--mastra-token`   | Its token. Required.                                                                                                                            |
+| `--app-url`        | The new deployment's address, when it differs from the old one. See [Move to a new address](#move-to-a-new-address).                            |
+| `--write-env`      | Write the environment to this file instead of printing it. If the file already exists, the command stops.                                       |
+
+### When loading stops
+
+Before it changes anything, the command checks the two databases:
+
+- **Each address must be one the app accepts.** Otherwise it stops with, for example, "`--database-url`: `"postgres://db"` needs a libsql:// address (Turso) or an http(s):// or ws(s):// address (sqld)".
+- **Both must be the same kind.** Otherwise it stops with "`--database-url` and `--mastra-url` must both be Turso (libsql://) or both be sqld (http(s):// or ws(s)://), because the app runs one database driver".
+- **Both tokens are needed.** Otherwise it stops with "pass `--database-token` and `--mastra-token`: the app needs a token for each database".
+- **Both must be empty.** Otherwise it stops with a message such as "`--database-url`: the target database is not empty", which names something the database already holds.
+
+It loads the app database first, then the AI memory database. If loading the AI memory database fails, the app database is already loaded. Empty both databases and run the command again.
+
+Other messages:
+
+| Message                                                                                                                           | What to do                                                                                 |
+| --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| "the key 3f2a9c0d4b1e8a7f6c5d2e1b0a9f8e7d is not a recipient of this export; its recipients are a1b2c3d4e5f60718293a4b5c6d7e8f90" | Use one of the keys the archive lists. [Check the archive](#check-an-archive) to see them. |
+| "this export has no passphrase recipient; pass `--identity` with a private key file"                                              | The archive was not encrypted to a passphrase key. Pass `--identity` with a key file.      |
+| "the passphrase does not open this export"                                                                                        | Check the passphrase and try again.                                                        |
+| A message that ends "so a newer CLI may be needed (run metis self-update)"                                                        | Run `metis self-update` and try again.                                                     |
+
+## Move to a new address
+
+To serve the moved instance at another address, pass the new address with `--app-url` when you load:
+
+```bash
+metis db load metis-export-20261111T100000Z.tar \
+  --identity metis-export.key \
+  --database-url libsql://metis-new-acme.turso.io \
+  --database-token your-app-db-token \
+  --mastra-url libsql://metis-new-mastra-acme.turso.io \
+  --mastra-token your-mastra-db-token \
+  --app-url https://mail.example.org \
+  --write-env production-new.env
+```
+
+The CLI puts the new address in `BETTER_AUTH_URL` and warns, for example: "BETTER_AUTH_URL changes from https://mail.example.com, so register the Google, Microsoft and Zoho redirect URIs again for the new address, and every MCP client must sign in again."
+
+So after the move:
+
+- Register the redirect URI for the new address with each sign-in provider you use. See [Find your redirect URI](/self-hosting/configure/sign-in-providers#find-your-redirect-uri).
+- Sign in again in every MCP client.
+- If you set **Public URL for webhooks and push** under **Dashboard**, **System**, **Workflow runner**, change it to the new address. If you did not set it, every webhook address changes with the address, so update the services that call them.
+
+## Read an archive
+
+### Check an archive
+
+To see what an archive holds and check that it is complete, run:
+
+```bash
+metis export inspect metis-export-20261111T100000Z.tar
+```
+
+It needs no key. It prints:
+
+```
+metis-export-20261111T100000Z.tar
+  Created           2026-11-11T10:00:00Z
+  Metis version     1.4.0
+  Last migration    0009_mail_signatures
+  Source            turso
+  Maintenance since 2026-11-11T09:50:00Z
+  File              app.sqlite.gz.enc (41.7 MB)
+  File              mastra.sqlite.gz.enc (6.5 MB)
+  File              boot.env.gz.enc (1.2 KB)
+  Recipient         3f2a9c0d4b1e8a7f6c5d2e1b0a9f8e7d
+  Recipient         a1b2c3d4e5f60718293a4b5c6d7e8f90 (passphrase)
+```
+
+A recipient marked "(passphrase)" is a passphrase key. Then it prints "All 3 files match their checksums".
+
+An export made on a server that runs the Resend gateway lists a fourth file, `gateway-resend.sqlite.gz.enc`, and ends with "All 4 files match their checksums".
+
+If the archive is damaged, it prints one line for each problem, such as "app.sqlite.gz.enc is missing", and stops with "metis-export-20261111T100000Z.tar is damaged".
+
+### Decrypt an archive
+
+To get the plain files out of an archive, for example to look at the data, run:
+
+```bash
+metis export decrypt metis-export-20261111T100000Z.tar \
+  --identity metis-export.key \
+  --out restored
+```
+
+Pass `--passphrase` instead of `--identity` for a passphrase key. Without `--out`, it writes into the current folder.
+
+It writes these files, which only you can read:
+
+- `app.sqlite`, the app database. It opens in `sqlite3`.
+- `mastra.sqlite`, the AI memory database.
+- `boot.env`, the archived environment.
+- `gateway-resend.sqlite`, the Resend gateway's database, when the archive holds one.
+
+Then it warns "These files are not encrypted; boot.env holds the instance's secrets." Delete them when you are done.
+
+If one of these files already exists in the folder, it stops. If anything fails, it removes what it wrote.
+
+## Limits
+
+- **A passphrase key is only as strong as the passphrase.** Anyone with an archive can try passphrases on their own computer, as often as they like. Use a long one.
+- **Plain copies sit on your disk for a short time.** While an export or a load runs, the CLI keeps unencrypted copies of the databases in a hidden folder that only you can read. For an export, the folder is in the `--out` folder, or in the current folder when you upload to S3. For a load, it is beside the archive. On a server, it is in the install folder, in the exports folder, or beside the install folder for a restore with `metis setup`. The CLI removes it when it finishes. If it crashed, the next run removes it.
+- **On a server, exports sit on the server's own disk**, in `/opt/metis-suite/exports`, unless you upload them to S3. They are lost with that disk. Copy each one somewhere else.
+- **The Exports page lists where each archive was written, not where it is now.** Metis does not check that a file is still there. If you move or delete an archive, the page still shows the old place.
+- **An archive does not list itself.** The CLI records an export right after it finishes the archive and any upload. So an instance restored or loaded from an archive lists the exports made before that one, with the old address after "From".
+- **No export holds** the files on **Server storage**, Caddy's HTTPS certificates, the files under `/opt/metis-suite/env/`, or the messages the Resend gateway stores. Back these up with your own tools. See [Backups](/self-hosting/operate/backups).
+- **Setup does not restore the Resend gateway.** An export from a server holds its database, but `metis setup --from-export` leaves it out. Set the gateway up again on the new server.
+- **Exports are not in the audit log**, because the app is in maintenance while they run.
+- **Webhooks and push messages that arrive during maintenance get the status `503`.** Whether they arrive later depends on the sender trying again.

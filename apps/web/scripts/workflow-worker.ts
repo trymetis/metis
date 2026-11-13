@@ -1,3 +1,4 @@
+import { config } from "@/config";
 import {
   getInstanceConfig,
   loadInstanceConfig,
@@ -13,6 +14,7 @@ const SHUTDOWN_SIGNALS = ["SIGINT", "SIGTERM"] as const;
 let active: WorkflowRunnerDriver | null = null;
 let stopping = false;
 let queue: Promise<void> = Promise.resolve();
+let maintenanceLogged = false;
 
 async function stopActive(): Promise<void> {
   const driver = active;
@@ -29,6 +31,15 @@ async function stopQuietly(): Promise<void> {
 }
 
 async function startIfBullmq(): Promise<void> {
+  const maintenance = config.maintenance.since;
+  if (maintenance instanceof Date) {
+    if (!maintenanceLogged) {
+      console.log(`[workflow-worker] maintenance since ${maintenance.toISOString()}, idle`);
+      maintenanceLogged = true;
+    }
+    return;
+  }
+
   const runner = getInstanceConfig().workflowRunner;
   if (runner.driver !== "bullmq") {
     console.log(

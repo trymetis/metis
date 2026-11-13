@@ -115,6 +115,7 @@
 | [cli.md](agent-docs/cli.md)                           | the `metis` CLI: modes, the install directory, `metis.json` and its lock, the catalog and stack engine, components, forced config, integrations, self-update |
 | [self-host.md](agent-docs/self-host.md)               | where the `metis` CLI, its `bootstrap` shim, each server release's `metis.json` and the gateway zips are published (`sh.trymetis.email`)                     |
 | [updater.md](agent-docs/updater.md)                   | the updater protocol, the Go updater, dashboard updates                                                                                                      |
+| [export.md](agent-docs/export.md)                     | export archives: keys, the `metis-export/v1` format, copying databases over Hrana, `db export`, `db load`, `export decrypt` and `inspect`                    |
 | [lint.md](agent-docs/lint.md)                         | the oxlint rule set, rules turned off or tuned and why, workspace settings, suppression format                                                               |
 | [e2e.md](agent-docs/e2e.md)                           | the e2e black-box rule, the two suites, the fakes, the harness and the model-call recorder                                                                   |
 | [www.md](agent-docs/www.md)                           | the marketing site's metadata, structured data, sitemap, social images and comparison pages                                                                  |

@@ -1,6 +1,7 @@
 import { onError } from "@orpc/server";
 import { RPCHandler } from "@orpc/server/fetch";
 
+import { maintenanceResponse } from "@/maintenance/response";
 import { router } from "@/server/routes";
 
 const handler = new RPCHandler(router, {
@@ -12,6 +13,9 @@ const handler = new RPCHandler(router, {
 });
 
 async function handleRequest(request: Request) {
+  const closed = maintenanceResponse(false, request.url);
+  if (closed) return closed;
+
   const { response } = await handler.handle(request, {
     prefix: "/rpc",
     context: {},

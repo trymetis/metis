@@ -9,11 +9,22 @@ import {
   TWO_FACTOR_CALLBACK_COOKIE,
   TWO_FACTOR_CALLBACK_MAX_AGE,
 } from "@/auth/two-factor-callback";
+import { maintenanceResponse } from "@/maintenance/response";
 
 const NOT_FOUND_ROUTE = "/_not-found";
 const TWO_FACTOR_SETUP_PATH = "/2fa/setup";
 const INVITE_ACCEPT_PATH = "/invite/accept";
 const CONNECT_START_PREFIX = "/api/connections/start/";
+const GUARDED_PATHS = new Set(["/w", "/settings", "/dashboard", INVITE_ACCEPT_PATH]);
+const GUARDED_PREFIXES = ["/w/", "/settings/", "/dashboard/"];
+const UNGUARDED_API =
+  /^\/api\/(?:auth\/|mcp|workflows\/tick|inbound\/|drive\/relay\/|livez|readyz)/;
+
+function protectedPath(pathname: string): boolean {
+  if (GUARDED_PATHS.has(pathname)) return true;
+  if (GUARDED_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return true;
+  return pathname.startsWith("/api/") && !UNGUARDED_API.test(pathname);
+}
 
 function notFound(request: NextRequest) {
   return NextResponse.rewrite(new URL(NOT_FOUND_ROUTE, request.url));
@@ -65,7 +76,14 @@ async function guardDashboard(request: NextRequest) {
 }
 
 export async function proxy(request: NextRequest) {
+  const closed = maintenanceResponse(
+    (request.headers.get("accept") ?? "").includes("text/html"),
+    request.url,
+  );
+  if (closed) return closed;
+
   const { pathname, searchParams } = request.nextUrl;
+  if (!protectedPath(pathname)) return NextResponse.next();
 
   if (pathname.startsWith("/dashboard")) {
     return guardDashboard(request);
@@ -95,11 +113,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/w/:path*",
-    "/settings/:path*",
-    "/dashboard",
-    "/dashboard/:path*",
-    "/invite/accept",
-    "/api/((?!auth/|mcp|workflows/tick|inbound/|drive/relay/|livez|readyz).*)",
+    "/((?!_next/static/|_next/image|favicon.ico|icon.svg|apple-icon.png|api/livez|api/readyz|api/drive/relay/|rpc/).*)",
   ],
 };

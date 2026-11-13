@@ -19,13 +19,29 @@ import (
 )
 
 type fakeBackend struct {
-	mu            sync.Mutex
-	snapshots     bool
-	stored        map[string]bool
-	failPreflight bool
-	failSwitchTo  string
-	notReady      string
-	calls         []string
+	mu                sync.Mutex
+	snapshots         bool
+	stored            map[string]bool
+	failPreflight     bool
+	failSave          bool
+	failMaintenanceOn bool
+	failSwitchTo      string
+	notReady          string
+	maintenance       bool
+	calls             []string
+}
+
+func (backend *fakeBackend) inMaintenance() bool {
+	backend.mu.Lock()
+	defer backend.mu.Unlock()
+	return backend.maintenance
+}
+
+func (backend *fakeBackend) during(call string) string {
+	if backend.inMaintenance() {
+		return call + " (maintenance)"
+	}
+	return call
 }
 
 func (backend *fakeBackend) record(call string) {
@@ -40,7 +56,7 @@ func (backend *fakeBackend) Pull(context.Context, Images) error {
 	return nil
 }
 func (backend *fakeBackend) Preflight(_ context.Context, _ *state.State, images Images) error {
-	backend.record("preflight " + ImagesVersion(images))
+	backend.record(backend.during("preflight " + ImagesVersion(images)))
 	if backend.failPreflight {
 		return errors.New("exit status 1")
 	}
@@ -49,6 +65,9 @@ func (backend *fakeBackend) Preflight(_ context.Context, _ *state.State, images 
 func (backend *fakeBackend) Switch(_ context.Context, lock *state.Lock, images Images) error {
 	target := ImagesVersion(images)
 	backend.record("switch " + target)
+	backend.mu.Lock()
+	backend.maintenance = false
+	backend.mu.Unlock()
 	if target == backend.failSwitchTo {
 		return errors.New("metis-app exited with code 1")
 	}
@@ -58,24 +77,33 @@ func (backend *fakeBackend) Switch(_ context.Context, lock *state.Lock, images I
 	})
 	return err
 }
-func (backend *fakeBackend) StopApp(context.Context) error {
-	backend.record("stop app")
-	return nil
-}
-func (backend *fakeBackend) StartApp(context.Context) error {
-	backend.record("start app")
+func (backend *fakeBackend) Maintenance(_ context.Context, _ *state.State, on bool) error {
+	if on {
+		backend.record("maintenance on")
+	} else {
+		backend.record("maintenance off")
+	}
+	backend.mu.Lock()
+	defer backend.mu.Unlock()
+	backend.maintenance = on
+	if on && backend.failMaintenanceOn {
+		return errors.New("creating metis-worker-2: conflict")
+	}
 	return nil
 }
 func (backend *fakeBackend) StartSqld(context.Context) error { return nil }
 func (backend *fakeBackend) SaveSnapshot(_ context.Context, _ *state.State, name string) error {
-	backend.record("save " + name)
+	backend.record(backend.during("save " + name))
+	if backend.failSave {
+		return errors.New("metis-snapshot exited with code 1")
+	}
 	backend.mu.Lock()
 	defer backend.mu.Unlock()
 	backend.stored[name] = true
 	return nil
 }
 func (backend *fakeBackend) RestoreSnapshot(_ context.Context, _ *state.State, name string) error {
-	backend.record("restore " + name)
+	backend.record(backend.during("restore " + name))
 	return nil
 }
 func (backend *fakeBackend) HasSnapshot(name string) bool {
@@ -174,7 +202,7 @@ func TestUpgradeSucceedsAndCanBeUndoneOnce(t *testing.T) {
 	if last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_SUCCEEDED || last.GetRequestedBy() != "user-1" {
 		t.Fatalf("upgrade %v", last)
 	}
-	if got := strings.Join(backend.calls, ","); got != "pull,stop app,save pending,preflight 1.5.0,switch 1.5.0" {
+	if got := strings.Join(backend.calls, ","); got != "pull,maintenance on,save pending (maintenance),preflight 1.5.0 (maintenance),switch 1.5.0" {
 		t.Fatalf("calls %s", got)
 	}
 	st := load(t, dir)
@@ -194,7 +222,7 @@ func TestUpgradeSucceedsAndCanBeUndoneOnce(t *testing.T) {
 	if last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_SUCCEEDED || last.GetKind() != updaterv1.UpgradeKind_UPGRADE_KIND_ROLLBACK {
 		t.Fatalf("undo %v", last)
 	}
-	if got := strings.Join(backend.calls, ","); got != "pull,stop app,restore current,switch 1.4.0" {
+	if got := strings.Join(backend.calls, ","); got != "pull,maintenance on,restore current (maintenance),switch 1.4.0" {
 		t.Fatalf("undo calls %s", got)
 	}
 	if st := load(t, dir); st.App.Version != "1.4.0" || st.Updater.Previous != nil {
@@ -231,7 +259,7 @@ func TestPreflightFailureWithoutSnapshotsChangesNothing(t *testing.T) {
 		t.Fatal(err)
 	}
 	last := wait(t, manager)
-	if last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_FAILED || last.GetRestored() || strings.Contains(strings.Join(backend.calls, ","), "stop app") {
+	if last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_FAILED || last.GetRestored() || strings.Contains(strings.Join(backend.calls, ","), "maintenance") {
 		t.Fatalf("upgrade %v calls %v", last, backend.calls)
 	}
 	if st := load(t, dir); st.App.Version != "1.4.0" {
@@ -249,7 +277,7 @@ func TestSwitchFailureRestores(t *testing.T) {
 	if last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_FAILED || !last.GetRestored() || !strings.Contains(last.GetError(), "switching") {
 		t.Fatalf("upgrade %v", last)
 	}
-	if got := strings.Join(backend.calls, ","); !strings.HasSuffix(got, "switch 1.5.0,stop app,restore pending,switch 1.4.0") {
+	if got := strings.Join(backend.calls, ","); !strings.HasSuffix(got, "switch 1.5.0,maintenance on,restore pending (maintenance),switch 1.4.0") {
 		t.Fatalf("calls %s", got)
 	}
 	if st := load(t, dir); st.App.Version != "1.4.0" {
@@ -334,4 +362,204 @@ func TestDeadRunningRecordIsMarked(t *testing.T) {
 	if last := manager.Last(); last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_ROLLBACK_FAILED || !strings.Contains(last.GetError(), "stopped while this upgrade was running") {
 		t.Fatalf("last %v", last)
 	}
+}
+
+func TestMaintenanceCoversTheSnapshotUntilTheSwitch(t *testing.T) {
+	backend := &fakeBackend{snapshots: true}
+	manager, _ := setup(t, backend)
+	if _, err := manager.Upgrade(context.Background(), "1.5.0", "", UpgradeOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	if last := wait(t, manager); last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_SUCCEEDED {
+		t.Fatalf("upgrade %v", last)
+	}
+	calls := strings.Join(backend.calls, ",")
+	if !strings.Contains(calls, "save pending (maintenance)") || !strings.Contains(calls, "preflight 1.5.0 (maintenance)") {
+		t.Fatalf("the snapshot or preflight ran outside maintenance: %s", calls)
+	}
+	if backend.inMaintenance() {
+		t.Fatal("the app is still in maintenance after the switch")
+	}
+}
+
+func TestRestoreEndsOutOfMaintenance(t *testing.T) {
+	backend := &fakeBackend{snapshots: true, failPreflight: true}
+	manager, _ := setup(t, backend)
+	if _, err := manager.Upgrade(context.Background(), "1.5.0", "", UpgradeOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	last := wait(t, manager)
+	if last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_FAILED || !last.GetRestored() {
+		t.Fatalf("upgrade %v", last)
+	}
+	if got := strings.Join(backend.calls, ","); !strings.HasSuffix(got, "preflight 1.5.0 (maintenance),maintenance on,restore pending (maintenance),switch 1.4.0") {
+		t.Fatalf("calls %s", got)
+	}
+	if backend.inMaintenance() {
+		t.Fatal("the restored release is still in maintenance")
+	}
+}
+
+func TestFailedSnapshotTakesTheAppOutOfMaintenance(t *testing.T) {
+	backend := &fakeBackend{snapshots: true, failSave: true}
+	manager, dir := setup(t, backend)
+	if _, err := manager.Upgrade(context.Background(), "1.5.0", "", UpgradeOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	last := wait(t, manager)
+	if last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_FAILED || last.GetRestored() || !strings.Contains(last.GetError(), "taking the database snapshot") {
+		t.Fatalf("upgrade %v", last)
+	}
+	if got := strings.Join(backend.calls, ","); got != "pull,maintenance on,save pending (maintenance),maintenance off" {
+		t.Fatalf("calls %s", got)
+	}
+	if backend.inMaintenance() {
+		t.Fatal("the app is still in maintenance")
+	}
+	if st := load(t, dir); st.App.Version != "1.4.0" {
+		t.Fatalf("state %+v", st)
+	}
+}
+
+func TestUndoEndsOutOfMaintenance(t *testing.T) {
+	backend := &fakeBackend{snapshots: true}
+	manager, _ := setup(t, backend)
+	if _, err := manager.Upgrade(context.Background(), "1.5.0", "", UpgradeOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	wait(t, manager)
+	if _, err := manager.Rollback(""); err != nil {
+		t.Fatal(err)
+	}
+	if last := wait(t, manager); last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_SUCCEEDED {
+		t.Fatalf("undo %v", last)
+	}
+	if backend.inMaintenance() {
+		t.Fatal("the app is still in maintenance after the undo")
+	}
+}
+
+func cancellingSetup(t *testing.T, during string) (*Manager, *cancellingBackend, string) {
+	t.Helper()
+	ctx, cancel := context.WithCancel(context.Background())
+	backend := &cancellingBackend{fakeBackend: fakeBackend{snapshots: true, stored: map[string]bool{}}, cancel: cancel, during: during}
+	dir := t.TempDir()
+	st := state.New()
+	st.App = state.App{Version: "1.4.0", Images: ReleaseImages("1.4.0")}
+	st.Components.Sqld = &state.Sqld{}
+	if err := state.Create(dir, st); err != nil {
+		t.Fatal(err)
+	}
+	manager, err := NewManager(ctx, dir, backend, fakeReleases{{Version: "1.5.0"}, {Version: "1.4.0"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return manager, backend, dir
+}
+
+func TestCancellingDuringThePullStopsBeforeAnythingChanged(t *testing.T) {
+	manager, backend, dir := cancellingSetup(t, "pull")
+	if _, err := manager.Upgrade(context.Background(), "1.5.0", "", UpgradeOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	last := wait(t, manager)
+	if last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_FAILED || !strings.Contains(last.GetError(), "stopped before anything changed") {
+		t.Fatalf("upgrade %v", last)
+	}
+	if got := strings.Join(backend.calls, ","); got != "pull" {
+		t.Fatalf("calls %s", got)
+	}
+	if st := load(t, dir); st.App.Version != "1.4.0" {
+		t.Fatalf("state %+v", st)
+	}
+}
+
+func TestCancellingAfterMaintenanceBeginsDoesNotStopTheUpgrade(t *testing.T) {
+	manager, backend, _ := cancellingSetup(t, "maintenance")
+	if _, err := manager.Upgrade(context.Background(), "1.5.0", "", UpgradeOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	if last := wait(t, manager); last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_SUCCEEDED {
+		t.Fatalf("upgrade %v", last)
+	}
+	if backend.inMaintenance() {
+		t.Fatal("the app is still in maintenance")
+	}
+}
+
+type cancellingBackend struct {
+	fakeBackend
+	cancel context.CancelFunc
+	during string
+}
+
+func (backend *cancellingBackend) Pull(ctx context.Context, images Images) error {
+	err := backend.fakeBackend.Pull(ctx, images)
+	if backend.during == "pull" {
+		backend.cancel()
+	}
+	return err
+}
+
+func (backend *cancellingBackend) Maintenance(ctx context.Context, st *state.State, on bool) error {
+	if on && backend.during == "maintenance" {
+		backend.cancel()
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	return backend.fakeBackend.Maintenance(ctx, st, on)
+}
+
+func (backend *cancellingBackend) SaveSnapshot(ctx context.Context, st *state.State, name string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	return backend.fakeBackend.SaveSnapshot(ctx, st, name)
+}
+
+func TestUndoThatCannotEnterMaintenanceLeavesIt(t *testing.T) {
+	backend := &fakeBackend{snapshots: true}
+	manager, dir := setup(t, backend)
+	if _, err := manager.Upgrade(context.Background(), "1.5.0", "", UpgradeOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	wait(t, manager)
+	backend.calls = nil
+	backend.failMaintenanceOn = true
+	if _, err := manager.Rollback(""); err != nil {
+		t.Fatal(err)
+	}
+	last := wait(t, manager)
+	if last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_FAILED || !strings.Contains(last.GetError(), "putting the app in maintenance") {
+		t.Fatalf("undo %v", last)
+	}
+	if got := strings.Join(backend.calls, ","); got != "pull,maintenance on,maintenance off" {
+		t.Fatalf("calls %s", got)
+	}
+	if backend.inMaintenance() {
+		t.Fatal("the app was left in maintenance")
+	}
+	if st := load(t, dir); st.App.Version != "1.5.0" {
+		t.Fatalf("state %+v", st)
+	}
+}
+
+func TestUpgradeIsRefusedWhileAnExportRuns(t *testing.T) {
+	manager, dir := setup(t, &fakeBackend{snapshots: true})
+	held, err := state.Acquire(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := held.Update(func(st *state.State) error {
+		st.Running = &state.Operation{Kind: state.OperationExport, StartedAt: time.Now().UTC().Format(time.RFC3339Nano)}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	_, err = manager.Upgrade(context.Background(), "1.5.0", "", UpgradeOptions{})
+	if connect.CodeOf(err) != connect.CodeAborted || !strings.Contains(err.Error(), "an export is running") {
+		t.Fatalf("upgrade during an export: %v", err)
+	}
+	held.Release()
 }

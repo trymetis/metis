@@ -2,6 +2,7 @@ import type { BrandMark } from "@metis/ui/components/brand-marks";
 import {
   Bot,
   CircleArrowUp,
+  Archive,
   Database,
   HardDrive,
   History,
@@ -26,6 +27,7 @@ export const SYSTEM_INSTANCE_HREF: Route = `${SYSTEM_ROOT}/instance`;
 export const SYSTEM_HISTORY_HREF: Route = `${SYSTEM_ROOT}/history`;
 export const SYSTEM_PREFLIGHT_HREF: Route = `${SYSTEM_ROOT}/preflight`;
 export const SYSTEM_UPDATES_HREF: Route = `${SYSTEM_ROOT}/updates`;
+export const SYSTEM_EXPORTS_HREF: Route = `${SYSTEM_ROOT}/exports`;
 
 export interface SystemDriverNav {
   driver: SystemDriver;
@@ -64,6 +66,14 @@ export const SYSTEM_UPDATES_NAV = {
   label: "Updates",
   description: "The running release, the releases published after it, and moving between them.",
   icon: CircleArrowUp,
+};
+
+export const SYSTEM_EXPORTS_NAV = {
+  href: SYSTEM_EXPORTS_HREF,
+  label: "Exports",
+  description:
+    "Every encrypted export of this instance the metis CLI made, and where it put each archive. Only the owner sees this page.",
+  icon: Archive,
 };
 
 export const SYSTEM_INSTANCE_NAV = {

@@ -16,6 +16,7 @@ These live only in the environment (the `.env` file) or in the optional config f
 - How long the audit log keeps events: `METIS_AUDIT_RETENTION_DAYS`. It cannot be changed in the dashboard.
 - The databases: `METIS_DB_DRIVER`, `DATABASE_URL`, `MASTRA_DATABASE_URL` and their tokens.
 - The drive relay secret: `METIS_DRIVE_RELAY_SECRET`.
+- Maintenance mode: `METIS_MAINTENANCE`. On a server the `metis` CLI runs, upgrades and undo turn maintenance on and off on their own. If you set it with `metis config set`, the app stays in maintenance, through every upgrade and undo, until you run `sudo metis config unset METIS_MAINTENANCE`. See [Maintenance mode](/self-hosting/reference/environment-variables#maintenance-mode).
 
 On a server the `metis` CLI runs, change one with `metis config set`:
 

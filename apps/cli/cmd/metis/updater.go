@@ -11,7 +11,6 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strings"
-	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -159,7 +158,7 @@ func newUpdaterCommand() *cobra.Command {
 
 var stepLabels = map[updaterv1.UpgradeStep]string{
 	updaterv1.UpgradeStep_UPGRADE_STEP_PULL:      "Pulling the images",
-	updaterv1.UpgradeStep_UPGRADE_STEP_SNAPSHOT:  "Stopping the app and snapshotting the database",
+	updaterv1.UpgradeStep_UPGRADE_STEP_SNAPSHOT:  "Putting the app in maintenance and snapshotting the database",
 	updaterv1.UpgradeStep_UPGRADE_STEP_PREFLIGHT: "Running preflight",
 	updaterv1.UpgradeStep_UPGRADE_STEP_SWITCH:    "Switching releases",
 	updaterv1.UpgradeStep_UPGRADE_STEP_READY:     "Waiting for the app to answer",
@@ -174,25 +173,25 @@ func runInProcess(parent context.Context, start func(ctx context.Context, manage
 	cfg.InstallDir = detected.InstallDir
 	ctx, cancel := context.WithCancel(parent)
 	defer cancel()
-	var step atomic.Int32
 	signals := make(chan os.Signal, 2)
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGHUP)
 	defer signal.Stop(signals)
-	go func() {
-		for range signals {
-			if updaterv1.UpgradeStep(step.Load()) == updaterv1.UpgradeStep_UPGRADE_STEP_PULL {
-				ui.Warn("Stopping before anything changed")
-				cancel()
-				continue
-			}
-			ui.Warn("The upgrade continues: stopping now would leave the app down. Follow it with metis status.")
-		}
-	}()
 
 	manager, err := newManager(ctx, cfg, func(format string, args ...any) { ui.Faint("    "+format, args...) })
 	if err != nil {
 		return err
 	}
+	go func() {
+		for range signals {
+			last := manager.Last()
+			if last == nil || last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_RUNNING || last.GetStep() == updaterv1.UpgradeStep_UPGRADE_STEP_PULL {
+				ui.Warn("Stopping before anything changed")
+				cancel()
+				continue
+			}
+			ui.Warn("The upgrade continues and can no longer be stopped. Follow it with metis status.")
+		}
+	}()
 	upgrade, err := start(ctx, manager)
 	if err != nil {
 		var connectErr *connect.Error
@@ -206,7 +205,6 @@ func runInProcess(parent context.Context, start func(ctx context.Context, manage
 	for {
 		last := manager.Last()
 		if last != nil && last.GetId() == upgrade.GetId() {
-			step.Store(int32(last.GetStep()))
 			if last.GetStep() != shown {
 				shown = last.GetStep()
 				ui.Info("  %s", stepLabels[shown])

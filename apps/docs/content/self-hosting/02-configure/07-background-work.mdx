@@ -13,6 +13,8 @@ Some work happens when nobody has a page open: workflows, mail scheduled to send
 
 All three run the same engine on the same database, so schedules, retries and history behave the same way with each.
 
+No background work runs while the instance is in maintenance mode, under any runner. Under `internal` the app does not start it, and a `bullmq` worker stays idle. Work that comes due waits in the database. Webhook requests and push notifications that arrive during maintenance are refused with `503`. See [Maintenance mode](/self-hosting/reference/environment-variables#maintenance-mode).
+
 The same settings page also sets how long workflow run data is kept, and the public address that webhooks and providers use to reach your instance. See [Keep run data](#keep-run-data) and [Webhooks and push](#webhooks-and-push).
 
 ## Change the runner
@@ -63,6 +65,7 @@ curl -fsS -X POST https://mail.example.com/api/workflows/tick \
 | `500`  | The tick failed. The body includes the failure. |
 | `401`  | The secret is wrong or missing.                 |
 | `404`  | The runner is not set to `cron`.                |
+| `503`  | The instance is in maintenance mode.            |
 
 Calling more often than the cadence is harmless and runs ready work sooner. Triggers are still checked at most once per cadence. Each call runs for up to the tick budget. The endpoint allows 60 seconds. Under `cron`, **Tick budget (ms)** is at most 55000.
 

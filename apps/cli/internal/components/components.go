@@ -217,7 +217,7 @@ func (sqldComponent) Remove(_ context.Context, in *Install, opts Options) error 
 		users = append(users, "gateway-resend --database stack")
 	}
 	if len(users) > 0 {
-		return fmt.Errorf("sqld is in use by %s; point them at another database first", strings.Join(users, ", "))
+		return fmt.Errorf("sqld is in use by %s; move the app's databases with sudo metis db move, or point them at another database first", strings.Join(users, ", "))
 	}
 	in.State.Components.Sqld = nil
 	in.Env.Unset("SQLD_AUTH_JWT_KEY")
