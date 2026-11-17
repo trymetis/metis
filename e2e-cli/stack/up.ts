@@ -43,7 +43,11 @@ function composeUp(services: string[]): void {
   const result = spawnSync(
     "docker",
     ["compose", "--env-file", ".env.fixture", "up", "--build", "--wait", ...services],
-    { cwd: SUITE_DIR, stdio: "inherit" },
+    {
+      cwd: SUITE_DIR,
+      stdio: "inherit",
+      env: { ...process.env, BUILDX_NO_DEFAULT_ATTESTATIONS: "1" },
+    },
   );
   if (result.status !== 0) throw new Error("[stack] docker compose up failed");
 }

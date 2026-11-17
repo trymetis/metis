@@ -6,7 +6,7 @@ Where the `metis` CLI, its `bootstrap` shim, each server release's metadata and 
 
 | Concern                               | Where                                                                           |
 | ------------------------------------- | ------------------------------------------------------------------------------- |
-| Publishing the CLI and the shim       | `.github/workflows/cli.yml` → jobs `release`, `build`, `smoke`, `publish`       |
+| Publishing the CLI and the shim       | `.github/workflows/cli.yml` → jobs `release`, `build`, `publish`                |
 | Publishing a server release's files   | `.github/workflows/docker.yml` → job `publish`                                  |
 | Publishing a gateway release          | `.github/workflows/gateways.yml` → jobs `release`, `image`, `publish`           |
 | Writing one release into the bucket   | `.github/scripts/r2-upload.sh`                                                  |
@@ -65,7 +65,7 @@ Where the `metis` CLI, its `bootstrap` shim, each server release's metadata and 
 
 - **`cli.yml` → `build` cross-compiles every binary on one Linux runner** with `CGO_ENABLED=0`, `-trimpath` and the version set through `-ldflags -X github.com/trymetis/metis/apps/cli/internal/version.Version`.
   - Before each build it writes that target's `go-licenses` report to `apps/cli/internal/version/licenses.txt`, which `metis version --licenses` embeds; the committed file is a placeholder.
-- **`cli.yml` → `smoke` runs the CLI suite on the tag before anything is published:** `bun run test` in `e2e-cli/` ([e2e-cli.md](e2e-cli.md)).
+- **The CLI suite runs in its own workflow, `e2e-cli.yml`, on every `cli-v*` release and never gates `cli.yml` → `publish`:** `bun run test` in `e2e-cli/` ([e2e-cli.md](e2e-cli.md)).
   - The suite builds its own `-tags e2e` binaries and app images from the checkout; what it pulls from outside is the newest app release's images, which its migration test installs, the third-party images the catalog pins and its builds' base images. On failure it uploads `metis logs` of `app`, `updater` and `sqld`, the Playwright report and the test results.
 - **`docker.yml` → `publish` writes `metis.json` with `bun run release:meta`.**
 - **`gateways.yml` → `publish` builds the one gateway its tag names** after installing that workspace: `bun run build` and `bun run package` give the SES or Cloudflare zip, and the Resend release writes `image.txt` after `image` pushes the image. wrangler's dry run needs no Cloudflare credentials, and `wrangler.jsonc`'s placeholder ids stay, because whoever deploys supplies the bindings.

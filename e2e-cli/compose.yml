@@ -338,6 +338,9 @@ services:
           - registry-1.docker.io
           - gcr.io
           - registry.localhost
+    volumes:
+      - fakes-sh:/srv/sh
+      - fakes-registry:/var/lib/registry
     mem_limit: 3g
     cpus: 2
     pids_limit: 256
@@ -398,3 +401,7 @@ services:
       - 127.0.0.1:30052:8090
       - 127.0.0.1:30053:5443
       - 127.0.0.1:30054:7681
+
+volumes:
+  fakes-sh:
+  fakes-registry:

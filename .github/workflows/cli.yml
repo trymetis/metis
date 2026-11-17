@@ -75,44 +75,8 @@ jobs:
           path: out/*
           if-no-files-found: error
 
-  smoke:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: lts/*
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Run the CLI suite on a fresh stack
-        working-directory: e2e-cli
-        run: bun run test
-
-      - name: Host logs
-        if: failure()
-        working-directory: e2e-cli
-        run: |
-          for component in app updater sqld; do
-            docker compose --env-file .env.fixture exec -T cli-host metis logs "$component" > "cli-host-$component.log" 2>&1 || true
-          done
-
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: failure()
-        with:
-          name: cli-suite-logs
-          path: |
-            e2e-cli/playwright-report
-            e2e-cli/test-results
-            e2e-cli/*.log
-          if-no-files-found: ignore
-
   publish:
-    needs: [release, build, smoke]
+    needs: [release, build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

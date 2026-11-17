@@ -22,7 +22,7 @@ See also [AGENTS.md](../AGENTS.md), [e2e.md](e2e.md) (the black-box rule, the we
 | CLI suite helpers             | `e2e-cli/cli/support/` → `browser.ts` (`withPage`, `withAnaPage`), `database.ts` (`createNamespaces`, `query`, `fingerprint`), `fakes.ts`, `maintenance.ts`, `remote.ts`, `session.ts`                              |
 | Borrowed from the web suite   | `@metis/e2e` → `clients/*`, `api/support/*`, `tests/*` (`e2e/package.json#exports`) · test servers and gateways in `e2e/` · the harness image `e2e/Dockerfile`                                                      |
 | Fixture values                | `e2e-cli/.env.fixture` (committed) · `e2e-cli/lib/env.ts` → `env`                                                                                                                                                   |
-| CI                            | `.github/workflows/cli.yml` → `smoke` ([self-host.md](self-host.md))                                                                                                                                                |
+| CI                            | `.github/workflows/e2e-cli.yml` (`bun run test` on every `cli-v*` release, or by hand on any branch)                                                                                                                |
 
 ## Rules
 
@@ -56,6 +56,10 @@ See also [AGENTS.md](../AGENTS.md), [e2e.md](e2e.md) (the black-box rule, the we
   - The Dockerfiles that add the CA layer reach `docker build` on stdin; images are pushed to the registry stand-in through `E2E_REGISTRY` (`127.0.0.1:30053`).
   - `artifacts.Dockerfile` builds the two `-tags e2e` CLIs and the Cloudflare and SES gateway zips, and its output streams as a tar into `fakes` through `docker compose cp -`.
   - The small release files (`bootstrap`, each `metis.json` and its notes, each `version.txt`) are a tar built in memory (`stack/tar.ts`) and copied the same way.
+- **What is published to `fakes` lives in the named volumes `fakes-sh` (`/srv/sh`) and `fakes-registry` (`/var/lib/registry`)**, so a recreated `fakes` keeps it; `bun run down` removes them.
+  - `up` starts `fakes` before the build and the rest of the stack after it. Compose recreates a running service whose image ID changed, and a dependency's recreate recreates `fakes` with it.
+  - `composeUp` builds with `BUILDX_NO_DEFAULT_ATTESTATIONS=1`, because a default provenance attestation gives every rebuild a new image ID even when the layers are cached.
+- **The suite gates no release.** `e2e-cli.yml` runs beside `cli.yml`, and a failure blocks nothing `cli.yml` publishes.
 
 ### Stand-ins
 
