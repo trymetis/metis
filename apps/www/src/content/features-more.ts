@@ -424,7 +424,7 @@ export const MORE_AREAS = {
         icon: Palette,
         t: "Workspace branding",
         shot: "teams/branding",
-        d: "Six accent colors and your own logo, applied for everyone. Each person picks light or dark.",
+        d: "Seven built-in themes, your own themes from one accent color, and your logo, applied for everyone. Each person picks light or dark.",
       },
       {
         icon: Keyboard,

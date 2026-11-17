@@ -3,7 +3,12 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 
 import { requireMember, withToolErrors } from "@/mastra/toolkit/resolve";
-import { inviteTarget, memberTarget, themeFields } from "@/mastra/toolkit/schema";
+import {
+  createThemeFields,
+  inviteTarget,
+  memberTarget,
+  themeFields,
+} from "@/mastra/toolkit/schema";
 import * as admin from "@/ops/admin";
 
 import { mcpScopeFromCall } from "../context";
@@ -44,13 +49,34 @@ export const revokeInvite = createTool({
     ),
 });
 
+export const listThemes = createTool({
+  id: "listThemes",
+  description:
+    "List the themes one workspace can use (built-in, the instance's own and the workspace's custom ones) and which one it uses now.",
+  inputSchema: z.object(workspaceTarget),
+  execute: async ({ workspaceId }, { requestContext }) =>
+    withToolErrors(async () =>
+      admin.listThemes(await mcpScopeFromCall(requestContext, workspaceId)),
+    ),
+});
+
 export const setWorkspaceTheme = createTool({
   id: "setWorkspaceTheme",
-  description:
-    "Change a workspace's accent color for everyone in it. Workspace owners and admins only.",
+  description: "Change a workspace's theme for everyone in it. Workspace owners and admins only.",
   inputSchema: inWorkspace(themeFields),
-  execute: async ({ workspaceId, themeBrand }, { requestContext }) =>
+  execute: async ({ workspaceId, themeId }, { requestContext }) =>
     withToolErrors(async () =>
-      admin.setWorkspaceTheme(await mcpScopeFromCall(requestContext, workspaceId), themeBrand),
+      admin.setWorkspaceTheme(await mcpScopeFromCall(requestContext, workspaceId), themeId),
+    ),
+});
+
+export const createWorkspaceTheme = createTool({
+  id: "createWorkspaceTheme",
+  description:
+    "Create a custom theme for a workspace from an accent color, and use it right away unless select is false. Workspace owners and admins only.",
+  inputSchema: inWorkspace(createThemeFields),
+  execute: async ({ workspaceId, ...args }, { requestContext }) =>
+    withToolErrors(async () =>
+      admin.createWorkspaceTheme(await mcpScopeFromCall(requestContext, workspaceId), args),
     ),
 });

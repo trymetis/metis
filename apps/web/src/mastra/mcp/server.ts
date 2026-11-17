@@ -27,7 +27,14 @@ import {
   sendEmail,
   starEmail,
 } from "./tools/actions";
-import { listInvites, removeMember, revokeInvite, setWorkspaceTheme } from "./tools/admin";
+import {
+  createWorkspaceTheme,
+  listInvites,
+  listThemes,
+  removeMember,
+  revokeInvite,
+  setWorkspaceTheme,
+} from "./tools/admin";
 import {
   createEvent,
   deleteEvent,
@@ -256,6 +263,8 @@ const MCP_TOOLS = {
   listInvites,
   removeMember,
   revokeInvite,
+  listThemes,
+  createWorkspaceTheme,
   setWorkspaceTheme,
   listSignatures,
   saveSignature,

@@ -22,15 +22,16 @@ import {
   userPrefs,
   workflow,
   workflowRevision,
+  theme,
   workspace,
   workspaceMember,
 } from "@/db/schema";
 import { assistantThreadTitle, exportAssistantThreads } from "@/mastra/memory";
 import type { DataExport } from "@/server/schema";
+import { defaultSystemTheme } from "@/theme/system";
 import type { WorkflowGraph } from "@/workflow/schema";
 import { RESOURCE_KINDS, type ResourceKind } from "@/workflow/steps";
 import { graphResourceIds } from "@/workflow/validation";
-import { workspaceThemeBrand } from "@/workspace";
 
 const NOTICE =
   "This file holds what Metis Suite stores for your account: preferences, workspaces, signatures, labels, workflows, Workspace Assistant chats and security activity. It is not a mailbox archive. Mail, calendar events, files and contacts stay with the provider you connected; export those from the provider.";
@@ -62,12 +63,13 @@ async function loadMemberships(userId: string) {
       slug: workspace.slug,
       aiPolicy: workspace.aiPolicy,
       phishingDetectionPolicy: workspace.phishingDetectionPolicy,
-      branding: workspace.branding,
+      themeName: theme.name,
       role: workspaceMember.role,
       joinedAt: workspaceMember.joinedAt,
     })
     .from(workspaceMember)
     .innerJoin(workspace, eq(workspace.id, workspaceMember.workspaceId))
+    .leftJoin(theme, eq(theme.id, workspace.themeId))
     .where(eq(workspaceMember.userId, userId))
     .orderBy(asc(workspaceMember.joinedAt));
 }
@@ -390,7 +392,7 @@ export async function buildDataExport(userId: string): Promise<DataExport> {
 
   return {
     format: "metis-suite-export",
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     notice: NOTICE,
     account: {
@@ -420,7 +422,7 @@ export async function buildDataExport(userId: string): Promise<DataExport> {
       joinedAt: iso(m.joinedAt),
       aiPolicy: m.aiPolicy,
       phishingDetectionPolicy: m.phishingDetectionPolicy,
-      themeBrand: workspaceThemeBrand(m.branding ?? null),
+      theme: m.themeName ?? defaultSystemTheme().name,
       mailboxes: (mailboxesBy.get(m.id) ?? []).map(({ workspaceId: _, ...link }) => link),
       calendars: (calendarsBy.get(m.id) ?? []).map(({ workspaceId: _, ...link }) => link),
       drives: (drivesBy.get(m.id) ?? []).map(({ workspaceId: _, ...link }) => link),

@@ -3,7 +3,7 @@ title: About workspaces
 description: What a workspace is, and how it uses the mailboxes, calendars, drives and address books you connect.
 ---
 
-A workspace is a shared space with its own members, its own look and its own rules for AI. You might keep one workspace for yourself and another for your team. Each workspace has the same sections in the left rail: **Inbox**, **Calendar**, **Drive**, **Contacts** and **Workflows**, plus **Workspace AI** when your instance has AI set up.
+A workspace is a shared space with its own members, its own look and its own rules for AI. You might keep one workspace for yourself and another for your team. Each workspace has the same sections in the left rail: **Mail**, **Calendar**, **Drive**, **Contacts** and **Workflows**, plus **Workspace AI** when your instance has AI set up.
 
 ## Your accounts belong to you
 

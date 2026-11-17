@@ -8,10 +8,10 @@ import { headers } from "next/headers";
 
 import "@/styles/globals.css";
 import { PlatformPolicyProvider } from "@/components/platform-policy-context";
-import { resolveThemeBrand } from "@/theme/resolve";
+import { themeStyleHref } from "@/theme/active";
+import { resolveActiveTheme } from "@/theme/resolve";
 import { platformPolicy } from "@/workspace/policy";
 
-import { BrandSync } from "./_components/brand-sync";
 import { QueryProvider } from "./_components/query-provider";
 import { ThemeProvider } from "./_components/theme-provider";
 
@@ -55,20 +55,24 @@ export async function generateViewport(): Promise<Viewport> {
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const themeBrand = await resolveThemeBrand();
+  const theme = await resolveActiveTheme();
 
   return (
     <html
       lang="en"
-      data-brand={themeBrand}
+      data-brand={theme?.id}
       suppressHydrationWarning
       className={cn(dmSans.variable, cormorant.variable, dmMono.variable, "font-sans antialiased")}
     >
       <body>
+        {theme && (
+          <style href={themeStyleHref(theme)} precedence="metis-theme">
+            {theme.css}
+          </style>
+        )}
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <QueryProvider>
             <PlatformPolicyProvider policy={platformPolicy()}>
-              <BrandSync />
               {children}
               <Toaster position="bottom-center" richColors />
             </PlatformPolicyProvider>

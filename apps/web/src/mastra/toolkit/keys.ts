@@ -88,6 +88,8 @@ export const TOOL_KEYS = [
   "removeMember",
   "revokeInvite",
   "setWorkspaceTheme",
+  "listThemes",
+  "createWorkspaceTheme",
   "listSignatures",
   "saveSignature",
   "deleteSignature",
@@ -137,6 +139,7 @@ export const READ_TOOL_KEYS = [
   "getDriveQuota",
   "previewDecision",
   "listInvites",
+  "listThemes",
   "listSignatures",
 ] as const satisfies readonly ToolKey[];
 
@@ -187,6 +190,7 @@ export const WRITE_TOOL_KEYS = [
   "removeMember",
   "revokeInvite",
   "setWorkspaceTheme",
+  "createWorkspaceTheme",
   "createContact",
   "updateContact",
   "deleteContact",

@@ -41,7 +41,7 @@ These apply to everyone in the workspace.
 
 | Setting                                               | Who can change it                                                                                                 |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| The workspace's color and logo                        | Owners and admins                                                                                                 |
+| The workspace's theme and logo                        | Owners and admins                                                                                                 |
 | The AI and phishing detection rules for the workspace | Owners and admins                                                                                                 |
 | Which calendars of an account the workspace shows     | Owners, admins, and the person who connected the account                                                          |
 | Which drive folders the workspace shows               | Owners, admins, and the person who connected the drive                                                            |

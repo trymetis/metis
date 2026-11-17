@@ -1132,6 +1132,25 @@ const READS: Case[] = [
       expect(out.count).toBe(out.invites.length);
     },
   },
+  {
+    tool: "listThemes",
+    run: async (s, c) => {
+      const out = await s.ok<{
+        selectedThemeId: string;
+        themes: { themeId: string; name: string; source: string }[];
+      }>("listThemes", ws(c));
+      expect(out.themes.filter((t) => t.source === "system").map((t) => t.name)).toEqual([
+        "Amber",
+        "Blue",
+        "Violet",
+        "Emerald",
+        "Rose",
+        "Slate",
+        "Graphite",
+      ]);
+      expect(out.themes.map((t) => t.themeId)).toContain(out.selectedThemeId);
+    },
+  },
 ];
 
 const MAIL: Case[] = [
@@ -2398,13 +2417,49 @@ const ACCOUNT: Case[] = [
   {
     tool: "setWorkspaceTheme",
     run: async (s, c) => {
+      const { themes } = await s.ok<{ themes: { themeId: string; name: string }[] }>(
+        "listThemes",
+        ws(c),
+      );
+      const id = (name: string) => themes.find((t) => t.name === name)?.themeId ?? "";
       try {
-        expect(await s.ok("setWorkspaceTheme", { ...ws(c), themeBrand: "violet" })).toMatchObject({
+        expect(await s.ok("setWorkspaceTheme", { ...ws(c), themeId: id("Violet") })).toMatchObject({
           updated: true,
-          themeBrand: "violet",
+          themeId: id("Violet"),
+          name: "Violet",
         });
+        expect(await s.refused("setWorkspaceTheme", { ...ws(c), themeId: "no-such-theme" })).toBe(
+          "That theme is not available to this workspace",
+        );
       } finally {
-        await s.ok("setWorkspaceTheme", { ...ws(c), themeBrand: "blue" });
+        await s.ok("setWorkspaceTheme", { ...ws(c), themeId: id("Blue") });
+      }
+    },
+  },
+  {
+    tool: "createWorkspaceTheme",
+    run: async (s, c) => {
+      const name = uniqueName();
+      const out = await s.ok<{ created: true; themeId: string; name: string; selected: boolean }>(
+        "createWorkspaceTheme",
+        { ...ws(c), name, accent: "#0D9488", tint: "strong", select: false },
+      );
+      try {
+        expect(out).toMatchObject({ created: true, name, selected: false });
+        const { selectedThemeId, themes } = await s.ok<{
+          selectedThemeId: string;
+          themes: { themeId: string; name: string; source: string }[];
+        }>("listThemes", ws(c));
+        expect(themes).toContainEqual({ themeId: out.themeId, name, source: "workspace" });
+        expect(selectedThemeId).not.toBe(out.themeId);
+        expect(await s.refused("createWorkspaceTheme", { ...ws(c), name, accent: "#0d9488" })).toBe(
+          "A theme with that name already exists",
+        );
+      } finally {
+        await c.rpc("workspaceThemes.delete", {
+          workspaceSlug: c.account.workspaceSlug,
+          themeId: out.themeId,
+        });
       }
     },
   },

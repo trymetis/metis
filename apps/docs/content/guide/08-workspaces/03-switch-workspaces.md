@@ -11,7 +11,7 @@ From top to bottom, the rail shows:
 
 1. **Workspace settings**, a gear icon. Click it to open the current workspace's **General** settings page. The list on the left of that page, headed **Workspace**, has the other settings pages: **Members**, **Mailboxes**, **Signatures**, **Calendars**, **Drives** and **Contacts**. Owners and admins of the workspace also see **Activity**, below **Contacts**. See [Workspace activity](/guide/workspaces/workspace-activity).
 2. **Search**. See [Search](/guide/search).
-3. **Inbox**, **Calendar**, **Drive** and **Contacts**.
+3. **Mail**, **Calendar**, **Drive** and **Contacts**.
 4. **Workspace AI**, when your instance has AI set up.
 5. **Workflows**.
 6. **Your workspace tiles**, one for each workspace you belong to. The current workspace is highlighted and has a bar on its left.
@@ -59,7 +59,7 @@ Click your initials at the bottom of the rail to open the account menu. It shows
 
 - **Account**, **Privacy**, **Workspaces**, **Connections**, **Mailboxes**, **Calendars**, **Drives**, **Address books**, **MCP clients** and **Security**, the pages of your account settings. Click one to go straight to it. **MCP clients** shows only when your instance has AI set up.
 - **Dashboard**, only for the instance owner, instance admins and instance observers.
-- **Dark mode** or **Light mode**, to switch the theme for yourself.
+- **Dark mode** or **Light mode**, to switch between light and dark mode for yourself.
 - **Sign out**.
 
 In the desktop and mobile apps, **App settings** appears right after **Security**.

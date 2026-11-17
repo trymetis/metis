@@ -3,6 +3,7 @@ import {
   ChartNoAxesColumn,
   History,
   LayoutDashboard,
+  Palette,
   Plug,
   Settings2,
   UserRound,
@@ -45,6 +46,7 @@ export function dashboardNav(opts: { updatesEnabled: boolean; owner: boolean }):
     { href: "/dashboard/workspaces", label: "Workspaces", icon: Users },
     { href: "/dashboard/automation", label: "Automation", icon: Workflow },
     { href: "/dashboard/mcp", label: "MCP clients", icon: Plug },
+    { href: "/dashboard/themes", label: "Themes", icon: Palette },
     { href: "/dashboard/audit", label: "Audit log", icon: History },
     {
       href: SYSTEM_ROOT,

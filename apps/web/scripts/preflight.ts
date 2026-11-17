@@ -17,6 +17,7 @@ import { recordPreflightRun } from "@/dashboard/preflight";
 import { checkLlm } from "@/dashboard/system-checks";
 import { db } from "@/db";
 import { migrateDatabase } from "@/db/migrations";
+import { ensureSystemThemes } from "@/theme/store";
 import type { PreflightWarning, PreflightWarningKind } from "@/types/preflight";
 import { ensureSystemWorkflows } from "@/workflow/builtins/system";
 
@@ -92,6 +93,15 @@ if (!ownerRole.owner) console.log("[preflight] the owner account is not set up y
 
 await ensureSystemWorkflows();
 console.log("[preflight] system workflows up to date");
+
+const themes = await ensureSystemThemes();
+for (const [verb, keys] of [
+  ["added", themes.added],
+  ["updated", themes.updated],
+  ["removed", themes.removed],
+] as const) {
+  if (keys.length > 0) console.log(`[preflight] ${verb} system themes ${keys.join(", ")}`);
+}
 
 const instance = await loadInstanceConfig();
 

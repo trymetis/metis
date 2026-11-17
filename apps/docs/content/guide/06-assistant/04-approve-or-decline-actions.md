@@ -91,7 +91,8 @@ The Workspace Assistant asks before every action in this table. The side panels 
 | Workflows | Retry a run                      | Asks to retry the failed steps, and notes that completed steps won't run again                                                                                                             |
 | Workspace | Remove a member                  | Asks to remove the member, and warns that "their mailboxes, calendars, drives and address books leave the workspace"                                                                       |
 | Workspace | Revoke an invitation             | "Approve revoking this workspace invite"                                                                                                                                                   |
-| Workspace | Change the accent color          | "Approve changing the workspace accent color to blue for everyone"                                                                                                                         |
+| Workspace | Change the theme                 | "Approve changing the workspace theme for everyone"                                                                                                                                        |
+| Workspace | Create a theme                   | "Approve creating the theme "Teal" and using it for everyone in the workspace" or, when you ask it not to use the theme, "Approve creating the theme "Teal" for the workspace"             |
 
 The names, addresses and numbers in the table are examples. Your approval shows the real ones. The workspace actions are only available to workspace owners and admins.
 

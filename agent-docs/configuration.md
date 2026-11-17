@@ -99,7 +99,7 @@ See also [AGENTS.md](../AGENTS.md), [servers.md](servers.md), [database.md](data
   - The proxy matcher leaves them out because Next buffers the body of every request the proxy sees and cuts it at 10 MB (`proxyClientMaxBodySize`), which would truncate compose attachments and relay uploads.
 - **Background work stays off.** `src/instrumentation.ts` skips the `internal` runner and keeps the instance config poll, which only reads; `scripts/workflow-worker.ts` logs `[workflow-worker] maintenance since …, idle` once and takes no ticks; the `cron` route gets the proxy's 503 ([workflow-runtime.md](workflow-runtime.md)).
 - **The maintenance page is an ordinary page under the root layout**, with the app's fonts, styles, theme and `MetisMark`, and the source link from `(standalone)`.
-  - `resolveThemeBrand` returns the default brand in maintenance, so the root layout reads no session and no database; the client's session check gets the JSON 503 and falls back to the default brand.
+  - `resolveActiveTheme` returns no theme in maintenance, so the root layout reads no session and no database and the page renders the neutral palette ([ui.md](ui.md)).
   - `/maintenance` calls `notFound()` outside maintenance.
 - **On a server the `metis` CLI manages, the app is never stopped while visitors can reach it.** The CLI recreates the app and workers with `METIS_MAINTENANCE` in their container environment, never in `.env` ([cli.md](cli.md), [updater.md](updater.md)).
 

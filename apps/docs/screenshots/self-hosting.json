@@ -9,6 +9,14 @@
     ]
   },
   {
+    "name": "self-hosting/dashboard-themes",
+    "path": "/dashboard/themes",
+    "steps": [
+      { "waitFor": "role=heading[level=1][name=\"Themes\"]" },
+      { "waitFor": "main >> role=heading[level=2][name=\"Built in\"]" }
+    ]
+  },
+  {
     "name": "self-hosting/dashboard-accounts",
     "path": "/dashboard/accounts",
     "steps": [

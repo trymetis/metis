@@ -76,8 +76,7 @@
   --radius: 0.5rem;
 }
 
-:root,
-.theme-neutral {
+:root {
   --background: var(--bg-base);
   --foreground: var(--text-primary);
   --card: var(--bg-surface);

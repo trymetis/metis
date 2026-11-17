@@ -12,7 +12,9 @@ const { seedExportRecords } = await import("./export-records");
 const { seedWorkflows } = await import("./workflows");
 const { seedMcpClients } = await import("./mcp");
 const { writeSeed } = await import("./write");
+const { ensureSystemThemes } = await import("../../../src/theme/store");
 
+await ensureSystemThemes();
 const account = await createAccount();
 const member = await createMember();
 const resources = await connectResources(account);

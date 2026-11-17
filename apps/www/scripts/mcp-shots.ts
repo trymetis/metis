@@ -218,6 +218,10 @@ async function rpc(ctx: BrowserContext, path: string, json?: unknown): Promise<u
 
 const mcpClientsSchema = z.array(z.object({ clientId: z.string(), label: z.string() }));
 
+const themesSchema = z.object({
+  themes: z.array(z.object({ id: z.string(), name: z.string(), source: z.string() })),
+});
+
 async function signIn(browser: Browser) {
   const account = accountSchema.parse(await (await harness("/account")).json());
   const ctx = await browser.newContext({
@@ -245,9 +249,14 @@ async function signIn(browser: Browser) {
   } finally {
     await page.close();
   }
-  await rpc(ctx, "workspaces/setThemeBrand", {
+  const { themes } = themesSchema.parse(
+    await rpc(ctx, "workspaceThemes/list", { workspaceSlug: account.workspaceSlug }),
+  );
+  const amber = themes.find((t) => t.source === "system" && t.name === "Amber");
+  if (!amber) throw new Error("no Amber theme");
+  await rpc(ctx, "workspaceThemes/select", {
     workspaceSlug: account.workspaceSlug,
-    themeBrand: "amber",
+    themeId: amber.id,
   });
   return ctx;
 }

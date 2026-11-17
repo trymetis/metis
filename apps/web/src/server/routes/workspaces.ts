@@ -34,7 +34,7 @@ import {
   resolveDefaultWorkspaceSlug,
   transferOwnership,
 } from "@/workspace";
-import { type AdminRefusal, removeWorkspaceMember, setWorkspaceTheme } from "@/workspace/admin";
+import { type AdminRefusal, removeWorkspaceMember } from "@/workspace/admin";
 import { platformPolicy } from "@/workspace/policy";
 
 import { appSession } from "../middlewares/app-session";
@@ -54,7 +54,6 @@ import {
   okSchema,
   removeMemberInputSchema,
   revokeInviteInputSchema,
-  setThemeBrandInputSchema,
   setWorkspaceLogoInputSchema,
   setWorkspaceLogoOutputSchema,
   setWorkspacePolicyInputSchema,
@@ -214,18 +213,6 @@ export const workspacesRouter = {
 
       await db.update(workspace).set(patch).where(eq(workspace.id, workspaceId));
 
-      return { ok: true as const };
-    }),
-
-  setThemeBrand: workspaceSession(setThemeBrandInputSchema)
-    .output(okSchema)
-    .handler(async ({ input, context }) => {
-      const result = await setWorkspaceTheme({
-        workspaceId: context.appUser.workspaceId,
-        actorRole: context.appUser.workspaceRole,
-        themeBrand: input.themeBrand,
-      });
-      if ("error" in result) refused(result);
       return { ok: true as const };
     }),
 

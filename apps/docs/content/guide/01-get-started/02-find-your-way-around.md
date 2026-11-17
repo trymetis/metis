@@ -27,7 +27,7 @@ Below the gear are the parts of Metis Suite you use every day:
 | Icon             | What it opens                                                                                                                                                                                         |
 | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Search**       | Search across the whole workspace: mail, events, files, chats, people and contacts, commands and settings. You can also press **Ctrl** + **K** (**⌘** + **K** on a Mac). See [Search](/guide/search). |
-| **Inbox**        | Your mail. See [Mail](/guide/mail).                                                                                                                                                                   |
+| **Mail**         | Your mail. See [Mail](/guide/mail).                                                                                                                                                                   |
 | **Calendar**     | Your calendars and events. See [Calendar](/guide/calendar).                                                                                                                                           |
 | **Drive**        | Your files. See [Drive](/guide/drive).                                                                                                                                                                |
 | **Contacts**     | The people in your address books. See [Contacts](/guide/contacts).                                                                                                                                    |
@@ -54,7 +54,7 @@ The top of the menu shows your name and email address. Below that, the menu list
 | **Account**, **Privacy**, **Workspaces**, **Connections**, **Mailboxes**, **Calendars**, **Drives**, **Address books**, **MCP clients**, **Security** | Open that page of your account settings. **MCP clients** shows only when your instance has AI turned on.                                                               |
 | **App settings**                                                                                                                                      | Opens the settings of the desktop or mobile app. It comes right after **Security**, and you see it only inside those apps. See [Desktop and mobile apps](/guide/apps). |
 | **Dashboard**                                                                                                                                         | Opens the instance dashboard. You see it only if you are the instance owner, an instance admin or an instance observer.                                                |
-| **Dark mode** or **Light mode**                                                                                                                       | Switches the color theme.                                                                                                                                              |
+| **Dark mode** or **Light mode**                                                                                                                       | Switches between light and dark mode.                                                                                                                                  |
 | **Sign out**                                                                                                                                          | Signs you out of this browser.                                                                                                                                         |
 
 ### The source code link
@@ -69,7 +69,7 @@ Your choice is remembered in the browser you used. Another browser or device sta
 
 The screenshots in these docs use light mode, so your screen may look darker than the pictures.
 
-The accent color of a workspace is a workspace setting. See [Workspaces](/guide/workspaces).
+Each workspace has its own theme, which shows only on that workspace's pages. Your account settings and the other pages outside a workspace use the neutral theme, with no workspace color. See [Logo and theme](/guide/workspaces/appearance).
 
 ## Settings
 

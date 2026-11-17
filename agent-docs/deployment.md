@@ -111,6 +111,7 @@ See also [AGENTS.md](../AGENTS.md), [cli.md](cli.md), [updater.md](updater.md), 
   - applies pending migrations, creating the schema of an empty database from `0000_baseline` ([database.md](database.md));
   - seeds the stored config when the table is empty, else warns where the environment differs ([configuration.md](configuration.md));
   - creates or revises the system workflows (`ensureSystemWorkflows`, [workflow-graph.md](workflow-graph.md)), so ticks only run work;
+  - adds, revises or removes the built-in themes (`ensureSystemThemes`, [ui.md](ui.md));
   - probes every server and OAuth client in the stored config (`verifyConnectServers`, [servers.md](servers.md));
   - checks the decision model when a decision feature is on;
   - runs `backfillServerIds` and `reconcileQuarantine` ([connections.md](connections.md));

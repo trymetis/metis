@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { instanceRoleOf } from "@/auth/instance-role";
-import { getAppUser } from "@/auth/session";
+import { getAppUser, getWorkspaceMembership } from "@/auth/session";
 import { AppRail } from "@/components/app-rail";
 import { ConnectServersProvider } from "@/components/connect-servers-context";
 import { MobileAsideProvider } from "@/components/mobile-aside";
@@ -15,23 +15,27 @@ import { getWorkspacePolicy } from "@/workspace";
 import { workspaceRootPath } from "@/workspace/path";
 import { workspaceAllowsAi } from "@/workspace/policy";
 
+import { WorkspaceBrand } from "./_components/workspace-brand";
+
 export default async function WorkspaceLayout({ children, params }: LayoutProps<"/w/[slug]">) {
   const { slug } = await params;
   const h = await headers();
   const appUser = await getAppUser(h, slug);
   if (!appUser) redirect("/");
-  if (!appUser.workspaceId) redirect(workspaceRootPath());
+  const membership = await getWorkspaceMembership(appUser.userId, slug);
+  if (!membership) redirect(workspaceRootPath());
 
-  const policy = await getWorkspacePolicy(appUser.workspaceId);
+  const policy = await getWorkspacePolicy(membership.id);
   const hasDashboard =
     (await instanceRoleOf({ id: appUser.userId, email: appUser.user.email })) !== null;
 
   return (
     <WorkspaceScopeProvider workspaceSlug={slug}>
+      <WorkspaceBrand theme={membership.theme} />
       <WorkspaceAccessProvider
         access={{
           workspaceAi: policy ? workspaceAllowsAi(policy) : false,
-          role: appUser.workspaceRole ?? "member",
+          role: membership.role,
           userId: appUser.userId,
           hasDashboard,
         }}

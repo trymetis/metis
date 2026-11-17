@@ -39,6 +39,9 @@ How `apps/www` (the marketing site at www.trymetis.email) gets its page metadata
 - **Every competitor cell carries the vendor's own source.** A cell with no confirmable fact says "Not documented".
 - **`checked` is the date a competitor entry was verified.** Re-check the whole entry, sources included, before changing it.
 - **The Exhibit's `headline` is the page's H1** and carries the search category (email client, calendar, MCP server…); the large display lines are visual and `aria-hidden`.
+- **Social images read their fonts from `assets/fonts/`, never the network.**
+  - Satori takes TTF, OTF or WOFF, not WOFF2, so the files are the static latin `.woff` builds from `@fontsource/*`, one per weight the image uses, each with a `NOTICE` entry.
+  - Every OG image renders at build time; fetching fonts from Google per image failed builds when an HTML error page came back in place of a font.
 - **The `DOCS` list in `llms.txt/route.ts` names docs-site paths by hand**, so a moved or renamed docs page updates it in the same change.
 - **`apps/www/oxlint.config.mts` turns two rules off, each for one path.**
   - `react/immutability` is off for `src/components/exhibit/models/**`: the models build three.js objects in `useMemo` and mutate them in `useFrame`, which is how react-three-fiber animates.

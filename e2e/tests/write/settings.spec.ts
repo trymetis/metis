@@ -56,7 +56,7 @@ export default function settingsSpecs() {
     await expect(sidebar.getByRole("checkbox", { name: "Show Bulk" })).toBeVisible();
   });
 
-  test("create a workspace, switch with Alt+number, change the brand and restore it", async ({
+  test("create a workspace, switch with Alt+number, change the theme and restore it", async ({
     page,
     rpc,
     account,
@@ -98,14 +98,21 @@ export default function settingsSpecs() {
       const blue = main.getByRole("button", { name: "Blue", exact: true });
       const violet = main.getByRole("button", { name: "Violet", exact: true });
       await expect(blue).toHaveAttribute("aria-pressed", "true");
-      const brandSaved = () => page.waitForResponse("**/rpc/workspaces/setThemeBrand");
+      const html = page.locator("html");
+      const blueBrand = await html.getAttribute("data-brand");
+      expect(blueBrand).toBeTruthy();
+      const brandSaved = () => page.waitForResponse("**/rpc/workspaceThemes/select");
       const toViolet = brandSaved();
       await violet.click();
+      expect((await toViolet).ok()).toBe(true);
       await expect(violet).toHaveAttribute("aria-pressed", "true");
       await expect(blue).toHaveAttribute("aria-pressed", "false");
-      expect((await toViolet).ok()).toBe(true);
+      await expect(html).not.toHaveAttribute("data-brand", blueBrand ?? "");
       await page.reload();
       await expect(violet).toHaveAttribute("aria-pressed", "true");
+      await page.goto("/settings/account");
+      await expect(html).not.toHaveAttribute("data-brand", /.+/);
+      await page.goto(workspacePath(account, "/settings/general"));
       const toBlue = brandSaved();
       await blue.click();
       await expect(blue).toHaveAttribute("aria-pressed", "true");
@@ -115,6 +122,90 @@ export default function settingsSpecs() {
         workspaceSlug: created?.slug,
         code: await harness.totp(),
       });
+    }
+  });
+
+  test("a custom theme is built, used, edited and deleted from the workspace settings", async ({
+    page,
+    rpc,
+    account,
+  }, testInfo) => {
+    const name = uniqueName(testInfo);
+    const renamed = `${name} renamed`;
+    const main = page.getByRole("main");
+    const html = page.locator("html");
+    await page.goto(workspacePath(account, "/settings/general"));
+    const blue = main.getByRole("button", { name: "Blue", exact: true });
+    await expect(blue).toHaveAttribute("aria-pressed", "true");
+    const blueBrand = await html.getAttribute("data-brand");
+    try {
+      await main.getByRole("button", { name: "Create theme", exact: true }).click();
+      const dialog = page.getByRole("dialog", { name: "Create a theme" });
+      await dialog.getByRole("textbox", { name: "Name" }).fill(name);
+      await dialog.getByLabel("Accent color").fill("#0d9488");
+      await dialog.getByRole("radio", { name: "Strong" }).click();
+      const created = page.waitForResponse("**/rpc/workspaceThemes/save");
+      await dialog.getByRole("button", { name: "Create and use", exact: true }).click();
+      expect((await created).ok()).toBe(true);
+      await expect(dialog).toBeHidden();
+
+      const custom = main.getByRole("button", { name, exact: true });
+      await expect(custom).toHaveAttribute("aria-pressed", "true");
+      await expect(blue).toHaveAttribute("aria-pressed", "false");
+      await expect(html).not.toHaveAttribute("data-brand", blueBrand ?? "");
+      await expect(main.getByRole("heading", { level: 4, name: "Custom" })).toBeVisible();
+
+      await main.getByRole("button", { name: `Edit ${name}`, exact: true }).click();
+      const edit = page.getByRole("dialog", { name: `Edit ${name}` });
+      await edit.getByRole("textbox", { name: "Name" }).fill(renamed);
+      await edit.getByRole("button", { name: "Advanced: set each color" }).click();
+      const accentField = edit.getByRole("textbox", { name: "Light Accent", exact: true });
+      await accentField.fill("not a color");
+      await expect(
+        edit.getByText("Use a color like #1a2b3c or rgba(26, 43, 60, 0.5)."),
+      ).toBeVisible();
+      await expect(edit.getByRole("button", { name: "Save theme" })).toBeDisabled();
+      await accentField.fill("#115e59");
+      const saved = page.waitForResponse("**/rpc/workspaceThemes/save");
+      await edit.getByRole("button", { name: "Save theme" }).click();
+      expect((await saved).ok()).toBe(true);
+      await expect(edit).toBeHidden();
+      await page.reload();
+      await expect(main.getByRole("button", { name: renamed, exact: true })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+
+      await main.getByRole("button", { name: `Delete ${renamed}`, exact: true }).click();
+      const confirm = page.getByRole("alertdialog", { name: `Delete ${renamed}?` });
+      await expect(confirm).toContainText("switches to Graphite");
+      await confirm.getByRole("button", { name: "Delete", exact: true }).click();
+      await expect(confirm).toBeHidden();
+      await expect(main.getByRole("button", { name: renamed, exact: true })).toHaveCount(0);
+      await expect(main.getByRole("button", { name: "Graphite", exact: true })).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+    } finally {
+      const { themes } = await rpc<{ themes: { id: string; name: string; source: string }[] }>(
+        "workspaceThemes.list",
+        { workspaceSlug: account.workspaceSlug },
+      );
+      for (const theme of themes.filter(
+        (t) => t.source === "workspace" && t.name.startsWith(name),
+      )) {
+        await rpc("workspaceThemes.delete", {
+          workspaceSlug: account.workspaceSlug,
+          themeId: theme.id,
+        });
+      }
+      const blueTheme = themes.find((t) => t.source === "system" && t.name === "Blue");
+      if (blueTheme) {
+        await rpc("workspaceThemes.select", {
+          workspaceSlug: account.workspaceSlug,
+          themeId: blueTheme.id,
+        });
+      }
     }
   });
 

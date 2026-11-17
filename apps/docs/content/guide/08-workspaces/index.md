@@ -15,6 +15,6 @@ A workspace is where you and your team use mail, calendars, drives and contacts 
 - [Members and roles](/guide/workspaces/members-and-roles): the Members page, inviting people, changing roles, transferring ownership and removing members.
 - [Workspace activity](/guide/workspaces/workspace-activity): for owners and admins, see who changed roles, members, invites, workflows and resources in the workspace.
 - [AI and privacy settings](/guide/workspaces/ai-and-privacy): decide whether AI and phishing detection are allowed in the workspace.
-- [Logo and color](/guide/workspaces/appearance): give the workspace its own logo and accent color.
+- [Logo and theme](/guide/workspaces/appearance): give the workspace its own logo and theme, and create custom themes.
 - [Delete a workspace](/guide/workspaces/delete-a-workspace): remove a workspace for every member.
 - [Personal and shared settings](/guide/workspaces/personal-and-shared-settings): which settings are yours alone and which apply to the whole workspace.

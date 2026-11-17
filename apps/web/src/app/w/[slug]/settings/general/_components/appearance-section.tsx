@@ -6,32 +6,22 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 import { useWorkspaceScope } from "@/hooks/use-workspace-path";
-import { invalidateWorkspaces } from "@/hooks/use-workspaces";
 import { orpc } from "@/lib/orpc";
 import { getInitials } from "@/lib/utils";
-import { BRAND_OPTIONS, type ThemeBrandId } from "@/theme/brand";
 
-import { BrandPreviewCard } from "./brand-preview-card";
+import { ThemeSection } from "./theme-section";
 
 const MAX_LOGO_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 interface AppearanceSectionProps {
   workspaceName: string;
-  initialThemeBrand: ThemeBrandId;
   initialLogo: string | null;
   canEdit: boolean;
 }
 
-export function AppearanceSection({
-  workspaceName,
-  initialThemeBrand,
-  initialLogo,
-  canEdit,
-}: AppearanceSectionProps) {
+export function AppearanceSection({ workspaceName, initialLogo, canEdit }: AppearanceSectionProps) {
   const router = useRouter();
   const scope = useWorkspaceScope();
-  const [activeBrand, setActiveBrand] = useState<ThemeBrandId>(initialThemeBrand);
-  const [saving, setSaving] = useState<ThemeBrandId | null>(null);
   const [logo, setLogo] = useState<string | null>(initialLogo);
   const [logoBusy, setLogoBusy] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -88,34 +78,12 @@ export function AppearanceSection({
     }
   }
 
-  async function selectBrand(themeBrand: ThemeBrandId) {
-    if (!canEdit || themeBrand === activeBrand || saving) return;
-
-    const previousBrand = activeBrand;
-    setActiveBrand(themeBrand);
-    setSaving(themeBrand);
-    setError(null);
-    document.documentElement.setAttribute("data-brand", themeBrand);
-
-    try {
-      await orpc.workspaces.setThemeBrand({ ...scope, themeBrand });
-      invalidateWorkspaces();
-      router.refresh();
-    } catch (err) {
-      setActiveBrand(previousBrand);
-      document.documentElement.setAttribute("data-brand", previousBrand);
-      setError(err instanceof Error ? err.message : "Could not save");
-    } finally {
-      setSaving(null);
-    }
-  }
-
   return (
     <section className="mt-8">
       <h2 className="text-[10px] font-medium uppercase tracking-[1.5px] text-faint">Appearance</h2>
       <p className="mt-1 text-[12px] text-faint">
-        Accent color used by everyone in “{workspaceName}”.
-        {!canEdit && " Only owners and admins can change it."}
+        Logo and theme used by everyone in “{workspaceName}”.
+        {!canEdit && " Only owners and admins can change them."}
       </p>
 
       {error && (
@@ -180,18 +148,7 @@ export function AppearanceSection({
         )}
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {BRAND_OPTIONS.map((brand) => (
-          <BrandPreviewCard
-            key={brand.id}
-            id={brand.id}
-            label={brand.label}
-            selected={activeBrand === brand.id}
-            disabled={saving !== null || !canEdit}
-            onSelect={selectBrand}
-          />
-        ))}
-      </div>
+      <ThemeSection />
     </section>
   );
 }

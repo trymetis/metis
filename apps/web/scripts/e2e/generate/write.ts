@@ -9,7 +9,7 @@ import { stableIds } from "../stable-ids";
 import type { Account } from "./account";
 import type { Resources } from "./connections";
 
-const SKIPPED_TABLES = new Set(["session", "verification"]);
+const SKIPPED_TABLES = new Set(["session", "verification", "theme"]);
 
 export async function writeSeed(
   appDb: string,

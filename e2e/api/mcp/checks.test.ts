@@ -38,13 +38,14 @@ const SENSITIVE = [
   "revokeInvite",
   "removeMember",
   "setWorkspaceTheme",
+  "createWorkspaceTheme",
   "saveSignature",
   "deleteSignature",
   "setMailFooter",
 ].toSorted();
 
 const FOREIGN_WORKSPACE = "00000000-0000-0000-0000-000000000000";
-const PATTERN_CANDIDATES = ["out", "q1", "o1", "l1", "in", "x"];
+const PATTERN_CANDIDATES = ["out", "q1", "o1", "l1", "in", "x", "#000000"];
 
 const ACCOUNT_INVITE_TOOLS = new Set([
   "listSignupInvites",

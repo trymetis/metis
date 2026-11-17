@@ -33,7 +33,7 @@ interface DataExport {
     name: string;
     slug: string;
     role: string;
-    themeBrand: string;
+    theme: string;
     mailboxes: (ResourceLink & { phishingDetectionEnabled: boolean })[];
     calendars: (ResourceLink & { visibleCalendarIds: string[] })[];
     drives: (ResourceLink & { visibleRootIds: string[] })[];
@@ -83,14 +83,14 @@ test("the export holds the account's preferences, workspaces, labels, workflows 
   const data = await exportData(rpc);
 
   expect(data.format).toBe("metis-suite-export");
-  expect(data.version).toBe(1);
+  expect(data.version).toBe(2);
   expect(data.notice).toContain("not a mailbox archive");
   expect(data.account.email).toBe(account.email);
   expect(data.preferences.workspaceOrder).toContain(account.workspaceSlug);
   expect(typeof data.preferences.signInAlerts).toBe("boolean");
 
   const workspace = data.workspaces.find((w) => w.slug === account.workspaceSlug);
-  expect(workspace).toMatchObject({ role: "owner", themeBrand: "blue" });
+  expect(workspace).toMatchObject({ role: "owner", theme: "Blue" });
   expect(workspace?.mailboxes.map((m) => m.slug)).toContain(account.mailboxSlug);
   expect(workspace?.calendars.map((c) => c.slug)).toContain(account.calendarSlug);
   expect(workspace?.drives.map((d) => d.slug)).toEqual(

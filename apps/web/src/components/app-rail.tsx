@@ -21,9 +21,9 @@ import {
   CalendarDays,
   GitBranch,
   HardDrive,
-  Inbox,
   LayoutDashboard,
   LogOut,
+  Mail,
   Moon,
   Search,
   Settings,
@@ -91,7 +91,7 @@ export function AppRail({ user, hasDashboard, source }: AppRailProps) {
   const isDark = mounted && resolvedTheme === "dark";
   const inNativeApp = mounted && isNativeUserAgent(navigator.userAgent);
 
-  const inboxHref = mailboxSlug
+  const mailHref = mailboxSlug
     ? mailPath(workspaceSlug, mailboxSlug, "inbox")
     : mailRootPath(workspaceSlug);
   const calendarHref = calendarSlug
@@ -138,9 +138,8 @@ export function AppRail({ user, hasDashboard, source }: AppRailProps) {
           </TooltipContent>
         </Tooltip>
 
-        <IconLink label="Inbox" href={inboxHref} active={section === "mail"}>
-          <Inbox className="size-4.5" strokeWidth={1.8} />
-          <span className="absolute top-1.5 right-1.5 h-1.75 w-1.75 rounded-full border-[1.5px] border-panel bg-primary" />
+        <IconLink label="Mail" href={mailHref} active={section === "mail"}>
+          <Mail className="size-4.5" strokeWidth={1.8} />
         </IconLink>
 
         <IconLink label="Calendar" href={calendarHref} active={section === "calendar"}>

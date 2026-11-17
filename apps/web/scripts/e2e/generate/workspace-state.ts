@@ -3,7 +3,9 @@ import { eq } from "drizzle-orm";
 
 import { setDriveVisibility } from "../../../src/connections";
 import { db } from "../../../src/db";
-import { drivePin, driveWorkspace, mailboxLabel, workspace } from "../../../src/db/schema";
+import { drivePin, driveWorkspace, mailboxLabel } from "../../../src/db/schema";
+import { setWorkspaceThemeId } from "../../../src/theme/store";
+import { systemTheme } from "../../../src/theme/system";
 import { workspaceScope } from "../workspace-scope";
 import type { Account } from "./account";
 import type { Resources } from "./connections";
@@ -58,11 +60,8 @@ export async function seedWorkspaceState(account: Account, resources: Resources)
     visibleRootIds: [CLIENTS_FOLDER],
   });
 
-  await db
-    .update(workspace)
-    .set({ branding: { themeBrand: "blue" } })
-    .where(eq(workspace.id, workspaceId));
+  await setWorkspaceThemeId(workspaceId, systemTheme("blue").id);
   console.log(
-    "[generate] seeded a custom label, two drive pins, a root restriction on the ftp drive and the blue brand",
+    "[generate] seeded a custom label, two drive pins, a root restriction on the ftp drive and the Blue theme",
   );
 }

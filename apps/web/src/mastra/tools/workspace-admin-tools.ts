@@ -6,7 +6,7 @@ import * as admin from "@/ops/admin";
 
 import { getWorkspaceCtx } from "../runtime-context";
 import { requireMember, withToolErrors } from "../toolkit/resolve";
-import { inviteTarget, memberTarget, themeFields } from "../toolkit/schema";
+import { createThemeFields, inviteTarget, memberTarget, themeFields } from "../toolkit/schema";
 
 const listInvitesTool = createTool({
   id: "listInvites",
@@ -47,24 +47,43 @@ const revokeInviteTool = createTool({
     withToolErrors(async () => admin.revokeInvite(getWorkspaceCtx(requestContext), inviteId)),
 });
 
+const listThemesTool = createTool({
+  id: "listThemes",
+  description:
+    "List the themes this workspace can use (built-in, the instance's own and the workspace's custom ones) and which one it uses now.",
+  inputSchema: z.object({}),
+  execute: async (_input, { requestContext }) =>
+    withToolErrors(async () => admin.listThemes(getWorkspaceCtx(requestContext))),
+});
+
 const setWorkspaceThemeTool = createTool({
   id: "setWorkspaceTheme",
   description:
-    "Change this workspace's accent color for everyone in it. Workspace owners and admins only.",
+    "Change this workspace's theme for everyone in it. Workspace owners and admins only.",
   inputSchema: z.object({
     ...themeFields,
-    summary: z.string().describe("Short description of the new accent color"),
+    summary: z.string().describe("Short description of the new theme"),
   }),
   requireApproval: true,
-  execute: async ({ themeBrand }, { requestContext }) =>
-    withToolErrors(async () =>
-      admin.setWorkspaceTheme(getWorkspaceCtx(requestContext), themeBrand),
-    ),
+  execute: async ({ themeId }, { requestContext }) =>
+    withToolErrors(async () => admin.setWorkspaceTheme(getWorkspaceCtx(requestContext), themeId)),
+});
+
+const createWorkspaceThemeTool = createTool({
+  id: "createWorkspaceTheme",
+  description:
+    "Create a custom theme for this workspace from an accent color, and use it right away unless select is false. Workspace owners and admins only.",
+  inputSchema: z.object(createThemeFields),
+  requireApproval: true,
+  execute: async (args, { requestContext }) =>
+    withToolErrors(async () => admin.createWorkspaceTheme(getWorkspaceCtx(requestContext), args)),
 });
 
 export const workspaceAdminTools = {
   listInvites: listInvitesTool,
   removeMember: removeMemberTool,
   revokeInvite: revokeInviteTool,
+  listThemes: listThemesTool,
   setWorkspaceTheme: setWorkspaceThemeTool,
+  createWorkspaceTheme: createWorkspaceThemeTool,
 };

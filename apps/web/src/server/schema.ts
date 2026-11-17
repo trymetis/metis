@@ -18,7 +18,12 @@ import { MCP_PRESET_IDS } from "@/mcp/presets";
 import { MCP_TOOL_KEYS } from "@/mcp/tools";
 import { LOCAL_MAIL_STATES, SEARCH_KINDS } from "@/search/fields";
 import { MAX_SEARCH_LENGTH } from "@/search/query";
-import { THEME_BRAND_IDS } from "@/theme/brand";
+import {
+  normalizeThemeColor,
+  THEME_COLOR_PATTERN,
+  THEME_NAME_MAX,
+  THEME_TOKENS,
+} from "@/theme/tokens";
 import { ANALYSIS_ACTIONS, CLASSIFICATIONS } from "@/types/analysis";
 import {
   AUDIT_ACTIONS,
@@ -203,7 +208,24 @@ export const messageIdInputSchema = mailboxScopeSchema.extend({
   id: z.string().min(1),
 });
 
-export const themeBrandSchema = z.enum(THEME_BRAND_IDS);
+export const themeColorSchema = z
+  .string()
+  .transform(normalizeThemeColor)
+  .pipe(z.string().regex(THEME_COLOR_PATTERN, "Use a color like #1a2b3c or rgba(26, 43, 60, 0.5)"));
+export const themeTokensSchema = z.record(z.enum(THEME_TOKENS), themeColorSchema);
+export const themePaletteSchema = z.object({
+  light: themeTokensSchema,
+  dark: themeTokensSchema,
+});
+export const themeNameSchema = z.string().trim().min(1).max(THEME_NAME_MAX);
+export const themeSourceSchema = z.enum(["system", "instance", "workspace"]);
+export const themeSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  source: themeSourceSchema,
+  palette: themePaletteSchema,
+  updatedAt: z.string(),
+});
 export const preferencesSchema = z.object({
   workspaceOrder: z.array(z.string().min(1)).max(100),
   mailRemoteContent: z.enum(MAIL_REMOTE_CONTENT_MODES),
@@ -468,7 +490,7 @@ export type DashboardAudit = z.infer<typeof dashboardAuditOutputSchema>;
 
 export const dataExportSchema = z.object({
   format: z.literal("metis-suite-export"),
-  version: z.literal(1),
+  version: z.literal(2),
   exportedAt: z.string(),
   notice: z.string(),
   account: z.object({
@@ -498,7 +520,7 @@ export const dataExportSchema = z.object({
       joinedAt: z.string(),
       aiPolicy: z.enum(WORKSPACE_AI_POLICIES),
       phishingDetectionPolicy: z.enum(WORKSPACE_PHISHING_DETECTION_POLICIES),
-      themeBrand: z.enum(THEME_BRAND_IDS),
+      theme: z.string(),
       mailboxes: z.array(
         exportedResourceLinkSchema.extend({
           phishingDetectionEnabled: z.boolean(),
@@ -587,8 +609,41 @@ export const dataExportSchema = z.object({
 
 export type DataExport = z.infer<typeof dataExportSchema>;
 
-export const setThemeBrandInputSchema = workspaceScopeSchema.extend({
-  themeBrand: themeBrandSchema,
+export const listWorkspaceThemesOutputSchema = z.object({
+  themes: z.array(themeSchema),
+  selectedId: z.string(),
+  canEdit: z.boolean(),
+});
+
+export const selectWorkspaceThemeInputSchema = workspaceScopeSchema.extend({
+  themeId: z.string().min(1),
+});
+
+export const saveWorkspaceThemeInputSchema = workspaceScopeSchema.extend({
+  id: z.string().min(1).optional(),
+  name: themeNameSchema,
+  palette: themePaletteSchema,
+  select: z.boolean().default(false),
+});
+
+export const saveThemeOutputSchema = z.object({ theme: themeSchema });
+
+export const deleteWorkspaceThemeInputSchema = workspaceScopeSchema.extend({
+  themeId: z.string().min(1),
+});
+
+export const dashboardThemesOutputSchema = z.object({
+  themes: z.array(themeSchema.extend({ usedBy: z.number() })),
+});
+
+export const dashboardSaveThemeInputSchema = z.object({
+  id: z.string().min(1).optional(),
+  name: themeNameSchema,
+  palette: themePaletteSchema,
+});
+
+export const dashboardDeleteThemeInputSchema = z.object({
+  themeId: z.string().min(1),
 });
 
 export const deleteWorkspaceOutputSchema = successSchema;
@@ -1449,7 +1504,6 @@ export const workspaceSummarySchema = z.object({
   name: z.string(),
   slug: z.string(),
   role: workspaceRoleSchema,
-  themeBrand: themeBrandSchema,
   logo: z.string().nullable(),
 });
 

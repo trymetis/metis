@@ -2,8 +2,8 @@ import { sentInviteLink } from "@metis/e2e/lib/invites";
 import type { Page } from "@playwright/test";
 
 import { enterCode } from "../auth";
-import { expect, test } from "../fixtures";
-import { APP, HARNESS, harness, SIGNED_OUT } from "../harness";
+import { expect, test, uniqueName } from "../fixtures";
+import { APP, HARNESS, harness, SIGNED_OUT, workspacePath } from "../harness";
 import { newSecondUser, signUpByInvite } from "../second-user";
 
 const BANNED = "This account is banned. Ask the instance owner or an admin.";
@@ -270,6 +270,72 @@ export default function dashboardSpecs() {
 
     await page.goto("/dashboard/mcp");
     await expect(main(page).getByRole("heading", { level: 2, name: "All clients" })).toBeVisible();
+  });
+
+  test("a theme created on the Themes page is offered to workspaces, used, and deleted back to Graphite", async ({
+    page,
+    rpc,
+    account,
+  }, testInfo) => {
+    const name = uniqueName(testInfo);
+    const card = (themeName: string) =>
+      main(page)
+        .locator("div")
+        .filter({ has: page.getByText(themeName, { exact: true }) })
+        .last();
+    await page.goto("/dashboard/themes");
+    await expect(main(page).getByRole("heading", { level: 2, name: "Built in" })).toBeVisible();
+    await expect(card("Graphite")).toBeVisible();
+    try {
+      await main(page).getByRole("button", { name: "Create theme", exact: true }).click();
+      const dialog = page.getByRole("dialog", { name: "Create a theme" });
+      await dialog.getByRole("textbox", { name: "Name" }).fill(name);
+      await dialog.getByLabel("Accent color").fill("#7c3aed");
+      const created = page.waitForResponse("**/rpc/dashboard/themes/save");
+      await dialog.getByRole("button", { name: "Create theme", exact: true }).click();
+      expect((await created).ok()).toBe(true);
+      await expect(dialog).toBeHidden();
+      await expect(card(name)).toContainText("No workspace uses it");
+
+      await page.goto(workspacePath(account, "/settings/general"));
+      const offered = main(page).getByRole("button", { name, exact: true });
+      await expect(
+        main(page).getByRole("heading", { level: 4, name: "From your instance" }),
+      ).toBeVisible();
+      const selected = page.waitForResponse("**/rpc/workspaceThemes/select");
+      await offered.click();
+      expect((await selected).ok()).toBe(true);
+      await expect(offered).toHaveAttribute("aria-pressed", "true");
+
+      await page.goto("/dashboard/themes");
+      await expect(card(name)).toContainText("Used by 1 workspace");
+      await main(page)
+        .getByRole("button", { name: `Delete ${name}`, exact: true })
+        .click();
+      const confirm = page.getByRole("alertdialog", { name: `Delete ${name}?` });
+      await expect(confirm).toContainText("Those workspaces switch to Graphite.");
+      await confirm.getByRole("button", { name: "Delete", exact: true }).click();
+      await expect(confirm).toBeHidden();
+      await expect(main(page).getByText(name, { exact: true })).toHaveCount(0);
+
+      await page.goto(workspacePath(account, "/settings/general"));
+      await expect(
+        main(page).getByRole("button", { name: "Graphite", exact: true }),
+      ).toHaveAttribute("aria-pressed", "true");
+    } finally {
+      const { themes } = await rpc<{ themes: { id: string; name: string; source: string }[] }>(
+        "dashboard.themes.list",
+      );
+      const leftover = themes.find((t) => t.name === name);
+      if (leftover) await rpc("dashboard.themes.delete", { themeId: leftover.id });
+      const blue = themes.find((t) => t.source === "system" && t.name === "Blue");
+      if (blue) {
+        await rpc("workspaceThemes.select", {
+          workspaceSlug: account.workspaceSlug,
+          themeId: blue.id,
+        });
+      }
+    }
   });
 
   test("an account invite sent from the Invites page is filtered and accepted, and the Users page bans, unbans and removes the new account", async ({

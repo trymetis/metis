@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@metis/ui/lib/utils";
-import { Inbox, Sparkles, Workflow } from "lucide-react";
+import { Mail, Sparkles, Workflow } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 
@@ -10,7 +10,7 @@ import type { GateDestination, GateWorkspace } from "@/workspace/gate";
 import { assistantPath, mailPath, onboardingPath, workflowPath } from "@/workspace/path";
 
 const DESTINATIONS = {
-  mail: { title: "Mail", icon: Inbox },
+  mail: { title: "Mail", icon: Mail },
   assistant: { title: "Workspace AI", icon: Sparkles },
   workflow: { title: "Workflows", icon: Workflow },
 } as const satisfies Record<GateDestination, unknown>;

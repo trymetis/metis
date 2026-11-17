@@ -35,9 +35,11 @@ import {
   revertConfig,
   saveConfigSections,
 } from "@/dashboard/system-config";
+import { deleteInstanceTheme, listInstanceThemes, saveInstanceTheme } from "@/dashboard/themes";
 import { rollbackRelease, startUpgrade, updatesEnabled, updatesStatus } from "@/dashboard/updates";
 import { banUser, listInstanceUsers, removeUser, setUserRole, unbanUser } from "@/dashboard/users";
 import { createInvite, listAccountInvites, revokeAccountInvite } from "@/invites";
+import { themeJson } from "@/theme/store";
 
 import {
   dashboardOperator,
@@ -72,6 +74,10 @@ import {
   dashboardRevokeInviteInputSchema,
   dashboardSetRoleInputSchema,
   dashboardUsersOutputSchema,
+  dashboardDeleteThemeInputSchema,
+  dashboardSaveThemeInputSchema,
+  dashboardThemesOutputSchema,
+  saveThemeOutputSchema,
   okSchema,
   dashboardOverviewOutputSchema,
   dashboardAccountsOutputSchema,
@@ -105,6 +111,38 @@ export const dashboardRouter = {
   me: dashboardSession
     .output(dashboardMeOutputSchema)
     .handler(async ({ context }) => ({ role: context.instanceRole })),
+
+  themes: {
+    list: dashboardSession.output(dashboardThemesOutputSchema).handler(async () => ({
+      themes: (await listInstanceThemes()).map((theme) => ({
+        ...themeJson(theme),
+        usedBy: theme.usedBy,
+      })),
+    })),
+
+    save: dashboardOperator
+      .input(dashboardSaveThemeInputSchema)
+      .output(saveThemeOutputSchema)
+      .handler(async ({ input }) => {
+        const result = await saveInstanceTheme(input);
+        if ("error" in result) {
+          throw new ORPCError(result.notFound ? "NOT_FOUND" : "BAD_REQUEST", {
+            message: result.error,
+          });
+        }
+        return { theme: themeJson(result.theme) };
+      }),
+
+    delete: dashboardOperator
+      .input(dashboardDeleteThemeInputSchema)
+      .output(okSchema)
+      .handler(async ({ input }) => {
+        if (!(await deleteInstanceTheme(input.themeId))) {
+          throw new ORPCError("NOT_FOUND", { message: "That theme is gone" });
+        }
+        return { ok: true as const };
+      }),
+  },
 
   users: {
     list: dashboardSession

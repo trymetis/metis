@@ -10,6 +10,8 @@ import {
   TWO_FACTOR_CALLBACK_MAX_AGE,
 } from "@/auth/two-factor-callback";
 import { maintenanceResponse } from "@/maintenance/response";
+import { BRAND_WORKSPACE_HEADER } from "@/theme/brand";
+import { parseWorkspacePath } from "@/workspace/path";
 
 const NOT_FOUND_ROUTE = "/_not-found";
 const TWO_FACTOR_SETUP_PATH = "/2fa/setup";
@@ -26,8 +28,22 @@ function protectedPath(pathname: string): boolean {
   return pathname.startsWith("/api/") && !UNGUARDED_API.test(pathname);
 }
 
+function brandHeaders(request: NextRequest, workspaceSlug: string | null): Headers {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.delete(BRAND_WORKSPACE_HEADER);
+  if (workspaceSlug) requestHeaders.set(BRAND_WORKSPACE_HEADER, workspaceSlug);
+  return requestHeaders;
+}
+
+function forward(request: NextRequest) {
+  const { workspaceSlug } = parseWorkspacePath(request.nextUrl.pathname);
+  return NextResponse.next({ request: { headers: brandHeaders(request, workspaceSlug) } });
+}
+
 function notFound(request: NextRequest) {
-  return NextResponse.rewrite(new URL(NOT_FOUND_ROUTE, request.url));
+  return NextResponse.rewrite(new URL(NOT_FOUND_ROUTE, request.url), {
+    request: { headers: brandHeaders(request, null) },
+  });
 }
 
 function isApiCall(pathname: string): boolean {
@@ -72,7 +88,7 @@ async function guardDashboard(request: NextRequest) {
   if (!session || !(await instanceRoleOf(session.user))) return notFound(request);
   if (!session.user.twoFactorEnabled) return twoFactorRequired(request);
 
-  return NextResponse.next();
+  return forward(request);
 }
 
 export async function proxy(request: NextRequest) {
@@ -83,24 +99,24 @@ export async function proxy(request: NextRequest) {
   if (closed) return closed;
 
   const { pathname, searchParams } = request.nextUrl;
-  if (!protectedPath(pathname)) return NextResponse.next();
+  if (!protectedPath(pathname)) return forward(request);
 
   if (pathname.startsWith("/dashboard")) {
     return guardDashboard(request);
   }
 
   if (isConnectCallback(pathname)) {
-    return NextResponse.next();
+    return forward(request);
   }
 
   if (pathname.startsWith(CONNECT_START_PREFIX) && searchParams.has(NATIVE_TICKET_PARAM)) {
-    return NextResponse.next();
+    return forward(request);
   }
 
   const session = await readSession(request);
 
   if (!session) {
-    if (pathname === INVITE_ACCEPT_PATH) return NextResponse.next();
+    if (pathname === INVITE_ACCEPT_PATH) return forward(request);
     return signInRequired(request);
   }
 
@@ -108,7 +124,7 @@ export async function proxy(request: NextRequest) {
     return twoFactorRequired(request);
   }
 
-  return NextResponse.next();
+  return forward(request);
 }
 
 export const config = {

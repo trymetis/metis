@@ -133,9 +133,13 @@ SOFTWARE.
 
 DM Sans (https://github.com/googlefonts/dm-fonts)
 
-The font file public/fonts/dm-sans-latin-wght-normal.woff2, served to the
-instance's own emails, is the latin variable-weight build published as
-@fontsource-variable/dm-sans.
+The font file apps/web/public/fonts/dm-sans-latin-wght-normal.woff2, served
+to the instance's own emails, is the latin variable-weight build published as
+@fontsource-variable/dm-sans. The font files
+apps/www/assets/fonts/dm-sans-latin-400-normal.woff and
+apps/www/assets/fonts/dm-sans-latin-600-normal.woff, used to render the
+marketing site's social images, are the latin static builds published as
+@fontsource/dm-sans.
 
 Copyright 2014 The DM Sans Project Authors (https://github.com/googlefonts/dm-fonts) DMSans-Italic[opsz,wght].ttf: Copyright 2014 The DM Sans Project Authors (https://github.com/googlefonts/dm-fonts)
 
@@ -230,3 +234,29 @@ INCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL
 DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM
 OTHER DEALINGS IN THE FONT SOFTWARE.
+
+---
+
+Cormorant Garamond (https://github.com/CatharsisFonts/Cormorant)
+
+The font file apps/www/assets/fonts/cormorant-garamond-latin-500-normal.woff,
+used to render the marketing site's social images, is the latin static build
+published as @fontsource/cormorant-garamond.
+
+Copyright 2015 The Cormorant Project Authors (github.com/CatharsisFonts/Cormorant)
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1,
+reproduced in full under DM Sans above.
+
+---
+
+DM Mono (https://github.com/googlefonts/dm-mono)
+
+The font file apps/www/assets/fonts/dm-mono-latin-400-normal.woff, used to
+render the marketing site's social images, is the latin static build
+published as @fontsource/dm-mono.
+
+Copyright 2020 The DM Mono Project Authors (https://www.github.com/googlefonts/dm-mono)
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1,
+reproduced in full under DM Sans above.

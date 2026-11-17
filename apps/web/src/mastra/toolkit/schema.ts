@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import { SIGNATURE_HTML_MAX, SIGNATURE_NAME_MAX } from "@/mail/signature-markup";
-import { THEME_BRAND_IDS } from "@/theme/brand";
+import { THEME_NAME_MAX, THEME_TINTS } from "@/theme/tokens";
 import { WRITABLE_ATTENDEE_RESPONSES } from "@/types/calendar";
 import {
   CUSTOM_LABEL_COLORS,
@@ -352,7 +352,22 @@ export const inviteTarget = {
 };
 
 export const themeFields = {
-  themeBrand: z.enum(THEME_BRAND_IDS),
+  themeId: z.string().describe("A themeId from listThemes"),
+};
+
+export const createThemeFields = {
+  name: z.string().trim().min(1).max(THEME_NAME_MAX).describe("The theme's name"),
+  accent: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(HEX_COLOR_PATTERN)
+    .describe("The accent color as #rrggbb; the light and dark palettes are generated from it"),
+  tint: z
+    .enum(THEME_TINTS)
+    .default("light")
+    .describe("How much of the accent tints backgrounds and text"),
+  select: z.boolean().default(true).describe("Use the new theme for this workspace right away"),
 };
 
 export const moveFileFields = {

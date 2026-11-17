@@ -2,7 +2,7 @@ import { defineMeta } from "blume";
 
 export default defineMeta({
   title: "Mail",
-  icon: "inbox",
+  icon: "mail",
   pages: [
     "read-your-mail",
     "find-and-filter-mail",

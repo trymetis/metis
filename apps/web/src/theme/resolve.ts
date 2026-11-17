@@ -1,24 +1,20 @@
-import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 
-import { getAppUser } from "@/auth/session";
+import { getAppUser, getWorkspaceMembership } from "@/auth/session";
 import { config } from "@/config";
-import { db } from "@/db";
-import { workspace } from "@/db/schema";
-import { workspaceThemeBrand } from "@/workspace";
 
-import { DEFAULT_THEME_BRAND, type ThemeBrandId } from "./brand";
+import type { ActiveTheme } from "./active";
+import { BRAND_WORKSPACE_HEADER } from "./brand";
 
-export async function resolveThemeBrand(): Promise<ThemeBrandId> {
-  if (config.maintenance.since instanceof Date) return DEFAULT_THEME_BRAND;
-  const appUser = await getAppUser(await headers()).catch(() => null);
-  if (!appUser?.workspaceId) return DEFAULT_THEME_BRAND;
+export async function resolveActiveTheme(): Promise<ActiveTheme | null> {
+  if (config.maintenance.since instanceof Date) return null;
+  const requestHeaders = await headers();
+  const workspaceSlug = requestHeaders.get(BRAND_WORKSPACE_HEADER);
+  if (!workspaceSlug) return null;
 
-  const [row] = await db
-    .select({ branding: workspace.branding })
-    .from(workspace)
-    .where(eq(workspace.id, appUser.workspaceId))
-    .limit(1);
+  const appUser = await getAppUser(requestHeaders).catch(() => null);
+  if (!appUser?.twoFactorEnabled) return null;
 
-  return workspaceThemeBrand(row?.branding ?? null);
+  const membership = await getWorkspaceMembership(appUser.userId, workspaceSlug);
+  return membership?.theme ?? null;
 }

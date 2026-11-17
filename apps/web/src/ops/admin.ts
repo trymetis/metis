@@ -2,9 +2,15 @@ import "server-only";
 import { z } from "zod";
 
 import { listWorkspaceInvites, revokeWorkspaceInvite } from "@/invites";
-import { themeBrandSchema, workspaceRoleSchema } from "@/server/schema";
-import type { ThemeBrandId } from "@/theme/brand";
-import { setWorkspaceTheme as changeTheme, removeWorkspaceMember } from "@/workspace/admin";
+import { themeSourceSchema, workspaceRoleSchema } from "@/server/schema";
+import { generatePalette } from "@/theme/generate";
+import type { ThemeTint } from "@/theme/tokens";
+import {
+  setWorkspaceTheme as changeTheme,
+  removeWorkspaceMember,
+  saveWorkspaceTheme,
+  workspaceThemes,
+} from "@/workspace/admin";
 
 import { orFailure, type Output } from "./output";
 import { auditedBy, type WorkspaceCtx, type WorkspaceMember } from "./scope";
@@ -37,8 +43,23 @@ export const revokeInviteOutput = orFailure(
   z.object({ revoked: z.literal(true), inviteId: z.string() }),
 );
 
+const themeSummary = z.object({ themeId: z.string(), name: z.string(), source: themeSourceSchema });
+
+export const listThemesOutput = orFailure(
+  z.object({ selectedThemeId: z.string(), themes: z.array(themeSummary) }),
+);
+
 export const setWorkspaceThemeOutput = orFailure(
-  z.object({ updated: z.literal(true), themeBrand: themeBrandSchema }),
+  z.object({ updated: z.literal(true), themeId: z.string(), name: z.string() }),
+);
+
+export const createWorkspaceThemeOutput = orFailure(
+  z.object({
+    created: z.literal(true),
+    themeId: z.string(),
+    name: z.string(),
+    selected: z.boolean(),
+  }),
 );
 
 function actor(ctx: WorkspaceCtx) {
@@ -91,11 +112,38 @@ export async function revokeInvite(
   return { revoked: true, inviteId };
 }
 
+export async function listThemes(ctx: WorkspaceCtx): Promise<Output<typeof listThemesOutput>> {
+  const { themes, selectedId } = await workspaceThemes(ctx.workspaceId);
+  return {
+    selectedThemeId: selectedId,
+    themes: themes.map((t) => ({ themeId: t.id, name: t.name, source: t.source })),
+  };
+}
+
 export async function setWorkspaceTheme(
   ctx: WorkspaceCtx,
-  themeBrand: ThemeBrandId,
+  themeId: string,
 ): Promise<Output<typeof setWorkspaceThemeOutput>> {
-  const result = await changeTheme({ ...actor(ctx), themeBrand });
+  const result = await changeTheme({ ...actor(ctx), themeId });
   if ("error" in result) return { error: result.error };
-  return { updated: true, themeBrand };
+  return { updated: true, themeId: result.theme.id, name: result.theme.name };
+}
+
+export async function createWorkspaceTheme(
+  ctx: WorkspaceCtx,
+  args: { name: string; accent: string; tint: ThemeTint; select: boolean },
+): Promise<Output<typeof createWorkspaceThemeOutput>> {
+  const result = await saveWorkspaceTheme({
+    ...actor(ctx),
+    name: args.name,
+    palette: generatePalette({ accent: args.accent, tint: args.tint }),
+    select: args.select,
+  });
+  if ("error" in result) return { error: result.error };
+  return {
+    created: true,
+    themeId: result.theme.id,
+    name: result.theme.name,
+    selected: args.select,
+  };
 }

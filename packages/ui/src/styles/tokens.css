@@ -1,5 +1,4 @@
-:root,
-.theme-neutral {
+:root {
   --bg-base: #ffffff;
   --bg-panel: #fafafa;
   --bg-surface: #ffffff;
@@ -21,8 +20,7 @@
 }
 
 .dark,
-html.dark,
-.dark .theme-neutral {
+html.dark {
   --bg-base: #0a0a0a;
   --bg-panel: #121212;
   --bg-surface: #0a0a0a;

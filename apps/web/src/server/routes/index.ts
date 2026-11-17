@@ -24,6 +24,7 @@ import { workspaceCalendarsRouter } from "./workspace-calendars";
 import { workspaceDrivesRouter } from "./workspace-drives";
 import { workspaceMailboxesRouter } from "./workspace-mailboxes";
 import { workspaceSignaturesRouter } from "./workspace-signatures";
+import { workspaceThemesRouter } from "./workspace-themes";
 import { workspacesRouter } from "./workspaces";
 
 export const router = {
@@ -32,6 +33,7 @@ export const router = {
   workspaceDrives: workspaceDrivesRouter,
   workspaceAddressBooks: workspaceAddressBooksRouter,
   workspaceSignatures: workspaceSignaturesRouter,
+  workspaceThemes: workspaceThemesRouter,
   mailboxes: mailboxesRouter,
   calendars: calendarsRouter,
   calendarEvents: calendarEventsRouter,

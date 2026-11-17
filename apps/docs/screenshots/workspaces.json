@@ -194,6 +194,20 @@
     "element": "main >> section:has(h2:text-is(\"Appearance\"))"
   },
   {
+    "name": "workspaces/theme-builder",
+    "path": "{workspace}/settings/general",
+    "steps": [
+      { "waitFor": "main >> role=button[name=\"Create theme\"]" },
+      { "click": "main >> role=button[name=\"Create theme\"]" },
+      { "waitFor": "role=dialog[name=\"Create a theme\"]" },
+      { "fill": "role=dialog >> role=textbox[name=\"Name\"]", "value": "Teal" },
+      { "fill": "role=dialog >> input[type=color]", "value": "#0d9488" },
+      { "click": "role=dialog >> role=radio[name=\"Strong\"]" },
+      { "wait": 300 }
+    ],
+    "element": "role=dialog"
+  },
+  {
     "name": "workspaces/connections",
     "path": "/settings/connections",
     "steps": [{ "waitFor": "main >> button[aria-label^=\"Disconnect \"]" }]

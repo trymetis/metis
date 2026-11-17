@@ -153,8 +153,18 @@ function naturalKeys(path: string): Map<string, string> {
   return keys;
 }
 
+function fixedIds(path: string): string[] {
+  const db = new Database(path, { readonly: true });
+  const rows = z
+    .array(z.object({ id: z.string() }))
+    .parse(db.prepare(`SELECT id FROM "theme" WHERE system_key IS NOT NULL`).all());
+  db.close();
+  return rows.map((r) => r.id);
+}
+
 export function stableIds(path: string, sql: string): string {
   const ids = new Map([...naturalKeys(path)].map(([id, key]) => [id, stableId(key)]));
+  for (const id of fixedIds(path)) ids.set(id, id);
   return sql.replace(UUID, (id) => {
     const stable = ids.get(id);
     if (!stable) throw new Error(`seed id ${id} has no natural key`);

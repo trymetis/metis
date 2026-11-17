@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+
 import { ImageResponse } from "next/og";
 
 import { PAGES, pageInfo } from "@/content/pages";
@@ -14,13 +17,16 @@ const LICENSE_LINE = "Open source · AGPL-3.0";
 
 export const dynamicParams = false;
 
-async function googleFont(family: string, weight: number, text: string): Promise<ArrayBuffer> {
-  const url = `https://fonts.googleapis.com/css2?family=${family.replaceAll(" ", "+")}:wght@${weight}&text=${encodeURIComponent(text)}`;
-  const css = await (await fetch(url)).text();
-  const src = /src: url\((.+?)\) format\('(?:opentype|truetype)'\)/.exec(css)?.[1];
-  if (!src) throw new Error(`[og] no font file for ${family} ${weight}`);
-  return (await fetch(src)).arrayBuffer();
+function loadFont(file: string) {
+  return readFile(join(process.cwd(), "assets/fonts", file));
 }
+
+const FONTS = Promise.all([
+  loadFont("cormorant-garamond-latin-500-normal.woff"),
+  loadFont("dm-sans-latin-400-normal.woff"),
+  loadFont("dm-sans-latin-600-normal.woff"),
+  loadFont("dm-mono-latin-400-normal.woff"),
+]);
 
 function toPath(slug: string[]) {
   return slug.join("/") === "home" ? "/" : `/${slug.join("/")}`;
@@ -38,12 +44,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/og/[...slug]">) {
   const page = pageInfo(path);
   const headline = page.og ?? page.title;
   const kicker = path === "/" ? SITE_NAME : `${SITE_NAME} · ${page.label}`;
-  const [display, sans, sansBold, mono] = await Promise.all([
-    googleFont("Cormorant Garamond", 500, headline),
-    googleFont("DM Sans", 400, `${page.description}${NAV.join("")}`),
-    googleFont("DM Sans", 600, LICENSE_LINE),
-    googleFont("DM Mono", 400, kicker.toUpperCase()),
-  ]);
+  const [display, sans, sansBold, mono] = await FONTS;
 
   return new ImageResponse(
     <div

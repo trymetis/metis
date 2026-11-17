@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  type AnySQLiteColumn,
   check,
   index,
   integer,
@@ -13,6 +14,8 @@ import { AI_USAGE_FEATURES } from "@/ai/usage-features";
 import { CONNECTION_PROVIDERS } from "@/connections/types";
 import { MCP_PRESET_IDS } from "@/mcp/presets";
 import type { McpCapabilityPrefs } from "@/mcp/tools";
+import { DEFAULT_THEME_ID } from "@/theme/system";
+import type { ThemePalette } from "@/theme/tokens";
 import type { AnalysisResult } from "@/types/analysis";
 import { AUDIT_ACTIONS, AUDIT_RESOURCE_KINDS, AUDIT_VIAS, type AuditDetail } from "@/types/audit";
 import type { ExportLocation, ExportRecipient } from "@/types/export";
@@ -78,6 +81,10 @@ export const workspace = sqliteTable(
       .notNull()
       .default("optional"),
     branding: text("branding", { mode: "json" }).$type<Record<string, unknown>>(),
+    themeId: text("theme_id")
+      .notNull()
+      .default(DEFAULT_THEME_ID)
+      .references((): AnySQLiteColumn => theme.id, { onDelete: "set default" }),
     mailFooterHtml: text("mail_footer_html").notNull().default(""),
     mailFooterEnabled: bool("mail_footer_enabled").notNull().default(false),
     createdAt: timestamp("created_at").notNull(),
@@ -86,6 +93,31 @@ export const workspace = sqliteTable(
       .notNull(),
   },
   (table) => [uniqueIndex("workspace_slug_idx").on(table.slug)],
+);
+
+export const theme = sqliteTable(
+  "theme",
+  {
+    id: text("id").primaryKey(),
+    workspaceId: text("workspace_id").references((): AnySQLiteColumn => workspace.id, {
+      onDelete: "cascade",
+    }),
+    systemKey: text("system_key"),
+    name: text("name").notNull(),
+    tokens: text("tokens", { mode: "json" }).$type<ThemePalette>().notNull(),
+    createdAt: timestamp("created_at").notNull(),
+    updatedAt: timestamp("updated_at")
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("theme_workspace_idx").on(table.workspaceId),
+    uniqueIndex("theme_system_key_idx").on(table.systemKey),
+    uniqueIndex("theme_workspace_name_idx").on(table.workspaceId, table.name),
+    uniqueIndex("theme_instance_name_idx")
+      .on(table.name)
+      .where(sql`${table.workspaceId} is null`),
+  ],
 );
 
 export const workspaceMember = sqliteTable(

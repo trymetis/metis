@@ -16,6 +16,12 @@ const MANIFEST = join(ROOT, "src", "content", "shots.json");
 const VIEWPORT = { width: 1440, height: 900 };
 const PAD = 12;
 
+const themesSchema = z.object({
+  json: z.object({
+    themes: z.array(z.object({ id: z.string(), name: z.string(), source: z.string() })),
+  }),
+});
+
 const stepSchema = z.union([
   z.object({ goto: z.string() }),
   z.object({ follow: z.string() }),
@@ -124,10 +130,20 @@ async function signIn(browser: Browser, a: Account) {
   await page.keyboard.type((await (await harness("/totp?fresh=1")).text()).trim());
   await content.getByRole("button", { name: "Verify", exact: true }).click();
   await page.waitForURL(/\/w\//);
-  const brand = await context.request.post(`${APP}/rpc/workspaces/setThemeBrand`, {
-    data: { json: { workspaceSlug: a.workspaceSlug, themeBrand: "amber" } },
+  const listed = await context.request.post(`${APP}/rpc/workspaceThemes/list`, {
+    data: { json: { workspaceSlug: a.workspaceSlug } },
   });
-  if (!brand.ok()) throw new Error(`setThemeBrand: HTTP ${brand.status()} ${await brand.text()}`);
+  if (!listed.ok()) throw new Error(`workspaceThemes/list: HTTP ${listed.status()}`);
+  const amber = themesSchema
+    .parse(await listed.json())
+    .json.themes.find((t) => t.source === "system" && t.name === "Amber");
+  if (!amber) throw new Error("no Amber theme");
+  const brand = await context.request.post(`${APP}/rpc/workspaceThemes/select`, {
+    data: { json: { workspaceSlug: a.workspaceSlug, themeId: amber.id } },
+  });
+  if (!brand.ok()) {
+    throw new Error(`workspaceThemes/select: HTTP ${brand.status()} ${await brand.text()}`);
+  }
   const state = await context.storageState();
   await context.close();
   return state;

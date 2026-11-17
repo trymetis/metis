@@ -552,15 +552,32 @@ export function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): Too
         success: "Revoked the invite",
       };
     }
-    case "setWorkspaceTheme": {
-      const brand = asString(input?.themeBrand);
+    case "listThemes": {
       return {
         icon: Palette,
-        loading: "Changing the accent color...",
-        approval: brand
-          ? `Approve changing the workspace accent color to ${brand} for everyone`
-          : "Approve changing the workspace accent color for everyone",
-        success: brand ? `Changed the accent color to ${brand}` : "Changed the accent color",
+        loading: "Listing the workspace themes...",
+        success: "Listed the workspace themes",
+      };
+    }
+    case "setWorkspaceTheme": {
+      return {
+        icon: Palette,
+        loading: "Changing the theme...",
+        approval: "Approve changing the workspace theme for everyone",
+        success: "Changed the workspace theme",
+      };
+    }
+    case "createWorkspaceTheme": {
+      const themeName = asString(input?.name);
+      const selects = input?.select !== false;
+      const what = themeName ? `the theme "${themeName}"` : "a theme";
+      return {
+        icon: Palette,
+        loading: "Creating the theme...",
+        approval: selects
+          ? `Approve creating ${what} and using it for everyone in the workspace`
+          : `Approve creating ${what} for the workspace`,
+        success: themeName ? `Created the theme "${themeName}"` : "Created the theme",
       };
     }
     case "createWorkflow":

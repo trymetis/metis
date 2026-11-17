@@ -1,6 +1,6 @@
 ---
 title: Owner dashboard
-description: Instance roles and every page of the owner dashboard, from usage stats, accounts, bans and invites to instance settings, history and deploy checks.
+description: Instance roles and every page of the owner dashboard, from usage stats, accounts, bans, invites and themes to instance settings, history and deploy checks.
 ---
 
 The owner dashboard shows what your instance is carrying and holds its settings. Only the owner, admins and observers can open it. For users, the dashboard does not exist.
@@ -9,11 +9,11 @@ The owner dashboard shows what your instance is carrying and holds its settings.
 
 An instance role decides what someone can do in the dashboard. Every account has one of four roles. Three of them open the dashboard:
 
-| Role         | Who has it                                                                                                                            | What they can do                                                                                                                                                                                                                                                                                                                                                                     |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Owner**    | The account whose email is `METIS_OWNER_EMAIL`. There is exactly one. Nobody can change, ban, remove or invite it from the dashboard. | Everything in the dashboard. Manages admins, observers and users: changes their role, bans and unbans them, and removes them.                                                                                                                                                                                                                                                        |
-| **Admin**    | People the owner makes admins.                                                                                                        | Everything the owner can do in the dashboard: change and reset settings, restore versions, run health checks, acknowledge deploy checks, upgrade and undo, send and revoke account invites, and use the [Users](#users) page. Cannot open the **Exports** page. Manages observers and users, including banning them. Cannot make anyone an admin, or change, ban or remove an admin. |
-| **Observer** | People the owner or an admin makes observers.                                                                                         | The whole dashboard except the **Exports** page, read-only, including the **Accounts** pages and the **Audit log**. See [What observers see](#what-observers-see).                                                                                                                                                                                                                   |
+| Role         | Who has it                                                                                                                            | What they can do                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Owner**    | The account whose email is `METIS_OWNER_EMAIL`. There is exactly one. Nobody can change, ban, remove or invite it from the dashboard. | Everything in the dashboard. Manages admins, observers and users: changes their role, bans and unbans them, and removes them.                                                                                                                                                                                                                                                                                                            |
+| **Admin**    | People the owner makes admins.                                                                                                        | Everything the owner can do in the dashboard: change and reset settings, restore versions, run health checks, acknowledge deploy checks, upgrade and undo, send and revoke account invites, create, edit and delete [instance themes](#themes), and use the [Users](#users) page. Cannot open the **Exports** page. Manages observers and users, including banning them. Cannot make anyone an admin, or change, ban or remove an admin. |
+| **Observer** | People the owner or an admin makes observers.                                                                                         | The whole dashboard except the **Exports** page, read-only, including the **Accounts** pages and the **Audit log**. See [What observers see](#what-observers-see).                                                                                                                                                                                                                                                                       |
 
 Every other account has the role **User**. This is the default for a new account. A user works in Metis Suite as usual, but cannot open the dashboard.
 
@@ -38,14 +38,14 @@ If the new owner's account was banned, that same start lifts the ban.
 
 Click your initials at the bottom of the left rail and choose **Dashboard**. The item appears only for the owner, admins and observers. **Dashboard** is also in the search dialog. If your account has no two-factor authentication yet, you are sent to set it up first.
 
-The sidebar lists **Overview**, **AI usage**, **Connections**, **Accounts**, **Workspaces**, **Automation**, **MCP clients**, **Audit log** and **System**. Click **Back** to return to your mail. At the bottom of the sidebar are the deploy check bar and the source code link.
+The sidebar lists **Overview**, **AI usage**, **Connections**, **Accounts**, **Workspaces**, **Automation**, **MCP clients**, **Themes**, **Audit log** and **System**. Click **Back** to return to your mail. At the bottom of the sidebar are the deploy check bar and the source code link.
 
 **Accounts** and **System** each have pages under them. Under **Accounts** are **Users** and **Invites**. Click the arrow next to **Accounts** or **System** to show or hide its pages. The list opens by itself while you are on one of its pages.
 
 <img src="/images/self-hosting/dashboard-overview.webp" alt="The dashboard Overview page with counts, health cards and the sidebar" class="dark:hidden" />
 <img src="/images/self-hosting/dashboard-overview-dark.webp" alt="The dashboard Overview page with counts, health cards and the sidebar" class="hidden dark:block" />
 
-Every page except **Users**, **Invites** and the **System** pages is read-only. Under **System**, the **Exports** page is read-only too, and only the owner sees it.
+Every page except **Users**, **Invites**, **Themes** and the **System** pages is read-only. Under **System**, the **Exports** page is read-only too, and only the owner sees it.
 
 ## What observers see
 
@@ -58,6 +58,7 @@ Observers see every page and every value an admin sees, but none of the controls
 - On **History**, rows have **Compare** but no **Restore**.
 - On **Users**, there is no actions menu, so observers cannot change a role, ban, unban or remove anyone.
 - On **Invites**, there is no **Invite someone** card and no trash button to revoke an invite.
+- On **Themes**, there is no **Create theme** button and no edit or delete buttons on the cards.
 
 Observers can read the **Audit log**.
 
@@ -304,6 +305,44 @@ See [Background work](/self-hosting/configure/background-work).
 ## MCP clients
 
 Every external MCP client registered on the instance: **Clients**, **Enabled** and **Via CIMD** (clients that registered themselves by URL). The table shows each client, the workspaces it is hidden from, its status, its tools and when it was last used. Clients are disabled or deleted by their owners, in their own account settings.
+
+## Themes
+
+"The themes every workspace can pick, beside the built-in ones."
+
+A theme is the set of colors a workspace's pages use. Workspace owners and admins pick one for their workspace, in the workspace's settings. They can pick a built-in theme, one of the instance themes you add here, or a custom theme they made for their own workspace. See [Logo and theme](/guide/workspaces/appearance).
+
+The owner and admins can create, edit and delete instance themes. Observers see the page without these buttons. None of these actions asks for an authenticator code.
+
+<img src="/images/self-hosting/dashboard-themes.webp" alt="The Themes page with the Create theme button, an empty Instance themes section, and the built-in themes with how many workspaces use each" class="dark:hidden" />
+<img src="/images/self-hosting/dashboard-themes-dark.webp" alt="The Themes page with the Create theme button, an empty Instance themes section, and the built-in themes with how many workspaces use each" class="hidden dark:block" />
+
+### Instance themes
+
+This section says that workspace owners and admins can pick these themes in their workspace's settings, and that editing one changes every workspace that uses it. Workspaces see them under **From your instance**.
+
+Each card shows a preview, the theme's name and how many workspaces use it: "No workspace uses it", "Used by 1 workspace" or "Used by 3 workspaces". With no instance themes yet, the section says "No instance themes yet."
+
+To create an instance theme:
+
+1. Click **Create theme**.
+2. The **Create a theme** dialog opens: "Every workspace on this instance can pick it."
+3. Type a name and set the colors. The dialog works as it does in a workspace. See [Set the colors](/guide/workspaces/appearance#set-the-colors).
+4. Click **Create theme**.
+
+The new theme is not applied to any workspace. Workspace owners and admins pick it themselves.
+
+To edit one, click the pencil button on its card, change it, and click **Save theme**. Every workspace that uses it changes at once.
+
+To delete one, click the trash button on its card, then **Delete**. If no workspace uses the theme, the dialog says "No workspace uses it." If some do, it says, for example, "Used by 2 workspaces. Those workspaces switch to Graphite."
+
+You can keep up to 50 instance themes. Each name can be up to 40 characters. An instance theme cannot have the same name as another instance theme or a built-in theme, and upper and lower case count as the same. If saving fails, the dialog says "A theme with that name already exists" or "You can keep up to 50 themes".
+
+### Built in
+
+"Ship with Metis Suite and update with each release. Start a new theme from one of them."
+
+This section shows the seven built-in themes, **Amber**, **Blue**, **Violet**, **Emerald**, **Rose**, **Slate** and **Graphite**, each with how many workspaces use it. They have no buttons. To build on one, pick it under **Start from** when you create a theme.
 
 ## Audit log
 

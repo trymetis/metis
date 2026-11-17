@@ -13,18 +13,24 @@ import {
   driveWorkspace,
   mailbox,
   mailboxWorkspace,
+  theme,
   userPrefs,
   user as userTable,
   workspace,
   workspaceMember,
 } from "@/db/schema";
 import type { WorkspaceSummary } from "@/server/schema";
-import { DEFAULT_THEME_BRAND, isThemeBrand, type ThemeBrandId } from "@/theme/brand";
+import { type ActiveTheme, activeTheme } from "@/theme/active";
+import { storedTheme } from "@/theme/store";
 import type { WorkspaceRole } from "@/types/workspace";
 
 import type { WorkspacePolicy } from "./policy";
 
 export type { WorkspaceSummary };
+
+export interface WorkspaceMembership extends WorkspaceSummary {
+  theme: ActiveTheme;
+}
 
 function slugify(input: string): string {
   return input
@@ -158,7 +164,7 @@ export async function createWorkspace(
 export async function getWorkspaceBySlug(
   userId: string,
   slug: string,
-): Promise<WorkspaceSummary | null> {
+): Promise<WorkspaceMembership | null> {
   const [row] = await db
     .select({
       id: workspace.id,
@@ -166,9 +172,11 @@ export async function getWorkspaceBySlug(
       slug: workspace.slug,
       branding: workspace.branding,
       role: workspaceMember.role,
+      theme,
     })
     .from(workspaceMember)
     .innerJoin(workspace, eq(workspace.id, workspaceMember.workspaceId))
+    .leftJoin(theme, eq(theme.id, workspace.themeId))
     .where(and(eq(workspaceMember.userId, userId), eq(workspace.slug, slug)))
     .limit(1);
   if (!row) return null;
@@ -177,8 +185,8 @@ export async function getWorkspaceBySlug(
     name: row.name,
     slug: row.slug,
     role: row.role,
-    themeBrand: workspaceThemeBrand(row.branding),
     logo: workspaceLogo(row.branding),
+    theme: activeTheme(row.theme ? storedTheme(row.theme) : null),
   };
 }
 
@@ -221,14 +229,8 @@ export async function listMyWorkspaces(userId: string): Promise<WorkspaceSummary
     name: r.name,
     slug: r.slug,
     role: r.role,
-    themeBrand: workspaceThemeBrand(r.branding),
     logo: workspaceLogo(r.branding),
   }));
-}
-
-export function workspaceThemeBrand(branding: Record<string, unknown> | null): ThemeBrandId {
-  const brand = branding?.themeBrand;
-  return isThemeBrand(brand) ? brand : DEFAULT_THEME_BRAND;
 }
 
 export function workspaceLogo(branding: Record<string, unknown> | null): string | null {

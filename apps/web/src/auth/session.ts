@@ -23,7 +23,7 @@ export interface WorkspaceUserSession extends AppUserSession {
 
 const readSession = cache((headers: Headers) => getAuth().api.getSession({ headers }));
 
-const readMembership = cache((userId: string, workspaceSlug: string) =>
+export const getWorkspaceMembership = cache((userId: string, workspaceSlug: string) =>
   getWorkspaceBySlug(userId, workspaceSlug),
 );
 
@@ -34,7 +34,9 @@ export async function getAppUser(
   const session = await readSession(headers);
   if (!session?.user) return null;
 
-  const membership = workspaceSlug ? await readMembership(session.user.id, workspaceSlug) : null;
+  const membership = workspaceSlug
+    ? await getWorkspaceMembership(session.user.id, workspaceSlug)
+    : null;
 
   return {
     userId: session.user.id,

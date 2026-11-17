@@ -89,11 +89,16 @@ See [Workflows](/guide/workflows) for what workflows are.
 
 ### Workspace administration
 
+Any member can ask for the list of themes the workspace can use, and which one it uses.
+
 Only for workspace owners and admins:
 
 - List pending invitations, and revoke one **(approval)**
 - Remove a member **(approval)**
-- Change the workspace accent color **(approval)**
+- Change the workspace theme for everyone **(approval)**
+- Create a custom theme from a name, an accent color written as a hex code such as #0d9488, and a background tint of none, light or strong (light if you do not say) **(approval)**. The assistant uses the new theme for the workspace right away, unless you ask it not to.
+
+The assistant cannot edit or delete themes. See [Logo and theme](/guide/workspaces/appearance).
 
 ## Mail AI, Calendar AI, Drive AI and Contacts AI
 

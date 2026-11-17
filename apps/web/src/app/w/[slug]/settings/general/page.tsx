@@ -6,7 +6,6 @@ import { Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { useWorkspaceSlug } from "@/hooks/use-workspace-path";
 import { rpc } from "@/lib/orpc";
-import { DEFAULT_THEME_BRAND, isThemeBrand } from "@/theme/brand";
 
 import { AppearanceSection } from "./_components/appearance-section";
 import { DeleteWorkspaceSection } from "./_components/delete-workspace-section";
@@ -50,9 +49,6 @@ export default function GeneralSettingsPage() {
             key={workspace.id}
             workspaceName={workspace.name}
             initialLogo={workspace.logo ?? null}
-            initialThemeBrand={
-              isThemeBrand(workspace.themeBrand) ? workspace.themeBrand : DEFAULT_THEME_BRAND
-            }
             canEdit={workspace.role === "owner" || workspace.role === "admin"}
           />
           {workspace.role === "owner" && (

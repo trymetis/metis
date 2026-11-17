@@ -8,7 +8,6 @@ import { useCallback, useEffect, useState } from "react";
 import { orpc, rpc } from "@/lib/orpc";
 import { getQueryClient, refreshQueries } from "@/lib/query-client";
 import { orderByIds } from "@/lib/utils";
-import type { ThemeBrandId } from "@/theme/brand";
 import { parseWorkspacePath, switchWorkspacePath } from "@/workspace/path";
 
 import { cachedPreferences, updateCachedPreferences, useUserPreferences } from "./use-preferences";
@@ -19,7 +18,6 @@ export interface WorkspaceItem {
   slug: string;
   role: string;
   logo: string | null;
-  themeBrand: ThemeBrandId;
   mailboxCount: number;
   inboxMailboxSlug: string | null;
   calendarCount: number;
