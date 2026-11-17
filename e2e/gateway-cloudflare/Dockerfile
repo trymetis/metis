@@ -13,7 +13,7 @@ FROM node:26-slim@sha256:0d1e33586362bb9e608c4e751e7a9e7edb55c9ac11461ed5666af69
 WORKDIR /app
 COPY --from=deps /app /app
 COPY e2e/gateway-cloudflare/wrangler.jsonc e2e/gateway-cloudflare/start.sh /e2e/
-COPY e2e/gateway-cloudflare/tls/ /e2e/tls/
+COPY e2e/tls/gateway-cloudflare/ /e2e/tls/gateway-cloudflare/
 COPY e2e/tls/ca.crt /e2e/tls/ca.crt
 WORKDIR /app/apps/gateway-cloudflare
 CMD ["sh", "/e2e/start.sh"]

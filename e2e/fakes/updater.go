@@ -474,7 +474,7 @@ func parseUpdaterSettings(r *http.Request) (updaterSettings, error) {
 	return settings, nil
 }
 
-func runUpdater() error {
+func newUpdater() (*standIn, error) {
 	socket := os.Getenv("E2E_UPDATER_SOCKET")
 	if socket == "" {
 		socket = defaultUpdaterSocket
@@ -485,16 +485,15 @@ func runUpdater() error {
 	}
 	defaults, err := loadReleaseDefaults(releaseDir)
 	if err != nil {
-		return fmt.Errorf("release history: %w", err)
+		return nil, fmt.Errorf("release history: %w", err)
 	}
 	releaseDefaults = defaults
 	fake := &updaterFake{socket: socket, settings: defaultUpdaterSettings(), snapshotAt: time.Now().Add(-time.Hour)}
 	if err := fake.up(); err != nil {
-		return err
+		return nil, err
 	}
 
 	control := http.NewServeMux()
-	healthRoute(control)
 	control.HandleFunc("GET /state", func(w http.ResponseWriter, _ *http.Request) {
 		fake.mu.Lock()
 		defer fake.mu.Unlock()
@@ -555,8 +554,10 @@ func runUpdater() error {
 		}
 		fake.state(w)
 	})
-	fallback(control, "GET /health | GET /state | POST /reset, /hold, /down, /up")
-
-	log.Printf("[updater] serving the updater protocol on %s, control on :8080", socket)
-	return serve(":8080", control)
+	log.Printf("[updater] serving the updater protocol on %s", socket)
+	return &standIn{
+		name:    "updater",
+		control: control,
+		routes:  "GET /updater/state | POST /updater/reset, /hold, /down, /up",
+	}, nil
 }

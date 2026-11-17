@@ -100,7 +100,9 @@ Everything is installed in `/opt/metis-suite`. Your settings go in `/opt/metis-s
     Components: updater
     ```
 
-    Answer **Yes** to install. **No** stops with "setup cancelled", and
+    Without a domain, the domain line reads "Domain: none, 127.0.0.1:3000 only".
+
+    Answer **Yes** to install. **No** stops with "Setup cancelled.", and
     nothing is installed.
 
   </Step>
@@ -115,12 +117,15 @@ Everything is installed in `/opt/metis-suite`. Your settings go in `/opt/metis-s
       mail.example.com points at this server."
     - Without a domain: "Metis listens on 127.0.0.1:3000. Reach it with ssh
       -L 3000:127.0.0.1:3000, then open http://localhost:3000/setup," and
-      "or give it a domain with sudo metis domain mail.example.com."
+      "or give it a domain with sudo metis domain set mail.example.com."
     - **Setup code:** the code that creates the owner account. It is also
       kept as `METIS_SETUP_CODE` in `/opt/metis-suite/.env`.
 
+    <img src="/images/self-hosting/terminal-setup.webp" alt="The install script downloaded with curl and run, the end of the setup form with the Google sign-in choice and the Install Metis? summary, then setup checking Docker, picking the release, creating the database, preflight, app and updater containers and printing Metis is running, followed by how to reach the app through an SSH tunnel, the setup code and a warning to back up METIS_ENCRYPTION_KEY" class="dark:hidden" />
+    <img src="/images/self-hosting/terminal-setup-dark.webp" alt="The install script downloaded with curl and run, the end of the setup form with the Google sign-in choice and the Install Metis? summary, then setup checking Docker, picking the release, creating the database, preflight, app and updater containers and printing Metis is running, followed by how to reach the app through an SSH tunnel, the setup code and a warning to back up METIS_ENCRYPTION_KEY" class="hidden dark:block" />
+
     Setup creates no DNS record. Point your domain at the server yourself,
-    or let `metis domain` create it later on Cloudflare. See
+    or let `metis domain set` create it later on Cloudflare. See
     [Domain and HTTPS](/self-hosting/install/domain-and-https).
 
   </Step>
@@ -191,7 +196,7 @@ With `--yes`, or when there is no terminal (for example in cloud-init), setup as
 sudo sh bootstrap.sh --yes --owner-email alice@example.com --domain mail.example.com --with updater,worker
 ```
 
-If a value is missing or wrong, setup stops at once and lists what it needs, for example "setup needs `--owner-email you@example.com`; `--domain mail.example.com`".
+If a value is missing or wrong, setup stops at once and lists what it needs, for example "Setup needs `--owner-email you@example.com`; `--domain mail.example.com`."
 
 - **Mail gateways and Google** cannot be set up without questions. Add them once Metis runs, with `sudo metis add` and `sudo metis connect google`.
 - **Starting values** for other settings, such as OAuth clients, the AI model, server lists or the workflow runner, go in with `--env` or `--env-file`. They are written to `.env` last, and the first preflight stores them as the starting values of those dashboard settings. See [Environment variables](/self-hosting/reference/environment-variables).
@@ -214,7 +219,7 @@ If a value is missing or wrong, setup stops at once and lists what it needs, for
 | `--passphrase`     | With `--from-export`: ask for the passphrase the export was encrypted to, instead of `--identity`. It needs a terminal.                                                                                   |                    |
 | `--yes`            | Skip the questions and use the flags.                                                                                                                                                                     |                    |
 
-`--with` takes only `updater`, `worker` and `objstore`. A mail gateway there is refused with, for example, "a running install for gateway-resend: add it after setup with metis add gateway-resend".
+`--with` takes only `updater`, `worker` and `objstore`. A mail gateway there is refused. For example, the terminal shows "Setup needs a running install for gateway-resend: add it after setup with metis add gateway-resend."
 
 ## Use Turso or your own database server
 
@@ -239,8 +244,8 @@ The server then runs no database server of its own. The updater cannot take a sn
 
 Setup installs the newest published release that your version of the CLI supports. A release can need a newer CLI. Then:
 
-- Without `--version`, if every release needs a newer CLI, setup stops with, for example, "every published release needs Metis CLI 0.5.0 or later; this is 0.4.0". Download the install script again and run it: it always installs the newest CLI.
-- With `--version`, setup stops with, for example, "1.4.0 needs Metis CLI 0.5.0 or later; run sudo metis self-update, then setup again".
+- Without `--version`, if every release needs a newer CLI, setup stops with, for example, "Every published release needs Metis CLI 0.5.0 or later; this is 0.4.0." Download the install script again and run it: it always installs the newest CLI.
+- With `--version`, setup stops with, for example, "1.4.0 needs Metis CLI 0.5.0 or later; run sudo metis self-update, then setup again."
 - With `--version`, a release that does not exist is refused with a message that starts with, for example, "1.3.9 is not a published release".
 
 The install script always downloads the newest CLI. To install a fixed version of the CLI instead, set `METIS_CLI_VERSION`:
@@ -251,7 +256,7 @@ sudo METIS_CLI_VERSION=0.1.0 sh bootstrap.sh
 
 ## If the first start fails
 
-The error ends with "Fix the cause, then run sudo metis apply". The install already exists at that point, so running setup again is refused. Fix the cause, then run:
+The error ends with "Fix the cause, then run sudo metis apply." The install already exists at that point, so running setup again is refused. Fix the cause, then run:
 
 ```bash
 sudo metis apply
@@ -259,15 +264,15 @@ sudo metis apply
 
 ## Troubleshooting the install
 
-| Message                                                                                        | What to do                                                                                                                       |
-| ---------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| "[bootstrap] run as root: sudo sh bootstrap.sh"                                                | Run the script with `sudo`.                                                                                                      |
-| "[bootstrap] unsupported architecture" followed by a name                                      | The server's processor is not amd64 or arm64. Use another server.                                                                |
-| "Install Docker Engine first: https://docs.docker.com/engine/install/"                         | The server is not Debian or Ubuntu, so the CLI cannot install Docker. Install Docker Engine yourself, then run the script again. |
-| "Docker Engine was installed but does not answer on its socket"                                | Check that the Docker service runs, for example with `sudo systemctl status docker`, then run the script again.                  |
-| "/opt/metis-suite is not empty; setup installs only into an empty folder"                      | Choose another folder with `--dir`, or empty this one.                                                                           |
-| "Metis is already installed in /opt/metis-suite; use metis status, metis add and metis update" | Metis Suite is installed already. Change it with the other commands. See [CLI commands](/self-hosting/reference/cli-commands).   |
-| "setup needs" followed by a list                                                               | Pass the flags it names.                                                                                                         |
-| "preflight failed: metis-preflight exited with code 1:" followed by its output                 | A setting is wrong. The output names it. Fix it in `/opt/metis-suite/.env`, then run `sudo metis apply`.                         |
-| "metis-sqld was not healthy within 1m0s" followed by its log                                   | The database server did not start. Its log follows the message. Fix the cause, then run `sudo metis apply`.                      |
-| "metis-app exited with code 1:" followed by its log                                            | The app stopped. Its log follows the message. Fix the cause, then run `sudo metis apply`.                                        |
+| Message                                                                                         | What to do                                                                                                                       |
+| ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| "[bootstrap] run as root: sudo sh bootstrap.sh"                                                 | Run the script with `sudo`.                                                                                                      |
+| "[bootstrap] unsupported architecture" followed by a name                                       | The server's processor is not amd64 or arm64. Use another server.                                                                |
+| "Install Docker Engine first: https://docs.docker.com/engine/install/."                         | The server is not Debian or Ubuntu, so the CLI cannot install Docker. Install Docker Engine yourself, then run the script again. |
+| "Docker Engine was installed but does not answer on its socket."                                | Check that the Docker service runs, for example with `sudo systemctl status docker`, then run the script again.                  |
+| "/opt/metis-suite is not empty; setup installs only into an empty folder."                      | Choose another folder with `--dir`, or empty this one.                                                                           |
+| "Metis is already installed in /opt/metis-suite; use metis status, metis add and metis update." | Metis Suite is installed already. Change it with the other commands. See [CLI commands](/self-hosting/reference/cli-commands).   |
+| "Setup needs" followed by a list                                                                | Pass the flags it names.                                                                                                         |
+| "Preflight failed: metis-preflight exited with code 1:" followed by its output                  | A setting is wrong. The output names it. Fix it in `/opt/metis-suite/.env`, then run `sudo metis apply`.                         |
+| "metis-sqld was not healthy within 1m0s" followed by its log                                    | The database server did not start. Its log follows the message. Fix the cause, then run `sudo metis apply`.                      |
+| "metis-app exited with code 1:" followed by its log                                             | The app stopped. Its log follows the message. Fix the cause, then run `sudo metis apply`.                                        |

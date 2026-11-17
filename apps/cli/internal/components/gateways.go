@@ -216,7 +216,7 @@ func (resendGateway) Requires() []string { return nil }
 
 func (resendGateway) Validate(st *state.State) error {
 	if st.Components.Caddy == nil {
-		return errors.New("the Resend gateway needs a public HTTPS address for its webhook; run metis domain mail.example.com first")
+		return errors.New("the Resend gateway needs a public HTTPS address for its webhook; run metis domain set mail.example.com first")
 	}
 	return nil
 }

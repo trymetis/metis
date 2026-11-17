@@ -63,3 +63,10 @@ jobs:
 
       - name: Test
         run: go test ./...
+
+      - name: Test the e2e build
+        if: matrix.module == 'apps/cli'
+        run: |
+          go vet -tags e2e ./cmd/metis
+          go test -tags e2e -run TestTheE2EBuildTrustsTheE2ECA ./cmd/metis \
+            -ldflags "-X github.com/trymetis/metis/apps/cli/cmd/metis.e2eCA=$(base64 -w0 ../../e2e/tls/ca.crt)"

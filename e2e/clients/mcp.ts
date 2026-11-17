@@ -22,7 +22,7 @@ export const MODERN = "2026-07-28";
 export const ERAS = ["legacy", MODERN] as const;
 export type Era = (typeof ERAS)[number];
 
-const SERVICE_CONTROL = "http://localhost:8098";
+const SERVICE_CONTROL = "http://localhost:8090/mcp-client";
 
 export function clientIdFor(name: string, host: "public" | "private" = "public"): string {
   const domain = MCP_CLIENT_HOSTS[host];

@@ -19,3 +19,7 @@ e2e/blob-report
 e2e/tests/.auth
 e2e/api/.state
 e2e/.record
+e2e-cli/test-results
+e2e-cli/playwright-report
+e2e-cli/blob-report
+e2e-cli/tests/.auth

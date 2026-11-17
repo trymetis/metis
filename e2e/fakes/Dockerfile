@@ -10,9 +10,16 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/fakes .
 
 FROM scratch
 COPY --from=build /out/fakes /fakes
-COPY e2e/mcp-client/tls/ /tls/mcp-client/
-COPY e2e/resend/tls/ /tls/resend/
-COPY e2e/ses/tls/ /tls/ses/
+COPY e2e/tls/mcp-client/ /tls/mcp-client/
+COPY e2e/tls/resend/ /tls/resend/
+COPY e2e/tls/ses/ /tls/ses/
+COPY e2e/tls/sh/ /tls/sh/
+COPY e2e/tls/github-raw/ /tls/github-raw/
+COPY e2e/tls/cloudflare/ /tls/cloudflare/
+COPY e2e/tls/registry/ /tls/registry/
 COPY apps/web/package.json /release/
 COPY releases/ /release/releases/
+COPY apps/gateway-cloudflare/schema.sql apps/gateway-cloudflare/wrangler.jsonc /repo/apps/gateway-cloudflare/
+COPY apps/gateway-ses/schema.sql /repo/apps/gateway-ses/
 ENTRYPOINT ["/fakes"]
+CMD ["serve"]

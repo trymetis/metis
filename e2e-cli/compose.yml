@@ -1,0 +1,400 @@
+name: metis-e2e-cli
+
+networks:
+  default:
+    internal: true
+  egress: {}
+
+services:
+  sqld-external:
+    image: ghcr.io/tursodatabase/libsql-server:latest@sha256:6dd3eb276d9d3604e4a48ac4a999a2e267814732d57d7e94c04ba71482333a67
+    command: ["/bin/sqld", "--enable-namespaces"]
+    environment:
+      SQLD_AUTH_JWT_KEY: ${SQLD_AUTH_JWT_KEY:?set in e2e-cli/.env.fixture}
+      SQLD_ADMIN_LISTEN_ADDR: 0.0.0.0:9090
+      LIBSQL_ADMIN_AUTH_KEY: ${E2E_EXTERNAL_DATABASE_ADMIN_KEY:?set in e2e-cli/.env.fixture}
+    tmpfs:
+      - /var/lib/sqld:size=1g,mode=1777
+    networks:
+      default:
+        aliases:
+          - resend.sqld-external
+          - ses.sqld-external
+          - one-app.sqld-external
+          - one-mastra.sqld-external
+          - two-app.sqld-external
+          - two-mastra.sqld-external
+          - load-app.sqld-external
+          - load-mastra.sqld-external
+    mem_limit: 1g
+    cpus: 1
+    pids_limit: 256
+    healthcheck:
+      test:
+        - CMD
+        - bash
+        - -c
+        - 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf "GET /health HTTP/1.0\r\n\r\n" >&3 && read -r status <&3 && [[ $$status == *" 200 "* ]]'
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  sqld-namespaces:
+    image: metis-e2e-fakes
+    pull_policy: never
+    command: ["namespaces", "http://sqld-external:9090", "resend", "ses"]
+    environment:
+      SQLD_ADMIN_KEY: ${E2E_EXTERNAL_DATABASE_ADMIN_KEY:?set in e2e-cli/.env.fixture}
+    mem_limit: 64m
+    cpus: 0.5
+    pids_limit: 64
+    depends_on:
+      sqld-external:
+        condition: service_healthy
+      fakes:
+        condition: service_healthy
+
+  mail:
+    build:
+      context: ../e2e
+      dockerfile: mail/Dockerfile
+    init: true
+    environment:
+      USER_PASSWORD: "{PLAIN}${E2E_IMAP_PASS:?set in e2e-cli/.env.fixture}"
+      E2E_IMAP_USER: ${E2E_IMAP_USER:?set in e2e-cli/.env.fixture}
+      UID_VALIDITY: "1000"
+    tmpfs:
+      - /srv/vmail:size=1g,mode=1777
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 256
+
+  caldav:
+    build:
+      context: ../e2e
+      dockerfile: caldav/Dockerfile
+    tmpfs:
+      - /data:size=256m,mode=1777
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 128
+
+  s3:
+    build:
+      context: ../e2e
+      dockerfile: s3/Dockerfile
+    environment:
+      RUSTFS_ACCESS_KEY: e2e-access-key
+      RUSTFS_SECRET_KEY: e2e-secret-key-0001
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: 0.0.0.0:9000
+      RUSTFS_CONSOLE_ENABLE: "false"
+      RUSTFS_CORS_ALLOWED_ORIGINS: "*"
+    tmpfs:
+      - /data:size=2g,mode=1777
+    mem_limit: 2500m
+    cpus: 1
+    pids_limit: 256
+
+  webdav:
+    build:
+      context: ../e2e
+      dockerfile: webdav/Dockerfile
+    tmpfs:
+      - /data:size=2g,mode=1777
+    mem_limit: 2500m
+    cpus: 1
+    pids_limit: 128
+
+  ftp:
+    build:
+      context: ../e2e
+      dockerfile: ftp/Dockerfile
+    init: true
+    environment:
+      E2E_FTP_USER: ${E2E_FTP_USER:?set in e2e-cli/.env.fixture}
+      E2E_FTP_PASS: ${E2E_FTP_PASS:?set in e2e-cli/.env.fixture}
+    tmpfs:
+      - /home/files:size=2g,mode=1777
+    mem_limit: 2500m
+    cpus: 1
+    pids_limit: 128
+
+  sftp:
+    build:
+      context: ../e2e
+      dockerfile: sftp/Dockerfile
+    init: true
+    environment:
+      E2E_SFTP_USER: ${E2E_SFTP_USER:?set in e2e-cli/.env.fixture}
+      E2E_SFTP_PASS: ${E2E_SFTP_PASS:?set in e2e-cli/.env.fixture}
+      E2E_SFTP_ROOT: ${E2E_SFTP_ROOT:?set in e2e-cli/.env.fixture}
+    tmpfs:
+      - /home/${E2E_SFTP_USER}/${E2E_SFTP_ROOT}:size=2g,mode=1777
+    mem_limit: 2500m
+    cpus: 1
+    pids_limit: 128
+
+  gateway-cloudflare:
+    build:
+      context: ..
+      dockerfile: e2e/gateway-cloudflare/Dockerfile
+    environment:
+      MAIL_DOMAIN: ${E2E_GATEWAY_DOMAIN:?set in e2e-cli/.env.fixture}
+      API_TOKEN: ${E2E_GATEWAY_ADMIN_TOKEN:?set in e2e-cli/.env.fixture}
+      NODE_EXTRA_CA_CERTS: /e2e/tls/ca.crt
+      WRANGLER_SEND_METRICS: "false"
+    tmpfs:
+      - /data:size=256m,mode=1777
+    mem_limit: 1g
+    cpus: 1
+    pids_limit: 256
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - 'fetch("https://localhost:8787/v1/health").then(r=>process.exit(r.status===401?0:1),()=>process.exit(1))'
+      interval: 2s
+      timeout: 5s
+      retries: 60
+
+  cache-redis:
+    image: redis:8.2-alpine@sha256:b51665e66f00759be7c3152ad5ac3c66fb2f619c13ef62dea7cc1f9914524635
+    command:
+      ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory-policy", "noeviction"]
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 64
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  srh:
+    image: hiett/serverless-redis-http:latest@sha256:5b0bb9239fce53abf87b2018a7a0deb9ec7bd900c5360738fe5fbeeb426f9150
+    environment:
+      SRH_MODE: env
+      SRH_TOKEN: ${E2E_UPSTASH_TOKEN:?set in e2e-cli/.env.fixture}
+      SRH_CONNECTION_STRING: ${E2E_REDIS_URL:?set in e2e-cli/.env.fixture}
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 128
+    depends_on:
+      cache-redis:
+        condition: service_healthy
+
+  gateway-resend:
+    build:
+      context: ..
+      dockerfile: e2e/gateway-resend/Dockerfile
+    environment:
+      DATABASE_URL: http://resend.sqld-external:8080
+      DATABASE_AUTH_TOKEN: ${E2E_RESEND_DATABASE_AUTH_TOKEN:?set in e2e-cli/.env.fixture}
+      BLOB_DIR: /data/blobs
+      MAIL_DOMAIN: ${E2E_RESEND_DOMAIN:?set in e2e-cli/.env.fixture}
+      API_TOKEN: ${E2E_RESEND_GATEWAY_ADMIN_TOKEN:?set in e2e-cli/.env.fixture}
+      RESEND_API_KEY: ${E2E_RESEND_API_KEY:?set in e2e-cli/.env.fixture}
+      RESEND_WEBHOOK_SECRET: ${E2E_RESEND_WEBHOOK_SECRET:?set in e2e-cli/.env.fixture}
+      PORT: "8787"
+      NODE_EXTRA_CA_CERTS: /e2e/tls/ca.crt
+    tmpfs:
+      - /data:size=256m,mode=1777
+    mem_limit: 512m
+    cpus: 0.5
+    pids_limit: 128
+    depends_on:
+      sqld-namespaces:
+        condition: service_completed_successfully
+      fakes:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - bun
+        - -e
+        - 'fetch("http://127.0.0.1:8787/v1/health").then(r=>process.exit(r.status===401?0:1),()=>process.exit(1))'
+      interval: 2s
+      timeout: 3s
+      retries: 60
+
+  gateway-ses-schema:
+    build:
+      context: ..
+      dockerfile: e2e/gateway-ses/Dockerfile
+      target: schema
+    environment:
+      DATABASE_URL: http://ses.sqld-external:8080
+      DATABASE_AUTH_TOKEN: ${E2E_SES_DATABASE_AUTH_TOKEN:?set in e2e-cli/.env.fixture}
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 64
+    depends_on:
+      sqld-namespaces:
+        condition: service_completed_successfully
+
+  gateway-ses:
+    build:
+      context: ..
+      dockerfile: e2e/gateway-ses/Dockerfile
+      target: lambda
+    environment:
+      MAIL_DOMAIN: ${E2E_SES_DOMAIN:?set in e2e-cli/.env.fixture}
+      API_TOKEN: ${E2E_SES_GATEWAY_ADMIN_TOKEN:?set in e2e-cli/.env.fixture}
+      DATABASE_URL: http://ses.sqld-external:8080
+      DATABASE_AUTH_TOKEN: ${E2E_SES_DATABASE_AUTH_TOKEN:?set in e2e-cli/.env.fixture}
+      MAIL_BUCKET: ${E2E_SES_BUCKET:?set in e2e-cli/.env.fixture}
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: e2e-access-key
+      AWS_SECRET_ACCESS_KEY: e2e-secret-key-0001
+      AWS_LAMBDA_FUNCTION_TIMEOUT: "60"
+      AWS_LAMBDA_FUNCTION_MEMORY_SIZE: "1024"
+      NODE_EXTRA_CA_CERTS: /e2e/tls/ca.crt
+    mem_limit: 1g
+    cpus: 0.5
+    pids_limit: 128
+    depends_on:
+      gateway-ses-schema:
+        condition: service_completed_successfully
+      proxy:
+        condition: service_started
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - 'require("node:net").connect(8080,"127.0.0.1").on("connect",()=>process.exit(0)).on("error",()=>process.exit(1))'
+      interval: 2s
+      timeout: 3s
+      retries: 60
+
+  replay:
+    build:
+      context: ..
+      dockerfile: e2e/Dockerfile
+    command: ["bun", "run", "harness/replay.ts"]
+    env_file: .env.fixture
+    environment:
+      DATABASE_URL: http://app.sqld:8080
+      DATABASE_AUTH_TOKEN: replay-opens-no-database
+      MASTRA_DATABASE_URL: http://mastra.sqld:8080
+      MASTRA_DATABASE_AUTH_TOKEN: replay-opens-no-database
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 128
+    networks:
+      default:
+        aliases:
+          - openrouter.ai
+          - api.typesafe.ai
+      egress: {}
+    healthcheck:
+      test:
+        - CMD
+        - bun
+        - -e
+        - 'fetch("http://127.0.0.1:8080/health").then(r=>process.exit(r.ok?0:1),()=>process.exit(1))'
+      interval: 2s
+      timeout: 3s
+      retries: 60
+
+  fakes:
+    build:
+      context: ..
+      dockerfile: e2e/fakes/Dockerfile
+    image: metis-e2e-fakes
+    environment:
+      FAKES: resend,ses,sh,github-raw,cloudflare,registry,cron
+      RESEND_API_KEY: ${E2E_RESEND_API_KEY:?set in e2e-cli/.env.fixture}
+      RESEND_DOMAIN: ${E2E_RESEND_DOMAIN:?set in e2e-cli/.env.fixture}
+      RESEND_WEBHOOK_URL: http://gateway-resend:8787/webhooks/resend
+      RESEND_WEBHOOK_SECRET: ${E2E_RESEND_WEBHOOK_SECRET:?set in e2e-cli/.env.fixture}
+      SES_DOMAIN: ${E2E_SES_DOMAIN:?set in e2e-cli/.env.fixture}
+      SES_REGION: us-east-1
+      SES_BUCKET: ${E2E_SES_BUCKET:?set in e2e-cli/.env.fixture}
+      SES_ACCESS_KEY_ID: e2e-access-key
+      S3_ENDPOINT: http://s3:9000
+      S3_ACCESS_KEY: e2e-access-key
+      S3_SECRET_KEY: e2e-secret-key-0001
+      LAMBDA_INVOKE_URL: http://gateway-ses:8080/2015-03-31/functions/function/invocations
+      CLOUDFLARE_ZONES: cf.demo.trymetis.email,demo.trymetis.email
+      CRON_SECRET: ${CRON_SECRET:?set in e2e-cli/.env.fixture}
+      CRON_URL: http://cli-host:3100/api/workflows/tick
+    networks:
+      default:
+        aliases:
+          - api.resend.com
+          - email.us-east-1.amazonaws.com
+          - sts.us-east-1.amazonaws.com
+          - iam.amazonaws.com
+          - sqs.us-east-1.amazonaws.com
+          - lambda.us-east-1.amazonaws.com
+          - metis-ses-aws-demo-trymetis-email.s3.us-east-1.amazonaws.com
+          - sh.trymetis.email
+          - raw.githubusercontent.com
+          - api.cloudflare.com
+          - ghcr.io
+          - registry-1.docker.io
+          - gcr.io
+          - registry.localhost
+    mem_limit: 3g
+    cpus: 2
+    pids_limit: 256
+    depends_on:
+      s3:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/fakes", "health", "http://127.0.0.1:8080/health"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  cli-host:
+    build:
+      context: ..
+      dockerfile: e2e-cli/cli-host/Dockerfile
+    hostname: metis-server
+    privileged: true
+    environment:
+      APP_PORT: ${E2E_CLI_APP_PORT:-30050}
+    volumes:
+      - ./.env.fixture:/opt/e2e/fixture.env:ro
+      - ../e2e/tls/ca.crt:/opt/e2e/ca.crt:ro
+    mem_limit: 8g
+    cpus: 4
+    pids_limit: 4096
+    depends_on:
+      fakes:
+        condition: service_healthy
+
+  proxy:
+    image: haproxy:3.2.25@sha256:e2b397cdbd612221cf79dec325690139d00a78b4ce4eae065530fbc81e1f6192
+    volumes:
+      - ./proxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+      - ../e2e/tls/resend-gateway:/usr/local/etc/haproxy/tls/resend-gateway:ro
+      - ../e2e/tls/ses-gateway:/usr/local/etc/haproxy/tls/ses-gateway:ro
+      - ../e2e/tls/s3-amazonaws:/usr/local/etc/haproxy/tls/s3-amazonaws:ro
+    mem_limit: 128m
+    cpus: 0.5
+    pids_limit: 64
+    networks:
+      default:
+        aliases:
+          - imap.localhost
+          - caldav.localhost
+          - s3.localhost
+          - webdav.localhost
+          - ftp.localhost
+          - sftp.localhost
+          - gateway.localhost
+          - resend-gateway.localhost
+          - ses-gateway.localhost
+          - s3.us-east-1.amazonaws.com
+      egress: {}
+    ports:
+      - 127.0.0.1:30050:3000
+      - 127.0.0.1:30051:8099
+      - 127.0.0.1:30052:8090
+      - 127.0.0.1:30053:5443
+      - 127.0.0.1:30054:7681

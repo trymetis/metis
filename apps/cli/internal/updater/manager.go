@@ -39,6 +39,7 @@ type Manager struct {
 	backend  Backend
 	releases ReleaseSource
 	ctx      context.Context
+	OnStep   func(*updaterv1.Upgrade)
 
 	mu      sync.Mutex
 	running bool
@@ -251,6 +252,7 @@ func (manager *Manager) start(kind updaterv1.UpgradeKind, requestedBy string, no
 	manager.running = true
 	manager.saveLocked(nil)
 	log.Printf("[updater] %s %s → %s started (%s)", kind, displayVersion(st.App.Version), version, upgrade.GetId())
+	manager.announce(proto.CloneOf(upgrade))
 
 	manager.work.Add(1)
 	if kind == updaterv1.UpgradeKind_UPGRADE_KIND_ROLLBACK {
@@ -280,11 +282,19 @@ func (manager *Manager) saveLocked(update func(*state.State)) {
 	}
 }
 
+func (manager *Manager) announce(upgrade *updaterv1.Upgrade) {
+	if manager.OnStep != nil {
+		manager.OnStep(upgrade)
+	}
+}
+
 func (manager *Manager) step(step updaterv1.UpgradeStep) {
 	manager.mu.Lock()
-	defer manager.mu.Unlock()
 	manager.last.Step = step
 	manager.saveLocked(nil)
+	upgrade := proto.CloneOf(manager.last)
+	manager.mu.Unlock()
+	manager.announce(upgrade)
 }
 
 func (manager *Manager) finish(result updaterv1.UpgradeState, restored bool, err error, update func(*state.State)) {
@@ -361,6 +371,10 @@ func (manager *Manager) upgrade(from, to Images, snapshots bool) {
 		manager.restore(ctx, from, err, snapshots)
 		return
 	}
+	var warning error
+	if snapshots {
+		warning = manager.leaveMaintenance(ctx, ImagesVersion(to))
+	}
 
 	if snapshots {
 		if err := manager.backend.PromoteSnapshot(pendingSnapshot, currentSnapshot); err != nil {
@@ -370,7 +384,7 @@ func (manager *Manager) upgrade(from, to Images, snapshots bool) {
 	} else if err := manager.backend.DropSnapshot(currentSnapshot); err != nil {
 		log.Printf("[updater] removing the previous snapshot failed: %v", err)
 	}
-	manager.finish(updaterv1.UpgradeState_UPGRADE_STATE_SUCCEEDED, false, nil, func(st *state.State) {
+	manager.finish(updaterv1.UpgradeState_UPGRADE_STATE_SUCCEEDED, false, warning, func(st *state.State) {
 		previous := from
 		st.Updater.Previous = &previous
 		st.Updater.SnapshotAt = ""
@@ -378,6 +392,13 @@ func (manager *Manager) upgrade(from, to Images, snapshots bool) {
 			st.Updater.SnapshotAt = takenAt.UTC().Format(time.RFC3339Nano)
 		}
 	})
+}
+
+func (manager *Manager) leaveMaintenance(ctx context.Context, version string) error {
+	if err := manager.backend.Maintenance(ctx, manager.current(), false); err != nil {
+		return fmt.Errorf("%s is running, but taking it out of maintenance failed: %w. Run sudo metis apply on the server", displayVersion(version), err)
+	}
+	return nil
 }
 
 func (manager *Manager) takeSnapshot(ctx context.Context) error {
@@ -422,6 +443,10 @@ func (manager *Manager) restore(ctx context.Context, from Images, cause error, s
 	if err == nil {
 		err = manager.backend.WaitReady(ctx, manager.current())
 	}
+	var warning error
+	if err == nil && snapshot {
+		warning = manager.leaveMaintenance(ctx, ImagesVersion(from))
+	}
 	if err != nil {
 		if snapshot {
 			err = fmt.Errorf("%w (the database snapshot is in %s)", err, manager.backend.SnapshotDir()+"/"+pendingSnapshot)
@@ -438,6 +463,9 @@ func (manager *Manager) restore(ctx context.Context, from Images, cause error, s
 		if err := manager.backend.DropSnapshot(pendingSnapshot); err != nil {
 			log.Printf("[updater] removing the restored snapshot failed: %v", err)
 		}
+	}
+	if warning != nil {
+		cause = fmt.Errorf("%w; %v", cause, warning)
 	}
 	manager.finish(updaterv1.UpgradeState_UPGRADE_STATE_FAILED, true, cause, nil)
 }
@@ -484,11 +512,12 @@ func (manager *Manager) undo(to Images) {
 		manager.undoFailed(err)
 		return
 	}
+	warning := manager.leaveMaintenance(ctx, ImagesVersion(to))
 
 	if err := manager.backend.DropSnapshot(currentSnapshot); err != nil {
 		log.Printf("[updater] removing the restored snapshot failed: %v", err)
 	}
-	manager.finish(updaterv1.UpgradeState_UPGRADE_STATE_SUCCEEDED, false, nil, func(st *state.State) {
+	manager.finish(updaterv1.UpgradeState_UPGRADE_STATE_SUCCEEDED, false, warning, func(st *state.State) {
 		st.Updater.Previous = nil
 		st.Updater.SnapshotAt = ""
 	})

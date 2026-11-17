@@ -17,7 +17,7 @@ Once you set a domain, the `metis` CLI adds Caddy, a web server that gets and re
 Run:
 
 ```bash
-sudo metis domain mail.example.com
+sudo metis domain set mail.example.com
 ```
 
 Write the name only, without `https://`. The command:
@@ -40,7 +40,7 @@ The command finds the server's public IPv4 address. Then:
 - **With a Cloudflare API token,** when the domain's zone is on that Cloudflare account, it creates an A record that points the domain at the server, and prints a line such as "DNS A mail.example.com → 203.0.113.10". Pass the token on the same line:
 
   ```bash
-  sudo CLOUDFLARE_API_TOKEN=your-cloudflare-token metis domain mail.example.com
+  sudo CLOUDFLARE_API_TOKEN=your-cloudflare-token metis domain set mail.example.com
   ```
 
   The token needs **Zone, Zone: Read** and **Zone, DNS: Edit** for the zone. If the same A record exists, nothing changes. An A record for the same name with another address is not replaced: a second one is added, so delete the old one in Cloudflare yourself.
@@ -53,7 +53,7 @@ If the server's address cannot be found, the command prints nothing about DNS. C
 ## Remove the domain
 
 ```bash
-sudo metis domain --remove
+sudo metis domain remove
 ```
 
 `BETTER_AUTH_URL` goes back to `http://localhost:3000`, Caddy stops, and the command prints "Metis is reachable on 127.0.0.1 only". Reach the app through an SSH tunnel again. The certificates stay on the server, in the `metis-caddy-data` Docker volume, so they are reused if you set the domain again.
@@ -93,14 +93,12 @@ Without a CDN, Caddy alone needs nothing in this list.
 
 ## If something goes wrong
 
-| Message                                                                                                                | What to do                                                                                                                                                                                      |
-| ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| "enter a hostname such as mail.example.com, without https://"                                                          | Write the domain name only, such as `mail.example.com`.                                                                                                                                         |
-| "`metis domain` changes the server; run it as root: `sudo metis domain mail.example.com`"                              | Run the command with `sudo`.                                                                                                                                                                    |
-| "objstore `--direct` serves files from a public host on the domain; run `metis add objstore` without `--direct` first" | Object storage serves files on your domain. Run `sudo metis add objstore` first, then remove the domain. See [Drive transfers](/self-hosting/configure/drive-transfers#storage-on-your-server). |
-| "the Resend gateway needs a public HTTPS address; run `metis remove gateway-resend` first"                             | Remove the Resend gateway first. See [Set up the Resend gateway](/self-hosting/mail-gateways/resend).                                                                                           |
-| "Caddy comes with a domain: run `metis domain mail.example.com`"                                                       | You ran `metis add caddy`. Set a domain instead.                                                                                                                                                |
-| "Caddy goes with the domain: run `metis domain --remove`"                                                              | You ran `metis remove caddy`. Remove the domain instead.                                                                                                                                        |
+| Message                                                                                                                 | What to do                                                                                                                                                                                      |
+| ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Enter a hostname such as mail.example.com, without https://."                                                          | Write the domain name only, such as `mail.example.com`.                                                                                                                                         |
+| "Metis domain set changes the server; run it as root: sudo metis domain set mail.example.com."                          | Run the command with `sudo`. `metis domain remove` says the same, with "sudo metis domain remove".                                                                                              |
+| "Objstore `--direct` serves files from a public host on the domain; run `metis add objstore` without `--direct` first." | Object storage serves files on your domain. Run `sudo metis add objstore` first, then remove the domain. See [Drive transfers](/self-hosting/configure/drive-transfers#storage-on-your-server). |
+| "The Resend gateway needs a public HTTPS address; run `metis remove gateway-resend` first."                             | Remove the Resend gateway first. See [Set up the Resend gateway](/self-hosting/mail-gateways/resend).                                                                                           |
 
 If the certificate never arrives, check that DNS points at this server and that ports 80 and 443 are reachable from the internet. Caddy's log shows what failed:
 

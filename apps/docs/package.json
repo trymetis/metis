@@ -8,8 +8,7 @@
     "typecheck": "blume check",
     "validate": "blume validate --strict",
     "doctor": "blume doctor",
-    "screenshots": "node scripts/screenshots.ts",
-    "screenshots:maintenance": "DOCS_MAINTENANCE=1 node scripts/screenshots.ts"
+    "screenshots": "node scripts/screenshots.ts"
   },
   "dependencies": {
     "@metis/releases": "workspace:*",
@@ -19,7 +18,10 @@
   "devDependencies": {
     "@astrojs/compiler-rs": "^0.5.2",
     "@metis/e2e": "workspace:*",
+    "@metis/e2e-cli": "workspace:*",
     "@playwright/test": "catalog:",
+    "@wterm/core": "0.5.10",
+    "@wterm/dom": "0.5.10",
     "astro": "^7.4.2",
     "otpauth": "catalog:",
     "oxfmt": "catalog:",

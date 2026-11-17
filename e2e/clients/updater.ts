@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const UPDATER = "http://localhost:8097";
+export const UPDATER = "http://localhost:8090/updater";
 
 const updaterSettingsSchema = z.object({
   current: z.string(),

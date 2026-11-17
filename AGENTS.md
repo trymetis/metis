@@ -6,7 +6,7 @@
 
 - **Metis Suite (`trymetis/metis`, AGPL-3.0-or-later) is a mail, calendar, drive and contacts client over provider APIs, with an AI agent and phishing detection.** Product copy is written for open source and self-hosting: "bring your own model" means the operator's own model.
 - **Self-hosted and Metis Cloud run the same released app.** The only Cloud-specific code here is the `console` mail driver ([configuration.md](agent-docs/configuration.md)).
-- **Workspaces:** `apps/web` (the product), `apps/desktop` and `apps/mobile` (shells onto a user's instance), `apps/www` (marketing site), `apps/docs` (customer docs, rules in `apps/docs/AGENTS.md`), `apps/gateway-{cloudflare,resend,ses}`, `packages/*`, `e2e/`.
+- **Workspaces:** `apps/web` (the product), `apps/desktop` and `apps/mobile` (shells onto a user's instance), `apps/www` (marketing site), `apps/docs` (customer docs, rules in `apps/docs/AGENTS.md`), `apps/gateway-{cloudflare,resend,ses}`, `packages/*`, `e2e/`, `e2e-cli/`.
   - `apps/cli` (the `metis` binary) is a Go module outside the bun workspaces and implements `proto/`.
   - The Next.js rules `next dev` generates live in `apps/web/AGENTS.md`.
 - **`src/…` means `apps/web/src/…`** unless a path names another workspace.
@@ -32,7 +32,7 @@
   - The tracks: `apps/web/CHANGELOG.md` for the server (app, worker and preflight images), `apps/cli/CHANGELOG.md` for the `metis` CLI (commands, components, the service catalog, the `bootstrap` shim), `apps/gateway-{resend,ses,cloudflare}/CHANGELOG.md` for each mail gateway, `apps/desktop/CHANGELOG.md`, `apps/mobile/CHANGELOG.md`; the root `CHANGELOG.md` only links to them.
   - A line describes something users can do or find differently; purely visual polish (spacing, alignment) gets no line.
   - Each release's notes are one file in the root `releases/` folder, named after its tag (`app-v0.3.1.md`), and are never edited once published ([deployment.md](agent-docs/deployment.md)).
-- **Never commit secrets.** `.env*` is gitignored except `apps/web/.env.example` and `e2e/.env.fixture`.
+- **Never commit secrets.** `.env*` is gitignored except `apps/web/.env.example`, `e2e/.env.fixture` and `e2e-cli/.env.fixture`.
 - **Source copied into the repo gets a `NOTICE` entry.** Dependencies need no license bookkeeping: `apps/web/scripts/licenses.ts` writes `THIRD_PARTY_LICENSES.txt` at image build.
 
 ## 3. Dependencies
@@ -75,7 +75,7 @@
 
 ## 6. Tests
 
-- **E2E treats the app as a black box**: public HTTP API and UI only, generic clients, no app imports ([e2e.md](agent-docs/e2e.md)).
+- **E2E treats the app as a black box**: public HTTP API and UI only, plus the `metis` binary in the CLI suite, generic clients, no app imports ([e2e.md](agent-docs/e2e.md), [e2e-cli.md](agent-docs/e2e-cli.md)).
 - **A change to anything in a recorded LLM or decision request (agent instructions, resident tools, prompts) needs `bun run generate:record` in `e2e/`.**
 
 ## 7. Domain docs
@@ -117,7 +117,8 @@
 | [updater.md](agent-docs/updater.md)                   | the updater protocol, the Go updater, dashboard updates                                                                                                      |
 | [export.md](agent-docs/export.md)                     | export archives: keys, the `metis-export/v1` format, copying databases over Hrana, `db export`, `db load`, `export decrypt` and `inspect`                    |
 | [lint.md](agent-docs/lint.md)                         | the oxlint rule set, rules turned off or tuned and why, workspace settings, suppression format                                                               |
-| [e2e.md](agent-docs/e2e.md)                           | the e2e black-box rule, the two suites, the fakes, the harness and the model-call recorder                                                                   |
+| [e2e.md](agent-docs/e2e.md)                           | the e2e black-box rule, the web stack and its suites, the fakes, the harness and the model-call recorder                                                     |
+| [e2e-cli.md](agent-docs/e2e-cli.md)                   | the `metis` CLI suite: the Docker-in-Docker install host, the releases and stand-ins it publishes, its run order                                             |
 | [www.md](agent-docs/www.md)                           | the marketing site's metadata, structured data, sitemap, social images and comparison pages                                                                  |
 
 ### Writing AGENTS.md and agent-docs

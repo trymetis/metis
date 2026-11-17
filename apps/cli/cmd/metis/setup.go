@@ -27,10 +27,7 @@ import (
 
 const encryptionWarning = "Back up METIS_ENCRYPTION_KEY from %s; losing it means reconnecting every mailbox, calendar, drive and address book."
 
-var (
-	hostPattern  = regexp.MustCompile(`^(?i)[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$`)
-	setupOptions = []string{"updater", "worker", "objstore"}
-)
+var setupOptions = []string{"updater", "worker", "objstore"}
 
 type setupFlags struct {
 	dir            string
@@ -58,30 +55,6 @@ func validEmail(value string) error {
 		return errors.New("enter an email address such as you@example.com")
 	}
 	return nil
-}
-
-func validHost(value string) error {
-	if value == "" || hostPattern.MatchString(value) {
-		return nil
-	}
-	return errors.New("enter a hostname such as mail.example.com, without https://")
-}
-
-func parseEnvPairs(pairs []string) (map[string]string, []string, error) {
-	values := map[string]string{}
-	var order []string
-	for _, pair := range pairs {
-		key, value, ok := strings.Cut(pair, "=")
-		key = strings.TrimSpace(key)
-		if !ok || key == "" {
-			return nil, nil, fmt.Errorf("%q is not KEY=VALUE", pair)
-		}
-		if _, seen := values[key]; !seen {
-			order = append(order, key)
-		}
-		values[key] = value
-	}
-	return values, order, nil
 }
 
 func setupForm(ctx context.Context, flags *setupFlags, mastraURL, mastraToken, recipient *string) error {
@@ -396,7 +369,7 @@ func runSetup(ctx context.Context, flags *setupFlags) error {
 		ui.Info("Setup code: %s", env.Value("METIS_SETUP_CODE"))
 	default:
 		ui.Info("Metis listens on 127.0.0.1:%d. Reach it with ssh -L %d:127.0.0.1:%d, then open %s/setup,", flags.appPort, flags.appPort, flags.appPort, url)
-		ui.Info("or give it a domain with sudo metis domain mail.example.com.")
+		ui.Info("or give it a domain with sudo metis domain set mail.example.com.")
 		ui.Info("Setup code: %s", env.Value("METIS_SETUP_CODE"))
 	}
 	ui.Warn(encryptionWarning, components.EnvPath(dir))

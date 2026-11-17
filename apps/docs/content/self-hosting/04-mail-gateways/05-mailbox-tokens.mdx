@@ -37,7 +37,7 @@ sudo metis gateway token revoke alice@example.com
 - `list` takes the domain or an address on it, which picks the gateway. It prints one line of JSON for each address that has a token, sorted by address. Each line has the address (`address`), its sender name (`name`, or `null` when it has none) and when its first token was created (`created_at`).
 - `revoke` stops the token for an address at once, and prints "Revoked the token for alice@example.com".
 
-If no gateway on the server serves the domain, the command says, for example, "no gateway on this server serves example.org".
+If no gateway on the server serves the domain, the command says, for example, "No gateway on this server serves example.org."
 
 ### From your computer
 
@@ -47,7 +47,7 @@ For a gateway that is not on a server the `metis` CLI runs, pass the gateway's a
 metis gateway token create alice@example.com --endpoint https://resend-gateway.example.com --admin-token your-admin-token
 ```
 
-`list`, `name` and `revoke` take the same two flags. Without them, the command says "away from the server, pass `--endpoint` and `--admin-token`".
+`list`, `name` and `revoke` take the same two flags. Without them, the command says "Away from the server, pass `--endpoint` and `--admin-token`."
 
 ## Sender name
 
@@ -135,12 +135,12 @@ ADMIN_TOKEN=your-admin-token bun run token https://resend-gateway.example.com re
 
 `list` shows which addresses have a token, the sender name of each, and when the first token for each address was created. Creating a new token for an address does not change this date. `revoke` stops the token for an address at once, and removes its sender name.
 
-If a command fails, it prints the reason. With the `metis` CLI, the reason follows the gateway's address and status, for example "https://resend-gateway.example.com/v1/tokens answered 400: The name must be one line of at most 100 characters". With Bun, the reason follows the status, for example "404: No token exists for alice@example.com".
+If a command fails, it prints the reason. With the `metis` CLI, the reason follows the gateway's address and status, for example "https://resend-gateway.example.com/v1/tokens answered 400: The name must be one line of at most 100 characters." With Bun, the reason follows the status, for example "404: No token exists for alice@example.com".
 
 - "The address must be on @example.com": the address is not on the gateway's domain.
 - "Unauthorized": the admin token is wrong.
 - "Token management needs the admin API_TOKEN": you used a mailbox token instead of the admin token.
-- "create needs an address such as alice@example.com": with the `metis` CLI, `create` takes a full address, not a domain.
+- "Create needs an address such as alice@example.com.": with the `metis` CLI, `create` takes a full address, not a domain.
 - "The name must be one line of at most 100 characters": the sender name is too long, or it has a line break or a tab. With `create`, no token is created. Fix the name and run the command again.
 - "No token exists for alice@example.com": `name` works only for an address that has a token. Create a token first.
 

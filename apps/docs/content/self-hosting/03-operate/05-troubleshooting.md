@@ -43,8 +43,8 @@ To read another component's log, name it instead of `app`: `sqld`, `worker`, `re
 - `-f` or `--follow` keeps printing new lines. Press Ctrl+C to stop.
 - `--tail` sets how many lines to start from, or `all`. The default is `100`.
 - When a component has several containers, such as several workers, each line starts with the container's name, for example `worker-1 | `.
-- The Cloudflare Email and Amazon SES gateways run outside the server, so they have no log here. The command says, for example, "gateway-cloudflare has no containers".
-- An updater that runs under systemd has no container either. The command says "the updater runs under systemd: `journalctl -u metis-updater.service`". Run `sudo journalctl -u metis-updater.service` to read its log.
+- The Cloudflare Email and Amazon SES gateways run outside the server, so they have no log here. The command says, for example, "gateway-cloudflare has no containers."
+- An updater that runs under systemd has no container either. The command says "The updater runs under systemd: `journalctl -u metis-updater.service`." Run `sudo journalctl -u metis-updater.service` to read its log.
 
 When `/api/readyz` answers `503`, the reason is only in the app's log, never in the response. See [Health checks](/self-hosting/operate/health-checks).
 
@@ -89,7 +89,7 @@ If the LLM is set up but AI features fail, look for the **LLM** group on the **D
 
 ### The app does not start after a change to .env
 
-A setting has a wrong value. Preflight refuses it and names the setting, and the app that was running keeps running. On a server the `metis` CLI runs, the end of preflight's output is in the error of the command you ran, `metis apply` or `metis config set`, after "preflight failed:". Fix the value in `.env`, then run `sudo metis apply` again. If the app still does not start, read its log with `sudo metis logs app`, or the platform's log view on a container platform or Vercel. See [Read the logs](#read-the-logs).
+A setting has a wrong value. Preflight refuses it and names the setting, and the app that was running keeps running. On a server the `metis` CLI runs, the end of preflight's output is in the error of the command you ran, `metis apply` or `metis config set`, after "Preflight failed:". Fix the value in `.env`, then run `sudo metis apply` again. If the app still does not start, read its log with `sudo metis logs app`, or the platform's log view on a container platform or Vercel. See [Read the logs](#read-the-logs).
 
 ### An older release cannot run on the database
 
@@ -113,15 +113,17 @@ Preflight's output shows "Invalid configuration" with the line "app.ownerEmail: 
 
 ### A metis command stops at once
 
-| Message                                                                                                | What to do                                                                                                                                                                        |
-| ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| "metis add changes the server; run it with sudo"                                                       | Run the command with `sudo`. Other commands say, for example, "metis domain changes the server; run it as root".                                                                  |
-| "This machine has no Metis install"                                                                    | You are not on the server, or Metis Suite is not installed there yet. See [CLI commands](/self-hosting/reference/cli-commands#on-the-server-or-on-your-computer).                 |
-| "An upgrade is running (started 14:02). Run metis status to follow it."                                | Wait until the upgrade ends. `sudo metis status` shows it.                                                                                                                        |
-| "An export is running (started 14:02); the app is in maintenance until it ends. Try again then."       | Wait until `sudo metis db export` ends, then run the command again. See [While an export or a move runs](/self-hosting/operate/export-and-import#while-an-export-or-a-move-runs). |
-| "A database move is running (started 14:02); the app is in maintenance until it ends. Try again then." | Wait until `sudo metis db move` ends, then run the command again.                                                                                                                 |
-| A message that ends with "was written by Metis CLI 0.4.0; run sudo metis self-update"                  | A newer CLI changed this install. Run `sudo metis self-update`.                                                                                                                   |
-| "Go ahead? Pass `--yes` to go ahead without a terminal"                                                | The command asks a question, and there is no terminal to answer it. Add `--yes`.                                                                                                  |
+| Message                                                                                                | What to do                                                                                                                                                                            |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Metis add changes the server; run it with sudo."                                                      | Run the command with `sudo`. Other commands say, for example, "Metis domain set changes the server; run it as root".                                                                  |
+| "Unknown flag: --purge." then "Try --help for usage."                                                  | The flag does not belong to this command or component. Run the command with `--help` to see its flags. See [Manage components](/self-hosting/operate/manage-components#the-commands). |
+| "Unknown command "redis2" for "metis add"." then "Try --help for usage."                               | The command or component name is wrong. Run the command with `--help` to see the names it takes. `metis add` or `metis remove` alone lists the components.                            |
+| "This machine has no Metis install."                                                                   | You are not on the server, or Metis Suite is not installed there yet. See [CLI commands](/self-hosting/reference/cli-commands#on-the-server-or-on-your-computer).                     |
+| "An upgrade is running (started 14:02). Run metis status to follow it."                                | Wait until the upgrade ends. `sudo metis status` shows it.                                                                                                                            |
+| "An export is running (started 14:02); the app is in maintenance until it ends. Try again then."       | Wait until `sudo metis db export` ends, then run the command again. See [While an export or a move runs](/self-hosting/operate/export-and-import#while-an-export-or-a-move-runs).     |
+| "A database move is running (started 14:02); the app is in maintenance until it ends. Try again then." | Wait until `sudo metis db move` ends, then run the command again.                                                                                                                     |
+| A message that ends with "was written by Metis CLI 0.4.0; run sudo metis self-update."                 | A newer CLI changed this install. Run `sudo metis self-update`.                                                                                                                       |
+| "Go ahead? Pass `--yes` to go ahead without a terminal."                                               | The command asks a question, and there is no terminal to answer it. Add `--yes`.                                                                                                      |
 
 ### Invites fail with "The invite email couldn't be sent"
 

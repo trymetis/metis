@@ -164,13 +164,24 @@ sudo metis add worker
 
 Before it changes anything, it warns: "This stores the whole workflow runner section from .env, so runner settings changed on the dashboard (cadence, budget, batch size, concurrency, retention) go back to their .env values or defaults." It then asks "Go ahead?". Answer **Yes**, or pass `--yes`. It ends with "worker is on", and `sudo metis status` shows the worker with, for example, "1 replica(s), bullmq runner".
 
+<img
+  src="/images/self-hosting/terminal-add-worker.webp"
+  alt="The metis add worker command warning that it stores the whole workflow runner section from .env, so runner settings changed on the dashboard go back to their .env values or defaults, then progress lines, Added redis, which worker needs, the list of changes and worker is on"
+  class="dark:hidden"
+/>
+<img
+  src="/images/self-hosting/terminal-add-worker-dark.webp"
+  alt="The metis add worker command warning that it stores the whole workflow runner section from .env, so runner settings changed on the dashboard go back to their .env values or defaults, then progress lines, Added redis, which worker needs, the list of changes and worker is on"
+  class="hidden dark:block"
+/>
+
 To stop using workers:
 
 ```bash
 sudo metis remove worker
 ```
 
-It shows the same warning, sets the runner back to `internal` and stops the workers. Redis keeps running. To remove it too, run `sudo metis remove redis` afterwards. Removing Redis while the workers run is refused with "the workers use redis; run metis remove worker first".
+It shows the same warning, sets the runner back to `internal` and stops the workers. Redis keeps running. To remove it too, run `sudo metis remove redis` afterwards. Removing Redis while the workers run is refused with "The workers use redis; run metis remove worker first."
 
 See [Manage components](/self-hosting/operate/manage-components).
 

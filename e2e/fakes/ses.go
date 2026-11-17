@@ -78,6 +78,8 @@ type sesFake struct {
 	invokeURL string
 	s3        *s3.Client
 
+	aws *awsState
+
 	invokeMu sync.Mutex
 	mu       sync.Mutex
 	sent     []sesSent
@@ -98,12 +100,16 @@ func sesError(w http.ResponseWriter, status int, kind, message string) {
 	writeJSON(w, status, map[string]string{"message": message})
 }
 
-func (f *sesFake) api(w http.ResponseWriter, r *http.Request) {
+func (f *sesFake) endpoints(w http.ResponseWriter, r *http.Request) {
 	auth := r.Header.Get("authorization")
 	if !strings.HasPrefix(auth, "AWS4-HMAC-SHA256 ") || !strings.Contains(auth, "Credential="+f.accessKey+"/") {
 		sesError(w, http.StatusForbidden, "UnrecognizedClientException", "The security token included in the request is invalid.")
 		return
 	}
+	f.aws.handle(w, r, f.api)
+}
+
+func (f *sesFake) api(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost || r.URL.Path != "/v2/email/outbound-emails" {
 		sesError(w, http.StatusNotFound, "NotFoundException", fmt.Sprintf("No route for %s %s", r.Method, r.URL.Path))
 		return
@@ -420,11 +426,11 @@ func (f *sesFake) ensureBucket(ctx context.Context) error {
 	return lastErr
 }
 
-func runSes() error {
+func newSes() (*standIn, http.Handler, error) {
 	env, err := requireEnv("SES_DOMAIN", "SES_REGION", "SES_BUCKET", "SES_ACCESS_KEY_ID",
 		"S3_ENDPOINT", "S3_ACCESS_KEY", "S3_SECRET_KEY", "LAMBDA_INVOKE_URL")
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 	client := s3.New(s3.Options{
 		Region:                     env["SES_REGION"],
@@ -441,14 +447,13 @@ func runSes() error {
 		accessKey: env["SES_ACCESS_KEY_ID"],
 		invokeURL: env["LAMBDA_INVOKE_URL"],
 		s3:        client,
+		aws:       newAWSState(env["SES_REGION"]),
 		sent:      []sesSent{},
 	}
 	if err := fake.ensureBucket(context.Background()); err != nil {
-		return fmt.Errorf("creating bucket %s: %w", fake.bucket, err)
+		return nil, nil, fmt.Errorf("creating bucket %s: %w", fake.bucket, err)
 	}
-
 	control := http.NewServeMux()
-	healthRoute(control)
 	control.HandleFunc("GET /sent", func(w http.ResponseWriter, _ *http.Request) {
 		fake.mu.Lock()
 		defer fake.mu.Unlock()
@@ -462,15 +467,17 @@ func runSes() error {
 	})
 	control.HandleFunc("POST /inbound", fake.inbound)
 	control.HandleFunc("GET /objects", fake.objects)
-	fallback(control, "GET /health | GET, DELETE /sent | POST /inbound | GET /objects?prefix=")
-
-	errs := make(chan error, 3)
-	go func() {
-		errs <- serveTLS(":443", http.HandlerFunc(fake.api),
-			"/tls/ses/email.us-east-1.amazonaws.com.crt", "/tls/ses/email.us-east-1.amazonaws.com.key")
-	}()
-	go func() { errs <- serve(":8080", control) }()
-	go func() { errs <- serve(":8081", http.HandlerFunc(fake.functionURL)) }()
-	log.Printf("[ses] fake SESv2 on :443 (email.%s.amazonaws.com) for @%s, control on :8080, function URL on :8081", fake.region, fake.domain)
-	return firstError(errs)
+	fake.aws.calls.routes(control)
+	region := fake.region + ".amazonaws.com"
+	log.Printf("[ses] SES, STS, IAM, SQS, Lambda and gateway buckets in %s for @%s", fake.region, fake.domain)
+	return &standIn{
+		name: "ses",
+		hosts: []string{
+			"email." + region, "sts." + region, "sqs." + region, "lambda." + region, "iam.amazonaws.com",
+		},
+		suffixes: []string{".s3." + region},
+		api:      http.HandlerFunc(fake.endpoints),
+		control:  control,
+		routes:   "GET, DELETE /ses/sent | POST /ses/inbound | GET /ses/objects?prefix= | GET, DELETE /ses/calls",
+	}, http.HandlerFunc(fake.functionURL), nil
 }

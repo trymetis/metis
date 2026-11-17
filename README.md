@@ -47,7 +47,7 @@ sudo sh bootstrap.sh
 `metis setup` asks a few questions, generates every secret, starts the newest release and prints a setup code. Then:
 
 1. Back up `METIS_ENCRYPTION_KEY` from `/opt/metis-suite/.env`. If you lose it, every user has to reconnect every account.
-2. Point a domain at the server and run `sudo metis domain example.com` to get HTTPS.
+2. Point a domain at the server and run `sudo metis domain set example.com` to get HTTPS.
 3. Open `https://example.com/setup`, enter the setup code and create your account.
 4. In **Dashboard → System**, add at least one provider (a Google, Microsoft or Zoho app, or your own mail and file servers), then connect your accounts.
 

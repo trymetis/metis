@@ -1,0 +1,33 @@
+{
+  "name": "@metis/e2e-cli",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./clients/*": "./clients/*.ts",
+    "./lib/*": "./lib/*.ts",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "up": "bun --env-file=.env.fixture run stack/up.ts",
+    "up:ss": "E2E_CLI_APP_PORT=3000 bun --env-file=.env.fixture run stack/up.ts --screenshots",
+    "down": "docker compose --env-file .env.fixture down --volumes --remove-orphans",
+    "test": "bun run down && bun run up && bun run test:browser && bun run test:api && bun run test:cli",
+    "test:browser": "node --env-file=.env.fixture node_modules/@playwright/test/cli.js test",
+    "test:api": "NODE_EXTRA_CA_CERTS=../e2e/tls/ca.crt node --env-file=.env.fixture node_modules/vitest/vitest.mjs run --config vitest.api.config.ts",
+    "test:cli": "node --env-file=.env.fixture node_modules/vitest/vitest.mjs run",
+    "logs": "docker compose --env-file .env.fixture logs -f replay cli-host",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "otpauth": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@metis/e2e": "workspace:*",
+    "@playwright/test": "catalog:",
+    "@types/bun": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

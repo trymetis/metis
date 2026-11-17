@@ -13,7 +13,7 @@ const LINES = [
     note: "Install the metis CLI and set up the server",
   },
   {
-    cmd: "sudo metis domain mail.example.com",
+    cmd: "sudo metis domain set mail.example.com",
     note: "Caddy fetches the certificate on the first request",
   },
 ];

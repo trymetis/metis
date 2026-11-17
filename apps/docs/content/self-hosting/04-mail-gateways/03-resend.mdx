@@ -33,7 +33,7 @@ The command:
 
 1. Adds the domain to Resend, or finds it there: "Resend domain example.com".
 2. Creates the DNS records Resend needs, and an A record for the gateway's address that points at the server. With `CLOUDFLARE_API_TOKEN` set and the domain on that Cloudflare account, it creates them there. Otherwise it prints them under "Add these DNS records at your DNS provider:". Add them at your DNS provider.
-3. Asks Resend to check the domain: "Waiting for Resend to verify example.com (up to 10 minutes)…", then "Resend verified example.com". If it takes longer, the command lists each record with its status and says "Run the same command again once DNS has spread". Running it again continues where it stopped.
+3. Asks Resend to check the domain: "Waiting for Resend to verify example.com (up to 10 minutes)…", then "Resend verified example.com". If it takes longer, the command lists each record with its status and says "Run the same command again once DNS has spread." Running it again continues where it stopped.
 4. Creates Resend's webhook: "Resend webhook to https://resend.mail.example.com/webhooks/resend".
 5. Starts the gateway on the server, served by Caddy on `resend.` followed by your instance's domain, such as `resend.mail.example.com`. It also checks Resend for missed mail every 5 minutes.
 6. Waits until it answers: "Waiting for https://resend.mail.example.com to answer (Caddy may first need a certificate)…", for up to 3 minutes.
@@ -83,14 +83,14 @@ It deletes the webhooks to that address and prints, for example, "Deleted 1 Rese
 
 ### If something goes wrong
 
-| Message                                                                                                      | What to do                                                                                        |
-| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| "the Resend gateway needs a public HTTPS address for its webhook; run `metis domain mail.example.com` first" | Give the instance a domain first. See [Domain and HTTPS](/self-hosting/install/domain-and-https). |
-| "`--database stack` needs the server's sqld"                                                                 | Your instance's databases are elsewhere. Use `--database own`.                                    |
-| "`--blobs objstore` needs `metis add objstore` first"                                                        | Run `sudo metis add objstore` first, or use `--blobs dir`.                                        |
-| "`--region` takes us-east-1, eu-west-1, sa-east-1, ap-northeast-1"                                           | Pick one of these regions.                                                                        |
-| "Run the same command again once DNS has spread"                                                             | DNS changes take time to spread. Wait, then run the same command again.                           |
-| "the Resend gateway is not on"                                                                               | There is no Resend gateway on this server.                                                        |
+| Message                                                                                                         | What to do                                                                                        |
+| --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| "The Resend gateway needs a public HTTPS address for its webhook; run metis domain set mail.example.com first." | Give the instance a domain first. See [Domain and HTTPS](/self-hosting/install/domain-and-https). |
+| "`--database stack` needs the server's sqld."                                                                   | Your instance's databases are elsewhere. Use `--database own`.                                    |
+| "`--blobs objstore` needs `metis add objstore` first."                                                          | Run `sudo metis add objstore` first, or use `--blobs dir`.                                        |
+| "`--region` takes us-east-1, eu-west-1, sa-east-1, ap-northeast-1."                                             | Pick one of these regions.                                                                        |
+| "Run the same command again once DNS has spread."                                                               | DNS changes take time to spread. Wait, then run the same command again.                           |
+| "gateway-resend is not on."                                                                                     | There is no Resend gateway on this server.                                                        |
 
 ## Set it up by hand
 

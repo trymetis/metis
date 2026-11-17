@@ -5,3 +5,6 @@ services:
   preflight:
     environment:
       METIS_WORKFLOW_CADENCE_SEC: "60"
+  fakes:
+    environment:
+      FAKES: resend,ses,mcp-client,updater

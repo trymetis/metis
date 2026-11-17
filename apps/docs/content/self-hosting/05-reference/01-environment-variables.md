@@ -308,7 +308,12 @@ The health endpoints do not change, so a load balancer that checks them keeps se
 
 On a container platform or Vercel, set the variable on the app (and on the worker, if you run one) and redeploy. To end maintenance, remove it and redeploy. Set it before you stop or move the database, and remove it only once the database answers again.
 
-On a server the `metis` CLI runs, the CLI puts the app and the workers in maintenance on its own during an upgrade or an undo, and takes them out again when it switches releases. It does this without writing to `.env`. `sudo metis db export` and `sudo metis db move` also put the app in maintenance on their own. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo) and [On a server the metis CLI runs](/self-hosting/operate/export-and-import#on-a-server-the-metis-cli-runs).
+On a server the `metis` CLI runs, the CLI puts the site in maintenance on its own during an upgrade or an undo, and during `sudo metis db export` and `sudo metis db move`. It does this without writing to `.env`. How depends on whether the server has a domain:
+
+- **With a domain**, the CLI does not use this variable. It stops the app and the workers, and Caddy (the web server that serves your domain) answers every address on the domain until the app answers again. A browser that opens or reloads an address on the domain gets a plain page with **Down for maintenance**, the time maintenance began and "Try again in a few minutes.", with the status `503`. It has no **Source code** link, and it is light or dark as the visitor's device is set. Every other request gets the status `503` and a short JSON answer, such as `{"error":"maintenance","since":"2026-11-11T10:00:00Z"}`. That includes a form submitted from a tab that is already open and the app's own requests from that tab. Both answers carry `Cache-Control: no-store` and the three headers above. `Metis-Version` is the release the server ran when maintenance began, and is left out when the server runs images that are not a release. The health endpoints answer `503` too, because Caddy answers for every address.
+- **Without a domain**, the CLI starts the app and the workers again with this variable set, so they run in maintenance mode as described above. For an upgrade or an undo, maintenance ends when the CLI switches releases.
+
+See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo) and [On a server the metis CLI runs](/self-hosting/operate/export-and-import#on-a-server-the-metis-cli-runs).
 
 To hold a server in maintenance yourself, for example while you work on its database, set the variable with `metis config set`:
 
@@ -316,7 +321,20 @@ To hold a server in maintenance yourself, for example while you work on its data
 sudo metis config set METIS_MAINTENANCE=2026-11-11T10:00:00Z
 ```
 
-It warns "METIS_MAINTENANCE goes into .env, so the app stays in maintenance through every metis update, undo and apply until sudo metis config unset METIS_MAINTENANCE. Upgrades and undo put the app in maintenance on their own." Then it stores the variable and applies it as for any other variable. To end maintenance, run:
+It warns "METIS_MAINTENANCE goes into .env, so the app stays in maintenance through every metis update, undo and apply until sudo metis config unset METIS_MAINTENANCE. Upgrades and undo put the app in maintenance on their own." Then it stores the variable and applies it as for any other variable.
+
+<img
+  src="/images/self-hosting/terminal-maintenance.webp"
+  alt="The metis config set command for METIS_MAINTENANCE warning that the variable goes into .env, so the app stays in maintenance through every metis update, undo and apply until it is unset, and that upgrades and undo put the app in maintenance on their own, then progress lines, the list of changes and Stored in /opt/metis-suite/.env and applied"
+  class="dark:hidden"
+/>
+<img
+  src="/images/self-hosting/terminal-maintenance-dark.webp"
+  alt="The metis config set command for METIS_MAINTENANCE warning that the variable goes into .env, so the app stays in maintenance through every metis update, undo and apply until it is unset, and that upgrades and undo put the app in maintenance on their own, then progress lines, the list of changes and Stored in /opt/metis-suite/.env and applied"
+  class="hidden dark:block"
+/>
+
+To end maintenance, run:
 
 ```bash
 sudo metis config unset METIS_MAINTENANCE

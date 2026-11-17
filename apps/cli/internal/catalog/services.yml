@@ -123,7 +123,7 @@ services:
     volumes:
       - metis-caddy-data:/data
       - metis-caddy-config:/config
-      - ${METIS_INSTALL_DIR}/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ${METIS_INSTALL_DIR}/caddy:/etc/caddy:ro
     networks: [metis]
 
   updater:

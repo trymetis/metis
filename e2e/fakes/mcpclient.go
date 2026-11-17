@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -12,6 +11,7 @@ import (
 
 const (
 	mcpPublicHost  = "mcp.quillmate.app"
+	mcpPrivateHost = "mcp-private.quillmate.app"
 	mcpRedirectURI = "http://127.0.0.1:47801/callback"
 )
 
@@ -94,11 +94,9 @@ func (f *mcpClientFake) document(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, doc)
 }
 
-func runMcpClient() error {
+func newMcpClient() *standIn {
 	fake := &mcpClientFake{hits: []documentHit{}}
-
 	control := http.NewServeMux()
-	healthRoute(control)
 	control.HandleFunc("GET /hits", func(w http.ResponseWriter, _ *http.Request) {
 		fake.mu.Lock()
 		defer fake.mu.Unlock()
@@ -110,14 +108,11 @@ func runMcpClient() error {
 		fake.mu.Unlock()
 		w.WriteHeader(http.StatusNoContent)
 	})
-	fallback(control, "GET /health | GET, DELETE /hits")
-
-	errs := make(chan error, 2)
-	go func() {
-		errs <- serveTLS(":443", http.HandlerFunc(fake.document),
-			"/tls/mcp-client/mcp-client.crt", "/tls/mcp-client/mcp-client.key")
-	}()
-	go func() { errs <- serve(":8080", control) }()
-	log.Printf("[mcp-client] documents at https://%s/clients/<name>.json, hits on :8080", mcpPublicHost)
-	return firstError(errs)
+	return &standIn{
+		name:    "mcp-client",
+		hosts:   []string{mcpPublicHost, mcpPrivateHost},
+		api:     http.HandlerFunc(fake.document),
+		control: control,
+		routes:  "GET, DELETE /mcp-client/hits",
+	}
 }

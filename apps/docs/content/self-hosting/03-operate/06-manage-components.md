@@ -26,9 +26,11 @@ Each change shows what it does to the containers, for example:
 
 When the app is created again, preflight runs first. If preflight fails, the app that was running keeps running, and the error shows the end of preflight's output.
 
-Both `add` and `remove` take `--yes`, to go ahead without asking. `remove` also takes `--purge`, which deletes the component's data too: its Docker volumes, or its resources at a cloud provider. Without `--purge`, the data stays.
+Each component takes only its own flags. Both `add` and `remove` take `--yes` for every component, to go ahead without asking. `remove` also takes `--purge` for every component except `worker`. `--purge` deletes the component's data too: its Docker volumes, or its resources at a cloud provider. Without `--purge`, the data stays.
 
-An unknown name is refused with, for example, "redis2 is not a component; the components are sqld, caddy, updater, redis, worker, objstore, gateway-cloudflare, gateway-resend, gateway-ses". Removing a component that is not on is refused with, for example, "worker is not on".
+A flag that belongs to another component is refused. For example, `sudo metis remove worker --purge` stops with "Unknown flag: --purge." and then "Try --help for usage."
+
+An unknown name is refused. For example, `sudo metis add redis2` stops with "Unknown command "redis2" for "metis add"." (or "for "metis remove"." with `remove`). Run `metis add` or `metis remove` alone to see the list of components. `metis logs` and `metis restart` refuse an unknown name with, for example, "redis2 is not a component; the components are sqld, caddy, updater, redis, worker, objstore, gateway-cloudflare, gateway-resend, gateway-ses." Removing a component that is not on is refused with, for example, "Worker is not on."
 
 ## Run add again to change a component
 
@@ -49,23 +51,20 @@ Some changes warn you and ask "Go ahead?" first. Answer **Yes**, or pass `--yes`
 - Adding `sqld` on an install that uses another database: the app moves to an empty database.
 - Removing `objstore` or `gateway-resend`: drives or mailboxes connected through it are quarantined (hidden from every workspace).
 
-Some components need another one. Adding `worker` adds `redis` too, with the notice "Added redis, which worker needs". The Resend gateway and `objstore --direct` need a domain: set one first with `metis domain`. See [Domain and HTTPS](/self-hosting/install/domain-and-https).
+Some components need another one. Adding `worker` adds `redis` too, with the notice "Added redis, which worker needs". The Resend gateway and `objstore --direct` need a domain: set one first with `sudo metis domain set mail.example.com`. See [Domain and HTTPS](/self-hosting/install/domain-and-https).
 
 ## sqld
 
 The database server. It holds the app database and the AI memory database, in the `metis-sqld` volume. `metis setup` adds it unless you choose another database. `metis status` shows it as "namespaces app and mastra".
 
 - `sudo metis add sqld` on an install that uses another database, such as Turso, warns, for example: "DATABASE_URL is libsql://metis-app-acme.turso.io. The app moves to an empty database on the server's sqld; nothing is copied from the current one."
-- `sudo metis remove sqld` is refused while something uses it, for example: "sqld is in use by DATABASE_URL, MASTRA_DATABASE_URL; move the app's databases with sudo metis db move, or point them at another database first". The Resend gateway on `--database stack` counts too.
+- `sudo metis remove sqld` is refused while something uses it, for example: "Sqld is in use by DATABASE_URL, MASTRA_DATABASE_URL; move the app's databases with sudo metis db move, or point them at another database first." The Resend gateway on `--database stack` counts too.
 - `sudo metis db move` copies both databases to Turso or another sqld and runs the app on them. The old copy stays in sqld until you remove it with `sudo metis remove sqld --purge`. See [Move the databases off the server](/self-hosting/operate/export-and-import#move-the-databases-off-the-server).
 - `--purge` deletes the `metis-sqld` volume, with both databases in it.
 
 ## caddy
 
-The web server that serves the app over HTTPS. It comes and goes with your domain, so you never add or remove it yourself:
-
-- `sudo metis add caddy` is refused with "Caddy comes with a domain: run metis domain mail.example.com".
-- `sudo metis remove caddy` is refused with "Caddy goes with the domain: run metis domain `--remove`".
+The web server that serves the app over HTTPS. It comes and goes with your domain, so you never add or remove it yourself.
 
 See [Domain and HTTPS](/self-hosting/install/domain-and-https).
 
@@ -82,17 +81,17 @@ sudo metis add updater
 | `--systemd` | Run it as a systemd service. This is the default when the server runs systemd. |
 | `--docker`  | Run it as a container.                                                         |
 
-Pass one of them, not both ("pass `--systemd` or `--docker`, not both"). On a server without systemd, `--systemd` is refused with "`--systemd` needs systemd as PID 1; use `--docker`".
+Pass one of them, not both ("Pass `--systemd` or `--docker`, not both."). On a server without systemd, `--systemd` is refused with "`--systemd` needs systemd as PID 1; use `--docker`."
 
 `sudo metis remove updater` prints "The Updates page disappears from the dashboard; upgrade with metis update". You can still upgrade and undo with `sudo metis update` and `sudo metis undo`. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo).
 
 ## redis
 
-Redis (Valkey) for the workers' queue. `metis status` shows it as "Valkey, noeviction". `metis add worker` adds it for you. Removing it while the workers run is refused with "the workers use redis; run metis remove worker first". `--purge` deletes the `metis-redis` volume.
+Redis (Valkey) for the workers' queue. `metis status` shows it as "Valkey, noeviction". `metis add worker` adds it for you. Removing it while the workers run is refused with "The workers use redis; run metis remove worker first." `--purge` deletes the `metis-redis` volume.
 
 ## worker
 
-Workers run background work outside the app. `--replicas` sets how many worker containers run (default 1). See [Workers on a server the metis CLI runs](/self-hosting/configure/background-work#workers-on-a-server-the-metis-cli-runs).
+Workers run background work outside the app. `--replicas` sets how many worker containers run (default 1). `sudo metis remove worker` takes only `--yes`. See [Workers on a server the metis CLI runs](/self-hosting/configure/background-work#workers-on-a-server-the-metis-cli-runs).
 
 ## objstore
 
@@ -100,7 +99,15 @@ S3-compatible object storage on the server, listed as **Server storage** for dri
 
 ## Mail gateways
 
-`gateway-cloudflare`, `gateway-resend` and `gateway-ses` set up a mail gateway for a domain, and add it to the matching server list. Each has its own flags. On `remove`, they take `--domain`, `--remote`, `--endpoint`, `--region`, `--yes` and `--purge`. See:
+`gateway-cloudflare`, `gateway-resend` and `gateway-ses` set up a mail gateway for a domain, and add it to the matching server list. Each has its own flags. On `remove`, every gateway takes `--domain`, `--purge` and `--yes`, plus:
+
+| Gateway              | Other `remove` flags                                               |
+| -------------------- | ------------------------------------------------------------------ |
+| `gateway-cloudflare` | `--remote`                                                         |
+| `gateway-resend`     | `--endpoint`                                                       |
+| `gateway-ses`        | `--remote`, and `--region` (with `--remote`: the gateway's region) |
+
+See:
 
 - [Set up the Cloudflare Email gateway](/self-hosting/mail-gateways/cloudflare-email)
 - [Set up the Resend gateway](/self-hosting/mail-gateways/resend)

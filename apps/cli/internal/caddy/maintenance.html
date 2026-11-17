@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Down for maintenance</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        font-family: system-ui, sans-serif;
+        background: #fafafa;
+        color: #171717;
+      }
+      main {
+        padding: 24px;
+        text-align: center;
+      }
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+      }
+      p {
+        margin: 6px 0 0;
+        font-size: 14px;
+        color: #737373;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #0a0a0a;
+          color: #f5f5f5;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Down for maintenance</h1>
+      <p>Since {{.Since}}</p>
+      <p>Try again in a few minutes.</p>
+    </main>
+  </body>
+</html>

@@ -25,6 +25,7 @@ type fakeBackend struct {
 	failPreflight     bool
 	failSave          bool
 	failMaintenanceOn bool
+	failHandBack      bool
 	failSwitchTo      string
 	notReady          string
 	maintenance       bool
@@ -88,6 +89,9 @@ func (backend *fakeBackend) Maintenance(_ context.Context, _ *state.State, on bo
 	backend.maintenance = on
 	if on && backend.failMaintenanceOn {
 		return errors.New("creating metis-worker-2: conflict")
+	}
+	if !on && backend.failHandBack {
+		return errors.New("reloading caddy: caddy reload exited with code 1")
 	}
 	return nil
 }
@@ -202,7 +206,7 @@ func TestUpgradeSucceedsAndCanBeUndoneOnce(t *testing.T) {
 	if last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_SUCCEEDED || last.GetRequestedBy() != "user-1" {
 		t.Fatalf("upgrade %v", last)
 	}
-	if got := strings.Join(backend.calls, ","); got != "pull,maintenance on,save pending (maintenance),preflight 1.5.0 (maintenance),switch 1.5.0" {
+	if got := strings.Join(backend.calls, ","); got != "pull,maintenance on,save pending (maintenance),preflight 1.5.0 (maintenance),switch 1.5.0,maintenance off" {
 		t.Fatalf("calls %s", got)
 	}
 	st := load(t, dir)
@@ -222,7 +226,7 @@ func TestUpgradeSucceedsAndCanBeUndoneOnce(t *testing.T) {
 	if last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_SUCCEEDED || last.GetKind() != updaterv1.UpgradeKind_UPGRADE_KIND_ROLLBACK {
 		t.Fatalf("undo %v", last)
 	}
-	if got := strings.Join(backend.calls, ","); got != "pull,maintenance on,restore current (maintenance),switch 1.4.0" {
+	if got := strings.Join(backend.calls, ","); got != "pull,maintenance on,restore current (maintenance),switch 1.4.0,maintenance off" {
 		t.Fatalf("undo calls %s", got)
 	}
 	if st := load(t, dir); st.App.Version != "1.4.0" || st.Updater.Previous != nil {
@@ -277,7 +281,7 @@ func TestSwitchFailureRestores(t *testing.T) {
 	if last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_FAILED || !last.GetRestored() || !strings.Contains(last.GetError(), "switching") {
 		t.Fatalf("upgrade %v", last)
 	}
-	if got := strings.Join(backend.calls, ","); !strings.HasSuffix(got, "switch 1.5.0,maintenance on,restore pending (maintenance),switch 1.4.0") {
+	if got := strings.Join(backend.calls, ","); !strings.HasSuffix(got, "switch 1.5.0,maintenance on,restore pending (maintenance),switch 1.4.0,maintenance off") {
 		t.Fatalf("calls %s", got)
 	}
 	if st := load(t, dir); st.App.Version != "1.4.0" {
@@ -364,6 +368,32 @@ func TestDeadRunningRecordIsMarked(t *testing.T) {
 	}
 }
 
+func TestEachStepIsAnnouncedBeforeItsWork(t *testing.T) {
+	backend := &fakeBackend{snapshots: true}
+	manager, _ := setup(t, backend)
+	manager.OnStep = func(upgrade *updaterv1.Upgrade) {
+		backend.record("[" + strings.TrimPrefix(upgrade.GetStep().String(), "UPGRADE_STEP_") + " " + upgrade.GetFromVersion() + ">" + upgrade.GetToVersion() + "]")
+	}
+	if _, err := manager.Upgrade(context.Background(), "1.5.0", "", UpgradeOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	wait(t, manager)
+	want := "[PULL 1.4.0>1.5.0],pull,[SNAPSHOT 1.4.0>1.5.0],maintenance on,save pending (maintenance),[PREFLIGHT 1.4.0>1.5.0],preflight 1.5.0 (maintenance),[SWITCH 1.4.0>1.5.0],switch 1.5.0,[READY 1.4.0>1.5.0],maintenance off"
+	if got := strings.Join(backend.calls, ","); got != want {
+		t.Fatalf("upgrade order\n got %s\nwant %s", got, want)
+	}
+
+	backend.calls = nil
+	if _, err := manager.Rollback(""); err != nil {
+		t.Fatal(err)
+	}
+	wait(t, manager)
+	want = "[PULL 1.5.0>1.4.0],pull,[RESTORE 1.5.0>1.4.0],maintenance on,restore current (maintenance),[SWITCH 1.5.0>1.4.0],switch 1.4.0,[READY 1.5.0>1.4.0],maintenance off"
+	if got := strings.Join(backend.calls, ","); got != want {
+		t.Fatalf("undo order\n got %s\nwant %s", got, want)
+	}
+}
+
 func TestMaintenanceCoversTheSnapshotUntilTheSwitch(t *testing.T) {
 	backend := &fakeBackend{snapshots: true}
 	manager, _ := setup(t, backend)
@@ -392,7 +422,7 @@ func TestRestoreEndsOutOfMaintenance(t *testing.T) {
 	if last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_FAILED || !last.GetRestored() {
 		t.Fatalf("upgrade %v", last)
 	}
-	if got := strings.Join(backend.calls, ","); !strings.HasSuffix(got, "preflight 1.5.0 (maintenance),maintenance on,restore pending (maintenance),switch 1.4.0") {
+	if got := strings.Join(backend.calls, ","); !strings.HasSuffix(got, "preflight 1.5.0 (maintenance),maintenance on,restore pending (maintenance),switch 1.4.0,maintenance off") {
 		t.Fatalf("calls %s", got)
 	}
 	if backend.inMaintenance() {
@@ -562,4 +592,30 @@ func TestUpgradeIsRefusedWhileAnExportRuns(t *testing.T) {
 		t.Fatalf("upgrade during an export: %v", err)
 	}
 	held.Release()
+}
+
+func TestAnUpgradeThatCannotLeaveMaintenanceSucceedsWithAWarning(t *testing.T) {
+	backend := &fakeBackend{snapshots: true, failHandBack: true}
+	manager, dir := setup(t, backend)
+	ctx := context.Background()
+	if _, err := manager.Upgrade(ctx, "1.5.0", "user-1", UpgradeOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	last := wait(t, manager)
+	want := "1.5.0 is running, but taking it out of maintenance failed: reloading caddy: caddy reload exited with code 1. Run sudo metis apply on the server"
+	if last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_SUCCEEDED || last.GetError() != want {
+		t.Fatalf("upgrade %v", last)
+	}
+	if st := load(t, dir); st.App.Version != "1.5.0" || st.Updater.Previous == nil {
+		t.Fatalf("state %+v", st)
+	}
+
+	if _, err := manager.Rollback("user-1"); err != nil {
+		t.Fatal(err)
+	}
+	last = wait(t, manager)
+	want = "1.4.0 is running, but taking it out of maintenance failed: reloading caddy: caddy reload exited with code 1. Run sudo metis apply on the server"
+	if last.GetState() != updaterv1.UpgradeState_UPGRADE_STATE_SUCCEEDED || last.GetError() != want {
+		t.Fatalf("undo %v", last)
+	}
 }

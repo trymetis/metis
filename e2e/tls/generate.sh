@@ -15,7 +15,9 @@ if [[ ! -f tls/ca.key ]]; then
 fi
 
 issue() {
-  local key="$1" crt="$2" cn="$3" sans="$4"
+  local name="$1" cn="$2" sans="$3"
+  local key="tls/$name/cert.key" crt="tls/$name/cert.crt"
+  mkdir -p "tls/$name"
   openssl ecparam -name prime256v1 -genkey -noout | openssl pkcs8 -topk8 -nocrypt -out "$key"
   openssl req -new -key "$key" -subj "/CN=$cn" -out "$work/req.csr"
   printf 'basicConstraints=CA:FALSE\nextendedKeyUsage=serverAuth\nsubjectAltName=%s\n' "$sans" >"$work/ext.cnf"
@@ -23,24 +25,19 @@ issue() {
     -CAserial "$work/ca.srl" -sha256 -days "$days" -extfile "$work/ext.cnf" -out "$crt"
 }
 
-issue mcp-client/tls/mcp-client.key mcp-client/tls/mcp-client.crt mcp.quillmate.app \
-  "DNS:mcp.quillmate.app,DNS:mcp-private.quillmate.app"
-issue gateway-cloudflare/tls/gateway.key gateway-cloudflare/tls/gateway.crt gateway.localhost \
-  "DNS:gateway.localhost,DNS:localhost"
-issue resend/tls/api.resend.com.key resend/tls/api.resend.com.crt api.resend.com \
-  "DNS:api.resend.com"
-issue harness/tls/models.key harness/tls/models.crt openrouter.ai \
-  "DNS:openrouter.ai,DNS:api.typesafe.ai"
-issue "$work/resend-gateway.key" "$work/resend-gateway.crt" resend-gateway.localhost \
-  "DNS:resend-gateway.localhost,DNS:localhost"
-cat "$work/resend-gateway.crt" "$work/resend-gateway.key" >proxy/tls/resend-gateway.pem
-issue ses/tls/email.us-east-1.amazonaws.com.key ses/tls/email.us-east-1.amazonaws.com.crt \
-  email.us-east-1.amazonaws.com "DNS:email.us-east-1.amazonaws.com"
-issue "$work/ses-gateway.key" "$work/ses-gateway.crt" ses-gateway.localhost \
-  "DNS:ses-gateway.localhost,DNS:localhost"
-cat "$work/ses-gateway.crt" "$work/ses-gateway.key" >proxy/tls/ses-gateway.pem
-issue "$work/s3-amazonaws.key" "$work/s3-amazonaws.crt" s3.us-east-1.amazonaws.com \
-  "DNS:s3.us-east-1.amazonaws.com"
-cat "$work/s3-amazonaws.crt" "$work/s3-amazonaws.key" >proxy/tls/s3-amazonaws.pem
+issue mcp-client mcp.quillmate.app "DNS:mcp.quillmate.app,DNS:mcp-private.quillmate.app"
+issue gateway-cloudflare gateway.localhost "DNS:gateway.localhost,DNS:localhost"
+issue resend api.resend.com "DNS:api.resend.com"
+issue replay openrouter.ai "DNS:openrouter.ai,DNS:api.typesafe.ai"
+issue resend-gateway resend-gateway.localhost "DNS:resend-gateway.localhost,DNS:localhost"
+issue ses email.us-east-1.amazonaws.com \
+  "DNS:email.us-east-1.amazonaws.com,DNS:sts.us-east-1.amazonaws.com,DNS:iam.amazonaws.com,DNS:sqs.us-east-1.amazonaws.com,DNS:lambda.us-east-1.amazonaws.com,DNS:metis-ses-aws-demo-trymetis-email.s3.us-east-1.amazonaws.com"
+issue ses-gateway ses-gateway.localhost "DNS:ses-gateway.localhost,DNS:localhost"
+issue s3-amazonaws s3.us-east-1.amazonaws.com "DNS:s3.us-east-1.amazonaws.com"
+issue registry ghcr.io \
+  "DNS:ghcr.io,DNS:registry-1.docker.io,DNS:gcr.io,DNS:registry.localhost,DNS:localhost,IP:127.0.0.1"
+issue sh sh.trymetis.email "DNS:sh.trymetis.email"
+issue github-raw raw.githubusercontent.com "DNS:raw.githubusercontent.com"
+issue cloudflare api.cloudflare.com "DNS:api.cloudflare.com"
 
 echo "[tls] issued certificates under $(cat tls/ca.crt | openssl x509 -noout -subject)"

@@ -55,7 +55,7 @@ The command deploys the newest release of the Amazon SES gateway, or the release
 1. Checks the key: "AWS account 123456789012, eu-west-1".
 2. Creates the gateway's tables in the database: "Database schema".
 3. Adds the domain to Amazon SES, and creates its DNS records: the MX record, such as `10 inbound-smtp.eu-west-1.amazonaws.com`, and three DKIM records. With `CLOUDFLARE_API_TOKEN` set and the domain on that Cloudflare account, it creates them there. Otherwise it prints them under "Add these DNS records at your DNS provider:".
-4. Waits for Amazon SES to check the domain: "Waiting for SES to verify example.com (up to 10 minutes)…", then "SES verified example.com". If it takes longer, it says "Run the same command again once DNS has spread". Running it again continues where it stopped.
+4. Waits for Amazon SES to check the domain: "Waiting for SES to verify example.com (up to 10 minutes)…", then "SES verified example.com". If it takes longer, it says "Run the same command again once DNS has spread." Running it again continues where it stopped.
 5. If the account is in the sandbox, it warns "SES in eu-west-1 is in the sandbox: it sends only to verified addresses, at most 200 messages per 24 hours and 1 per second." and asks "Ask AWS for production access now?" ("AWS answers within 96 hours; mail still arrives meanwhile."). On a server, the request names your instance's address and the owner email.
 6. Creates the S3 bucket ("S3 bucket metis-ses-example-com"), a queue for failed deliveries (`metis-ses-example-com-failed`) and the function's role ("IAM role metis-ses-example-com").
 7. Creates the function: "Lambda function metis-ses-example-com (0.1.0)", on Node.js 24 and arm64, with 1024 MB of memory and a 60-second timeout.
@@ -99,13 +99,13 @@ From your computer, run `metis remove gateway-ses --remote --domain example.com 
 
 | Message                                                                                                                | What to do                                                              |
 | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| "loading AWS credentials:" or "checking the AWS credentials (AWS_PROFILE, AWS_ACCESS_KEY_ID, …):" followed by a reason | Check the access key. On the server, pass it on the line after `sudo`.  |
-| "pass `--region`, one of" followed by the regions                                                                      | Add `--region`.                                                         |
+| "Loading AWS credentials:" or "Checking the AWS credentials (AWS_PROFILE, AWS_ACCESS_KEY_ID, …):" followed by a reason | Check the access key. On the server, pass it on the line after `sudo`.  |
+| "Pass `--region`, one of" followed by the regions                                                                      | Add `--region`.                                                         |
 | "eu-west-9 is not an SES receiving region; use one of" followed by the regions                                         | Pick one of the listed regions.                                         |
-| "pass `--database-url` and `--database-token`: a libSQL database Lambda can reach over the internet, such as Turso"    | Add the database flags.                                                 |
-| "Run the same command again once DNS has spread"                                                                       | DNS changes take time to spread. Wait, then run the same command again. |
+| "Pass `--database-url` and `--database-token`: a libSQL database Lambda can reach over the internet, such as Turso."   | Add the database flags.                                                 |
+| "Run the same command again once DNS has spread."                                                                      | DNS changes take time to spread. Wait, then run the same command again. |
 | "The request failed (…); ask from the SES console's Account dashboard"                                                 | Ask AWS for production access in the Amazon SES console.                |
-| "no SES gateway serves example.org; pass `--domain`"                                                                   | No gateway on this server serves that domain. Check the domain.         |
+| "No SES gateway serves example.org; pass `--domain`."                                                                  | No gateway on this server serves that domain. Check the domain.         |
 
 ## Set it up by hand
 

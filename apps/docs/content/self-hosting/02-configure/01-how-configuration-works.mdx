@@ -16,7 +16,7 @@ These live only in the environment (the `.env` file) or in the optional config f
 - How long the audit log keeps events: `METIS_AUDIT_RETENTION_DAYS`. It cannot be changed in the dashboard.
 - The databases: `METIS_DB_DRIVER`, `DATABASE_URL`, `MASTRA_DATABASE_URL` and their tokens.
 - The drive relay secret: `METIS_DRIVE_RELAY_SECRET`.
-- Maintenance mode: `METIS_MAINTENANCE`. On a server the `metis` CLI runs, upgrades and undo turn maintenance on and off on their own. If you set it with `metis config set`, the app stays in maintenance, through every upgrade and undo, until you run `sudo metis config unset METIS_MAINTENANCE`. See [Maintenance mode](/self-hosting/reference/environment-variables#maintenance-mode).
+- Maintenance mode: `METIS_MAINTENANCE`. On a server the `metis` CLI runs, upgrades, undo, `sudo metis db export` and `sudo metis db move` turn maintenance on and off on their own. If you set it with `metis config set`, the app stays in maintenance, through every upgrade and undo, until you run `sudo metis config unset METIS_MAINTENANCE`. See [Maintenance mode](/self-hosting/reference/environment-variables#maintenance-mode).
 
 On a server the `metis` CLI runs, change one with `metis config set`:
 
@@ -24,7 +24,7 @@ On a server the `metis` CLI runs, change one with `metis config set`:
 sudo metis config set METIS_SOURCE_URL=https://git.example.com/metis
 ```
 
-The command writes the line to `/opt/metis-suite/.env`, shows what it changes, restarts the app on the new value (preflight runs first), and prints "Stored in /opt/metis-suite/.env and applied". To remove a variable, use `metis config unset`:
+The command writes the line to `/opt/metis-suite/.env` and restarts the app on the new value (preflight runs first). Then it lists what it changed and prints "Stored in /opt/metis-suite/.env and applied". To remove a variable, use `metis config unset`:
 
 ```bash
 sudo metis config unset METIS_SOURCE_URL
@@ -72,7 +72,18 @@ sudo metis config set GOOGLE_CLIENT_ID=1234-abc.apps.googleusercontent.com GOOGL
 - **History shows it.** The change appears under **System**, **History** as a **Server** version, by "Preflight", with the cards it changed.
 - **Quote a value that holds spaces or JSON** in single quotes, so your shell passes it as one piece, for example `sudo metis config set 'METIS_IMAP_SERVERS=[{"name":"Office mail","imap":{"host":"imap.example.com"},"smtp":{"host":"smtp.example.com"}}]'`. The value is written to `.env` exactly as the shell passes it.
 
-If a stored card fails its checks, preflight fails and nothing is stored in the database. The command shows "preflight failed:" with lines that name the card and the field, and the app keeps running. The change stays in `.env`, though. Fix the value and run `metis config set` or `metis config unset` again. A later `metis apply` alone starts the app on the new `.env` without storing the card, so the dashboard keeps its value and **Deploy checks** shows that the environment differs.
+<img
+  src="/images/self-hosting/terminal-config-set.webp"
+  alt="The metis config set command setting METIS_SIGNUP_DISABLED to false, with progress lines, the list of changes that recreate the app and the worker and run preflight, and the line Stored in /opt/metis-suite/.env and applied"
+  class="dark:hidden"
+/>
+<img
+  src="/images/self-hosting/terminal-config-set-dark.webp"
+  alt="The metis config set command setting METIS_SIGNUP_DISABLED to false, with progress lines, the list of changes that recreate the app and the worker and run preflight, and the line Stored in /opt/metis-suite/.env and applied"
+  class="hidden dark:block"
+/>
+
+If a stored card fails its checks, preflight fails and nothing is stored in the database. The command shows "Preflight failed:" with lines that name the card and the field, and the app keeps running. The change stays in `.env`, though. Fix the value and run `metis config set` or `metis config unset` again. A later `metis apply` alone starts the app on the new `.env` without storing the card, so the dashboard keeps its value and **Deploy checks** shows that the environment differs.
 
 ### Change settings away from the server
 
@@ -100,7 +111,7 @@ Without Docker, it prints "Docker is not running here. Store the dashboard setti
 docker run --rm --env-file production.env -e METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS=GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET ghcr.io/trymetis/metis:1.2.3-preflight
 ```
 
-If none of the variables is a dashboard setting, it prints "None of them is a dashboard setting, so the next deploy picks them up." Without `--version`, it updates the file, then stops with, for example, "GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET are dashboard settings; pass `--version X.Y.Z`, the release the deployment runs, to store them once through its preflight image".
+If none of the variables is a dashboard setting, it prints "None of them is a dashboard setting, so the next deploy picks them up." Without `--version`, it updates the file, then stops with, for example, "GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET are dashboard settings; pass `--version X.Y.Z`, the release the deployment runs, to store them once through its preflight image."
 
 :::danger[Never set `METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS` yourself]
 The CLI passes this variable to one preflight run only. Never put it in `.env` or in a platform's environment, and above all never on a platform whose build or start command runs preflight on every deploy. Every later preflight would store those settings from the environment again, and overwrite what the owner or an admin changed in the dashboard. The CLI warns: "Never set `METIS__UPDATER__FORCE_UPDATE_CONFIG_KEYS` on the platform itself; every deploy would then overwrite the dashboard."
@@ -206,7 +217,7 @@ A server the `metis` CLI runs gives the app no config file. Use `.env` there.
 
 The app checks every setting when it starts. A setting with a wrong value stops it from starting, and the error names the setting.
 
-On a server the `metis` CLI runs, preflight runs before every new app starts. If it fails, the app that was running keeps running. The end of preflight's output is in the error of the command that made the change (`metis config set`, `metis apply`, `metis add`, `metis remove` or `metis domain`), after "preflight failed:". Fix the value and run the command again.
+On a server the `metis` CLI runs, preflight runs before every new app starts. If it fails, the app that was running keeps running. The end of preflight's output is in the error of the command that made the change (`metis config set`, `metis apply`, `metis add`, `metis remove`, `metis domain set` or `metis domain remove`), after "Preflight failed:". Fix the value and run the command again.
 
 The app's own log shows errors after it has started:
 

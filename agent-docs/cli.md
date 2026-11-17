@@ -5,29 +5,39 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [updater.md]
 
 ## Code map
 
-| Concern                         | Where                                                                                                                                                                                                    |
-| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Commands, modes and root checks | `cmd/metis/main.go` → `checkMode`, `modes`, `needsRoot` · one file per command group in `cmd/metis/`                                                                                                     |
-| Setup and the release pin       | `cmd/metis/setup.go` → `runSetup`, `setupForm`, `pinRelease` · `internal/updater/meta.go` → `NewestCompatible`, `FetchMeta`, `CLISatisfies`                                                              |
-| Mode detection                  | `internal/mode/mode.go` → `Detect`, `Record` (`/etc/metis/install-dir`)                                                                                                                                  |
-| `metis.json` and its lock       | `internal/state/state.go` → `State`, `Load`, `Update`, `Create` · `lock_unix.go` → `Acquire`, `TryAcquire`                                                                                               |
-| The service catalog             | `internal/catalog/services.yml` (embedded, compose format) · `catalog.go` → `Load`, `Environment`, `Order`, `Pins`                                                                                       |
-| The stack engine                | `internal/stack/stack.go` → `Plan`, `Apply`, `Maintenance`, `RunOnce`, `Wait`, `Pull`, `Exec` · `spec.go` → `BuildSpec`, `Hash`, labels · `engine.go` → `Engine`                                         |
-| Env files                       | `internal/envfile/envfile.go` (raw `KEY=VALUE`, mode 600)                                                                                                                                                |
-| Secrets and the sqld key        | `internal/secrets/secrets.go` → `Token`, `EncryptionKey`, `NewSqldAuth`                                                                                                                                  |
-| sqld namespaces                 | `internal/sqld/sqld.go` → `CreateNamespaces`, `DeleteNamespace`                                                                                                                                          |
-| Components and a change         | `internal/components/components.go` (sqld, caddy, redis, worker, objstore) · `updater.go` (the updater and its systemd unit) · `gateways.go` · `install.go` → `Install`, `Runner.Change`, `Runner.First` |
-| Dashboard-setting keys          | `internal/components/keys.go` → `InstanceKeys` (checked against `apps/web/src/config/sections.ts` by `keys_test.go`)                                                                                     |
-| The Caddyfile                   | `internal/caddy/caddy.go` → `Sites`, `Write`                                                                                                                                                             |
-| Docker install                  | `internal/docker/docker.go` → `Ensure`, `Install`                                                                                                                                                        |
-| Integrations                    | `internal/google`, `internal/cloudflare`, `internal/resend`, `internal/ses` · artifacts and tokens `internal/gateways`                                                                                   |
-| Export and import               | `cmd/metis/export.go` · `internal/keys`, `internal/archive`, `internal/hrana`, `internal/dbcopy`, `internal/export` ([export.md](export.md))                                                             |
-| Config, Google, gateway tokens  | `cmd/metis/config.go` → `runConfig`, `runRemoteConfig` · `google.go` → `connectGoogle` · `components.go` → `newGatewayCommand`                                                                           |
-| Self-update                     | `cmd/metis/selfupdate.go`                                                                                                                                                                                |
-| Forms and output                | `internal/ui/ui.go`                                                                                                                                                                                      |
-| The release track               | `CHANGELOG.md` · `bootstrap.sh` (the shim) · `licenses.tpl` · `.github/workflows/cli.yml` ([self-host.md](self-host.md))                                                                                 |
+| Concern                         | Where                                                                                                                                                                                                     |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Commands, modes and root checks | `cmd/metis/root.go` → `newRootCommand` · `modes.go` → `checkMode`, `modes`, `needsRoot`, `strictGroup` · `change.go` → `change`, `addComponent`, `removeComponent` · one file per command in `cmd/metis/` |
+| Setup and the release pin       | `cmd/metis/setup.go` → `runSetup`, `setupForm`, `pinRelease` · `internal/updater/meta.go` → `NewestCompatible`, `FetchMeta`, `CLISatisfies`                                                               |
+| Mode detection                  | `internal/mode/mode.go` → `Detect`, `Record` (`/etc/metis/install-dir`)                                                                                                                                   |
+| `metis.json` and its lock       | `internal/state/state.go` → `State`, `Load`, `Update`, `Create` · `lock_unix.go` → `Acquire`, `TryAcquire`                                                                                                |
+| The service catalog             | `internal/catalog/services.yml` (embedded, compose format) · `catalog.go` → `Load`, `Environment`, `Order`, `Pins`                                                                                        |
+| The stack engine                | `internal/stack/stack.go` → `Plan`, `Apply`, `Maintenance`, `RunOnce`, `Wait`, `Pull`, `Exec` · `spec.go` → `BuildSpec`, `Hash`, labels · `engine.go` → `Engine`                                          |
+| Env files                       | `internal/envfile/envfile.go` (raw `KEY=VALUE`, mode 600)                                                                                                                                                 |
+| Secrets and the sqld key        | `internal/secrets/secrets.go` → `Token`, `EncryptionKey`, `NewSqldAuth`                                                                                                                                   |
+| sqld namespaces                 | `internal/sqld/sqld.go` → `CreateNamespaces`, `DeleteNamespace`                                                                                                                                           |
+| Components and a change         | `internal/components/components.go` (sqld, caddy, redis, worker, objstore) · `updater.go` (the updater and its systemd unit) · `gateways.go` · `install.go` → `Install`, `Runner.Change`, `Runner.First`  |
+| Dashboard-setting keys          | `internal/components/keys.go` → `InstanceKeys` (checked against `apps/web/src/config/sections.ts` by `keys_test.go`)                                                                                      |
+| The Caddyfile                   | `internal/caddy/caddy.go` → `Sites`, `Render`, `Page`, `Write`, `WriteMaintenance`, `Ensure`, `Fronts`, `Frozen` · templates `Caddyfile.tmpl` and `maintenance.html`, embedded                            |
+| Docker install                  | `internal/docker/docker.go` → `Ensure`, `Install`                                                                                                                                                         |
+| Integrations                    | `internal/google`, `internal/cloudflare`, `internal/resend`, `internal/ses` · artifacts and tokens `internal/gateways`                                                                                    |
+| Export and import               | `cmd/metis/keygen.go`, `db_*.go`, `export_*.go` · `internal/keys`, `internal/archive`, `internal/hrana`, `internal/dbcopy`, `internal/export` ([export.md](export.md))                                    |
+| Config, Google, gateway tokens  | `cmd/metis/envchange.go` → `runConfig`, `runRemoteConfig` · `connect_google.go` → `connectGoogle` · `gateway_token.go` → `gatewayTokenFlags.access`                                                       |
+| Self-update                     | `cmd/metis/self_update.go`                                                                                                                                                                                |
+| The e2e build and suite         | `cmd/metis/e2e_trust.go` (`//go:build e2e`, `-X main.e2eCA`) · its test `e2e_trust_test.go` · the suite that runs the binary `e2e-cli/` ([e2e-cli.md](e2e-cli.md))                                        |
+| Forms and output                | `internal/ui/ui.go`                                                                                                                                                                                       |
+| The release track               | `CHANGELOG.md` · `bootstrap.sh` (the shim) · `licenses.tpl` · `.github/workflows/cli.yml` ([self-host.md](self-host.md))                                                                                  |
 
 ## Rules
+
+### Commands
+
+- **Every action is its own cobra subcommand, with only the flags and positional arguments it uses.** An action is never chosen by a positional argument or a flag (`domain set HOST` and `domain remove`, `gateway token name ADDRESS NAME`).
+  - Shared flags go on the parent as persistent flags (`gateway token --endpoint`); `--accessible` is the one global flag.
+  - `add`, `remove`, `domain` and `gateway token` refuse an unknown subcommand ("Unknown command") through `strictGroup`, so a script still on an argument form such as `metis domain mail.example.com` fails instead of printing help and exiting 0.
+- **Each command and subcommand is its own file in `cmd/metis/`, named after its command path** (`add_worker.go`, `gateway_token_create.go`).
+  - The file holds the command, its flags and the logic only it uses; a parent's file adds its children.
+  - Code several commands share lives in files that name no command (`change.go`, `identity.go`, `install_data.go`, `upgrade.go`).
 
 ### Modes
 
@@ -40,21 +50,23 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [updater.md]
 - **A remote command takes what it needs from flags or `--env-file` and caches nothing.**
   - Commands that run a server release's artifact away from a server (the preflight image for `config set`) take `--version X.Y.Z`, because the app does not expose its version.
   - The gateway commands take the gateway's own newest release unless `--version` names one.
+- **Only a `-tags e2e` build trusts the e2e CA.** `cmd/metis/e2e_trust.go` adds the CA from `-X main.e2eCA` (base64) to the system roots in memory before anything dials, so the CLI and the updater container, which runs the host binary, trust the CLI suite's stand-ins ([e2e-cli.md](e2e-cli.md)); a release build never compiles the file.
+  - It hands the system pool plus the CA to `x509.SetFallbackRoots`, and its `//go:debug x509usefallbackroots=1` line makes Go use that pool on a machine that has system roots; nothing is written to disk.
 - **Fresh installs only.** `metis setup` refuses a folder that is not empty and a machine that already has an install; nothing reads or converts a bootstrap or compose install.
 
 ### The install folder
 
-| Path                                                                                        | What it is                                                                                                   |
-| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `metis.json`                                                                                | The state: components and their options, the app's pinned images, the updater's record. Mode 600, no secrets |
-| `metis.lock`                                                                                | The `flock` target of every mutating command and the updater                                                 |
-| `.env`                                                                                      | The app's environment, mode 600                                                                              |
-| `env/objstore.env`, `env/sqld-resend.env`                                                   | RustFS's keys; `sqld-resend`'s JWT key                                                                       |
-| `env/gateway-resend.env`, `env/gateway-cloudflare-DOMAIN.env`, `env/gateway-ses-DOMAIN.env` | Each gateway's environment or admin `API_TOKEN`                                                              |
-| `Caddyfile`                                                                                 | Written from the components that need a public host                                                          |
-| `exports/`                                                                                  | Export archives `sudo metis db export` writes, mode 700 ([export.md](export.md))                             |
-| `snapshots/pending`, `snapshots/current`                                                    | The updater's sqld snapshots ([updater.md](updater.md))                                                      |
-| `cache/gateways/VERSION/`                                                                   | Downloaded gateway zips                                                                                      |
+| Path                                                                                        | What it is                                                                                                                                                                            |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `metis.json`                                                                                | The state: components and their options, the app's pinned images, the updater's record. Mode 600, no secrets                                                                          |
+| `metis.lock`                                                                                | The `flock` target of every mutating command and the updater                                                                                                                          |
+| `.env`                                                                                      | The app's environment, mode 600                                                                                                                                                       |
+| `env/objstore.env`, `env/sqld-resend.env`                                                   | RustFS's keys; `sqld-resend`'s JWT key                                                                                                                                                |
+| `env/gateway-resend.env`, `env/gateway-cloudflare-DOMAIN.env`, `env/gateway-ses-DOMAIN.env` | Each gateway's environment or admin `API_TOKEN`                                                                                                                                       |
+| `caddy/Caddyfile`                                                                           | Written from the components that need a public host; Caddy mounts the `caddy/` folder, so it reads a rewritten file. `caddy/maintenance.html` is the page Caddy serves in maintenance |
+| `exports/`                                                                                  | Export archives `sudo metis db export` writes, mode 700 ([export.md](export.md))                                                                                                      |
+| `snapshots/pending`, `snapshots/current`                                                    | The updater's sqld snapshots ([updater.md](updater.md))                                                                                                                               |
+| `cache/gateways/VERSION/`                                                                   | Downloaded gateway zips                                                                                                                                                               |
 
 - **Secrets live only in the env files.** `metis.json` holds names, versions, ids and options.
 - **`metis.json` also holds `exportRecipients` (public key PEMs) and `running` (an export or a database move in progress)**, so a command that finds the lock taken says which one runs instead of waiting through it.
@@ -76,17 +88,28 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [updater.md]
   - Managed containers of components that are off are removed last.
 - **Volumes are removed only by `metis remove … --purge`.**
 - **Preflight runs once before a new app container, and a failed preflight leaves the old app running** with the last 2000 bytes of its log in the error.
-- **`stack.Maintenance` puts the app and every worker in maintenance, or takes them out, by recreating them** ([configuration.md](configuration.md)).
-  - On: each is recreated from its catalog spec with `METIS_MAINTENANCE` set to the current UTC time in the container's environment only; `.env` never holds it.
-  - Off: each is recreated from its catalog spec as it is, which is the spec an apply wants, so an unchanged container is only started if stopped.
-  - It never runs preflight and touches nothing but `app` and `worker`; any later apply also ends maintenance, because the spec hash differs.
+- **`stack.Maintenance` keeps visitors answered while the app is away, through Caddy when the server has a domain and through the app itself when it has none** ([configuration.md](configuration.md)).
+  - With a domain (`caddy.Fronts`), on: `caddy.WriteMaintenance` writes the page and then the Caddyfile with the app's site as the maintenance answers, Caddy reloads, then the app and every worker are stopped.
+  - In maintenance Caddy serves `maintenance.html` from its folder with status 503 to a `GET` or `HEAD` that accepts `text/html`, and answers any other request with the 503 JSON; both carry `Retry-After`, `Cache-Control: no-store`, `Metis-Maintenance` and `Metis-Version`.
+  - **No Caddy or HTML text lives in Go strings.** `Caddyfile.tmpl` is a `text/template` for every site, `maintenance.html` an `html/template`, and the JSON body comes from `encoding/json`.
+  - With a domain, off: the app and workers are started, `waitUpstream` asks the app's `/api/readyz` from inside the Caddy container until it answers, then the Caddyfile is written as usual and Caddy reloads.
+  - The hand-back is tried three times (`thaw`, `handBacks`); a caller that still gets an error warns and names `sudo metis apply`.
+  - While the Caddy container still has the single-file mount of an older CLI (`caddyReadsFolder`), a reload cannot see the new file, so maintenance goes the way of a server without a domain until an apply recreates Caddy.
+  - The other sites in the Caddyfile (the Resend gateway, direct storage) stay proxied during maintenance.
+  - Without a domain, on: the app and every worker are recreated from their catalog spec with `METIS_MAINTENANCE` set to the current UTC time in the container's environment only; `.env` never holds it.
+  - Without a domain, off: each is recreated from its catalog spec as it is, which is the spec an apply wants, so an unchanged container is only started if stopped.
+  - It never runs preflight and touches no container but `app` and `worker`.
+- **A full apply ends a maintenance the CLI left on; an apply that keeps `caddy` leaves the site as it is.**
+  - `Plan` lists stopped containers under `Start` and sets `Site` when the Caddyfile holds the maintenance answers (`caddy.Frozen`), so `sudo metis apply` sees work to do after `db export --keep-down` or a failed hand-back.
+  - `Apply` starts the containers, waits for the app with `waitUpstream`, then writes the Caddyfile as usual and reloads Caddy (`thaw`); without a domain the changed spec hash recreates the app and workers.
+  - The updater's switch keeps `caddy` (`appComponents`), so it stays behind the maintenance answers until the release is ready; it writes the Caddyfile only when the file is missing (`caddy.Ensure`).
 
 ### Components
 
 | Component            | Requires                | Add                                                                                                                                                            | Remove                                                                                                                                      |
 | -------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `sqld`               | —                       | On in setup unless another database is chosen; the stack URLs and a JWT pair in `.env`                                                                         | Refused while `DATABASE_URL`, `MASTRA_DATABASE_URL` or `gateway-resend --database stack` uses it                                            |
-| `caddy`              | a domain                | `metis domain HOST`: `METIS_DOMAIN`, `BETTER_AUTH_URL=https://HOST`, the Caddyfile                                                                             | `metis domain --remove`: `BETTER_AUTH_URL=http://localhost:PORT`; refused under `objstore --direct` or the Resend gateway                   |
+| `caddy`              | a domain                | `metis domain set HOST`: `METIS_DOMAIN`, `BETTER_AUTH_URL=https://HOST`, the Caddyfile                                                                         | `metis domain remove`: `BETTER_AUTH_URL=http://localhost:PORT`; refused under `objstore --direct` or the Resend gateway                     |
 | `updater`            | —                       | `--systemd` (default when systemd is PID 1) or `--docker` ([updater.md](updater.md))                                                                           | The app loses `METIS_UPDATER_SOCKET`, so the Updates page disappears                                                                        |
 | `redis`              | —                       | Valkey with `noeviction`                                                                                                                                       | Refused while `worker` is on                                                                                                                |
 | `worker`             | `redis` (added with it) | `--replicas N`; forces the runner to `bullmq` on `redis://redis:6379`                                                                                          | Forces the runner to `internal`, then stops the workers                                                                                     |
@@ -95,6 +118,9 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [updater.md]
 | `gateway-cloudflare` | a Cloudflare zone       | See Integrations                                                                                                                                               | Deletes its rules and Worker; `--purge` also D1 and R2                                                                                      |
 | `gateway-ses`        | an AWS account          | See Integrations                                                                                                                                               | Deletes its rule and resources; `--purge` also the bucket                                                                                   |
 
+- **The CLI prints an error as it was written** (`cmd/metis/error_text.go` → `printError`, `sentenceStart`): the first letter is capitalized only when the first word is plain lowercase letters, so a message that starts with a setting's name or an address keeps it.
+  - fang's default handler title-cases the whole first word, which turns `METIS_DRIVE_RELAY_MAX_MB` into `Metis_drive_relay_max_mb`.
+  - The handler adds a period, so `withoutFinalPeriod` drops one the message already ends with and the terminal shows a single period.
 - **Every change runs in one order**: under the lock, the component edits `metis.json` and the env files, the Caddyfile is rewritten, then one apply runs, with one preflight forcing the keys the change owns ([configuration.md](configuration.md)).
 - **Re-running `metis add` changes a component in place** and moves a gateway to its newest release, or to the one `--version` names.
 - **The runner switch forces the whole `workflowRunner` section**, so runner settings changed on the dashboard return to their `.env` values or defaults; `add worker` and `remove worker` say so before they run, and `--yes` accepts it.
@@ -149,7 +175,7 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [updater.md]
   - It prints the URL, the setup code and the encryption key warning; gateways and Google chosen in the form are set up after the first apply.
 - **The shim** (`bootstrap.sh`) downloads `metis-linux-ARCH` and `SHA256SUMS` from `cli/` (or `cli/vMETIS_CLI_VERSION/`), checks it, installs it as `/usr/local/bin/metis` and runs `metis setup` with its own arguments.
 - **Status.** `metis status` lists each component with its health, every managed container, the app version and the last upgrade; each gateway shows its version and, when its folder's `version.txt` answers within 3 s, a newer release that is out; an SES gateway also shows its failed receipts.
-- **Domain.** `metis domain HOST` also creates the A record for the server's public address (from `https://1.1.1.1/cdn-cgi/trace`) through Cloudflare when it can.
+- **Domain.** `metis domain set HOST` also creates the A record for the server's public address (from `https://1.1.1.1/cdn-cgi/trace`) through Cloudflare when it can.
 
 ## Deliberate limits
 

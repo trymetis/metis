@@ -1,0 +1,6 @@
+node_modules
+!.env.fixture
+test-results
+playwright-report
+blob-report
+tests/.auth

@@ -6,7 +6,7 @@ import { loadEnrollment, totpRoutes } from "./totp";
 
 const PORT = 8080;
 const MODELS_PORT = 443;
-const MODELS_TLS = new URL("./tls/", import.meta.url);
+const MODELS_TLS = new URL("../tls/replay/", import.meta.url);
 
 const enrollment = await loadEnrollment();
 
@@ -22,8 +22,8 @@ Bun.serve({
   hostname: "0.0.0.0",
   idleTimeout: 255,
   tls: {
-    cert: Bun.file(new URL("models.crt", MODELS_TLS)),
-    key: Bun.file(new URL("models.key", MODELS_TLS)),
+    cert: Bun.file(new URL("cert.crt", MODELS_TLS)),
+    key: Bun.file(new URL("cert.key", MODELS_TLS)),
   },
   routes: modelRoutes,
   fetch: () => new Response("not found\n", { status: 404 }),

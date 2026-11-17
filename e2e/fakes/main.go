@@ -6,15 +6,15 @@ import (
 	"os"
 )
 
-const usage = `usage: fakes <role>
+const usage = `usage: fakes <command>
 
-roles:
-  updater     the fake updater: the updater protocol on a Unix socket, control on :8080
-  resend      the fake Resend API on :443 (api.resend.com), control on :8080
-  ses         the fake SESv2 API on :443, control on :8080, a Lambda function URL front on :8081
-  mcp-client  Client ID Metadata Documents on :443, hits on :8080
-  cron        POSTs the app's workflow tick route every minute
+commands:
+  serve       the stand-ins FAKES names (resend, ses, mcp-client, updater, sh, github-raw,
+              cloudflare, registry, cron): :443 routed by host name, control on :8080 under
+              /NAME/, the SES function URL on :8081, the updater protocol on a Unix socket
   health URL  exits 0 when URL answers 2xx (for scratch healthchecks)
+  namespaces ADMIN_URL NAME...
+              creates the sqld namespaces through sqld's admin API, then exits
 `
 
 func main() {
@@ -26,18 +26,12 @@ func main() {
 	args := os.Args[2:]
 	var err error
 	switch os.Args[1] {
-	case "updater":
-		err = runUpdater()
-	case "resend":
-		err = runResend()
-	case "ses":
-		err = runSes()
-	case "mcp-client":
-		err = runMcpClient()
-	case "cron":
-		err = runCron()
+	case "serve":
+		err = runServe()
 	case "health":
 		err = runHealth(args)
+	case "namespaces":
+		err = runNamespaces(args)
 	default:
 		fmt.Fprint(os.Stderr, usage)
 		os.Exit(2)

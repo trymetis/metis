@@ -246,7 +246,7 @@ func (caddyComponent) Status(_ context.Context, st *state.State) (string, bool) 
 
 func (caddyComponent) Add(ctx context.Context, in *Install, opts Options) error {
 	if opts.Domain == "" {
-		return errors.New("caddy serves a domain; run metis domain HOST")
+		return errors.New("caddy serves a domain; run metis domain set HOST")
 	}
 	in.State.Components.Caddy = &state.Caddy{Domain: opts.Domain}
 	in.Env.Set("METIS_DOMAIN", opts.Domain)
@@ -376,7 +376,7 @@ func (objstoreComponent) Status(_ context.Context, st *state.State) (string, boo
 
 func (objstoreComponent) Add(_ context.Context, in *Install, opts Options) error {
 	if opts.Direct && (in.State.Components.Caddy == nil || in.State.Components.Caddy.Domain == "") {
-		return errors.New("--direct serves files from storage. plus the domain; run metis domain HOST first")
+		return errors.New("--direct serves files from storage. plus the domain; run metis domain set HOST first")
 	}
 	if opts.DataDir != "" {
 		if !strings.HasPrefix(opts.DataDir, "/") {

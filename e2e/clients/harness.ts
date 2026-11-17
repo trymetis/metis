@@ -2,8 +2,8 @@ import { z } from "zod";
 
 import { type Enrollment, enrollmentSchema } from "../lib/enrollment";
 
-export const APP = "http://localhost:3000";
-export const HARNESS = "http://localhost:8099";
+export const APP = process.env.E2E_APP_URL ?? "http://localhost:3000";
+export const HARNESS = process.env.E2E_HARNESS_URL ?? "http://localhost:8099";
 
 export type Account = Enrollment;
 

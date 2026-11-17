@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/trymetis/metis/apps/cli/internal/caddy"
 	"github.com/trymetis/metis/apps/cli/internal/state"
 )
 
@@ -142,7 +143,7 @@ func TestDomainAndCaddyfile(t *testing.T) {
 	if err := in.save(); err != nil {
 		t.Fatal(err)
 	}
-	caddyfile, err := os.ReadFile(filepath.Join(in.Dir, "Caddyfile"))
+	caddyfile, err := os.ReadFile(caddy.Path(in.Dir))
 	if err != nil || string(caddyfile) != "mail.example.com {\n\treverse_proxy app:3000\n}\n" {
 		t.Fatalf("Caddyfile %q %v", caddyfile, err)
 	}

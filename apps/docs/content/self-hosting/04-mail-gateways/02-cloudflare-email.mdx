@@ -59,7 +59,7 @@ It deploys the newest gateway release. To deploy another one, add `--version`, s
 It works against your Cloudflare account only, and then prints:
 
 - "The gateway's admin token (API_TOKEN), shown once; metis gateway token needs it:", followed by the token. Keep it: you need it to create mailbox tokens. Each run sets a new admin token, so keep the one from your last run.
-- "Add this server under Dashboard → System, or store it with `metis config set --env-file`:", followed by the server entry, and the same entry as a line such as `METIS_CLOUDFLARE_SERVERS=[{"id":"metis-cloudflare-example-com","name":"example.com","domain":"example.com","endpoint":"https://metis-mail-example-com.example-account.workers.dev"}]`.
+- "Add this server under Dashboard → System, or store it with `metis config set --env-file`:", followed by the server entry, and the same entry as a line such as `METIS_CLOUDFLARE_SERVERS=[{"domain":"example.com","endpoint":"https://metis-mail-example-com.example-account.workers.dev","id":"metis-cloudflare-example-com","name":"example.com"}]`.
 
 Add the server under **Dashboard**, **System**, **Cloudflare Email**, or store it with `metis config set --env-file`. See [Change settings away from the server](/self-hosting/configure/how-configuration-works#change-settings-away-from-the-server).
 
@@ -77,12 +77,12 @@ From your computer, use `CLOUDFLARE_API_TOKEN=your-cloudflare-token metis remove
 
 | Message                                                                                           | What to do                                                                                      |
 | ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| "no zone for example.com is on this Cloudflare account"                                           | Add the domain to the Cloudflare account the token belongs to, or use a token for that account. |
-| "Email Routing works on a zone apex; mail.example.com is inside the zone example.com"             | Use the zone itself, such as `example.com`.                                                     |
-| "checking the Cloudflare API token:" or "the Cloudflare API token is" followed by a reason        | Check the token in the Cloudflare dashboard, or create a new one.                               |
-| "pass `--domain example.com`"                                                                     | Add `--domain`.                                                                                 |
-| "no Cloudflare gateway serves example.org; pass `--domain`"                                       | No gateway on this server serves that domain. Check the domain.                                 |
-| "deleting the R2 bucket metis-mail-example-com-raw (empty it in the Cloudflare dashboard first):" | Empty the bucket in the Cloudflare dashboard, then run the command again.                       |
+| "No zone for example.com is on this Cloudflare account."                                          | Add the domain to the Cloudflare account the token belongs to, or use a token for that account. |
+| "Email Routing works on a zone apex; mail.example.com is inside the zone example.com."            | Use the zone itself, such as `example.com`.                                                     |
+| "Checking the Cloudflare API token:" or "The Cloudflare API token is" followed by a reason        | Check the token in the Cloudflare dashboard, or create a new one.                               |
+| "Pass `--domain example.com`."                                                                    | Add `--domain`.                                                                                 |
+| "No Cloudflare gateway serves example.org; pass `--domain`."                                      | No gateway on this server serves that domain. Check the domain.                                 |
+| "Deleting the R2 bucket metis-mail-example-com-raw (empty it in the Cloudflare dashboard first):" | Empty the bucket in the Cloudflare dashboard, then run the command again.                       |
 
 ## Set it up by hand
 

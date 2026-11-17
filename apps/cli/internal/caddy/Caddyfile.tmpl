@@ -1,0 +1,33 @@
+{{- range $index, $site := .Sites -}}
+{{- if $index}}
+{{end -}}
+{{- if $site.Frozen -}}
+{{$site.Host}} {
+	header Retry-After "300"
+	header Cache-Control "no-store"
+	header Metis-Maintenance "{{$.Since}}"
+{{- if $.Version}}
+	header Metis-Version "{{$.Version}}"
+{{- end}}
+	@page {
+		method GET HEAD
+		header Accept *text/html*
+	}
+	handle @page {
+		root * {{$.Root}}
+		rewrite * /{{$.Page}}
+		file_server {
+			status 503
+		}
+	}
+	handle {
+		header Content-Type "application/json"
+		respond `{{$.Body}}` 503
+	}
+}
+{{else -}}
+{{$site.Host}} {
+	reverse_proxy {{$site.Upstream}}
+}
+{{end -}}
+{{- end -}}

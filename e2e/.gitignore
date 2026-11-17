@@ -1,6 +1,5 @@
 node_modules
 !.env.fixture
-!proxy/tls/*.pem
 test-results
 playwright-report
 blob-report

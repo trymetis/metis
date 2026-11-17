@@ -3,6 +3,7 @@ package stack
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -16,6 +17,7 @@ import (
 	"github.com/moby/moby/api/types/network"
 	"github.com/moby/moby/client"
 
+	"github.com/trymetis/metis/apps/cli/internal/caddy"
 	"github.com/trymetis/metis/apps/cli/internal/catalog"
 	"github.com/trymetis/metis/apps/cli/internal/envfile"
 	"github.com/trymetis/metis/apps/cli/internal/state"
@@ -23,9 +25,13 @@ import (
 
 const MaintenanceVariable = "METIS_MAINTENANCE"
 
+var handBackPause = pollEvery
+
 const (
 	pollEvery   = 2 * time.Second
 	waitFor     = 60 * time.Second
+	upstreamFor = 2 * time.Minute
+	handBacks   = 3
 	logTailSize = 2000
 )
 
@@ -47,12 +53,14 @@ type Options struct {
 type Plan struct {
 	Create    []string
 	Recreate  []string
+	Start     []string
 	Remove    []string
 	Preflight bool
+	Site      bool
 }
 
 func (plan Plan) Empty() bool {
-	return len(plan.Create)+len(plan.Recreate)+len(plan.Remove) == 0 && !plan.Preflight
+	return len(plan.Create)+len(plan.Recreate)+len(plan.Start)+len(plan.Remove) == 0 && !plan.Preflight && !plan.Site
 }
 
 type Stack struct {
@@ -158,6 +166,8 @@ func (stack *Stack) plan(want []desired, current map[string]container.Summary, k
 			plan.Create = append(plan.Create, entry.spec.Name)
 		case existing.Labels[LabelSpec] != entry.hash:
 			plan.Recreate = append(plan.Recreate, entry.spec.Name)
+		case existing.State != container.StateRunning:
+			plan.Start = append(plan.Start, entry.spec.Name)
 		}
 	}
 	for name, existing := range current {
@@ -186,7 +196,12 @@ func (stack *Stack) Plan(ctx context.Context, st *state.State, opts Options) (Pl
 	}
 	plan := stack.plan(want, current, opts.Keep)
 	plan.Preflight = preflightNeeded(plan, opts.Preflight)
+	plan.Site = stack.frozenSite(st, opts)
 	return plan, nil
+}
+
+func (stack *Stack) frozenSite(st *state.State, opts Options) bool {
+	return !slices.Contains(opts.Keep, "caddy") && caddy.Fronts(st) && caddy.Frozen(stack.InstallDir)
 }
 
 func preflightNeeded(plan Plan, mode PreflightMode) bool {
@@ -279,6 +294,15 @@ func (stack *Stack) Apply(ctx context.Context, st *state.State, opts Options) (P
 	if err := stack.Pull(ctx, images(cat)...); err != nil {
 		return Plan{}, err
 	}
+	frozen := stack.frozenSite(st, opts)
+	if slices.Contains(opts.Keep, "caddy") {
+		err = caddy.Ensure(stack.InstallDir, st)
+	} else if !frozen {
+		err = caddy.Write(stack.InstallDir, st)
+	}
+	if err != nil {
+		return Plan{}, err
+	}
 	want, preflight, err := stack.desired(ctx, cat)
 	if err != nil {
 		return Plan{}, err
@@ -289,6 +313,7 @@ func (stack *Stack) Apply(ctx context.Context, st *state.State, opts Options) (P
 	}
 	plan := stack.plan(want, current, opts.Keep)
 	plan.Preflight = preflightNeeded(plan, opts.Preflight)
+	plan.Site = frozen
 
 	afterSqld := false
 	runAfterSqld := func() error {
@@ -324,10 +349,111 @@ func (stack *Stack) Apply(ctx context.Context, st *state.State, opts Options) (P
 			return plan, err
 		}
 	}
+	if frozen {
+		return plan, stack.thaw(ctx, st, nil)
+	}
 	return plan, nil
 }
 
+func (stack *Stack) thaw(ctx context.Context, st *state.State, err error) error {
+	if err == nil {
+		err = stack.waitUpstream(ctx)
+	}
+	stack.Logf("taking the site out of maintenance")
+	var handBack error
+	for attempt := 1; attempt <= handBacks; attempt++ {
+		if handBack = caddy.Write(stack.InstallDir, st); handBack == nil {
+			handBack = stack.reloadCaddy(ctx)
+		}
+		if handBack == nil || attempt == handBacks {
+			break
+		}
+		stack.Logf("handing the site back failed (%v), trying again", handBack)
+		select {
+		case <-ctx.Done():
+			return errors.Join(err, handBack, ctx.Err())
+		case <-time.After(handBackPause):
+		}
+	}
+	return errors.Join(err, handBack)
+}
+
+func (stack *Stack) caddyReadsFolder(ctx context.Context) bool {
+	inspect, err := stack.Engine.ContainerInspect(ctx, ContainerName("caddy", 1), client.ContainerInspectOptions{})
+	if err != nil || inspect.Container.State == nil || !inspect.Container.State.Running || inspect.Container.HostConfig == nil {
+		return false
+	}
+	for _, mounted := range inspect.Container.HostConfig.Mounts {
+		if mounted.Target == caddy.MountPath {
+			return true
+		}
+	}
+	return false
+}
+
+func (stack *Stack) reloadCaddy(ctx context.Context) error {
+	if err := stack.Exec(ctx, ContainerName("caddy", 1), "caddy", "reload", "--config", caddy.MountPath+"/"+caddy.FileName); err != nil {
+		return fmt.Errorf("reloading caddy: %w", err)
+	}
+	return nil
+}
+
+func (stack *Stack) stopApp(ctx context.Context, st *state.State) error {
+	cat, err := stack.Catalog(ctx, st)
+	if err != nil {
+		return err
+	}
+	for _, service := range cat.Services {
+		if service.OneShot || (service.Component != "app" && service.Component != "worker") {
+			continue
+		}
+		for replica := 1; replica <= service.Replicas; replica++ {
+			name := ContainerName(service.Name, replica)
+			stack.Logf("stopping %s", name)
+			if _, err := stack.Engine.ContainerStop(ctx, name, client.ContainerStopOptions{}); err != nil && !cerrdefs.IsNotFound(err) {
+				return fmt.Errorf("stopping %s: %w", name, err)
+			}
+		}
+	}
+	return nil
+}
+
+func (stack *Stack) waitUpstream(ctx context.Context) error {
+	deadline := time.Now().Add(upstreamFor)
+	for {
+		err := stack.Exec(ctx, ContainerName("caddy", 1), "wget", "-q", "-O", "/dev/null", "http://"+caddy.AppUpstream+"/api/readyz")
+		if err == nil {
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("the app did not answer caddy within %s: %w", upstreamFor, err)
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(pollEvery):
+		}
+	}
+}
+
 func (stack *Stack) Maintenance(ctx context.Context, st *state.State, on bool) error {
+	if !caddy.Fronts(st) || !stack.caddyReadsFolder(ctx) {
+		return stack.appMaintenance(ctx, st, on)
+	}
+	if on {
+		stack.Logf("putting the site in maintenance")
+		if err := caddy.WriteMaintenance(stack.InstallDir, st, time.Now()); err != nil {
+			return err
+		}
+		if err := stack.reloadCaddy(ctx); err != nil {
+			return err
+		}
+		return stack.stopApp(ctx, st)
+	}
+	return stack.thaw(ctx, st, stack.appMaintenance(ctx, st, false))
+}
+
+func (stack *Stack) appMaintenance(ctx context.Context, st *state.State, on bool) error {
 	cat, err := stack.Catalog(ctx, st)
 	if err != nil {
 		return err
@@ -407,8 +533,8 @@ func (stack *Stack) ensure(ctx context.Context, entry desired, current map[strin
 			return fmt.Errorf("creating %s: %w", name, err)
 		}
 	} else if entry.spec.Service == "caddy" && existing.State == container.StateRunning {
-		if err := stack.Exec(ctx, name, "caddy", "reload", "--config", "/etc/caddy/Caddyfile"); err != nil {
-			return fmt.Errorf("reloading caddy: %w", err)
+		if err := stack.reloadCaddy(ctx); err != nil {
+			return err
 		}
 	}
 	if !ok || existing.State != container.StateRunning {

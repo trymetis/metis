@@ -51,7 +51,10 @@
       "devDependencies": {
         "@astrojs/compiler-rs": "^0.5.2",
         "@metis/e2e": "workspace:*",
+        "@metis/e2e-cli": "workspace:*",
         "@playwright/test": "catalog:",
+        "@wterm/core": "0.5.10",
+        "@wterm/dom": "0.5.10",
         "astro": "^7.4.2",
         "otpauth": "catalog:",
         "oxfmt": "catalog:",
@@ -370,6 +373,21 @@
         "@types/ssh2-sftp-client": "^9.0.6",
         "electron": "catalog:",
         "oxfmt": "catalog:",
+        "oxlint": "catalog:",
+        "typescript": "catalog:",
+        "vitest": "catalog:",
+      },
+    },
+    "e2e-cli": {
+      "name": "@metis/e2e-cli",
+      "dependencies": {
+        "otpauth": "catalog:",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@metis/e2e": "workspace:*",
+        "@playwright/test": "catalog:",
+        "@types/bun": "catalog:",
         "oxlint": "catalog:",
         "typescript": "catalog:",
         "vitest": "catalog:",
@@ -1268,6 +1286,8 @@
     "@metis/docs": ["@metis/docs@workspace:apps/docs"],
 
     "@metis/e2e": ["@metis/e2e@workspace:e2e"],
+
+    "@metis/e2e-cli": ["@metis/e2e-cli@workspace:e2e-cli"],
 
     "@metis/gateway-cloudflare": ["@metis/gateway-cloudflare@workspace:apps/gateway-cloudflare"],
 
@@ -2294,6 +2314,10 @@
     "@vscode/l10n": ["@vscode/l10n@0.0.18", "", {}, "sha512-KYSIHVmslkaCDyw013pphY+d7x1qV8IZupYfeIfzNA+nsaWHbn5uPuQRvdRFsa9zFzGeudPuoGoZ1Op4jrJXIQ=="],
 
     "@workflow/serde": ["@workflow/serde@4.1.0", "", {}, "sha512-pav4F2BoirECWR7Nf1TKt+2eETcBj7jj4cBefQ8VXQCA6NPkaKeLfj/zMgi+3zYV5ZIBT4GuUiphsj0/b9hPQQ=="],
+
+    "@wterm/core": ["@wterm/core@0.5.10", "", {}, "sha512-kVzgs094y/9z/w2IVaYUd75F+bUFa14cn7uhec0g9QDI1kalh8W7Ft6ckOER478gncsPrf7a9oRf1bAOe3ERgQ=="],
+
+    "@wterm/dom": ["@wterm/dom@0.5.10", "", { "dependencies": { "@wterm/core": "0.5.10" } }, "sha512-Tcdig0gqVgqpoWB/i9pp4z3+ZI2Rf5MOeCy3geOuRvGSSXMGgeF6xcA/PD667tCe8Te47ldVeKYsM92uUgijCg=="],
 
     "@xmldom/xmldom": ["@xmldom/xmldom@0.8.15", "", {}, "sha512-/5NV/vDALVFDXgLmfsy9TRCBlKwO2LNBFzpzvb9iIj+jR+eSc6DLYYvVOdivT/jm7MtU6TebYuRmzEOI7w40UA=="],
 

@@ -26,7 +26,9 @@ sudo metis logs app
 
 ## Maintenance mode
 
-In maintenance mode, both health endpoints answer as usual: `/api/livez` answers `200`, and `/api/readyz` answers `200` when the databases answer. So a load balancer that checks them keeps sending traffic to the instance while the databases answer. A browser that opens a page gets the maintenance page with the status `200`. Every other request gets `503`. Both answers carry a `Metis-Maintenance` header. The site icons (`/favicon.ico`, `/icon.svg`, `/apple-icon.png`) and the app's built script, style and font files load as usual. See [Maintenance mode](/self-hosting/reference/environment-variables#maintenance-mode).
+This section is about the app's own maintenance mode, which you turn on with `METIS_MAINTENANCE`. On a server the `metis` CLI runs with a domain, the CLI's own maintenance works differently: see [During an upgrade, undo, export or move](#during-an-upgrade-undo-export-or-move) below.
+
+In the app's maintenance mode, both health endpoints answer as usual: `/api/livez` answers `200`, and `/api/readyz` answers `200` when the databases answer. So a load balancer that checks them keeps sending traffic to the instance while the databases answer. A browser that opens a page gets the maintenance page with the status `200`. Every other request gets `503`. Both answers carry a `Metis-Maintenance` header. The site icons (`/favicon.ico`, `/icon.svg`, `/apple-icon.png`) and the app's built script, style and font files load as usual. See [Maintenance mode](/self-hosting/reference/environment-variables#maintenance-mode).
 
 To alert on maintenance, check a page such as `/` instead. A `Metis-Maintenance` header means the instance is in maintenance mode, whatever the status. A monitor that requests `/` like a browser gets `200` in maintenance, so it must look for the header. To get the `503` instead, request the page with `Accept: application/json`. A `503` without the header is a failure. For example, this prints the status and the header:
 
@@ -34,9 +36,13 @@ To alert on maintenance, check a page such as `/` instead. A `Metis-Maintenance`
 curl -sS -o /dev/null -D - -H "Accept: application/json" https://mail.example.com/ | grep -i -E "^HTTP|^metis-maintenance"
 ```
 
-On a server the `metis` CLI runs, the app is in maintenance mode during part of an upgrade or an undo. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo).
+### During an upgrade, undo, export or move
 
-During an upgrade or undo on a server, `/api/readyz` answers `503` while the database is copied or restored, because the database server is stopped. A load balancer that checks `/api/readyz` stops sending traffic to the instance during that part.
+On a server the `metis` CLI runs, the site is in maintenance during part of an upgrade or an undo, and during `sudo metis db export` and `sudo metis db move`. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo) and [Export and import](/self-hosting/operate/export-and-import#on-a-server-the-metis-cli-runs).
+
+**On a server with a domain**, the CLI stops the app and the workers, and Caddy answers for them until the app answers again. Through your domain, every address answers `503` with the `Metis-Maintenance` header, the health endpoints and pages included. A browser that opens or reloads a page gets a plain maintenance page. Every other request gets a short JSON answer, including a form submitted from a tab that is already open and the app's own requests from that tab. A load balancer or monitor gets the JSON answer, unless you set it to send `Accept: text/html` like a browser. So a load balancer that checks either health endpoint stops sending traffic for the whole time, and a monitor sees the header. On the server itself, nothing answers on `127.0.0.1:3000` while the app is stopped. Once the app starts again, it answers there before Caddy hands requests back to it.
+
+**On a server without a domain**, the app runs in its own maintenance mode, as described above. While the app restarts, nothing answers on its port. During an upgrade or undo, `/api/readyz` answers `503` while the database is copied or restored, because the database server is stopped. A load balancer that checks `/api/readyz` stops sending traffic to the instance during that part.
 
 ## Check the server with the metis CLI
 
@@ -51,7 +57,18 @@ It prints:
 - A heading with the release, such as "Metis 1.4.0".
 - One line for each component, marked "ok" or "NOT HEALTHY", with a detail. For example, the app shows its version, sqld "namespaces app and mastra", Caddy the hosts it serves (such as "serving mail.example.com"), and Redis "Valkey, noeviction". A mail gateway shows its domain and its release, such as "example.com 0.1.0". When a newer gateway release is out, it adds, for example, ", 0.2.0 is out: run metis add again to move it". An Amazon SES gateway also shows, when the command has AWS credentials, how many mails failed to reach it, for example ", 2 failed receipt(s) in metis-ses-example-com-failed".
 - A table of the containers, with their state and health.
-- The last upgrade or undo, such as "Last upgrade: 1.3.2 → 1.4.0, succeeded", with its error if it failed.
+- The last upgrade or undo, such as "Last upgrade: 1.3.2 → 1.4.0, succeeded", with its error if it failed. This line shows only once an upgrade or undo has run.
+
+<img
+  src="/images/self-hosting/terminal-status.webp"
+  alt="The metis status command printing the release heading, the app, sqld with namespaces app and mastra, and the updater as container metis-updater, each marked ok, then the containers metis-app running, metis-sqld running and healthy, and metis-updater running"
+  class="dark:hidden"
+/>
+<img
+  src="/images/self-hosting/terminal-status-dark.webp"
+  alt="The metis status command printing the release heading, the app, sqld with namespaces app and mastra, and the updater as container metis-updater, each marked ok, then the containers metis-app running, metis-sqld running and healthy, and metis-updater running"
+  class="hidden dark:block"
+/>
 
 Add `--json` to get the same facts as JSON, for a script or a monitor.
 
@@ -68,7 +85,7 @@ sudo metis logs sqld --tail all
 | `-f`, `--follow` | Keep printing new lines. Press Ctrl+C to stop. | Off     |
 | `--tail`         | How many lines to start from, or `all`.        | `100`   |
 
-When a component has several containers, such as several workers, each line starts with the container's name, for example `worker-1 | `. The Cloudflare Email and Amazon SES gateways run outside the server, so they have no log here: the command says, for example, "gateway-cloudflare has no containers".
+When a component has several containers, such as several workers, each line starts with the container's name, for example `worker-1 | `. The Cloudflare Email and Amazon SES gateways run outside the server, so they have no log here: the command says, for example, "gateway-cloudflare has no containers."
 
 To restart a component's containers, run `sudo metis restart app` (or another component). It prints, for example, "Restarted metis-app". A restart does not read `.env` again: after you edit `.env`, run `sudo metis apply` instead. See [CLI commands](/self-hosting/reference/cli-commands).
 

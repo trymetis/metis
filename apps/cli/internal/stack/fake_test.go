@@ -26,23 +26,27 @@ type fakeContainer struct {
 }
 
 type fakeEngine struct {
-	mu         sync.Mutex
-	containers map[string]*fakeContainer
-	images     map[string]string
-	network    bool
-	volumes    map[string]bool
-	exitCodes  map[string]int
-	logs       map[string]string
-	calls      []string
+	mu          sync.Mutex
+	containers  map[string]*fakeContainer
+	images      map[string]string
+	network     bool
+	volumes     map[string]bool
+	exitCodes   map[string]int
+	logs        map[string]string
+	calls       []string
+	execs       int
+	failReloads int
+	failedExecs map[string]bool
 }
 
 func newFakeEngine() *fakeEngine {
 	return &fakeEngine{
-		containers: map[string]*fakeContainer{},
-		images:     map[string]string{},
-		volumes:    map[string]bool{},
-		exitCodes:  map[string]int{},
-		logs:       map[string]string{},
+		containers:  map[string]*fakeContainer{},
+		images:      map[string]string{},
+		volumes:     map[string]bool{},
+		exitCodes:   map[string]int{},
+		logs:        map[string]string{},
+		failedExecs: map[string]bool{},
 	}
 }
 
@@ -102,6 +106,7 @@ func (engine *fakeEngine) ContainerInspect(_ context.Context, name string, _ cli
 		Name:            "/" + name,
 		State:           state,
 		Config:          entry.config,
+		HostConfig:      entry.host,
 		NetworkSettings: &container.NetworkSettings{Ports: ports},
 	}}, nil
 }
@@ -235,13 +240,22 @@ func (engine *fakeEngine) VolumeRemove(_ context.Context, name string, _ client.
 
 func (engine *fakeEngine) ExecCreate(_ context.Context, name string, options client.ExecCreateOptions) (client.ExecCreateResult, error) {
 	engine.record("exec %s %s", name, strings.Join(options.Cmd, " "))
-	return client.ExecCreateResult{ID: "exec-" + name}, nil
+	engine.execs++
+	id := fmt.Sprintf("exec-%s-%d", name, engine.execs)
+	if engine.failReloads > 0 && len(options.Cmd) > 1 && options.Cmd[0] == "caddy" && options.Cmd[1] == "reload" {
+		engine.failReloads--
+		engine.failedExecs[id] = true
+	}
+	return client.ExecCreateResult{ID: id}, nil
 }
 
 func (engine *fakeEngine) ExecStart(context.Context, string, client.ExecStartOptions) (client.ExecStartResult, error) {
 	return client.ExecStartResult{}, nil
 }
 
-func (engine *fakeEngine) ExecInspect(context.Context, string, client.ExecInspectOptions) (client.ExecInspectResult, error) {
+func (engine *fakeEngine) ExecInspect(_ context.Context, id string, _ client.ExecInspectOptions) (client.ExecInspectResult, error) {
+	if engine.failedExecs[id] {
+		return client.ExecInspectResult{ExitCode: 1}, nil
+	}
 	return client.ExecInspectResult{}, nil
 }

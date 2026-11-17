@@ -39,6 +39,11 @@ func fallback(mux *http.ServeMux, routes string) {
 	})
 }
 
+const (
+	serverHeaderTimeout = 10 * time.Second
+	serverIdleTimeout   = 30 * time.Second
+)
+
 func serve(addr string, handler http.Handler) error {
 	srv := &http.Server{
 		Addr:              addr,
@@ -46,16 +51,6 @@ func serve(addr string, handler http.Handler) error {
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 	return srv.ListenAndServe()
-}
-
-func serveTLS(addr string, handler http.Handler, cert, key string) error {
-	srv := &http.Server{
-		Addr:              addr,
-		Handler:           handler,
-		ReadHeaderTimeout: 10 * time.Second,
-		IdleTimeout:       30 * time.Second,
-	}
-	return srv.ListenAndServeTLS(cert, key)
 }
 
 func firstError(errs <-chan error) error {

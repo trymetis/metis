@@ -7,7 +7,8 @@
     "packages": [
       "apps/*",
       "packages/*",
-      "e2e"
+      "e2e",
+      "e2e-cli"
     ],
     "catalog": {
       "@aws-sdk/client-s3": "^3.1156.0",

@@ -58,6 +58,8 @@ A Resend gateway you run yourself listens on port `8787` by default (`PORT`). An
 
 In maintenance mode, a browser that opens a page gets the maintenance page with the status `200`, and every other request gets `503` with a short JSON answer. `/api/livez`, `/api/readyz`, `/favicon.ico`, `/icon.svg`, `/apple-icon.png` and the app's built script, style and font files answer as usual. See [Maintenance mode](/self-hosting/reference/environment-variables#maintenance-mode).
 
+On a server the `metis` CLI runs with a domain, the CLI's own maintenance (during an upgrade, an undo, `sudo metis db export` or `sudo metis db move`) works differently. The app and the workers are stopped, and Caddy answers every address on your domain with `503`, `/api/livez` and `/api/readyz` included, until the app answers again. A browser that opens or reloads a page gets a plain maintenance page. Every other request gets a short JSON answer, including a form submitted from a tab that is already open and the app's own requests from that tab. Nothing answers on `127.0.0.1:3000` while the app is stopped. Caddy still passes requests on to the Resend gateway and storage addresses, although an export stops the Resend gateway while it runs. See [Health checks](/self-hosting/operate/health-checks#during-an-upgrade-undo-export-or-move).
+
 See [Health checks](/self-hosting/operate/health-checks) and [Background work](/self-hosting/configure/background-work).
 
 ## Images

@@ -101,7 +101,7 @@ See also [AGENTS.md](../AGENTS.md), [servers.md](servers.md), [database.md](data
 - **The maintenance page is an ordinary page under the root layout**, with the app's fonts, styles, theme and `MetisMark`, and the source link from `(standalone)`.
   - `resolveActiveTheme` returns no theme in maintenance, so the root layout reads no session and no database and the page renders the neutral palette ([ui.md](ui.md)).
   - `/maintenance` calls `notFound()` outside maintenance.
-- **On a server the `metis` CLI manages, the app is never stopped while visitors can reach it.** The CLI recreates the app and workers with `METIS_MAINTENANCE` in their container environment, never in `.env` ([cli.md](cli.md), [updater.md](updater.md)).
+- **On a server the `metis` CLI manages, visitors of a server with a domain get the maintenance answers from Caddy while the app is stopped; without a domain the CLI recreates the app and workers with `METIS_MAINTENANCE` in their container environment, never in `.env`** ([cli.md](cli.md), [updater.md](updater.md)).
 
 ### Reading at runtime
 

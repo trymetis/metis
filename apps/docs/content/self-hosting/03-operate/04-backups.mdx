@@ -33,13 +33,14 @@ You have only the volumes of the components you added. See [Manage components](/
 
 ### The install folder
 
-| Path                          | What it holds                                                                                                                                   |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/opt/metis-suite/.env`       | Every app secret, including the encryption key, the app secret, the database credentials and the setup code.                                    |
-| `/opt/metis-suite/env/`       | The keys of the server's object storage and of the Resend gateway's database, each gateway's admin token (`API_TOKEN`), and the Resend API key. |
-| `/opt/metis-suite/Caddyfile`  | Caddy's settings. The CLI writes it again on every change.                                                                                      |
-| `/opt/metis-suite/snapshots/` | The upgrade snapshot (see below).                                                                                                               |
-| `/opt/metis-suite/exports/`   | The encrypted exports `sudo metis db export` writes, unless it uploaded them to S3. Copy them off the server.                                   |
+| Path                                      | What it holds                                                                                                                                                                                                |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/opt/metis-suite/.env`                   | Every app secret, including the encryption key, the app secret, the database credentials and the setup code.                                                                                                 |
+| `/opt/metis-suite/env/`                   | The keys of the server's object storage and of the Resend gateway's database, each gateway's admin token (`API_TOKEN`), and the Resend API key.                                                              |
+| `/opt/metis-suite/caddy/Caddyfile`        | Caddy's settings. The CLI writes it again on every change. While the site is in maintenance, it tells Caddy to answer for the app, with the maintenance page or a short JSON answer.                         |
+| `/opt/metis-suite/caddy/maintenance.html` | The page Caddy shows during an upgrade, an undo, an export or a move. The CLI writes it again, with the new start time, each time maintenance begins. It stays in the folder after maintenance ends, unused. |
+| `/opt/metis-suite/snapshots/`             | The upgrade snapshot (see below).                                                                                                                                                                            |
+| `/opt/metis-suite/exports/`               | The encrypted exports `sudo metis db export` writes, unless it uploaded them to S3. Copy them off the server.                                                                                                |
 
 The folder also holds the CLI's record of which components are on, their options and the release you run. Back up the whole folder. `/etc/metis/install-dir` tells the CLI where the folder is.
 

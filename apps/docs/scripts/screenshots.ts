@@ -14,6 +14,8 @@ import * as OTPAuth from "otpauth";
 import sharp from "sharp";
 import { z } from "zod";
 
+import { captureTerminal, hostShell, releaseValues, terminalShotsSchema } from "./terminal.ts";
+
 const RENDER_FLAGS = [
   "--disable-lcd-text",
   "--font-render-hinting=none",
@@ -24,8 +26,8 @@ const RENDER_FLAGS = [
 ];
 
 const APP = process.env.DOCS_APP_URL ?? "http://localhost:3000";
-const MAINTENANCE = process.env.DOCS_MAINTENANCE === "1";
 const HARNESS = process.env.DOCS_HARNESS_URL ?? "http://localhost:8099";
+const CLI_APP = process.env.DOCS_CLI_APP_URL ?? "http://localhost:30050";
 const CLOCK = new Date(process.env.DOCS_CLOCK ?? "2026-10-08T12:00:00Z");
 const ROOT = join(import.meta.dirname, "..");
 const OUT = join(ROOT, "public", "images");
@@ -107,7 +109,14 @@ async function harness(path: string): Promise<Response> {
   return res;
 }
 
-function resolve(path: string, a: Account): string {
+function webAccount(a: Account | undefined): Account {
+  if (!a) throw new Error("this entry needs the web stack's account");
+  return a;
+}
+
+function resolve(path: string, account: Account | undefined): string {
+  if (!path.includes("{")) return path;
+  const a = webAccount(account);
   return path
     .replaceAll("{workspace}", `/w/${a.workspaceSlug}`)
     .replaceAll("{mailbox}", a.mailboxSlug)
@@ -294,8 +303,8 @@ async function drag(page: Page, from: string, to: string) {
   await page.mouse.up();
 }
 
-async function run(page: Page, step: Step, a: Account) {
-  if ("clearReadLater" in step) await clearReadLater(page, a);
+async function run(page: Page, step: Step, a: Account | undefined) {
+  if ("clearReadLater" in step) await clearReadLater(page, webAccount(a));
   else if ("goto" in step) await page.goto(resolve(step.goto, a));
   else if ("follow" in step) {
     const href = await page.locator(step.follow).first().getAttribute("href");
@@ -395,23 +404,63 @@ async function switchTheme(page: Page, theme: "light" | "dark") {
   await page.waitForTimeout(800);
 }
 
+const TERMINAL_FILE = "terminal.json";
+
+async function inMaintenance(): Promise<boolean> {
+  const res = await fetch(`${CLI_APP}/`, { headers: { accept: "application/json" } }).catch(
+    () => null,
+  );
+  await res?.body?.cancel();
+  return res?.status === 503 && res.headers.has("metis-maintenance");
+}
+
+async function waitFor(check: () => Promise<boolean>, what: string, timeoutMs = 180_000) {
+  const end = Date.now() + timeoutMs;
+  while (Date.now() < end) {
+    if (await check()) return;
+    await new Promise((r) => setTimeout(r, 2_000));
+  }
+  throw new Error(`${what} within ${timeoutMs} ms`);
+}
+
+function setMaintenance(on: boolean) {
+  hostShell(
+    "cli-host",
+    on
+      ? "metis config set METIS_MAINTENANCE=2026-11-11T10:00:00Z --yes"
+      : "metis config unset METIS_MAINTENANCE --yes",
+  );
+}
+
 async function main() {
   const only = process.argv.slice(2);
+  const picked = (name: string) => only.length === 0 || only.some((o) => name.startsWith(o));
   const dir = join(ROOT, "screenshots");
-  const shots = readdirSync(dir)
-    .filter((f) => f.endsWith(".json"))
+  const all = readdirSync(dir)
+    .filter((f) => f.endsWith(".json") && f !== TERMINAL_FILE)
     .flatMap((f) => shotsSchema.parse(JSON.parse(readFileSync(join(dir, f), "utf8"))))
-    .filter((s) => (s.maintenance ?? false) === MAINTENANCE)
-    .filter((s) => only.length === 0 || only.some((o) => s.name.startsWith(o)));
-  const account = accountSchema.parse(await (await harness("/account")).json());
+    .filter((s) => picked(s.name));
+  const shots = all.filter((s) => !s.maintenance);
+  const frozen = all.filter((s) => s.maintenance);
+  const terminals = terminalShotsSchema
+    .parse(JSON.parse(readFileSync(join(dir, TERMINAL_FILE), "utf8")))
+    .filter((s) => picked(s.name));
+  const account =
+    shots.length > 0 ? accountSchema.parse(await (await harness("/account")).json()) : undefined;
   const browser = await chromium.launch({ channel: "chrome", headless: true, args: RENDER_FLAGS });
-  const state = MAINTENANCE ? undefined : await signIn(browser, account, totp);
-  if (state) await useGraphite(browser, state, account);
+  const state = account ? await signIn(browser, account, totp) : undefined;
+  if (state && account) await useGraphite(browser, state, account);
   const failed: string[] = [];
 
-  async function take(shot: Shot, path: string, as: StorageState | undefined = state) {
+  async function take(
+    shot: Shot,
+    path: string,
+    as: StorageState | undefined = state,
+    baseURL = APP,
+  ) {
     const context = await browser.newContext({
       ...contextOptions(),
+      baseURL,
       ...(shot.viewport ? { viewport: shot.viewport } : {}),
       storageState: shot.signedOut ? undefined : as,
     });
@@ -441,10 +490,7 @@ async function main() {
   }
 
   for (const shot of shots) {
-    if (!state) {
-      await take(shot, shot.path);
-      continue;
-    }
+    if (!state || !account) break;
     const { invite } = shot;
     if (shot.observer) {
       try {
@@ -467,6 +513,34 @@ async function main() {
       failed.push(shot.name);
       console.error(`[docs-shots] failed ${shot.name}: ${String(error)}`);
     }
+  }
+
+  if (terminals.length > 0) {
+    const values = releaseValues();
+    for (const shot of terminals) {
+      try {
+        await captureTerminal(browser, shot, OUT, values);
+        console.log(`[docs-shots] ok ${shot.name}`);
+      } catch (error) {
+        failed.push(shot.name);
+        console.error(`[docs-shots] failed ${shot.name}: ${String(error)}`);
+      }
+    }
+  }
+
+  if (frozen.length > 0) {
+    try {
+      if (!(await inMaintenance())) setMaintenance(true);
+      await waitFor(inMaintenance, "the app did not go into maintenance");
+      for (const shot of frozen) await take(shot, shot.path, undefined, CLI_APP);
+    } catch (error) {
+      failed.push(...frozen.map((shot) => shot.name));
+      console.error(`[docs-shots] failed the maintenance shots: ${String(error)}`);
+    }
+  }
+  if (await inMaintenance()) {
+    setMaintenance(false);
+    await waitFor(async () => !(await inMaintenance()), "the app stayed in maintenance");
   }
 
   await browser.close();

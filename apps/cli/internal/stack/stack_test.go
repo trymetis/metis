@@ -11,7 +11,9 @@ import (
 
 	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/api/types/mount"
+	"github.com/moby/moby/client"
 
+	"github.com/trymetis/metis/apps/cli/internal/caddy"
 	"github.com/trymetis/metis/apps/cli/internal/state"
 )
 
@@ -376,5 +378,180 @@ func TestMaintenanceStartsAStoppedApp(t *testing.T) {
 	}
 	if !engine.containers["metis-app"].running {
 		t.Fatal("the app was left stopped")
+	}
+}
+
+func TestMaintenanceBehindCaddyAnswersFromCaddyAndStopsTheApp(t *testing.T) {
+	stack, engine := testStack(t)
+	ctx := context.Background()
+	st := testState()
+	st.Components.Caddy = &state.Caddy{Domain: "mail.example.com"}
+	if _, err := stack.Apply(ctx, st, Options{}); err != nil {
+		t.Fatal(err)
+	}
+	read := func() string {
+		t.Helper()
+		content, err := os.ReadFile(caddy.Path(stack.InstallDir))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return string(content)
+	}
+	if normal := read(); normal != "mail.example.com {\n\treverse_proxy app:3000\n}\n" {
+		t.Fatalf("apply did not write the missing Caddyfile: %q", normal)
+	}
+	apps := []string{"metis-app", "metis-worker-1", "metis-worker-2"}
+
+	engine.calls = nil
+	if err := stack.Maintenance(ctx, st, true); err != nil {
+		t.Fatal(err)
+	}
+	if frozen := read(); !strings.Contains(frozen, "Metis-Maintenance") || !strings.Contains(frozen, "Metis-Version \"1.4.0\"") || strings.Contains(frozen, "reverse_proxy") {
+		t.Fatalf("the Caddyfile in maintenance: %q", frozen)
+	}
+	if got := strings.Join(engine.calls, ","); got != "exec metis-caddy caddy reload --config /etc/caddy/Caddyfile,stop metis-app,stop metis-worker-1,stop metis-worker-2" {
+		t.Fatalf("entering maintenance: %s", got)
+	}
+	for _, name := range apps {
+		entry := engine.containers[name]
+		if _, ok := envValue(entry.config.Env, MaintenanceVariable); ok || entry.running {
+			t.Fatalf("%s env %v running %v", name, entry.config.Env, entry.running)
+		}
+	}
+
+	engine.calls = nil
+	if _, err := stack.Apply(ctx, st, Options{Preflight: PreflightNever, Keep: []string{"sqld", "redis", "caddy", "updater"}}); err != nil {
+		t.Fatal(err)
+	}
+	if frozen := read(); !strings.Contains(frozen, "Metis-Maintenance") {
+		t.Fatalf("an apply that keeps caddy took it out of maintenance: %q", frozen)
+	}
+	for _, name := range apps {
+		if _, err := engine.ContainerStop(ctx, name, client.ContainerStopOptions{}); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	engine.calls = nil
+	if err := stack.Maintenance(ctx, st, false); err != nil {
+		t.Fatal(err)
+	}
+	if got := strings.Join(engine.calls, ","); got != "start metis-app,start metis-worker-1,start metis-worker-2,exec metis-caddy wget -q -O /dev/null http://app:3000/api/readyz,exec metis-caddy caddy reload --config /etc/caddy/Caddyfile" {
+		t.Fatalf("leaving maintenance: %s", got)
+	}
+	if normal := read(); normal != "mail.example.com {\n\treverse_proxy app:3000\n}\n" {
+		t.Fatalf("the Caddyfile out of maintenance: %q", normal)
+	}
+	plan, err := stack.Plan(ctx, st, Options{})
+	if err != nil || !plan.Empty() {
+		t.Fatalf("leaving maintenance did not match the catalog: %+v %v", plan, err)
+	}
+
+	if err := stack.Maintenance(ctx, st, true); err != nil {
+		t.Fatal(err)
+	}
+	left, err := stack.Plan(ctx, st, Options{})
+	if err != nil || left.Empty() || !left.Site || strings.Join(left.Start, ",") != strings.Join(apps, ",") {
+		t.Fatalf("a plan does not show the maintenance the CLI left on: %+v %v", left, err)
+	}
+	engine.calls = nil
+	if _, err := stack.Apply(ctx, st, Options{}); err != nil {
+		t.Fatal(err)
+	}
+	if normal := read(); normal != "mail.example.com {\n\treverse_proxy app:3000\n}\n" {
+		t.Fatalf("a full apply left caddy in maintenance: %q", normal)
+	}
+	if started := engine.callsWith("start "); strings.Join(started, ",") != strings.Join(apps, ",") {
+		t.Fatalf("a full apply started %v", started)
+	}
+	if execs := strings.Join(engine.callsWith("exec "), ","); !strings.HasSuffix(execs, "metis-caddy wget -q -O /dev/null http://app:3000/api/readyz,metis-caddy caddy reload --config /etc/caddy/Caddyfile") {
+		t.Fatalf("a full apply handed the site back before the app answered: %s", execs)
+	}
+	if plan, err := stack.Plan(ctx, st, Options{}); err != nil || !plan.Empty() {
+		t.Fatalf("a full apply did not end the maintenance: %+v %v", plan, err)
+	}
+}
+
+func frontedStack(t *testing.T) (*Stack, *fakeEngine, *state.State) {
+	t.Helper()
+	stack, engine := testStack(t)
+	st := testState()
+	st.Components.Caddy = &state.Caddy{Domain: "mail.example.com"}
+	if _, err := stack.Apply(context.Background(), st, Options{}); err != nil {
+		t.Fatal(err)
+	}
+	pause := handBackPause
+	handBackPause = time.Millisecond
+	t.Cleanup(func() { handBackPause = pause })
+	return stack, engine, st
+}
+
+func TestHandingTheSiteBackIsTriedThreeTimes(t *testing.T) {
+	stack, engine, st := frontedStack(t)
+	ctx := context.Background()
+	reloads := func() int {
+		return len(slices.DeleteFunc(engine.callsWith("exec "), func(call string) bool {
+			return !strings.Contains(call, "caddy reload")
+		}))
+	}
+
+	if err := stack.Maintenance(ctx, st, true); err != nil {
+		t.Fatal(err)
+	}
+	engine.calls = nil
+	engine.failReloads = 2
+	if err := stack.Maintenance(ctx, st, false); err != nil {
+		t.Fatal(err)
+	}
+	if reloads() != 3 || caddy.Frozen(stack.InstallDir) {
+		t.Fatalf("handing back after two failed reloads: %v", engine.calls)
+	}
+
+	if err := stack.Maintenance(ctx, st, true); err != nil {
+		t.Fatal(err)
+	}
+	engine.calls = nil
+	engine.failReloads = 3
+	err := stack.Maintenance(ctx, st, false)
+	if err == nil || !strings.Contains(err.Error(), "reloading caddy") || reloads() != 3 {
+		t.Fatalf("three failed reloads: %v, %v", err, engine.calls)
+	}
+	for _, name := range []string{"metis-app", "metis-worker-1", "metis-worker-2"} {
+		if !engine.containers[name].running {
+			t.Fatalf("%s is not running after a failed hand-back", name)
+		}
+	}
+}
+
+func TestMaintenanceUsesTheAppWhileCaddyHasItsOldMount(t *testing.T) {
+	stack, engine, st := frontedStack(t)
+	ctx := context.Background()
+	old := engine.containers["metis-caddy"].host.Mounts
+	for index := range old {
+		if old[index].Target == "/etc/caddy" {
+			old[index].Target = "/etc/caddy/Caddyfile"
+		}
+	}
+
+	engine.calls = nil
+	if err := stack.Maintenance(ctx, st, true); err != nil {
+		t.Fatal(err)
+	}
+	if created := engine.callsWith("create "); strings.Join(created, ",") != "metis-app,metis-worker-1,metis-worker-2" {
+		t.Fatalf("created %v", created)
+	}
+	if _, ok := envValue(engine.containers["metis-app"].config.Env, MaintenanceVariable); !ok {
+		t.Fatal("the app did not get the maintenance variable")
+	}
+	if len(engine.callsWith("exec ")) != 0 || caddy.Frozen(stack.InstallDir) {
+		t.Fatalf("caddy was put in maintenance through a mount it does not read: %v", engine.calls)
+	}
+
+	engine.calls = nil
+	if err := stack.Maintenance(ctx, st, false); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := envValue(engine.containers["metis-app"].config.Env, MaintenanceVariable); ok || len(engine.callsWith("exec ")) != 0 {
+		t.Fatalf("leaving maintenance: %v", engine.calls)
 	}
 }

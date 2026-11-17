@@ -99,15 +99,35 @@ type resendFake struct {
 	webhookURL    string
 	webhookSecret string
 
+	calls callLog
+
 	mu       sync.Mutex
 	sent     []sentEmail
 	received []receivedEmail
 	raws     map[string]string
+	domains  []resendDomain
+	webhooks []resendWebhook
+}
+
+type resendDomain struct {
+	ID        string
+	Name      string
+	Region    string
+	Verified  bool
+	Receiving bool
+}
+
+type resendWebhook struct {
+	ID       string `json:"id"`
+	Endpoint string `json:"endpoint"`
 }
 
 var (
 	resendRawPath     = regexp.MustCompile(`^/raw/([^/]+)$`)
 	resendReceivedOne = regexp.MustCompile(`^/emails/receiving/([^/]+)$`)
+	resendDomainOne   = regexp.MustCompile(`^/domains/([^/]+)$`)
+	resendDomainCheck = regexp.MustCompile(`^/domains/([^/]+)/verify$`)
+	resendWebhookOne  = regexp.MustCompile(`^/webhooks/([^/]+)$`)
 )
 
 func newID() string {
@@ -145,6 +165,118 @@ func (f *resendFake) domainBody() map[string]any {
 	}
 }
 
+func (domain resendDomain) body() map[string]any {
+	status, receiving := "not_started", "disabled"
+	if domain.Verified {
+		status = "verified"
+	}
+	if domain.Receiving {
+		receiving = "enabled"
+	}
+	return map[string]any{
+		"object":     "domain",
+		"id":         domain.ID,
+		"name":       domain.Name,
+		"status":     status,
+		"created_at": time.Unix(0, 0).UTC().Format(time.RFC3339),
+		"region":     domain.Region,
+		"records": []map[string]any{
+			{"record": "SPF", "name": "send." + domain.Name, "type": "MX", "ttl": "Auto", "status": status, "value": "feedback-smtp." + domain.Region + ".amazonses.com", "priority": 10},
+			{"record": "DKIM", "name": "resend._domainkey." + domain.Name, "type": "TXT", "ttl": "Auto", "status": status, "value": "p=e2e"},
+			{"record": "Receiving", "name": domain.Name, "type": "MX", "ttl": "Auto", "status": status, "value": "inbound-smtp." + domain.Region + ".amazonaws.com", "priority": 10},
+		},
+		"capabilities": map[string]string{"sending": "enabled", "receiving": receiving},
+	}
+}
+
+func (f *resendFake) findDomain(id string) int {
+	for index, domain := range f.domains {
+		if domain.ID == id {
+			return index
+		}
+	}
+	return -1
+}
+
+func (f *resendFake) manage(w http.ResponseWriter, r *http.Request, path string) bool {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	switch {
+	case r.Method == http.MethodGet && path == "/domains":
+		data := []any{f.domainBody()}
+		for _, domain := range f.domains {
+			data = append(data, domain.body())
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"object": "list", "has_more": false, "data": data})
+	case r.Method == http.MethodPost && path == "/domains":
+		body := readJSON(r)
+		domain := resendDomain{ID: newID(), Name: strings.ToLower(text(body, "name")), Region: text(body, "region")}
+		if capabilities, ok := body["capabilities"].(map[string]any); ok {
+			domain.Receiving = capabilities["receiving"] == "enabled"
+		}
+		if domain.Name == "" {
+			resendError(w, http.StatusUnprocessableEntity, "validation_error", "name is required")
+			return true
+		}
+		f.domains = append(f.domains, domain)
+		f.calls.add("resend", "create-domain", domain.Name, map[string]string{"region": domain.Region})
+		writeJSON(w, http.StatusOK, domain.body())
+	case r.Method == http.MethodPost && resendDomainCheck.MatchString(path):
+		index := f.findDomain(resendDomainCheck.FindStringSubmatch(path)[1])
+		if index < 0 {
+			resendError(w, http.StatusNotFound, "not_found", "Domain not found")
+			return true
+		}
+		f.domains[index].Verified = true
+		f.calls.add("resend", "verify-domain", f.domains[index].Name, nil)
+		writeJSON(w, http.StatusOK, map[string]string{"object": "domain", "id": f.domains[index].ID})
+	case r.Method == http.MethodPatch && resendDomainOne.MatchString(path):
+		index := f.findDomain(resendDomainOne.FindStringSubmatch(path)[1])
+		if index < 0 {
+			resendError(w, http.StatusNotFound, "not_found", "Domain not found")
+			return true
+		}
+		if capabilities, ok := readJSON(r)["capabilities"].(map[string]any); ok && capabilities["receiving"] == "enabled" {
+			f.domains[index].Receiving = true
+		}
+		f.calls.add("resend", "update-domain", f.domains[index].Name, nil)
+		writeJSON(w, http.StatusOK, map[string]string{"object": "domain", "id": f.domains[index].ID})
+	case r.Method == http.MethodGet && resendDomainOne.MatchString(path) && path != "/domains/"+resendDomainID:
+		index := f.findDomain(resendDomainOne.FindStringSubmatch(path)[1])
+		if index < 0 {
+			resendError(w, http.StatusNotFound, "not_found", "Domain not found")
+			return true
+		}
+		writeJSON(w, http.StatusOK, f.domains[index].body())
+	case r.Method == http.MethodGet && path == "/webhooks":
+		data := f.webhooks
+		if data == nil {
+			data = []resendWebhook{}
+		}
+		writeJSON(w, http.StatusOK, map[string]any{"object": "list", "has_more": false, "data": data})
+	case r.Method == http.MethodPost && path == "/webhooks":
+		body := readJSON(r)
+		hook := resendWebhook{ID: newID(), Endpoint: text(body, "endpoint")}
+		f.webhooks = append(f.webhooks, hook)
+		f.calls.add("resend", "create-webhook", hook.Endpoint, nil)
+		writeJSON(w, http.StatusOK, map[string]string{"object": "webhook", "id": hook.ID, "signing_secret": "whsec_" + base64.StdEncoding.EncodeToString([]byte(hook.ID))})
+	case r.Method == http.MethodDelete && resendWebhookOne.MatchString(path):
+		id := resendWebhookOne.FindStringSubmatch(path)[1]
+		for index, hook := range f.webhooks {
+			if hook.ID == id {
+				f.webhooks = append(f.webhooks[:index], f.webhooks[index+1:]...)
+				f.calls.add("resend", "delete-webhook", hook.Endpoint, nil)
+				writeJSON(w, http.StatusOK, map[string]any{"object": "webhook", "id": id, "deleted": true})
+				return true
+			}
+		}
+		resendError(w, http.StatusNotFound, "not_found", "Webhook not found")
+	default:
+		return false
+	}
+	return true
+}
+
 func (f *resendFake) api(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimRight(r.URL.Path, "/")
 
@@ -163,6 +295,10 @@ func (f *resendFake) api(w http.ResponseWriter, r *http.Request) {
 
 	if r.Header.Get("authorization") != "Bearer "+f.apiKey {
 		resendError(w, http.StatusUnauthorized, "validation_error", "API key is invalid")
+		return
+	}
+
+	if f.manage(w, r, path) {
 		return
 	}
 
@@ -187,10 +323,6 @@ func (f *resendFake) api(w http.ResponseWriter, r *http.Request) {
 		})
 		f.mu.Unlock()
 		writeJSON(w, http.StatusOK, map[string]string{"id": id})
-	case r.Method == http.MethodGet && path == "/domains":
-		writeJSON(w, http.StatusOK, map[string]any{
-			"object": "list", "has_more": false, "data": []any{f.domainBody()},
-		})
 	case r.Method == http.MethodGet && path == "/domains/"+resendDomainID:
 		body := f.domainBody()
 		body["object"] = "domain"
@@ -326,10 +458,10 @@ func (f *resendFake) inbound(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"id": id, "webhook": status})
 }
 
-func runResend() error {
+func newResend() (*standIn, error) {
 	env, err := requireEnv("RESEND_API_KEY", "RESEND_DOMAIN", "RESEND_WEBHOOK_URL", "RESEND_WEBHOOK_SECRET")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	fake := &resendFake{
 		apiKey:        env["RESEND_API_KEY"],
@@ -340,9 +472,7 @@ func runResend() error {
 		received:      []receivedEmail{},
 		raws:          map[string]string{},
 	}
-
 	control := http.NewServeMux()
-	healthRoute(control)
 	control.HandleFunc("GET /sent", func(w http.ResponseWriter, _ *http.Request) {
 		fake.mu.Lock()
 		defer fake.mu.Unlock()
@@ -355,14 +485,13 @@ func runResend() error {
 		w.WriteHeader(http.StatusNoContent)
 	})
 	control.HandleFunc("POST /inbound", fake.inbound)
-	fallback(control, "GET /health | GET, DELETE /sent | POST /inbound")
-
-	errs := make(chan error, 2)
-	go func() {
-		errs <- serveTLS(":443", http.HandlerFunc(fake.api),
-			"/tls/resend/api.resend.com.crt", "/tls/resend/api.resend.com.key")
-	}()
-	go func() { errs <- serve(":8080", control) }()
-	log.Printf("[resend] fake Resend API on :443 (api.resend.com) for @%s, control on :8080", fake.domain)
-	return firstError(errs)
+	fake.calls.routes(control)
+	log.Printf("[resend] api.resend.com for @%s", fake.domain)
+	return &standIn{
+		name:    "resend",
+		hosts:   []string{"api.resend.com"},
+		api:     http.HandlerFunc(fake.api),
+		control: control,
+		routes:  "GET, DELETE /resend/sent | POST /resend/inbound | GET, DELETE /resend/calls",
+	}, nil
 }
