@@ -1,3 +1,4 @@
+import { base64ToBytes } from "@metis/gateway-contract/crypto";
 import {
   attachmentKey,
   type Gateway,
@@ -24,7 +25,7 @@ import {
 import PostalMime, { type Email as ParsedEmail } from "postal-mime";
 
 interface EmailSendAttachment {
-  content: string | ArrayBuffer;
+  content: string | ArrayBuffer | ArrayBufferView;
   filename: string;
   type: string;
   disposition: "attachment" | "inline";
@@ -449,7 +450,7 @@ function gateway(env: Env): Gateway {
       if (mail.headers) params.headers = mail.headers;
       if (mail.attachments) {
         params.attachments = mail.attachments.map((attachment) => ({
-          content: attachment.contentBase64,
+          content: base64ToBytes(attachment.contentBase64),
           filename: attachment.filename,
           type: attachment.mimeType,
           disposition: "attachment" as const,

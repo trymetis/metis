@@ -58,7 +58,7 @@ The `metis` CLI's own suite, which reuses this stack's fakes, certificates, test
   - Each tool group has its own client because the MCP route rate-limits per client ([mcp.md](mcp.md)); `api/support/mcp.ts` paces every client under it.
 - **API tests share the app's rate limits, so their helpers wait out a 429 and retry.**
   - `requireTotp` allows 10 codes per user and scope in 300 s; every coded owner call (config saves, role changes, bans, account invites with a role) goes through `withTotp` in `api/support/config.ts`, which waits out `retryAfterSec` for that limit only; any other 429 fails at once.
-  - The wait is the full 300 s window, so the `rpc` and `system` projects, which hold the coded tests, get a 12-minute test timeout in `e2e/vitest.config.ts`.
+  - The wait is the full 300 s window, so the `rpc` and `system` projects, which hold the coded tests, get a 12-minute test timeout in `e2e/vitest.config.ts`; `rpc` also gets a 12-minute hook timeout, because `themes.test.ts` deletes its workspace in `afterAll`.
   - Account invites allow 10 per sender an hour (`createInvite`'s `invite-send` scope), and a full run sends close to that as the owner, so a spec that needs an account invite shares one: the MCP sign-up invite cases create, list and revoke one invite in order, and the roles spec's emailed invite also covers that its link is never handed back.
   - Better Auth allows 10 `/sign-in/email` calls a minute per IP; `clients/sign-in.ts` waits out its `X-Retry-After`.
   - The `system` project's `testTimeout` in `vitest.config.ts` covers two such waits, since a test may call `setSection` twice right after another test's burst of edits.

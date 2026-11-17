@@ -14,6 +14,10 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 - A mailbox can carry a sender name: mail it sends goes out as `From: Name <address>` and its Sent copy shows the name. Set it when creating the token (`POST /v1/tokens` with `name`) and change or remove it with `PATCH /v1/tokens` without a new token; `GET /v1/tokens` lists each address's name.
 
+### Fixed
+
+- Attachments arrive intact: they were delivered as their base64 text, so recipients could not open them (a PDF showed as damaged).
+
 ## Releases
 
 - [0.1.0](../../releases/gateway-cloudflare-v0.1.0.md) - 2026-11-13

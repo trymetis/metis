@@ -10,7 +10,8 @@
   "exports": {
     "./wire": "./src/wire.ts",
     "./text": "./src/text.ts",
-    "./router": "./src/router.ts"
+    "./router": "./src/router.ts",
+    "./crypto": "./src/crypto.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

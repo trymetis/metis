@@ -15,7 +15,12 @@ export default defineConfig({
       },
       {
         extends: true,
-        test: { name: "rpc", include: ["api/rpc/**/*.test.ts"], testTimeout: 12 * 60_000 },
+        test: {
+          name: "rpc",
+          include: ["api/rpc/**/*.test.ts"],
+          testTimeout: 12 * 60_000,
+          hookTimeout: 12 * 60_000,
+        },
       },
       {
         extends: true,

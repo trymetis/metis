@@ -59,6 +59,9 @@ The three mail backends that are separate services speaking one HTTP contract, a
 - **Cloudflare Email is one Worker per domain, serving many mailboxes**: every row is keyed by the envelope recipient.
 - **The Worker writes raw MIME to R2 before parsing it**, so a parse failure still leaves the raw message for the operator.
 - **Cloudflare ingestion is idempotent per `(to_address, Message-ID)`**, because retries come from the sending MTA and carry no attempt marker.
+- **The Worker hands `send_email` each attachment as bytes (`base64ToBytes`), never as a string.**
+  - In production the binding treats a string `content` as the file's text and base64-encodes it again, so recipients get the base64 as the file; Cloudflare's docs call a string "Base64", which is wrong.
+  - Cloudflare documents that wrangler's local `send_email` simulation cannot serialize binary content, so attachment sends are not exercised under `wrangler dev`; the e2e suite sends none through this gateway.
 
 ### Resend
 
