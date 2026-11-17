@@ -59,7 +59,12 @@ const messageRowSchema = z.object({
 });
 
 const addressRowSchema = z.object({ address: z.string() });
-const tokenRowSchema = z.object({ address: z.string(), created_at: z.string() });
+const tokenRowSchema = z.object({
+  address: z.string(),
+  name: z.string().nullable(),
+  created_at: z.string(),
+});
+const nameRowSchema = z.object({ name: z.string() });
 const idRowSchema = z.object({ id: z.string() });
 const totalRowSchema = z.object({ total: z.number() });
 const attachmentsRowSchema = z.object({ attachments_json: z.string() });
@@ -249,7 +254,12 @@ export const store: GatewayStore = {
   },
 
   async listTokens() {
-    return query(tokenRowSchema, "SELECT address, created_at FROM tokens ORDER BY address");
+    return query(
+      tokenRowSchema,
+      `SELECT tokens.address, sender_names.name, tokens.created_at FROM tokens
+       LEFT JOIN sender_names ON sender_names.address = tokens.address
+       ORDER BY tokens.address`,
+    );
   },
 
   async saveToken(address, tokenHash) {
@@ -261,7 +271,32 @@ export const store: GatewayStore = {
   },
 
   async revokeToken(address) {
-    await run("DELETE FROM tokens WHERE address = ?", [address]);
+    await runBatch([
+      { sql: "DELETE FROM tokens WHERE address = ?", args: [address] },
+      { sql: "DELETE FROM sender_names WHERE address = ?", args: [address] },
+    ]);
+  },
+
+  async senderName(address) {
+    const rows = await query(nameRowSchema, "SELECT name FROM sender_names WHERE address = ?", [
+      address,
+    ]);
+    return rows[0]?.name ?? null;
+  },
+
+  async setSenderName(address, name) {
+    const tokens = await query(addressRowSchema, "SELECT address FROM tokens WHERE address = ?", [
+      address,
+    ]);
+    if (tokens.length === 0) return false;
+    await (name === null
+      ? run("DELETE FROM sender_names WHERE address = ?", [address])
+      : run(
+          `INSERT INTO sender_names (address, name) VALUES (?, ?)
+           ON CONFLICT (address) DO UPDATE SET name = excluded.name`,
+          [address, name],
+        ));
+    return true;
   },
 
   async getMessage(address, id) {
@@ -342,12 +377,13 @@ export const store: GatewayStore = {
   async upsertOutgoing(record) {
     await run(
       `INSERT INTO messages (
-        id, thread_id, to_address, folder, from_email, to_json, cc_json,
-        bcc_json, subject, snippet, body_html, body_text, date, is_read,
-        is_starred, references_header, in_reply_to, attachments_json
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?, ?)
+        id, thread_id, to_address, folder, from_email, from_name, to_json,
+        cc_json, bcc_json, subject, snippet, body_html, body_text, date,
+        is_read, is_starred, references_header, in_reply_to, attachments_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?, ?)
       ON CONFLICT (id) DO UPDATE SET
         folder = excluded.folder, from_email = excluded.from_email,
+        from_name = excluded.from_name,
         to_json = excluded.to_json, cc_json = excluded.cc_json,
         bcc_json = excluded.bcc_json, subject = excluded.subject,
         snippet = excluded.snippet, body_html = excluded.body_html,
@@ -362,6 +398,7 @@ export const store: GatewayStore = {
         record.address,
         record.folder,
         record.fromEmail,
+        record.fromName,
         JSON.stringify(record.to),
         JSON.stringify(record.cc),
         JSON.stringify(record.bcc),

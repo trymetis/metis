@@ -40,7 +40,7 @@ The command first prints "Needs: the domain's zone on this Cloudflare account, W
 5. "Email Routing to the Worker": Email Routing is turned on, with a catch-all or one rule for each address
 6. The DNS records Email Sending needs, then "Email Sending for example.com"
 
-The admin token is kept on the server, in `/opt/metis-suite/env/`. The command adds the gateway to the **Cloudflare Email** server list, named after the domain, and stores it at once. Then create a mailbox token for each address with `sudo metis gateway token create alice@example.com`. See [Mailbox tokens](/self-hosting/mail-gateways/mailbox-tokens).
+The admin token is kept on the server, in `/opt/metis-suite/env/`. The command adds the gateway to the **Cloudflare Email** server list, named after the domain, and stores it at once. Then create a mailbox token for each address with `sudo metis gateway token create alice@example.com`. Add `--name "Alice Doe"` to give the address a sender name. See [Mailbox tokens](/self-hosting/mail-gateways/mailbox-tokens).
 
 Mail gateways have their own releases, separate from Metis Suite releases. Any gateway release works with any Metis Suite release. Upgrading your instance never changes the gateway. To move the gateway to its newest release, run the same `metis add` command again. To stay on one release, pass `--version`, such as `--version 0.1.0`.
 
@@ -190,6 +190,21 @@ Each release of the Cloudflare Email gateway also publishes the built Worker, wi
     [Mailbox tokens](/self-hosting/mail-gateways/mailbox-tokens).
   </Step>
 </Steps>
+
+### Upgrade the Worker
+
+To move a Worker you deployed by hand to a new gateway release:
+
+1. Get the source code of that release, as in [Before you start](#before-you-start-1).
+2. In `apps/gateway-cloudflare/wrangler.jsonc`, set `database_id` to your D1 database id and `MAIL_DOMAIN` to your domain again, as in the **Create the database** step of [Deploy the Worker](#deploy-the-worker). The new source code has example values there.
+3. From `apps/gateway-cloudflare`, update the tables, then deploy. A new release can add tables, so always update them first:
+
+```bash
+bun run db:apply
+bun run deploy
+```
+
+`bun run db:apply` is safe to run at any time and keeps your data. A gateway you set up with the `metis` CLI does this for you when you run `metis add gateway-cloudflare` again.
 
 ## Cloudflare limits
 

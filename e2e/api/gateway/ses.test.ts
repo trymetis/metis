@@ -11,6 +11,7 @@ const SERVER = "Fernhill Team";
 interface WireEmail {
   id: string;
   threadId: string;
+  fromName?: string;
   subject: string;
   folder: string;
   to: string[];
@@ -225,6 +226,32 @@ describe("the /v1 contract", () => {
       bcc: ["hidden@discard.demo.trymetis.email"],
     });
     expect(listed?.threadId).toBe(`${delivered?.messageId}@email.amazonses.com`);
+  });
+
+  test("a sender name goes into the From header while SES sends from the bare address", async () => {
+    const address = `named-${stamp}@${DOMAIN}`;
+    const { token } = await v1Json<{ token: string }>(ADMIN, "/tokens", {
+      method: "POST",
+      body: { address, name: "Ana Silva" },
+    });
+    try {
+      const subject = `${uniqueName()} named`;
+      const sent = await v1Json<{ id: string }>(token, "/send", {
+        method: "POST",
+        body: { from: address, to: ["out@discard.demo.trymetis.email"], subject },
+      });
+      expect((await folder(token, "sent")).find((e) => e.id === sent.id)?.fromName).toBe(
+        "Ana Silva",
+      );
+      const atSes = z
+        .array(z.object({ from: z.string(), subject: z.string(), raw: z.string() }))
+        .parse(await (await fetch(`${CONTROL}/sent`)).json());
+      const delivered = atSes.find((e) => e.subject === subject);
+      expect(delivered?.from).toBe(address);
+      expect(delivered?.raw).toContain(`From: Ana Silva <${address}>\r\n`);
+    } finally {
+      await revoke(address);
+    }
   });
 
   test("a token only sends as its own address", async () => {

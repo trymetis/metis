@@ -94,7 +94,11 @@ domain identity, sending and account details use SESv2 (`aws sesv2`).
   on, and two actions in order: an S3 action (the bucket, no object key
   prefix), then a Lambda action (the function, invocation type `Event`).
 - **Tokens:** minted through `/v1/tokens` on the function URL with
-  `API_TOKEN`.
+  `API_TOKEN` (`ADMIN_TOKEN=... bun run token FUNCTION_URL create
+  you@yourdomain.com "Your Name"`). The name is optional: it is the sender
+  name in the `From` header of mail from that address, while SES still sends
+  from the bare address. `name you@yourdomain.com "Your Name"` changes it
+  without touching the token and `name you@yourdomain.com ""` removes it.
 - **Limits:** the S3 action stores messages up to 40 MB. A function URL
   request is at most 6 MB, so the attachments of one sent message, which travel
   base64-encoded in the request, total at most about 4.5 MB. The SNS-content

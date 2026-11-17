@@ -98,11 +98,19 @@ and `API_TOKEN` as in `wrangler.jsonc`.
 
 ```sh
 ADMIN_TOKEN=... bun run token https://metis-cf-mail.you.workers.dev \
-  create alice@yourdomain.com
+  create alice@yourdomain.com "Alice Doe"
 ```
 
-Prints the token once — it is stored only as a sha256 hash. `revoke <address>`
-kills it, `list` shows which addresses have one. Creating again rotates it.
+Prints the token once — it is stored only as a sha256 hash. `revoke ADDRESS`
+kills it, `list` shows which addresses have one and their sender names.
+Creating again rotates it and keeps the name.
+
+The name is optional: it is the sender name mail from that address carries
+(`From: Alice Doe <alice@yourdomain.com>`), and the Sent copy shows it too.
+`name alice@yourdomain.com "Alice Smith"` changes it without touching the
+token; `name alice@yourdomain.com ""` removes it. With the `metis` CLI:
+`metis gateway token create alice@yourdomain.com --name "Alice Doe"` and
+`metis gateway token name alice@yourdomain.com "Alice Doe"`.
 Under catch-all mode, mail for an address without a token is still stored and
 becomes visible the moment a token for it is minted.
 

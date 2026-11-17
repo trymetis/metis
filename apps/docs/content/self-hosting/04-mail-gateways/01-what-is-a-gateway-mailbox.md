@@ -17,7 +17,7 @@ There are three gateways:
 
 - **One gateway per domain** serves many mailboxes.
 - **Each address has its own mailbox token.** You create a token for each address and give it to the person who owns it. A token can read and send mail only for its own address. See [Mailbox tokens](/self-hosting/mail-gateways/mailbox-tokens).
-- **The gateway has an admin token** that can only create and revoke mailbox tokens. It cannot read mail.
+- **The gateway has an admin token** that can only create, list and revoke mailbox tokens, and set the sender name each address sends with. It cannot read mail.
 - **You register the gateway in the owner dashboard**, under **System**, **Providers**, **Cloudflare Email**, **Resend** or **Amazon SES**, with a **Name**, the **Domain** and the gateway's address. Each entry appears in the connect dialog under its name.
 - **Users connect** by picking that entry and entering their **Email address** and **Mailbox token**. Metis Suite checks the gateway's domain and the token's address before it saves anything.
 

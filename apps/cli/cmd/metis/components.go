@@ -295,11 +295,16 @@ func newGatewayCommand() *cobra.Command {
 		Use:   "gateway",
 		Short: "Work with a mail gateway",
 	}
-	var endpoint, adminToken string
+	var endpoint, adminToken, name string
 	token := &cobra.Command{
-		Use:   "token create|list|revoke ADDRESS",
-		Short: "Mint, list or revoke mailbox tokens on the gateway that serves an address",
-		Args:  cobra.ExactArgs(2),
+		Use:   "token create|list|revoke ADDRESS | token name ADDRESS NAME",
+		Short: "Mint, list, rename or revoke mailbox tokens on the gateway that serves an address",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) > 0 && args[0] == "name" {
+				return cobra.ExactArgs(3)(cmd, args)
+			}
+			return cobra.ExactArgs(2)(cmd, args)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			action, address := args[0], strings.ToLower(strings.TrimSpace(args[1]))
@@ -331,13 +336,24 @@ func newGatewayCommand() *cobra.Command {
 				if !strings.Contains(address, "@") {
 					return errors.New("create needs an address such as alice@example.com")
 				}
-				created, err := gateways.CreateToken(ctx, access.Endpoint, access.AdminToken, address)
+				created, err := gateways.CreateToken(ctx, access.Endpoint, access.AdminToken, address, name)
 				if err != nil {
 					return err
 				}
 				ui.Info("Token for %s (shown once; paste it when connecting the mailbox):", address)
 				_, err = fmt.Fprintln(cmd.OutOrStdout(), created)
 				return err
+			case "name":
+				sender := strings.TrimSpace(args[2])
+				if err := gateways.SetName(ctx, access.Endpoint, access.AdminToken, address, sender); err != nil {
+					return err
+				}
+				if sender == "" {
+					ui.Done("%s sends with no name", address)
+				} else {
+					ui.Done("%s sends as %s", address, sender)
+				}
+				return nil
 			case "revoke":
 				if err := gateways.RevokeToken(ctx, access.Endpoint, access.AdminToken, address); err != nil {
 					return err
@@ -356,9 +372,10 @@ func newGatewayCommand() *cobra.Command {
 				}
 				return nil
 			}
-			return fmt.Errorf("%s is not create, list or revoke", action)
+			return fmt.Errorf("%s is not create, list, name or revoke", action)
 		},
 	}
+	token.Flags().StringVar(&name, "name", "", "create: the sender name mail from the address carries")
 	token.Flags().StringVar(&endpoint, "endpoint", "", "away from the server: the gateway's URL")
 	token.Flags().StringVar(&adminToken, "admin-token", "", "away from the server: the gateway's API_TOKEN")
 	cmd.AddCommand(token)

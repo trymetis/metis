@@ -113,7 +113,18 @@ func TestTokens(t *testing.T) {
 		_ = json.NewDecoder(r.Body).Decode(&body)
 		switch r.Method {
 		case http.MethodPost:
+			if body["name"] != "Alice Doe" {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
 			_, _ = w.Write([]byte(`{"address":"` + body["address"] + `","token":"mbx_1"}`))
+		case http.MethodPatch:
+			name, sent := body["name"]
+			if !sent || name != "" {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			_, _ = w.Write([]byte(`{"address":"` + body["address"] + `","name":null}`))
 		case http.MethodGet:
 			_, _ = w.Write([]byte(`{"tokens":[{"address":"alice@example.com"}]}`))
 		case http.MethodDelete:
@@ -122,8 +133,11 @@ func TestTokens(t *testing.T) {
 	}))
 	defer server.Close()
 	ctx := context.Background()
-	if token, err := CreateToken(ctx, server.URL+"/", "admin", "alice@example.com"); err != nil || token != "mbx_1" {
+	if token, err := CreateToken(ctx, server.URL+"/", "admin", "alice@example.com", "Alice Doe"); err != nil || token != "mbx_1" {
 		t.Fatalf("create %q %v", token, err)
+	}
+	if err := SetName(ctx, server.URL, "admin", "alice@example.com", ""); err != nil {
+		t.Fatalf("clear name: %v", err)
 	}
 	if tokens, err := ListTokens(ctx, server.URL, "admin"); err != nil || len(tokens) != 1 {
 		t.Fatalf("list %v %v", tokens, err)

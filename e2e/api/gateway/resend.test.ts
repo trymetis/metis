@@ -10,6 +10,7 @@ const SERVER = "Fernhill Updates";
 
 interface WireEmail {
   id: string;
+  fromName?: string;
   subject: string;
   to: string[];
   bodyText?: string;
@@ -140,6 +141,33 @@ describe("the /v1 contract", () => {
       .array(z.object({ from: z.string(), subject: z.string() }))
       .parse(await (await fetch(`${CONTROL}/sent`)).json());
     expect(atResend).toContainEqual(expect.objectContaining({ from: anaAddress, subject }));
+  });
+
+  test("a sender name goes to Resend as a quoted display name", async () => {
+    const address = `named-${Date.now().toString(36)}@${DOMAIN}`;
+    const { token } = await v1Json<{ token: string }>(ADMIN, "/tokens", {
+      method: "POST",
+      body: { address, name: 'Silva, Ana "AS"' },
+    });
+    try {
+      const subject = `${uniqueName()} named`;
+      const sent = await v1Json<{ id: string }>(token, "/send", {
+        method: "POST",
+        body: { from: address, to: ["out@discard.demo.trymetis.email"], subject },
+      });
+      const listed = (
+        await v1Json<{ emails: WireEmail[] }>(token, "/messages?folder=sent")
+      ).emails.find((e) => e.id === sent.id);
+      expect(listed?.fromName).toBe('Silva, Ana "AS"');
+      const atResend = z
+        .array(z.object({ from: z.string(), subject: z.string() }))
+        .parse(await (await fetch(`${CONTROL}/sent`)).json());
+      expect(atResend).toContainEqual(
+        expect.objectContaining({ from: `"Silva, Ana \\"AS\\"" <${address}>`, subject }),
+      );
+    } finally {
+      await v1(ADMIN, "/tokens", { method: "DELETE", body: { address } });
+    }
   });
 });
 

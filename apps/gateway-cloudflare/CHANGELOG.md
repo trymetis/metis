@@ -6,6 +6,14 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 ## Unreleased
 
+### Upgrade notes
+
+- The schema adds a `sender_names` table; `metis add gateway-cloudflare` applies it when it deploys the release; a gateway deployed by hand needs `bun run db:apply` before the new Worker runs.
+
+### Added
+
+- A mailbox can carry a sender name: mail it sends goes out as `From: Name <address>` and its Sent copy shows the name. Set it when creating the token (`POST /v1/tokens` with `name`) and change or remove it with `PATCH /v1/tokens` without a new token; `GET /v1/tokens` lists each address's name.
+
 ## Releases
 
 - [0.1.0](../../releases/gateway-cloudflare-v0.1.0.md) - 2026-11-13

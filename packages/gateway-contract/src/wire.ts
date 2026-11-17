@@ -106,7 +106,12 @@ export type AttachmentsResponse = z.infer<typeof attachmentsResponseSchema>;
 export const errorResponseSchema = z.object({ error: z.string() });
 export type ErrorResponse = z.infer<typeof errorResponseSchema>;
 
-export const addressBodySchema = z.object({ address: z.string().optional() });
+export const SENDER_NAME_MAX_CHARS = 100;
+
+export const tokenBodySchema = z.object({
+  address: z.string().optional(),
+  name: z.string().nullable().optional(),
+});
 
 export const markReadBodySchema = z.object({
   ids: z.array(z.string()).optional(),
@@ -122,5 +127,6 @@ export const flagsBodySchema = z.object({
 
 export interface TokenRow {
   address: string;
+  name: string | null;
   created_at: string;
 }

@@ -11,11 +11,6 @@ import (
 	"time"
 )
 
-type TokenEntry struct {
-	Address   string `json:"address"`
-	CreatedAt string `json:"createdAt,omitempty"`
-}
-
 var httpClient = &http.Client{Timeout: 30 * time.Second}
 
 func call(ctx context.Context, method, endpoint, adminToken string, body any, out any) error {
@@ -58,14 +53,22 @@ func call(ctx context.Context, method, endpoint, adminToken string, body any, ou
 	return nil
 }
 
-func CreateToken(ctx context.Context, endpoint, adminToken, address string) (string, error) {
+func CreateToken(ctx context.Context, endpoint, adminToken, address, name string) (string, error) {
+	body := map[string]string{"address": address}
+	if name != "" {
+		body["name"] = name
+	}
 	var created struct {
 		Token string `json:"token"`
 	}
-	if err := call(ctx, http.MethodPost, endpoint, adminToken, map[string]string{"address": address}, &created); err != nil {
+	if err := call(ctx, http.MethodPost, endpoint, adminToken, body, &created); err != nil {
 		return "", err
 	}
 	return created.Token, nil
+}
+
+func SetName(ctx context.Context, endpoint, adminToken, address, name string) error {
+	return call(ctx, http.MethodPatch, endpoint, adminToken, map[string]string{"address": address, "name": name}, nil)
 }
 
 func RevokeToken(ctx context.Context, endpoint, adminToken, address string) error {

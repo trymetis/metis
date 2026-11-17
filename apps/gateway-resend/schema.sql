@@ -38,3 +38,8 @@ CREATE TABLE IF NOT EXISTS tokens (
   token_hash TEXT NOT NULL UNIQUE,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
+
+CREATE TABLE IF NOT EXISTS sender_names (
+  address TEXT PRIMARY KEY,
+  name TEXT NOT NULL
+);

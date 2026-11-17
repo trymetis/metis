@@ -12,7 +12,7 @@ function messageIdHost(region: string): string {
 
 function buildRaw(mail: OutgoingMail): Promise<Buffer> {
   const composer = new MailComposer({
-    from: mail.from,
+    from: mail.fromName ? { name: mail.fromName, address: mail.from } : mail.from,
     to: mail.to,
     ...(mail.cc ? { cc: mail.cc } : {}),
     ...(mail.bcc ? { bcc: mail.bcc } : {}),

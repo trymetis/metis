@@ -39,7 +39,7 @@ The command:
 6. Waits until it answers: "Waiting for https://resend.mail.example.com to answer (Caddy may first need a certificate)…", for up to 3 minutes.
 7. Adds the gateway to the **Resend** server list, named after the domain, and stores it at once.
 
-Then create a mailbox token for each address with `sudo metis gateway token create alice@example.com`. See [Mailbox tokens](/self-hosting/mail-gateways/mailbox-tokens).
+Then create a mailbox token for each address with `sudo metis gateway token create alice@example.com`. Add `--name "Alice Doe"` to give the address a sender name. See [Mailbox tokens](/self-hosting/mail-gateways/mailbox-tokens).
 
 | Flag         | What it does                                                                                                                                                                                                                   | Default                                      |
 | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------- |
@@ -176,8 +176,9 @@ Write the tag without the leading `v`: `0.1.0`, not `v0.1.0`.
       It works like the published image.
 
     - Bun, from `apps/gateway-resend` in the source code. Create the tables
-      first, then start it. You can run `bun run db:apply` again at any
-      time. It keeps your data.
+      first, then start it. After you move to a new gateway release, run
+      `bun run db:apply` again before `bun run start`, because a new release
+      can add tables. You can run it at any time. It keeps your data.
 
       ```bash
       bun run db:apply

@@ -11,7 +11,6 @@ import {
   truncate,
 } from "./text";
 import {
-  addressBodySchema,
   type AttachmentMeta,
   DEFAULT_LIST_LIMIT,
   type DraftAttachment,
@@ -24,6 +23,8 @@ import {
   MAX_IDS,
   MAX_LIST_LIMIT,
   markReadBodySchema,
+  SENDER_NAME_MAX_CHARS,
+  tokenBodySchema,
   type TokenRow,
   type WireEmail,
 } from "./wire";
@@ -61,6 +62,7 @@ export interface OutgoingRecord {
   address: string;
   folder: "sent" | "drafts";
   fromEmail: string;
+  fromName: string | null;
   to: string[];
   cc: string[];
   bcc: string[];
@@ -87,6 +89,8 @@ export interface GatewayStore {
   listTokens(): Promise<TokenRow[]>;
   saveToken(address: string, tokenHash: string): Promise<void>;
   revokeToken(address: string): Promise<void>;
+  senderName(address: string): Promise<string | null>;
+  setSenderName(address: string, name: string | null): Promise<boolean>;
   getMessage(address: string, id: string): Promise<StoredMessage | null>;
   listMessages(
     address: string,
@@ -111,6 +115,7 @@ export interface GatewayStore {
 
 export interface OutgoingMail {
   from: string;
+  fromName?: string;
   to: string[];
   cc?: string[];
   bcc?: string[];
@@ -154,6 +159,19 @@ async function readBody<S extends z.ZodType>(
 }
 
 const INVALID_BODY = "The request body is not valid";
+
+const INVALID_NAME = `The name must be one line of at most ${SENDER_NAME_MAX_CHARS} characters`;
+
+function parseSenderName(
+  value: string | null | undefined,
+): { ok: true; name: string | null } | { ok: false } {
+  const name = (value ?? "").trim();
+  if (name.length === 0) return { ok: true, name: null };
+  if (name.length > SENDER_NAME_MAX_CHARS || /\p{Cc}/u.test(name)) {
+    return { ok: false };
+  }
+  return { ok: true, name };
+}
 
 export function attachmentKey(messageId: string, attachmentId: string): string {
   return `att/${messageId}/${attachmentId}`;
@@ -216,10 +234,12 @@ async function storeOutgoing(
   folder: "sent" | "drafts",
   existingId?: string,
   messageIdHeader: string | null = null,
+  fromName?: string | null,
 ): Promise<string> {
   const { store } = gateway;
   const id = existingId ?? crypto.randomUUID();
   const previous = existingId ? await store.outgoingAttachments(address, existingId) : null;
+  const name = fromName === undefined ? await store.senderName(address) : fromName;
 
   const attachments: AttachmentMeta[] = await Promise.all(
     (body.attachments ?? []).map(async (attachment, index) => {
@@ -244,6 +264,7 @@ async function storeOutgoing(
     address,
     folder,
     fromEmail: body.from ?? address,
+    fromName: name,
     to: body.to ?? [],
     cc: body.cc ?? [],
     bcc: body.bcc ?? [],
@@ -280,10 +301,13 @@ async function handleSend(gateway: Gateway, address: string, body: DraftBody): P
   if (body.inReplyTo) headers["In-Reply-To"] = body.inReplyTo;
   if (body.references) headers.References = body.references;
 
+  const fromName = await gateway.store.senderName(address);
+
   let messageIdHeader: string | null = null;
   try {
     const sent = await gateway.send({
       from,
+      ...(fromName ? { fromName } : {}),
       to: body.to,
       ...(body.cc && body.cc.length > 0 ? { cc: body.cc } : {}),
       ...(body.bcc && body.bcc.length > 0 ? { bcc: body.bcc } : {}),
@@ -300,7 +324,15 @@ async function handleSend(gateway: Gateway, address: string, body: DraftBody): P
   }
 
   try {
-    const id = await storeOutgoing(gateway, address, body, "sent", undefined, messageIdHeader);
+    const id = await storeOutgoing(
+      gateway,
+      address,
+      body,
+      "sent",
+      undefined,
+      messageIdHeader,
+      fromName,
+    );
     return json({ id });
   } catch (err) {
     console.error(`[${gateway.tag}] message was sent but the Sent copy could not be stored`, err);
@@ -313,7 +345,7 @@ async function handleTokens(request: Request, gateway: Gateway, method: string):
     return json({ tokens: await gateway.store.listTokens() });
   }
 
-  const body = await readBody(request, addressBodySchema);
+  const body = await readBody(request, tokenBodySchema);
   if (!body) return error(INVALID_BODY, 400);
   const address = normalizeAddress(body.address ?? "");
   const domain = gateway.domain.toLowerCase();
@@ -326,10 +358,22 @@ async function handleTokens(request: Request, gateway: Gateway, method: string):
     return json({ ok: true });
   }
 
+  const name = parseSenderName(body.name);
+  if (!name.ok) return error(INVALID_NAME, 400);
+
   if (method === "POST") {
     const token = newToken();
     await gateway.store.saveToken(address, await sha256Hex(token));
+    if (body.name !== undefined) await gateway.store.setSenderName(address, name.name);
     return json({ address, token });
+  }
+
+  if (method === "PATCH") {
+    if (body.name === undefined) return error(INVALID_BODY, 400);
+    if (!(await gateway.store.setSenderName(address, name.name))) {
+      return error(`No token exists for ${address}`, 404);
+    }
+    return json({ address, name: name.name });
   }
 
   return error("Method not allowed", 405);

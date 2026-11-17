@@ -11,6 +11,7 @@ interface WireEmail {
   id: string;
   threadId: string;
   from: string;
+  fromName?: string;
   to: string[];
   subject: string;
   folder: string;
@@ -47,12 +48,35 @@ async function v1Json<T>(
   return (await res.json()) as T;
 }
 
-async function mint(address: string): Promise<string> {
+async function mint(address: string, name?: string): Promise<string> {
   const { token } = await v1Json<{ token: string }>(ADMIN, "/tokens", {
     method: "POST",
-    body: { address },
+    body: { address, ...(name === undefined ? {} : { name }) },
   });
   return token;
+}
+
+async function senderNameOf(address: string): Promise<string | null | undefined> {
+  const { tokens } = await v1Json<{ tokens: { address: string; name: string | null }[] }>(
+    ADMIN,
+    "/tokens",
+  );
+  return tokens.find((t) => t.address === address)?.name;
+}
+
+async function sendAndReadSent(token: string, from: string): Promise<WireEmail | undefined> {
+  const sent = await v1Json<{ id: string }>(token, "/send", {
+    method: "POST",
+    body: {
+      from,
+      to: ["out@discard.demo.trymetis.email"],
+      subject: `${uniqueName()} named`,
+      html: "<p>from the e2e suite</p>",
+    },
+  });
+  return (await v1Json<{ emails: WireEmail[] }>(token, "/messages?folder=sent")).emails.find(
+    (e) => e.id === sent.id,
+  );
 }
 
 async function deliver(
@@ -190,6 +214,77 @@ describe("the /v1 contract", () => {
       await v1Json<{ emails: WireEmail[] }>(anaToken, "/messages?folder=sent")
     ).emails.find((e) => e.id === sent.id);
     expect(listed).toMatchObject({ subject, to: ["out@discard.demo.trymetis.email"] });
+  });
+
+  test("a sender name set at mint is renamed and removed without a new token", async () => {
+    const address = `named-${Date.now().toString(36)}@${DOMAIN}`;
+    const token = await mint(address, "Ana Silva");
+    try {
+      expect(await senderNameOf(address)).toBe("Ana Silva");
+      expect((await sendAndReadSent(token, address))?.fromName).toBe("Ana Silva");
+
+      const renamed = await v1Json<{ name: string | null }>(ADMIN, "/tokens", {
+        method: "PATCH",
+        body: { address, name: "  Ana Silva, Fernhill  " },
+      });
+      expect(renamed.name).toBe("Ana Silva, Fernhill");
+      expect(await senderNameOf(address)).toBe("Ana Silva, Fernhill");
+      expect((await sendAndReadSent(token, address))?.fromName).toBe("Ana Silva, Fernhill");
+
+      await v1Json(ADMIN, "/tokens", { method: "PATCH", body: { address, name: "" } });
+      expect(await senderNameOf(address)).toBeNull();
+      expect((await sendAndReadSent(token, address))?.fromName).toBeUndefined();
+    } finally {
+      await v1(ADMIN, "/tokens", { method: "DELETE", body: { address } });
+    }
+  });
+
+  test("minting again keeps the sender name and revoking drops it", async () => {
+    const address = `remint-${Date.now().toString(36)}@${DOMAIN}`;
+    await mint(address, "Ana Silva");
+    try {
+      const token = await mint(address);
+      expect(await senderNameOf(address)).toBe("Ana Silva");
+      expect((await sendAndReadSent(token, address))?.fromName).toBe("Ana Silva");
+
+      await v1(ADMIN, "/tokens", { method: "DELETE", body: { address } });
+      await mint(address);
+      expect(await senderNameOf(address)).toBeNull();
+    } finally {
+      await v1(ADMIN, "/tokens", { method: "DELETE", body: { address } });
+    }
+  });
+
+  test("a sender name is one short line and renaming needs an existing token", async () => {
+    const injected = await v1(ADMIN, "/tokens", {
+      method: "PATCH",
+      body: { address: anaAddress, name: "Ana\r\nBcc: x@discard.demo.trymetis.email" },
+    });
+    expect(injected.status).toBe(400);
+    const tooLong = await v1(ADMIN, "/tokens", {
+      method: "POST",
+      body: { address: `long-${Date.now().toString(36)}@${DOMAIN}`, name: "a".repeat(101) },
+    });
+    expect(tooLong.status).toBe(400);
+    const missingName = await v1(ADMIN, "/tokens", {
+      method: "PATCH",
+      body: { address: anaAddress },
+    });
+    expect(missingName.status).toBe(400);
+    const unknown = await v1(ADMIN, "/tokens", {
+      method: "PATCH",
+      body: { address: `nobody-${Date.now().toString(36)}@${DOMAIN}`, name: "Nobody" },
+    });
+    expect(unknown.status).toBe(404);
+    expect(
+      (
+        await v1(anaToken, "/tokens", {
+          method: "PATCH",
+          body: { address: anaAddress, name: "Ana" },
+        })
+      ).status,
+    ).toBe(403);
+    expect(await senderNameOf(anaAddress)).toBeNull();
   });
 });
 

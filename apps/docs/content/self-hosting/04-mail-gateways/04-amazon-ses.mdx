@@ -63,7 +63,7 @@ The command deploys the newest release of the Amazon SES gateway, or the release
 9. Adds the receipt rule to the active rule set: "Receipt rule metis-ses-example-com in metis". Only when no rule set is active, it creates one first: "Created and activated the rule set metis".
 10. Adds the gateway to the **Amazon SES** server list, named after the domain, and stores it at once.
 
-Then create a mailbox token for each address with `sudo metis gateway token create alice@example.com`. See [Mailbox tokens](/self-hosting/mail-gateways/mailbox-tokens).
+Then create a mailbox token for each address with `sudo metis gateway token create alice@example.com`. Add `--name "Alice Doe"` to give the address a sender name. See [Mailbox tokens](/self-hosting/mail-gateways/mailbox-tokens).
 
 `sudo metis status` shows the gateway, with the number of deliveries in the failure queue, for example ", 2 failed receipt(s) in metis-ses-example-com-failed".
 

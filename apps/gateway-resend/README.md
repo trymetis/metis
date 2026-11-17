@@ -109,13 +109,21 @@ its `whsec_…` secret into `RESEND_WEBHOOK_SECRET`.
 ## Minting a mailbox token
 
 ```sh
-ADMIN_TOKEN=... bun run token https://... create you@yourdomain.com
+ADMIN_TOKEN=... bun run token https://... create you@yourdomain.com "Your Name"
+ADMIN_TOKEN=... bun run token https://... name you@yourdomain.com "Your New Name"
 ADMIN_TOKEN=... bun run token https://... list
 ADMIN_TOKEN=... bun run token https://... revoke you@yourdomain.com
 ```
 
 The token is shown once. Hand it to the person who owns that address; they
 paste it into Metis when connecting the mailbox.
+
+The name is optional: it is the sender name mail from that address carries
+(`From: Your Name <you@yourdomain.com>`), and the Sent copy shows it too.
+`name` changes it without touching the token, `name you@yourdomain.com ""`
+removes it, and creating a token again keeps it. With the `metis` CLI:
+`metis gateway token create you@yourdomain.com --name "Your Name"` and
+`metis gateway token name you@yourdomain.com "Your Name"`.
 
 ## API
 

@@ -33,7 +33,7 @@ interface EmailSendAttachment {
 
 interface EmailSendParams {
   to: string | string[];
-  from: string;
+  from: string | { name: string; email: string };
   subject: string;
   html?: string;
   text?: string;
@@ -176,8 +176,10 @@ function d1Store(env: Env): GatewayStore {
 
     async listTokens() {
       const rows = await env.DB.prepare(
-        "SELECT address, created_at FROM tokens ORDER BY address",
-      ).all<{ address: string; created_at: string }>();
+        `SELECT tokens.address, sender_names.name, tokens.created_at FROM tokens
+         LEFT JOIN sender_names ON sender_names.address = tokens.address
+         ORDER BY tokens.address`,
+      ).all<{ address: string; name: string | null; created_at: string }>();
       return rows.results ?? [];
     },
 
@@ -191,7 +193,33 @@ function d1Store(env: Env): GatewayStore {
     },
 
     async revokeToken(address) {
-      await env.DB.prepare("DELETE FROM tokens WHERE address = ?").bind(address).run();
+      await env.DB.batch([
+        env.DB.prepare("DELETE FROM tokens WHERE address = ?").bind(address),
+        env.DB.prepare("DELETE FROM sender_names WHERE address = ?").bind(address),
+      ]);
+    },
+
+    async senderName(address) {
+      const row = await env.DB.prepare("SELECT name FROM sender_names WHERE address = ?")
+        .bind(address)
+        .first<{ name: string }>();
+      return row?.name ?? null;
+    },
+
+    async setSenderName(address, name) {
+      const token = await env.DB.prepare("SELECT 1 AS found FROM tokens WHERE address = ?")
+        .bind(address)
+        .first<{ found: number }>();
+      if (!token) return false;
+      await (
+        name === null
+          ? env.DB.prepare("DELETE FROM sender_names WHERE address = ?").bind(address)
+          : env.DB.prepare(
+              `INSERT INTO sender_names (address, name) VALUES (?, ?)
+             ON CONFLICT(address) DO UPDATE SET name = excluded.name`,
+            ).bind(address, name)
+      ).run();
+      return true;
     },
 
     async getMessage(address, id) {
@@ -268,12 +296,13 @@ function d1Store(env: Env): GatewayStore {
     async upsertOutgoing(record) {
       await env.DB.prepare(
         `INSERT INTO messages (
-          id, thread_id, to_address, folder, from_email, to_json, cc_json,
-          bcc_json, subject, snippet, body_html, body_text, date, is_read,
-          is_starred, references_header, in_reply_to, attachments_json
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?, ?)
+          id, thread_id, to_address, folder, from_email, from_name, to_json,
+          cc_json, bcc_json, subject, snippet, body_html, body_text, date,
+          is_read, is_starred, references_header, in_reply_to, attachments_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           folder = excluded.folder, from_email = excluded.from_email,
+          from_name = excluded.from_name,
           to_json = excluded.to_json, cc_json = excluded.cc_json,
           bcc_json = excluded.bcc_json, subject = excluded.subject,
           snippet = excluded.snippet, body_html = excluded.body_html,
@@ -289,6 +318,7 @@ function d1Store(env: Env): GatewayStore {
           record.address,
           record.folder,
           record.fromEmail,
+          record.fromName,
           JSON.stringify(record.to),
           JSON.stringify(record.cc),
           JSON.stringify(record.bcc),
@@ -408,7 +438,7 @@ function gateway(env: Env): Gateway {
     store: d1Store(env),
     async send(mail) {
       const params: EmailSendParams = {
-        from: mail.from,
+        from: mail.fromName ? { name: mail.fromName, email: mail.from } : mail.from,
         to: mail.to,
         subject: mail.subject,
         html: mail.html || undefined,

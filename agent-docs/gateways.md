@@ -36,7 +36,7 @@ The three mail backends that are separate services speaking one HTTP contract, a
   - The tag is the version; no file holds it.
   - `.github/workflows/gateways.yml` publishes one release: the Resend image `ghcr.io/trymetis/metis-gateway-resend:VERSION` (its own GHCR package, public like the `metis` image's) with `gateway-resend/vVERSION/image.txt` naming it, `gateway-ses.zip` under `gateway-ses/vVERSION/`, or `gateway-cloudflare.zip` under `gateway-cloudflare/vVERSION/` ([self-host.md](self-host.md)).
   - Each folder's `version.txt` names the newest release that is not a pre-release.
-- **The `metis` CLI sets each gateway up from those artifacts** ([cli.md](cli.md)): `metis add gateway-cloudflare`, `gateway-resend` and `gateway-ses` deploy the gateway's newest release (or the one `--version` names), create the provider's resources, write the admin `API_TOKEN` to `env/` and store a `metis-` server entry; `metis gateway token` mints and revokes mailbox tokens. Each README keeps the manual steps.
+- **The `metis` CLI sets each gateway up from those artifacts** ([cli.md](cli.md)): `metis add gateway-cloudflare`, `gateway-resend` and `gateway-ses` deploy the gateway's newest release (or the one `--version` names), create the provider's resources, write the admin `API_TOKEN` to `env/` and store a `metis-` server entry; `metis gateway token` mints, names and revokes mailbox tokens. Each README keeps the manual steps.
 - **`snippetOf` builds every gateway snippet from the HTML's visible text, and from the plain text only when that is empty.**
   - It reads at most 64 KB from `<body>`, drops `head`, `title`, `style`, `script`, `noscript`, `template`, `xml`, `svg` and comments, decodes entities, and strips the invisible filler characters newsletters pad their preview text with.
   - It runs once at ingest and at send with a bounded cost, so it fits the Workers CPU limit; the list serves the stored snippet as is.
@@ -46,6 +46,12 @@ The three mail backends that are separate services speaking one HTTP contract, a
 - **Every API token is scoped to one address and stored as a sha256 row.**
   - `/v1/send` sends only as the token's own address.
   - The admin `API_TOKEN` manages tokens; the mailbox routes refuse it.
+- **A mailbox's sender name is gateway data: Metis sends only the bare address, and the gateway adds the name.**
+  - `handleSend` reads `senderName` and passes it as `OutgoingMail.fromName`; `storeOutgoing` writes it on the Sent and draft copies.
+  - `POST /v1/tokens` sets it when the body has `name` and keeps it otherwise, so rotating a token keeps the name; `PATCH /v1/tokens` changes or clears it without a new token; `DELETE` removes it with the token.
+  - A name is trimmed, one line with no control characters, and at most `SENDER_NAME_MAX_CHARS` long; an empty name clears it.
+- **Sender names live in a `sender_names` table keyed by address, not a `tokens` column**, because every deploy re-applies `schema.sql` and only `CREATE … IF NOT EXISTS` is idempotent there.
+- **Each gateway puts the name in `From` its provider's way.** Cloudflare passes `{ name, email }` to the `send_email` binding; Resend gets `Name <address>`, quoted when the name holds characters outside RFC 5322 `atext`; SES builds `From` with `MailComposer` and keeps `FromEmailAddress` the bare address its IAM `ses:FromAddress` condition matches.
 - **Metis refuses an admin token or a mismatched one at connect time** ([servers.md](servers.md)): `createGatewayDriver`'s `verify` requires the email on the entry's domain, the health echo's domain to match the entry, and the token's address to equal the email.
 
 ### Cloudflare
