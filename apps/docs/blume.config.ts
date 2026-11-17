@@ -12,11 +12,12 @@ export default defineConfig({
     site: "https://docs.trymetis.email",
   },
   theme: {
-    accent: "blue",
+    accent: { light: "#18181b", dark: "#e4e4e7" },
+    background: { light: "#f7f7f8", dark: "#000000" },
     fonts: {
-      display: "dm-sans",
-      body: "dm-sans",
-      mono: { name: "DM Mono", weights: [400, 500] },
+      display: "inter",
+      body: "inter",
+      mono: "jetbrains-mono",
     },
   },
   navigation: {

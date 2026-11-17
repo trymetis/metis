@@ -366,7 +366,7 @@ export function EmailList({ folder, view }: EmailListProps) {
       <div className="shrink-0 border-b px-4.5 pb-3 pt-4.5 border-border-soft">
         <div className="mb-3 flex items-center gap-2">
           <MobileAsideTrigger className="-ml-1.5 size-8 shrink-0" />
-          <h1 className="mr-auto text-[22px] font-medium leading-tight tracking-tight font-serif text-foreground">
+          <h1 className="mr-auto text-[22px] font-medium leading-tight tracking-tight text-foreground">
             {folderLabel}
           </h1>
           {platformAi && (
@@ -562,7 +562,7 @@ export function EmailList({ folder, view }: EmailListProps) {
             role="alert"
             className="flex flex-col items-center justify-center gap-2 py-16 text-faint"
           >
-            <p className="text-base font-serif">Couldn't load your {folderLabel.toLowerCase()}</p>
+            <p className="text-base">Couldn't load your {folderLabel.toLowerCase()}</p>
             <span className="text-xs">
               {listError.message || "The request did not go through."}
             </span>
@@ -572,7 +572,7 @@ export function EmailList({ folder, view }: EmailListProps) {
           </div>
         ) : visibleEmails.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-16 text-faint">
-            <p className="text-base font-serif">No emails</p>
+            <p className="text-base">No emails</p>
             <span className="text-xs">
               {activeTab === "all" || readLaterMode
                 ? `Your ${folderLabel.toLowerCase()} is empty`

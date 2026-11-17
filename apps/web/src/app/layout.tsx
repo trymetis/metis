@@ -3,7 +3,7 @@ import { cn } from "@metis/ui/lib/utils";
 
 import "@/lib/orpc.server";
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, DM_Mono, DM_Sans } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import { headers } from "next/headers";
 
 import "@/styles/globals.css";
@@ -15,25 +15,15 @@ import { platformPolicy } from "@/workspace/policy";
 import { QueryProvider } from "./_components/query-provider";
 import { ThemeProvider } from "./_components/theme-provider";
 
-const dmSans = DM_Sans({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-dm-sans",
+  variable: "--font-inter",
   display: "swap",
 });
 
-const cormorant = Cormorant_Garamond({
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
-  variable: "--font-cormorant",
-  display: "swap",
-});
-
-const dmMono = DM_Mono({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-dm-mono",
+  variable: "--font-jetbrains-mono",
   display: "swap",
 });
 
@@ -62,7 +52,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       data-brand={theme?.id}
       suppressHydrationWarning
-      className={cn(dmSans.variable, cormorant.variable, dmMono.variable, "font-sans antialiased")}
+      className={cn(inter.variable, jetbrainsMono.variable, "font-sans antialiased")}
     >
       <body>
         {theme && (

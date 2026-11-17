@@ -38,7 +38,7 @@ export interface MetisSuiteTemplateProps {
 const FONT_URL = new URL(EMAIL_FONT_PATH, config.auth.url).toString();
 
 const FONT_STACK =
-  "'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+  "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
 const INK = "#0a0a0a";
 const TEXT = "#404040";
@@ -198,10 +198,10 @@ export function MetisSuiteTemplate({
         <meta name="color-scheme" content="light dark" />
         <meta name="supported-color-schemes" content="light dark" />
         <Font
-          fontFamily="DM Sans"
+          fontFamily="Inter"
           fallbackFontFamily={["Helvetica", "Arial", "sans-serif"]}
           webFont={{ url: FONT_URL, format: "woff2" }}
-          fontWeight="100 1000"
+          fontWeight="100 900"
         />
         {/* oxlint-disable-next-line react/no-danger --static stylesheet, no interpolation */}
         <style dangerouslySetInnerHTML={{ __html: colorSchemeCss }} />

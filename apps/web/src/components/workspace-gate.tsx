@@ -62,7 +62,7 @@ export function WorkspaceGate({
         <div className="flex size-12 items-center justify-center rounded-xl border border-border bg-surface">
           <Icon className="size-5 text-muted-foreground" strokeWidth={1.8} />
         </div>
-        <h1 className="mt-4 font-serif text-[22px] font-medium tracking-tight text-foreground">
+        <h1 className="mt-4 text-[22px] font-medium tracking-tight text-foreground">
           Continue to {title}
         </h1>
         <p className="mt-1 text-center text-[13px] text-faint">

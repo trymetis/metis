@@ -428,7 +428,7 @@ export function WorkflowRunDetailView({ runId }: { runId: string }) {
         </Button>
         {run && <StatusIcon status={stopping ? "running" : run.status} className="size-5" />}
         <div className="min-w-0 flex-1">
-          <h1 className="truncate font-medium font-serif text-foreground text-lg">
+          <h1 className="truncate font-medium text-foreground text-lg">
             {run?.workflowName ?? "Workflow run"}
           </h1>
           {run && (

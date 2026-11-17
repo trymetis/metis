@@ -52,7 +52,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 
 function Title({ children }: { children: ReactNode }) {
   return (
-    <h2 className="font-serif text-[20px] font-medium leading-tight tracking-tight text-foreground">
+    <h2 className="text-[20px] font-medium leading-tight tracking-tight text-foreground">
       {children}
     </h2>
   );

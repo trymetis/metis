@@ -136,7 +136,7 @@ export function ContactsAgentPanel({ onClose }: { onClose: () => void }) {
     <div className="flex h-full w-full flex-col bg-panel">
       <div className="flex items-center gap-2.5 border-border-soft border-b px-4 py-3.5">
         <div className="flex-1">
-          <p className="font-medium font-serif text-[16px] text-foreground">Contacts AI</p>
+          <p className="font-medium text-[16px] text-foreground">Contacts AI</p>
           <p className="text-[11px] text-faint">
             {scope.addressBookSlug === "all" ? "All address books" : "This address book"}
           </p>
@@ -156,7 +156,7 @@ export function ContactsAgentPanel({ onClose }: { onClose: () => void }) {
             >
               <div className="flex flex-col items-center gap-3">
                 <Bot className="size-10 text-faint opacity-40" />
-                <p className="font-serif text-muted-foreground text-sm">Ask about your contacts</p>
+                <p className="text-muted-foreground text-sm">Ask about your contacts</p>
                 <div className="flex flex-col gap-1.5">
                   {SUGGESTIONS.map((s) => (
                     <Suggestion className="rounded-md" key={s} onClick={sendText} suggestion={s} />

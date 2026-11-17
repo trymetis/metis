@@ -21,7 +21,7 @@ export function PageHeader({
         <p className="text-[11px] font-medium tracking-wide text-faint uppercase">{eyebrow}</p>
       )}
       <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
-        <h1 className="flex min-w-0 items-center gap-2.5 font-serif text-[28px] font-medium tracking-tight text-foreground">
+        <h1 className="flex min-w-0 items-center gap-2.5 text-[28px] font-medium tracking-tight text-foreground">
           {icon}
           {title}
         </h1>

@@ -64,7 +64,7 @@ export function ScheduledView() {
       <div className="flex shrink-0 items-center gap-3 border-b px-7 py-4 border-border-soft">
         <MobileAsideTrigger className="-ml-1.5 size-8 shrink-0" />
         <Clock className="h-4 w-4 text-brand-text" />
-        <h1 className="text-[24px] tracking-tight font-serif text-foreground">Scheduled</h1>
+        <h1 className="text-[24px] tracking-tight text-foreground">Scheduled</h1>
         <span className="text-xs text-faint">{pending.length} queued</span>
         <Button
           variant="ghost"
@@ -92,7 +92,7 @@ export function ScheduledView() {
           ) : items.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-20 text-faint">
               <Clock className="h-10 w-10 opacity-30" />
-              <p className="text-base tracking-tight font-serif">No scheduled emails</p>
+              <p className="text-base tracking-tight">No scheduled emails</p>
               <p className="text-xs">When you schedule a send, it'll appear here.</p>
             </div>
           ) : (

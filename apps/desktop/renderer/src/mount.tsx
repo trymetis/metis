@@ -1,5 +1,5 @@
-import "@fontsource-variable/dm-sans";
-import "@fontsource/dm-mono";
+import "@fontsource-variable/inter";
+import "@fontsource-variable/jetbrains-mono";
 import "./styles.css";
 import { type ReactNode, StrictMode } from "react";
 import { createRoot } from "react-dom/client";

@@ -87,7 +87,7 @@ export function StatCards() {
             {stats === null ? (
               <Loader2 className="h-4 w-4 animate-spin opacity-50" />
             ) : (
-              <span className="font-serif text-[32px] leading-none font-medium tracking-tight text-foreground tabular-nums">
+              <span className="text-[32px] leading-none font-medium tracking-tight text-foreground tabular-nums">
                 {stats[key].toLocaleString()}
               </span>
             )}

@@ -49,7 +49,7 @@ export function AgentDisabled({
       <div className="flex h-full w-full flex-col border-border border-l bg-panel">
         <div className="flex items-center gap-2.5 border-border-soft border-b px-4 py-3.5">
           <div className="flex-1">
-            <p className="font-medium font-serif text-[16px] text-foreground">Metis AI</p>
+            <p className="font-medium text-[16px] text-foreground">Metis AI</p>
             <p className="text-[11px] text-faint">Unavailable</p>
           </div>
           {onClose && (
@@ -70,7 +70,7 @@ export function AgentDisabled({
             />
             <TooltipContent>{body}</TooltipContent>
           </Tooltip>
-          <p className="font-serif text-muted-foreground text-sm">Assistant turned off</p>
+          <p className="text-muted-foreground text-sm">Assistant turned off</p>
           <p className="max-w-[16rem] text-[12px] text-faint">{body}</p>
           <Button
             className="mt-1"

@@ -186,7 +186,7 @@ export function AgentPanel() {
     >
       <div className="flex items-center gap-2.5 border-border-soft border-b px-4 py-3.5">
         <div className="flex-1">
-          <p className="font-medium font-serif text-[16px] text-foreground">Mail AI</p>
+          <p className="font-medium text-[16px] text-foreground">Mail AI</p>
           <p className="text-[11px] text-faint">This mailbox</p>
         </div>
         {messages.length > 0 && (
@@ -226,7 +226,7 @@ export function AgentPanel() {
             >
               <div className="flex flex-col items-center gap-3">
                 <Bot className="size-10 text-faint opacity-40" />
-                <p className="font-serif text-muted-foreground text-sm">
+                <p className="text-muted-foreground text-sm">
                   {attachedCount > 0 ? "Ask about this email" : "Ask Mail AI"}
                 </p>
                 <div className="flex flex-col gap-1.5">

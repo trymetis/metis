@@ -144,7 +144,7 @@ export function WorkflowBuilder({ allowDecisionSteps, initialWorkflowId }: Workf
             >
               <ArrowLeft className="size-4" />
             </Link>
-            <span className="flex-1 font-medium font-serif text-foreground text-sm">Workflows</span>
+            <span className="flex-1 font-medium text-foreground text-sm">Workflows</span>
           </div>
 
           <div className="p-2">

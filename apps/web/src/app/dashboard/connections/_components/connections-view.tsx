@@ -94,7 +94,7 @@ export function ConnectionsView() {
               ) : (
                 <span
                   className={cn(
-                    "font-serif text-[28px] leading-none font-medium tracking-tight tabular-nums",
+                    "text-[28px] leading-none font-medium tracking-tight tabular-nums",
                     card.alert ? "text-destructive-text" : "text-foreground",
                   )}
                 >

@@ -117,7 +117,7 @@ export function OverviewExtras() {
               ) : (
                 <span
                   className={cn(
-                    "font-serif text-[28px] leading-none font-medium tracking-tight tabular-nums",
+                    "text-[28px] leading-none font-medium tracking-tight tabular-nums",
                     alert ? "text-destructive-text" : "text-foreground",
                   )}
                 >

@@ -75,7 +75,7 @@ export function WorkflowHistoryView() {
           <History className="size-4.5 text-brand-text" />
         </div>
         <div className="min-w-40 flex-1">
-          <h1 className="font-medium font-serif text-foreground text-lg">Workflow activity</h1>
+          <h1 className="font-medium text-foreground text-lg">Workflow activity</h1>
           <p className="text-faint text-xs">
             Every workflow run in this workspace — refreshes automatically.
           </p>

@@ -3,6 +3,6 @@
 @source "./";
 
 :root {
-  --font-dm-sans: "DM Sans Variable";
-  --font-dm-mono: "DM Mono";
+  --font-inter: "Inter Variable";
+  --font-jetbrains-mono: "JetBrains Mono Variable";
 }

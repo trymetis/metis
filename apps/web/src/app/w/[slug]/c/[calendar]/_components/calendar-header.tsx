@@ -68,7 +68,7 @@ export function CalendarHeader({
         </Button>
       </div>
 
-      <h1 className="ml-1 font-serif text-[20px] font-medium tracking-tight text-foreground">
+      <h1 className="ml-1 text-[20px] font-medium tracking-tight text-foreground">
         {rangeLabel(view, date)}
       </h1>
 

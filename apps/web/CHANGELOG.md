@@ -22,6 +22,7 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 ### Changed
 
+- The app uses Inter and JetBrains Mono instead of DM Sans, DM Mono and the serif title font, so names and subjects in Cyrillic, Greek and Vietnamese render in the app's own font. Emails sent by the instance use Inter too.
 - The mail entry in the left rail is called **Mail** and uses an envelope icon, so it no longer looks like the Inbox folder, and it drops the dot that looked like an unread badge but never reflected new mail.
 - Workspace colors show only on a workspace's own pages. The dashboard, account settings, sign-in, the MCP consent page and their dialogs and menus use the neutral theme, and a workspace page opens in its own color instead of flashing amber first.
 

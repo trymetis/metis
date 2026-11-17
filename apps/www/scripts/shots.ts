@@ -6,6 +6,15 @@ import { type Browser, chromium, type Page } from "@playwright/test";
 import sharp from "sharp";
 import { z } from "zod";
 
+const RENDER_FLAGS = [
+  "--disable-lcd-text",
+  "--font-render-hinting=none",
+  "--disable-font-subpixel-positioning",
+  "--disable-skia-runtime-opts",
+  "--force-color-profile=srgb",
+  "--disable-gpu",
+];
+
 const APP = process.env.DOCS_APP_URL ?? "http://localhost:3000";
 const HARNESS = process.env.DOCS_HARNESS_URL ?? "http://localhost:8099";
 const CLOCK = new Date(process.env.DOCS_CLOCK ?? "2026-10-08T12:00:00Z");
@@ -268,7 +277,7 @@ async function main() {
   const account = accountSchema.parse(await (await harness("/account")).json());
   const browser = process.env.CDP_URL
     ? await chromium.connectOverCDP(process.env.CDP_URL)
-    : await chromium.launch({ channel: "chrome", headless: true });
+    : await chromium.launch({ channel: "chrome", headless: true, args: RENDER_FLAGS });
   const state = await signIn(browser, account);
   const failed: string[] = [];
 

@@ -71,7 +71,7 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [downloads.md](dow
 - **Look.**
   - The desktop shell's neutral palette (`@metis/ui`'s default tokens) is redrawn as the `@variant light` / `dark` block in `global.css` and follows the system theme.
   - `MetisMark` is redrawn with `react-native-svg`; the app icons are rendered from the web app's `icon.svg` ([ui.md](ui.md)).
-  - DM Sans (400/500/600) and DM Mono come from `@expo-google-fonts/*` through the `expo-font` config plugin under one family name each, so `font-medium` / `font-semibold` pick real faces on both platforms.
+  - Inter (400/500/600) and JetBrains Mono come from `@expo-google-fonts/*` through the `expo-font` config plugin under one family name each, so `font-medium` / `font-semibold` pick real faces on both platforms.
 
 ## Deliberate limits
 

@@ -73,7 +73,7 @@ export function ClientPage({
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h1 className="truncate font-serif text-[28px] font-medium leading-tight tracking-tight text-foreground">
+            <h1 className="truncate text-[28px] font-medium leading-tight tracking-tight text-foreground">
               {client.label}
             </h1>
             {!client.enabled && <Badge variant="secondary">Disabled</Badge>}

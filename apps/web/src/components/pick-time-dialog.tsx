@@ -54,9 +54,7 @@ export function PickTimeDialog({
       <div role="presentation" className="absolute inset-0" onClick={onClose} />
       <div className="relative w-full max-w-sm overflow-hidden rounded-[10px] border border-border bg-surface shadow-2xl">
         <div className="flex items-center justify-between border-b border-border-soft bg-panel px-5 py-4">
-          <span className="text-[18px] font-medium tracking-tight font-serif text-foreground">
-            {title}
-          </span>
+          <span className="text-[18px] font-medium tracking-tight text-foreground">{title}</span>
           <Button
             variant="ghost"
             size="icon-xs"

@@ -8,6 +8,15 @@ import { type Browser, type BrowserContext, chromium, type Page } from "@playwri
 import sharp from "sharp";
 import { z } from "zod";
 
+const RENDER_FLAGS = [
+  "--disable-lcd-text",
+  "--font-render-hinting=none",
+  "--disable-font-subpixel-positioning",
+  "--disable-skia-runtime-opts",
+  "--force-color-profile=srgb",
+  "--disable-gpu",
+];
+
 const CONTAINER = process.env.MCP_SHOTS_CONTAINER ?? "metis-mcp";
 const IMAGE = process.env.MCP_SHOTS_IMAGE ?? "metis-mcp";
 const DOCKERFILE = join(import.meta.dirname, "mcp.Dockerfile");
@@ -483,7 +492,7 @@ async function main() {
   } catch {}
 
   ensureContainer();
-  const browser = await chromium.launch({ channel: "chrome", headless: true });
+  const browser = await chromium.launch({ channel: "chrome", headless: true, args: RENDER_FLAGS });
   const failed: string[] = [];
   try {
     const ctx = await signIn(browser);

@@ -819,7 +819,7 @@ export function EmailDetail() {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-background text-faint">
         <Mail className="h-12 w-12 opacity-30" strokeWidth={1.2} />
-        <p className="text-lg tracking-tight font-serif">Select a message to read</p>
+        <p className="text-lg tracking-tight">Select a message to read</p>
       </div>
     );
   }
@@ -1087,7 +1087,7 @@ export function EmailDetail() {
         <ScrollArea className="h-full">
           <div ref={scrollContentRef} className="px-6 py-6 md:px-10 md:py-8">
             <div className="sticky top-0 z-10 -mx-6 -mt-6 mb-2 flex items-start justify-between gap-3 bg-background/95 px-6 pt-6 pb-3 backdrop-blur-sm md:-mx-10 md:-mt-8 md:px-10 md:pt-8">
-              <h2 className="min-w-0 wrap-break-word text-[26px] font-medium leading-tight tracking-[-0.3px] md:text-[30px] font-serif text-foreground">
+              <h2 className="min-w-0 wrap-break-word text-[26px] font-medium leading-tight tracking-[-0.3px] md:text-[30px] text-foreground">
                 {selectedEmail.subject}
               </h2>
               {phishingDetectionEnabled && (
@@ -1108,7 +1108,7 @@ export function EmailDetail() {
                 decorative
                 className="relative shrink-0 rounded-full hover:no-underline"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-full border text-[15px] bg-surface border-border font-serif text-brand-text">
+                <span className="flex h-11 w-11 items-center justify-center rounded-full border text-[15px] bg-surface border-border text-brand-text">
                   {fromName.charAt(0).toUpperCase()}
                 </span>
                 {senderMatch && <SavedBadge />}

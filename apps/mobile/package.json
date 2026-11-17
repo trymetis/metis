@@ -12,8 +12,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@expo-google-fonts/dm-mono": "^0.4.2",
-    "@expo-google-fonts/dm-sans": "^0.4.2",
+    "@expo-google-fonts/inter": "^0.4.2",
+    "@expo-google-fonts/jetbrains-mono": "^0.4.1",
     "@metis/shell-core": "workspace:*",
     "@react-native-community/netinfo": "12.0.1",
     "@rn-primitives/label": "^1.5.2",

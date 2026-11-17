@@ -133,10 +133,7 @@ SOFTWARE.
 
 DM Sans (https://github.com/googlefonts/dm-fonts)
 
-The font file apps/web/public/fonts/dm-sans-latin-wght-normal.woff2, served
-to the instance's own emails, is the latin variable-weight build published as
-@fontsource-variable/dm-sans. The font files
-apps/www/assets/fonts/dm-sans-latin-400-normal.woff and
+The font files apps/www/assets/fonts/dm-sans-latin-400-normal.woff and
 apps/www/assets/fonts/dm-sans-latin-600-normal.woff, used to render the
 marketing site's social images, are the latin static builds published as
 @fontsource/dm-sans.
@@ -244,6 +241,19 @@ used to render the marketing site's social images, is the latin static build
 published as @fontsource/cormorant-garamond.
 
 Copyright 2015 The Cormorant Project Authors (github.com/CatharsisFonts/Cormorant)
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1,
+reproduced in full under DM Sans above.
+
+---
+
+Inter (https://github.com/rsms/inter)
+
+The font file apps/web/public/fonts/inter-latin-wght-normal.woff2, served to
+the instance's own emails, is the latin variable-weight build published as
+@fontsource-variable/inter.
+
+Copyright 2016 The Inter Project Authors (https://github.com/rsms/inter)
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1,
 reproduced in full under DM Sans above.

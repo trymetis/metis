@@ -129,7 +129,7 @@ export function ContactCard() {
         </Button>
         <ContactAvatar contact={contact} className="size-14 text-lg" />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate font-serif text-[24px] font-medium tracking-tight text-foreground">
+          <h1 className="truncate text-[24px] font-medium tracking-tight text-foreground">
             {contact.name.display || email || "Unnamed"}
           </h1>
           <p className="truncate text-[13px] text-faint">

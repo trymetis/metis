@@ -133,9 +133,7 @@ export function AssistantChat({
                     <Sparkles className="size-7 text-brand-text" />
                   </div>
                   <div className="space-y-1.5">
-                    <h2 className="font-serif text-foreground text-xl">
-                      Ask across your whole workspace
-                    </h2>
+                    <h2 className="text-foreground text-xl">Ask across your whole workspace</h2>
                     <p className="mx-auto max-w-md text-muted-foreground text-sm">
                       Read, search, summarize and act across every connected mailbox, calendar,
                       drive and address book in your workspace. Sends, deletes and other changes

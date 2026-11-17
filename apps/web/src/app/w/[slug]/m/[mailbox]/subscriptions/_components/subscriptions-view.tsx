@@ -148,7 +148,7 @@ export function SubscriptionsView() {
       <div className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 border-b border-border-soft px-6 py-4">
         <MobileAsideTrigger className="-ml-1.5 size-8 shrink-0" />
         <MailX className="h-4 w-4 text-primary" strokeWidth={1.8} />
-        <h1 className="text-[18px] font-medium tracking-tight font-serif">Subscriptions</h1>
+        <h1 className="text-[18px] font-medium tracking-tight">Subscriptions</h1>
         {!loading && (
           <span className="text-[12px] text-faint max-md:order-last max-md:w-full">
             {senders.length} {senders.length === 1 ? "sender" : "senders"} found in your latest{" "}

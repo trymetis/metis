@@ -58,7 +58,7 @@ export function ShortcutsHelp({
         className="w-full max-w-2xl gap-0 rounded-[10px] border border-border bg-surface p-0 shadow-2xl sm:max-w-2xl"
       >
         <div className="flex items-center justify-between border-b border-border-soft px-5 py-4">
-          <DialogTitle className="text-[20px] font-normal tracking-tight font-serif text-foreground">
+          <DialogTitle className="text-[20px] font-normal tracking-tight text-foreground">
             Keyboard shortcuts
           </DialogTitle>
           <Button

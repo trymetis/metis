@@ -188,7 +188,7 @@
     "name": "workspaces/appearance",
     "path": "{workspace}/settings/general",
     "steps": [
-      { "waitFor": "main >> role=button[name=/^Blue$/]" },
+      { "waitFor": "main >> role=button[name=/^Graphite$/]" },
       { "scroll": "main >> section:has(h2:text-is(\"Appearance\"))" }
     ],
     "element": "main >> section:has(h2:text-is(\"Appearance\"))"

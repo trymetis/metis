@@ -32,9 +32,7 @@ export function SettingsSidebar({ source }: { source: SourceInfo }) {
           Back
         </Link>
 
-        <h1 className="mb-4 font-serif text-[22px] font-medium tracking-tight text-foreground">
-          Settings
-        </h1>
+        <h1 className="mb-4 text-[22px] font-medium tracking-tight text-foreground">Settings</h1>
 
         <nav className="flex flex-col gap-px">
           {nav.map(({ href, label, icon: Icon }) => {

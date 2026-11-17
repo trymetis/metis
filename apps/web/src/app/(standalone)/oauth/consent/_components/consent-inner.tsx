@@ -144,7 +144,7 @@ export function ConsentInner() {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-surface px-4">
         <div className="max-w-sm text-center">
-          <h1 className="font-serif text-[22px] font-medium tracking-tight text-foreground">
+          <h1 className="text-[22px] font-medium tracking-tight text-foreground">
             Nothing to authorize
           </h1>
           <p className="mt-2 text-[13px] text-faint">
@@ -160,7 +160,7 @@ export function ConsentInner() {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-surface px-4">
         <div className="w-full max-w-sm rounded-xl border border-border bg-card px-6 py-6 text-center">
-          <h1 className="font-serif text-[22px] font-medium tracking-tight text-foreground">
+          <h1 className="text-[22px] font-medium tracking-tight text-foreground">
             This request could not be loaded
           </h1>
           <p className="mt-2 text-[13px] text-destructive-text">{loadError}</p>
@@ -184,7 +184,7 @@ export function ConsentInner() {
       <main className="flex min-h-dvh items-center justify-center bg-surface px-4">
         <div className="w-full max-w-sm rounded-xl border border-border bg-card px-6 py-6 text-center">
           <Bot className="mx-auto size-6 text-faint" />
-          <h1 className="mt-3 font-serif text-[22px] font-medium tracking-tight text-foreground">
+          <h1 className="mt-3 text-[22px] font-medium tracking-tight text-foreground">
             This app can&rsquo;t connect here
           </h1>
           <p className="mt-2 text-[13px] text-faint">
@@ -222,7 +222,7 @@ export function ConsentInner() {
               <Bot className="size-5 text-faint" />
             )}
           </span>
-          <h1 className="mt-4 font-serif text-[20px] font-medium leading-tight tracking-tight text-foreground">
+          <h1 className="mt-4 text-[20px] font-medium leading-tight tracking-tight text-foreground">
             {name}
           </h1>
           <p className="mt-1 text-[13px] text-faint">

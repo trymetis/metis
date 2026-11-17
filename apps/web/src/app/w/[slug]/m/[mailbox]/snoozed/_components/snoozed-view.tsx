@@ -102,7 +102,7 @@ export function SnoozedView() {
       <div className="flex shrink-0 items-center gap-2 border-b border-border-soft px-6 py-4">
         <MobileAsideTrigger className="-ml-1.5 size-8 shrink-0" />
         <Moon className="h-4 w-4 text-primary" strokeWidth={1.8} />
-        <h1 className="text-[18px] font-medium tracking-tight font-serif">Snoozed</h1>
+        <h1 className="text-[18px] font-medium tracking-tight">Snoozed</h1>
         <span className="text-[12px] text-faint">{emails.length} pending</span>
       </div>
 

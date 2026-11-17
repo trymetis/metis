@@ -26,36 +26,36 @@
         {
           "ios": {
             "fonts": [
-              "./node_modules/@expo-google-fonts/dm-sans/400Regular/DMSans_400Regular.ttf",
-              "./node_modules/@expo-google-fonts/dm-sans/500Medium/DMSans_500Medium.ttf",
-              "./node_modules/@expo-google-fonts/dm-sans/600SemiBold/DMSans_600SemiBold.ttf",
-              "./node_modules/@expo-google-fonts/dm-mono/400Regular/DMMono_400Regular.ttf"
+              "./node_modules/@expo-google-fonts/inter/400Regular/Inter_400Regular.ttf",
+              "./node_modules/@expo-google-fonts/inter/500Medium/Inter_500Medium.ttf",
+              "./node_modules/@expo-google-fonts/inter/600SemiBold/Inter_600SemiBold.ttf",
+              "./node_modules/@expo-google-fonts/jetbrains-mono/400Regular/JetBrainsMono_400Regular.ttf"
             ]
           },
           "android": {
             "fonts": [
               {
-                "fontFamily": "DM Sans",
+                "fontFamily": "Inter",
                 "fontDefinitions": [
                   {
-                    "path": "./node_modules/@expo-google-fonts/dm-sans/400Regular/DMSans_400Regular.ttf",
+                    "path": "./node_modules/@expo-google-fonts/inter/400Regular/Inter_400Regular.ttf",
                     "weight": 400
                   },
                   {
-                    "path": "./node_modules/@expo-google-fonts/dm-sans/500Medium/DMSans_500Medium.ttf",
+                    "path": "./node_modules/@expo-google-fonts/inter/500Medium/Inter_500Medium.ttf",
                     "weight": 500
                   },
                   {
-                    "path": "./node_modules/@expo-google-fonts/dm-sans/600SemiBold/DMSans_600SemiBold.ttf",
+                    "path": "./node_modules/@expo-google-fonts/inter/600SemiBold/Inter_600SemiBold.ttf",
                     "weight": 600
                   }
                 ]
               },
               {
-                "fontFamily": "DM Mono",
+                "fontFamily": "JetBrains Mono",
                 "fontDefinitions": [
                   {
-                    "path": "./node_modules/@expo-google-fonts/dm-mono/400Regular/DMMono_400Regular.ttf",
+                    "path": "./node_modules/@expo-google-fonts/jetbrains-mono/400Regular/JetBrainsMono_400Regular.ttf",
                     "weight": 400
                   }
                 ]

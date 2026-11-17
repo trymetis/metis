@@ -170,9 +170,9 @@ html.dark {
 }
 
 @theme inline {
-  --font-sans: var(--font-dm-sans, system-ui, sans-serif);
-  --font-serif: var(--font-cormorant, Georgia, serif);
-  --font-mono: var(--font-dm-mono, monospace);
+  --font-sans: var(--font-inter, system-ui, sans-serif);
+  --font-mono: var(--font-jetbrains-mono, monospace);
+  --font-mono--font-feature-settings: "liga" 0, "calt" 0;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -270,10 +270,4 @@ html.dark {
 ::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 4px;
-}
-
-.font-serif-title {
-  font-family: var(--font-serif);
-  font-weight: 500;
-  letter-spacing: -0.3px;
 }

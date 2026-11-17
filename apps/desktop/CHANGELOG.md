@@ -6,6 +6,10 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 ## Unreleased
 
+### Changed
+
+- The app's own screens use Inter and JetBrains Mono instead of DM Sans and DM Mono.
+
 ## Releases
 
 - [0.1.1](../../releases/desktop-v0.1.1.md) - 2026-10-28

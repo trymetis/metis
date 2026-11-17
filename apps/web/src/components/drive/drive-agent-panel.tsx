@@ -134,7 +134,7 @@ export function DriveAgentPanel({
     <div className="flex h-full w-full flex-col border-border border-l bg-panel">
       <div className="flex items-center gap-2.5 border-border-soft border-b px-4 py-3.5">
         <div className="flex-1">
-          <p className="font-medium font-serif text-[16px] text-foreground">Drive AI</p>
+          <p className="font-medium text-[16px] text-foreground">Drive AI</p>
           <p className="text-[11px] text-faint">
             {driveSlug === ALL_DRIVES_SLUG ? "All drives" : "This drive"}
           </p>
@@ -154,7 +154,7 @@ export function DriveAgentPanel({
             >
               <div className="flex flex-col items-center gap-3">
                 <Bot className="size-10 text-faint opacity-40" />
-                <p className="font-serif text-muted-foreground text-sm">Ask about these files</p>
+                <p className="text-muted-foreground text-sm">Ask about these files</p>
                 <div className="flex flex-col gap-1.5">
                   {SUGGESTIONS.map((s) => (
                     <Suggestion className="rounded-md" key={s} onClick={sendText} suggestion={s} />

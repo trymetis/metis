@@ -478,7 +478,7 @@ export function ComposeDialog() {
         className="pointer-events-auto relative w-full max-w-160 overflow-hidden rounded-[14px] border shadow-[0_30px_90px_rgba(0,0,0,0.65)] bg-surface border-border animate-[obsidian-slide-up_0.2s_ease] max-md:flex max-md:h-dvh max-md:max-w-none max-md:flex-col max-md:overflow-y-auto max-md:rounded-none max-md:border-0 max-md:[&>*]:shrink-0"
       >
         <div className="flex items-center justify-between border-b px-5 py-4 bg-panel border-border-soft">
-          <span className="flex items-center gap-3 text-[20px] font-medium tracking-tight font-serif text-foreground">
+          <span className="flex items-center gap-3 text-[20px] font-medium tracking-tight text-foreground">
             <span id={titleId}>New Message</span>
             <DraftStatusIndicator status={draftStatus} />
           </span>

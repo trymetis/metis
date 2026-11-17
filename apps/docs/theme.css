@@ -1,9 +1,22 @@
 :root {
-  --blume-foreground: oklch(0.28 0.02 260);
-  --blume-muted-foreground: oklch(0.5 0.02 260);
+  --blume-foreground: #121214;
+  --blume-muted: #efeff1;
+  --blume-muted-foreground: #55555c;
+  --blume-border: rgba(20, 20, 24, 0.1);
+  --blume-code-background: #efeff1;
 }
 
 :root[data-theme="dark"] {
-  --blume-foreground: oklch(0.97 0.01 260);
-  --blume-muted-foreground: oklch(0.82 0.02 260);
+  --blume-foreground: #ececee;
+  --blume-muted: #0e0e10;
+  --blume-muted-foreground: #a1a1a8;
+  --blume-border: rgba(255, 255, 255, 0.08);
+  --blume-code-background: #0e0e10;
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-variant-ligatures: none;
 }

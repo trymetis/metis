@@ -139,9 +139,7 @@ export function AssistantShell({
     <aside className="flex h-full w-full flex-col overflow-hidden border-border border-r bg-panel">
       <div className="flex items-center gap-1 border-border-soft border-b px-2 py-2.5">
         {!collapsed && (
-          <span className="flex-1 font-medium font-serif text-base text-foreground">
-            Workspace Assistant
-          </span>
+          <span className="flex-1 font-medium text-base text-foreground">Workspace Assistant</span>
         )}
         <Button
           aria-label={collapsed ? "Expand" : "Collapse"}
@@ -229,7 +227,7 @@ export function AssistantShell({
           <Sparkles className="size-4.5 text-brand-text" />
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="font-medium font-serif text-foreground text-lg">Workspace Assistant</h1>
+          <h1 className="font-medium text-foreground text-lg">Workspace Assistant</h1>
           <p className="truncate text-faint text-xs" title={scope}>
             {scope}
           </p>

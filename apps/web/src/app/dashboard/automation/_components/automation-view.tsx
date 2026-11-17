@@ -52,7 +52,7 @@ function StatRow({
             ) : (
               <span
                 className={cn(
-                  "font-serif text-[28px] leading-none font-medium tracking-tight tabular-nums",
+                  "text-[28px] leading-none font-medium tracking-tight tabular-nums",
                   card.alert && card.value > 0 ? "text-destructive-text" : "text-foreground",
                 )}
               >

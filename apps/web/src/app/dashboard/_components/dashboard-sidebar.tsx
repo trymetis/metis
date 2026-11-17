@@ -169,9 +169,7 @@ export function DashboardSidebar({ source }: { source: SourceInfo }) {
             Back
           </GuardedLink>
 
-          <h1 className="mb-4 font-serif text-[22px] font-medium tracking-tight text-foreground">
-            Dashboard
-          </h1>
+          <h1 className="mb-4 text-[22px] font-medium tracking-tight text-foreground">Dashboard</h1>
 
           <nav className="flex flex-col gap-px">
             <NavEntries

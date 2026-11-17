@@ -26,7 +26,7 @@ function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAge
     <>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex shrink-0 items-center gap-2 border-b border-border px-4 py-3">
-          <h1 className="min-w-0 truncate font-serif text-[20px] font-medium tracking-tight text-foreground">
+          <h1 className="min-w-0 truncate text-[20px] font-medium tracking-tight text-foreground">
             {book ? bookName(book) : "All contacts"}
           </h1>
           <Button

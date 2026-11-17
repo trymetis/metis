@@ -3,8 +3,8 @@
 @import "tw-animate-css";
 
 @theme {
-  --font-sans: "DM Sans";
-  --font-mono: "DM Mono";
+  --font-sans: "Inter";
+  --font-mono: "JetBrains Mono";
 
   --radius: 8px;
   --radius-sm: calc(var(--radius) - 4px);

@@ -29,9 +29,7 @@ export function SettingsSidebar() {
         className="sticky top-10 w-52 shrink-0 pt-1 max-md:static max-md:h-full max-md:w-full max-md:overflow-y-auto max-md:p-4"
         aria-label="Settings"
       >
-        <h1 className="mb-4 font-serif text-[22px] font-medium tracking-tight text-foreground">
-          Workspace
-        </h1>
+        <h1 className="mb-4 text-[22px] font-medium tracking-tight text-foreground">Workspace</h1>
 
         <nav className="flex flex-col gap-px">
           {nav.map(({ href, label, icon: Icon }) => {

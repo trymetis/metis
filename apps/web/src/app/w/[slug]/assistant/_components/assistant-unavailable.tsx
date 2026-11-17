@@ -12,7 +12,7 @@ export function AssistantUnavailable({ workspaceSlug }: { workspaceSlug: string 
           <BotOff className="h-7 w-7 text-faint" strokeWidth={1.6} />
         </div>
 
-        <h1 className="mt-5 font-serif text-[22px] font-medium tracking-tight text-foreground">
+        <h1 className="mt-5 text-[22px] font-medium tracking-tight text-foreground">
           Assistant turned off
         </h1>
         <p className="mx-auto mt-2 max-w-sm text-[13px] text-muted-foreground">

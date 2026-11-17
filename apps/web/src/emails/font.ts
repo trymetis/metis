@@ -1,1 +1,1 @@
-export const EMAIL_FONT_PATH = "/fonts/dm-sans-latin-wght-normal.woff2";
+export const EMAIL_FONT_PATH = "/fonts/inter-latin-wght-normal.woff2";

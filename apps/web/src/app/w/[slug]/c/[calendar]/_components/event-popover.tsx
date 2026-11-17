@@ -149,7 +149,7 @@ export function EventPopover() {
           />
 
           <div className="min-w-0 flex-1">
-            <DialogTitle className="wrap-break-word font-serif text-[20px] leading-snug font-medium tracking-tight text-foreground">
+            <DialogTitle className="wrap-break-word text-[20px] leading-snug font-medium tracking-tight text-foreground">
               {event.title}
             </DialogTitle>
             {isValid(start) && (

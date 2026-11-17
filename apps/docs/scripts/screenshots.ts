@@ -14,6 +14,15 @@ import * as OTPAuth from "otpauth";
 import sharp from "sharp";
 import { z } from "zod";
 
+const RENDER_FLAGS = [
+  "--disable-lcd-text",
+  "--font-render-hinting=none",
+  "--disable-font-subpixel-positioning",
+  "--disable-skia-runtime-opts",
+  "--force-color-profile=srgb",
+  "--disable-gpu",
+];
+
 const APP = process.env.DOCS_APP_URL ?? "http://localhost:3000";
 const MAINTENANCE = process.env.DOCS_MAINTENANCE === "1";
 const HARNESS = process.env.DOCS_HARNESS_URL ?? "http://localhost:8099";
@@ -159,6 +168,26 @@ const invitesSchema = z.object({
 });
 
 type Invite = NonNullable<Shot["invite"]>;
+
+const themesSchema = z.object({
+  json: z.object({
+    themes: z.array(z.object({ id: z.string(), name: z.string(), source: z.string() })),
+  }),
+});
+
+async function useGraphite(browser: Browser, state: StorageState, a: Account) {
+  const context = await browser.newContext({ ...contextOptions(), storageState: state });
+  const page = await context.newPage();
+  try {
+    const scope = { workspaceSlug: a.workspaceSlug };
+    const { json } = themesSchema.parse(await rpc(page, "workspaceThemes/list", scope));
+    const graphite = json.themes.find((t) => t.source === "system" && t.name === "Graphite");
+    if (!graphite) throw new Error("no Graphite theme");
+    await rpc(page, "workspaceThemes/select", { ...scope, themeId: graphite.id });
+  } finally {
+    await context.close();
+  }
+}
 
 async function totp(): Promise<string> {
   return (await (await harness("/totp?fresh=1")).text()).trim();
@@ -375,8 +404,9 @@ async function main() {
     .filter((s) => (s.maintenance ?? false) === MAINTENANCE)
     .filter((s) => only.length === 0 || only.some((o) => s.name.startsWith(o)));
   const account = accountSchema.parse(await (await harness("/account")).json());
-  const browser = await chromium.launch({ channel: "chrome", headless: true });
+  const browser = await chromium.launch({ channel: "chrome", headless: true, args: RENDER_FLAGS });
   const state = MAINTENANCE ? undefined : await signIn(browser, account, totp);
+  if (state) await useGraphite(browser, state, account);
   const failed: string[] = [];
 
   async function take(shot: Shot, path: string, as: StorageState | undefined = state) {

@@ -15,7 +15,7 @@ Install the `.deb` on Ubuntu 24.04 and later: `sudo apt install ./release/metis-
 
 The instance must be reachable over `https://`, except on `localhost` during development.
 
-The shell's own screens (loading, setup, sign-in, offline and settings) are a small React app in `renderer/`, built by Vite into `dist/renderer/` and opened with `loadFile`. They use the shared shadcn components and theme from `packages/ui`, whose neutral default palette is the shell's palette; DM Sans and DM Mono come from `@fontsource`.
+The shell's own screens (loading, setup, sign-in, offline and settings) are a small React app in `renderer/`, built by Vite into `dist/renderer/` and opened with `loadFile`. They use the shared shadcn components and theme from `packages/ui`, whose neutral default palette is the shell's palette; Inter and JetBrains Mono come from `@fontsource-variable`.
 
 On Linux the `metis-suite://` scheme only resolves once a `.desktop` file declares it, which the installed `.deb` does. Under `bun run start` the browser cannot hand the sign-in back to the app.
 
