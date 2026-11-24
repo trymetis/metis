@@ -2901,6 +2901,7 @@ export const readLaterMutationOutputSchema = z.object({
 });
 
 export const apologyToneEnum = z.enum(["brief", "warm", "formal"]);
+export type ApologyTone = z.infer<typeof apologyToneEnum>;
 
 export const draftApologyInputSchema = mailboxScopeSchema.extend({
   messageId: z.string().min(1),
@@ -2922,8 +2923,10 @@ export const REPLY_STANCES = [
 ] as const;
 
 export const replyStanceEnum = z.enum(REPLY_STANCES);
+export type ReplyStance = z.infer<typeof replyStanceEnum>;
 
 export const REWRITE_MODES = ["rewrite", "shorten", "formal", "friendly"] as const;
+export type RewriteMode = (typeof REWRITE_MODES)[number];
 
 export const rewriteTextInputSchema = mailboxScopeSchema.extend({
   text: z.string().trim().min(1).max(4000),

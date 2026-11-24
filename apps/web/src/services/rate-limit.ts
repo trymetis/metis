@@ -1,8 +1,17 @@
 import "server-only";
+import { defu } from "defu";
+
+import { config } from "@/config";
+import { keysOf } from "@/lib/guards";
 import { rateLimitMessage } from "@/lib/rate-limit-message";
 
 import { getCache } from "./cache";
-import type { RateLimitRule } from "./rate-limits";
+import {
+  AUTH_RATE_LIMITS,
+  type AuthRateLimits,
+  RATE_LIMITS,
+  type RateLimitRule,
+} from "./rate-limits";
 
 export interface RateLimitResult {
   ok: boolean;
@@ -10,7 +19,40 @@ export interface RateLimitResult {
   resetMs: number;
 }
 
-export async function rateLimit(identifier: string, rule: RateLimitRule): Promise<RateLimitResult> {
+let appOverrides: Map<string, RateLimitRule> | null = null;
+
+function effectiveRule(rule: RateLimitRule): RateLimitRule {
+  if (!appOverrides) {
+    const overrides = config.rateLimitOverrides.app ?? {};
+    appOverrides = new Map(
+      keysOf(overrides).map((name) => {
+        const base = RATE_LIMITS[name];
+        return [base.scope, defu(overrides[name], base)];
+      }),
+    );
+  }
+  return appOverrides.get(rule.scope) ?? rule;
+}
+
+export function authRateLimits(): AuthRateLimits {
+  const overrides = config.rateLimitOverrides.auth ?? {};
+  const paths = { ...AUTH_RATE_LIMITS.paths };
+  for (const path of keysOf(overrides.paths ?? {})) {
+    const base = paths[path];
+    if (base) paths[path] = defu(overrides.paths?.[path], base);
+  }
+  return {
+    default: defu(overrides.default, AUTH_RATE_LIMITS.default),
+    twoFactor: defu(overrides.twoFactor, AUTH_RATE_LIMITS.twoFactor),
+    paths,
+  };
+}
+
+export async function rateLimit(
+  identifier: string,
+  requested: RateLimitRule,
+): Promise<RateLimitResult> {
+  const rule = effectiveRule(requested);
   const windowMs = rule.windowSec * 1000;
   const key = `rl:${rule.scope}:${identifier}`;
   const cache = getCache();

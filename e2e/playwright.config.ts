@@ -17,7 +17,7 @@ export default defineConfig({
     timezoneId: "UTC",
     locale: "en-US",
     viewport: { width: 1440, height: 900 },
-    trace: "on-first-retry",
+    trace: "retain-on-failure",
   },
   projects: [
     {

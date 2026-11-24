@@ -132,9 +132,26 @@ function attach(db: ShellCacheDb, rows: CachedQuery[], run: number): () => void 
     return true;
   }
 
+  function persist(query: Query): void {
+    const data = cachedData(query);
+    if (data === undefined) return;
+    const row = {
+      hash: query.queryHash,
+      queryKey: query.queryKey,
+      data,
+      updatedAt: query.state.dataUpdatedAt,
+    };
+    stored.set(row.hash, row);
+    db.queries.put(row).catch(() => {});
+  }
+
   for (const query of cache.getAll()) {
-    if (query.getObserversCount() === 0 || !seed(query)) continue;
-    if (query.state.fetchStatus !== "fetching") void refreshQuery(query.queryKey);
+    if (query.getObserversCount() > 0 && seed(query)) {
+      if (query.state.fetchStatus !== "fetching") void refreshQuery(query.queryKey);
+      continue;
+    }
+    const known = stored.get(query.queryHash)?.updatedAt ?? 0;
+    if (query.state.status === "success" && query.state.dataUpdatedAt > known) persist(query);
   }
 
   return cache.subscribe((event) => {
@@ -144,16 +161,7 @@ function attach(db: ShellCacheDb, rows: CachedQuery[], run: number): () => void 
       return;
     }
     if (seeding || event.type !== "updated" || event.action.type !== "success") return;
-    const data = cachedData(event.query);
-    if (data === undefined) return;
-    const row = {
-      hash: event.query.queryHash,
-      queryKey: event.query.queryKey,
-      data,
-      updatedAt: event.query.state.dataUpdatedAt,
-    };
-    stored.set(row.hash, row);
-    db.queries.put(row).catch(() => {});
+    persist(event.query);
   });
 }
 

@@ -48,10 +48,14 @@ See also [AGENTS.md](../AGENTS.md) (scope as explicit input), [auth.md](auth.md)
   - `sanitizeError` words a 403 as a permission problem only when the provider gives no error reason or a permission reason (`PERMISSION_REASONS`); a rate-limit reason reads as too many requests, and any other reason as a failed request, because Google answers some bad requests with 403.
   - Each procedure a user triggers gets its wording in `OPERATIONS`, keyed by procedure path; one without an entry reads "do that".
   - Throw an authored code for any message the user should read.
-- **Every rate limit's values live in one table, `src/services/rate-limits.ts`**: `RATE_LIMITS` for the app's own limits, `AUTH_PATH_RATE_LIMITS`, `AUTH_DEFAULT_RATE_LIMIT` and `AUTH_TWO_FACTOR_RATE_LIMIT` for Better Auth.
+- **Every rate limit's default lives in one table, `src/services/rate-limits.ts`**: `RATE_LIMITS` for the app's own limits, `AUTH_RATE_LIMITS` (`default`, `twoFactor`, `paths`) for Better Auth.
   - A call site names its entry (`RATE_LIMITS.mailSend`); it never writes a scope, count or window inline.
-  - The Better Auth entries restate the library's own defaults for the paths the app uses, so no limit is implicit.
-  - Operators cannot change them.
+  - The Better Auth entries restate the library's own defaults for the paths the app uses, so no limit is implicit: its built-in sign-in rules and the rules the magic-link and OAuth provider plugins carry (`/magic-link/verify`, `/oauth2/*`). A path rule in `customRules` wins over a plugin's rule.
+  - A `better-auth`, `@better-auth/oauth-provider` or `@better-auth/mcp` bump checks each plugin's `rateLimit` array and restates any new or changed path here.
+- **Operators override limits only through `METIS_RATELIMIT_OVERRIDES` (boot config `rateLimitOverrides`), merged over the defaults per rule and field.**
+  - The shape mirrors the table: `app` keyed by `RATE_LIMITS` names, `auth` with `default`, `twoFactor` and `paths`; each entry sets `limit`, `windowSec` or both. An unknown name or path, a `scope`, an empty entry or a value below 1 fails at boot.
+  - `rateLimit` (`src/services/rate-limit.ts`) swaps in the overridden rule by scope, so call sites keep passing the default entry; `authRateLimits` merges the `auth` part, which `src/auth/server.ts` hands to `authOptions` as `rateLimits`.
+  - A path the defaults leave unthrottled (`false`) cannot be overridden into a limit.
 - **A limit counts work, not views**: a limit in front of a cache is checked only on a miss (thread summaries via `buildThreadSummary`'s `beforeModel`, the phishing check after `getCachedAnalysis`, the subscriptions scan after its cached result).
 - **Every rate limit is reported with `RateLimitedError(result, subject)`, never a hand-built `TOO_MANY_REQUESTS`**, so each message reads "Too many <subject>. Try again in <wait>." from `src/lib/rate-limit-message.ts` → `rateLimitMessage`.
   - The wait is the bucket's remaining time (`CacheDriver.ttlMs`), not the whole window.
@@ -109,6 +113,7 @@ See also [AGENTS.md](../AGENTS.md) (scope as explicit input), [auth.md](auth.md)
 - **The shell cache** is a Dexie database (`metis-shell-cache`) with a `queries` table keyed by query hash and an `owner` row.
   - `ShellCache`, in the workspace layout, calls `startShellCache` with the user id and the server version (`sourceInfo().version`) once mounted.
   - Once the rows are read, queries that already have observers are seeded at once and refreshed with `refreshQuery` unless a fetch is running; every later query is seeded on its `observerAdded` event, which fires before the observer decides whether to fetch on mount.
+  - A cached key whose fetch succeeded before the rows were read is written at once, because no later `success` event may come for it; its row is kept when it is as new or newer.
   - A seed is `setQueryData` with the stored `updatedAt`, then an invalidation with `refetchType: "none"`, so the mount fetch runs.
   - The same `QueryCache` subscriber writes every other `success` update of a cached key back, including `setQueryData` after a mutation, so call sites need no changes; the rows stay in memory too, so a query collected after `gcTime` is seeded again on its next mount.
   - Rows older than 30 days are dropped on start. `clearShellCache` deletes the database and stops any write already queued.

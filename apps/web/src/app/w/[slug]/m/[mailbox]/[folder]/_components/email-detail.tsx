@@ -20,6 +20,7 @@ import {
 } from "@metis/ui/components/dropdown-menu";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@metis/ui/components/hover-card";
 import { ScrollArea } from "@metis/ui/components/scroll-area";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@metis/ui/components/tooltip";
 import { cn } from "@metis/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { cva } from "class-variance-authority";
@@ -1343,16 +1344,23 @@ function IconToolBtn({
   );
   if (href) {
     return (
-      <IconButton
-        label={label}
-        variant="outline"
-        size="icon-sm"
-        nativeButton={false}
-        render={<Link href={href} prefetch={false} target="_blank" rel="noopener" />}
-        className={className}
-      >
-        {children}
-      </IconButton>
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Link
+              href={href}
+              prefetch={false}
+              target="_blank"
+              rel="noopener"
+              aria-label={label}
+              className={cn(buttonVariants({ variant: "outline", size: "icon-sm" }), className)}
+            />
+          }
+        >
+          {children}
+        </TooltipTrigger>
+        <TooltipContent>{label}</TooltipContent>
+      </Tooltip>
     );
   }
   return (

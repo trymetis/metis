@@ -145,3 +145,14 @@ export const WORKSPACE_CHATS = {
     "Which of my 10 newest emails are still unread?",
   ],
 } as const;
+
+export const COMPOSE_AI = {
+  subject: SUBJECTS.kickoff,
+  stances: ["accept", "decline", "negotiate", "buy_time", "clarify", "defer"] as const,
+  draft: { stance: "accept", text: "Thanks, count me in for the kickoff." },
+  apology: { situation: "missing the kickoff call on Monday", tone: "warm" },
+  rewrite: {
+    text: "hey can we move the rebrand review to thursday afternoon, tuesday filled up on my side",
+    modes: ["rewrite", "shorten", "formal", "friendly"] as const,
+  },
+} as const;

@@ -63,6 +63,9 @@ The `metis` CLI's own suite, which reuses this stack's fakes, certificates, test
   - `withTotp` takes a fresh code per attempt and waits out `retryAfterSec` for that limit only; any other 429 fails at once.
   - A code typed into the UI (`enterCode`) and sign-in's second factor (`clients/sign-in.ts`) are not oRPC calls and take `harness.totp()` directly.
   - The wait is the full 300 s window, so every place that holds a coded call has 12 minutes: the `rpc` and `system` projects' test timeout and the `rpc` and `mcp` projects' hook timeout in `e2e/vitest.config.ts`, the Playwright `write` project's timeout, and `e2e-cli/api/updates.test.ts`'s `afterAll`.
+- **`e2e/.env.fixture` raises only the mail and calendar session limits, through `METIS_RATELIMIT_OVERRIDES` ([orpc.md](orpc.md)).**
+  - Every browser test runs as Ana and the read project runs four at once, so one inbox load's mail calls, cancelled ones and the Print and View original pages included, add up past 300 a minute.
+  - Every other limit keeps its default, because tests check the real values (the MCP 429, sign-in, the TOTP window).
 - **API tests share the app's rate limits, so their helpers wait out a 429 and retry.**
   - Account invites allow 10 per sender an hour (`createInvite`'s `invite-send` scope), and a full run sends close to that as the owner, so a spec that needs an account invite shares one: the MCP sign-up invite cases create, list and revoke one invite in order, and the roles spec's emailed invite also covers that its link is never handed back.
   - Better Auth allows 10 `/sign-in/email` calls a minute per IP; `clients/sign-in.ts` waits out its `X-Retry-After`.

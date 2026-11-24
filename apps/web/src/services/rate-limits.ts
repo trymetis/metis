@@ -84,25 +84,41 @@ export const RATE_LIMITS = {
   instanceUpdate: stepUp("instance-update"),
 } as const satisfies Record<string, RateLimitRule>;
 
+export type RateLimitName = keyof typeof RATE_LIMITS;
+
 export const AUTH_RATE_LIMIT_SCOPE = "auth";
 
-export const AUTH_DEFAULT_RATE_LIMIT: PathRateLimit = { limit: 60, windowSec: MINUTE };
+export interface AuthRateLimits {
+  default: PathRateLimit;
+  twoFactor: PathRateLimit;
+  paths: Record<string, PathRateLimit | false>;
+}
 
-export const AUTH_TWO_FACTOR_RATE_LIMIT: PathRateLimit = { limit: 3, windowSec: 10 };
-
-export const AUTH_PATH_RATE_LIMITS: Record<string, PathRateLimit | false> = {
-  "/get-session": false,
-  "/sign-in/email": { limit: 10, windowSec: MINUTE },
-  "/sign-in/magic-link": { limit: 5, windowSec: HOUR },
-  "/sign-up/email": { limit: 5, windowSec: HOUR },
-  "/request-password-reset": { limit: 5, windowSec: HOUR },
-  "/send-verification-email": { limit: 5, windowSec: HOUR },
-  "/two-factor/verify": { limit: 10, windowSec: MINUTE },
-  "/native/code": { limit: 10, windowSec: MINUTE },
-  "/native/exchange": { limit: 10, windowSec: MINUTE },
-  "/native/connect-ticket": { limit: 20, windowSec: MINUTE },
-  "/sign-in/*": { limit: 3, windowSec: 10 },
-  "/sign-up/*": { limit: 3, windowSec: 10 },
-  "/change-password": { limit: 3, windowSec: 10 },
-  "/change-email": { limit: 3, windowSec: 10 },
+export const AUTH_RATE_LIMITS: AuthRateLimits = {
+  default: { limit: 60, windowSec: MINUTE },
+  twoFactor: { limit: 3, windowSec: 10 },
+  paths: {
+    "/get-session": false,
+    "/sign-in/email": { limit: 10, windowSec: MINUTE },
+    "/sign-in/magic-link": { limit: 5, windowSec: HOUR },
+    "/sign-up/email": { limit: 5, windowSec: HOUR },
+    "/request-password-reset": { limit: 5, windowSec: HOUR },
+    "/send-verification-email": { limit: 5, windowSec: HOUR },
+    "/two-factor/verify": { limit: 10, windowSec: MINUTE },
+    "/native/code": { limit: 10, windowSec: MINUTE },
+    "/native/exchange": { limit: 10, windowSec: MINUTE },
+    "/native/connect-ticket": { limit: 20, windowSec: MINUTE },
+    "/magic-link/verify": { limit: 5, windowSec: MINUTE },
+    "/oauth2/authorize": { limit: 30, windowSec: MINUTE },
+    "/oauth2/token": { limit: 20, windowSec: MINUTE },
+    "/oauth2/register": { limit: 5, windowSec: MINUTE },
+    "/oauth2/introspect": { limit: 100, windowSec: MINUTE },
+    "/oauth2/revoke": { limit: 30, windowSec: MINUTE },
+    "/oauth2/userinfo": { limit: 60, windowSec: MINUTE },
+    "/oauth2/client/rotate-keys": { limit: 5, windowSec: MINUTE },
+    "/sign-in/*": { limit: 3, windowSec: 10 },
+    "/sign-up/*": { limit: 3, windowSec: 10 },
+    "/change-password": { limit: 3, windowSec: 10 },
+    "/change-email": { limit: 3, windowSec: 10 },
+  },
 };

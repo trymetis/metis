@@ -1,7 +1,7 @@
 import type { BetterAuthPlugin, GenericEndpointContext } from "better-auth";
 import { createAuthMiddleware } from "better-auth/api";
 
-import { AUTH_TWO_FACTOR_RATE_LIMIT } from "@/services/rate-limits";
+import type { PathRateLimit } from "@/services/rate-limits";
 
 import { challengeSignIn, type ResolvedTwoFactorOptions } from "./challenge";
 import { twoFactorEndpoints } from "./endpoints";
@@ -15,6 +15,7 @@ export interface TwoFactorOptions {
   redirectPaths: string[];
   onRedirect: (ctx: GenericEndpointContext) => void;
   onEvent: (event: TwoFactorEvent) => Promise<void>;
+  rateLimit: PathRateLimit;
 }
 
 const CREDENTIAL_SIGN_IN_PATHS = ["/sign-in/email", "/sign-in/username"];
@@ -58,8 +59,8 @@ export const twoFactor = (options: TwoFactorOptions) => {
     rateLimit: [
       {
         pathMatcher: (path) => path.startsWith("/two-factor/") && !UNTHROTTLED_PATHS.has(path),
-        window: AUTH_TWO_FACTOR_RATE_LIMIT.windowSec,
-        max: AUTH_TWO_FACTOR_RATE_LIMIT.limit,
+        window: options.rateLimit.windowSec,
+        max: options.rateLimit.limit,
       },
     ],
     $ERROR_CODES: TWO_FACTOR_ERROR_CODES,

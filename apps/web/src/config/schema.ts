@@ -5,6 +5,7 @@ import { z } from "zod";
 
 import { isRecord, keysOf } from "@/lib/guards";
 import { parseSize } from "@/lib/size";
+import { AUTH_RATE_LIMITS, RATE_LIMITS } from "@/services/rate-limits";
 
 const S3_PART_SIZE_MIN = 5 * 1024 ** 2;
 const S3_PART_SIZE_MAX = 5 * 1024 ** 3;
@@ -81,6 +82,45 @@ export const appConfigSchema = z.object({
 export const auditConfigSchema = z.object({
   retentionDays: z.coerce.number().int().min(1).default(365),
 });
+
+const rateLimitOverrideSchema = z
+  .strictObject({
+    limit: z.number().int().min(1).optional(),
+    windowSec: z.number().int().min(1).optional(),
+  })
+  .refine((rule) => rule.limit !== undefined || rule.windowSec !== undefined, {
+    error: "set limit, windowSec or both",
+  });
+
+const authPathsWithLimits = keysOf(AUTH_RATE_LIMITS.paths).filter(
+  (path) => AUTH_RATE_LIMITS.paths[path] !== false,
+);
+
+export const rateLimitOverridesSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") return value;
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  },
+  z
+    .strictObject(
+      {
+        app: z.partialRecord(z.enum(keysOf(RATE_LIMITS)), rateLimitOverrideSchema).optional(),
+        auth: z
+          .strictObject({
+            default: rateLimitOverrideSchema.optional(),
+            twoFactor: rateLimitOverrideSchema.optional(),
+            paths: z.partialRecord(z.enum(authPathsWithLimits), rateLimitOverrideSchema).optional(),
+          })
+          .optional(),
+      },
+      { error: "METIS_RATELIMIT_OVERRIDES must be a JSON object with app and auth overrides" },
+    )
+    .default({}),
+);
 
 export const signupSectionSchema = z.object({
   signupDisabled: envBoolSchema(true),
@@ -679,6 +719,7 @@ export const bootConfigSchema = z.object({
   drive: driveConfigSchema,
   updater: updaterConfigSchema,
   maintenance: maintenanceConfigSchema,
+  rateLimitOverrides: rateLimitOverridesSchema,
 });
 
 export const oauthClientSchema = providerCredsSchema;
@@ -717,6 +758,7 @@ export const instanceConfigSchema = z.object({
 
 export type AuthConfig = z.infer<typeof authConfigSchema>;
 export type DbConfig = z.infer<typeof dbConfigSchema>;
+export type RateLimitOverrides = z.infer<typeof rateLimitOverridesSchema>;
 export type LegalConfig = z.infer<typeof legalConfigSchema>;
 export type AppConfig = z.infer<typeof appConfigSchema>;
 export type EncryptionConfig = z.infer<typeof encryptionConfigSchema>;

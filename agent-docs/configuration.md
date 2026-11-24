@@ -49,6 +49,7 @@ See also [AGENTS.md](../AGENTS.md), [servers.md](servers.md), [database.md](data
   - `METIS_UPDATER_SOCKET`: a dashboard-editable path could point the app at any socket on its filesystem ([updater.md](updater.md));
   - `METIS_AUDIT_RETENTION_DAYS`: a dashboard-editable retention would let a leaked owner session erase the audit log ([audit.md](audit.md)).
   - `METIS_MAINTENANCE`: the instance config lives in the database a maintenance window protects, so a stored switch would be copied into every backup and bring a restored copy up frozen.
+  - `METIS_RATELIMIT_OVERRIDES`: a dashboard-editable limit would let a leaked owner session lift the sign-in and two-factor limits ([orpc.md](orpc.md) has the shape).
 - **Instance config, seeded once:** every section in `CONFIG_SECTIONS`. `SECTION_ENV_VARS` maps each to the variables that can seed it.
 - **Every seed is optional, with a default**, so a process needs only the database variables, `METIS_ENCRYPTION_KEY`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL` and `METIS_OWNER_EMAIL`. The defaults live on the section schemas, so a stored row and the environment share them.
 

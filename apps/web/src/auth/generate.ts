@@ -2,6 +2,7 @@ import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 
 import * as schema from "@/db/schema";
+import { AUTH_RATE_LIMITS } from "@/services/rate-limits";
 
 import { authOptions } from "./base";
 
@@ -13,6 +14,7 @@ export const auth = {
     db: drizzle(createClient({ url: ":memory:" }), { schema }),
     mcpAudience: "http://localhost:3000/api/mcp",
     rateLimit: async () => ({ ok: true, remaining: 0, resetMs: 0 }),
+    rateLimits: AUTH_RATE_LIMITS,
     secondaryStorage: {
       get: async () => null,
       getAndDelete: async () => null,

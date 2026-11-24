@@ -16,6 +16,7 @@ These live only in the environment (the `.env` file) or in the optional config f
 - How long the audit log keeps events: `METIS_AUDIT_RETENTION_DAYS`. It cannot be changed in the dashboard.
 - The databases: `METIS_DB_DRIVER`, `DATABASE_URL`, `MASTRA_DATABASE_URL` and their tokens.
 - The drive relay secret: `METIS_DRIVE_RELAY_SECRET`.
+- Changes to the built-in rate limits: `METIS_RATELIMIT_OVERRIDES`. It cannot be set in the dashboard. See [Rate limits](/self-hosting/reference/environment-variables#rate-limits).
 - Maintenance mode: `METIS_MAINTENANCE`. On a server the `metis` CLI runs, upgrades, undo, `sudo metis db export` and `sudo metis db move` turn maintenance on and off on their own. If you set it with `metis config set`, the app stays in maintenance, through every upgrade and undo, until you run `sudo metis config unset METIS_MAINTENANCE`. See [Maintenance mode](/self-hosting/reference/environment-variables#maintenance-mode).
 
 On a server the `metis` CLI runs, change one with `metis config set`:
@@ -182,6 +183,8 @@ Instead of environment variables, you can put settings in a YAML, JSON or TOML f
 3. `/etc/metis/config.yaml`, `.yml`, `.json` or `.toml`.
 
 The file and the environment work key by key. When both set the same setting, the environment wins. An empty variable counts as not set.
+
+When `METIS_RATELIMIT_OVERRIDES` is set, its whole value is used and the file's `rateLimitOverrides` is ignored. The two are not combined. See [METIS_RATELIMIT_OVERRIDES](/self-hosting/reference/environment-variables#metis_ratelimit_overrides).
 
 The file uses nested sections instead of variable names. For example, this YAML file turns on open sign-up, sets the legal links, lists two trusted proxies and sets up outgoing email over SMTP:
 

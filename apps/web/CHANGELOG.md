@@ -33,6 +33,7 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 - In Drive, a **Compact grid** view joins **List** and **Large grid**, picked from the view menu in the toolbar or with **d** then **c**.
 - Files you preview show in Drive's **Recent** list next to folders, and clicking one opens its preview again.
 - In the dashboard's **Themes**, select several instance themes and delete them at once. Select all never picks a built-in theme.
+- `METIS_RATELIMIT_OVERRIDES` changes any built-in rate limit: a JSON object, set in the environment or the config file, whose entries replace only the limit or window they name. A misspelled limit name stops the server at start instead of being ignored.
 
 ### Changed
 
@@ -90,6 +91,7 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 ### Fixed
 
+- Opening an emailed sign-in link, or an AI app's access page, too many times shows a page that says how long to wait, instead of raw text. Sign-in and AI app answers over a limit also carry a standard `Retry-After` header.
 - **Sign out everywhere** with **Also sign out this device** signs this browser out at once, instead of leaving it signed in for up to two minutes.
 - HTML messages use the full width of the reading pane, and a message wider than the pane shrinks to fit instead of cutting off its right side.
 - The **m** then **r** shortcut replies to the open message, the same as **Reply** in the toolbar, instead of opening a blank message. It does nothing on a draft.

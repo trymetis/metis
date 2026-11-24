@@ -155,6 +155,9 @@ Each sign-in action has a limit. When you reach it, the page shows a red line un
 | **Create account**                                   | 5 an hour   | 1 hour       |
 | **Resend verification email**                        | 5 an hour   | 1 hour       |
 | **Verify** on the **Two-factor authentication** page | 10 a minute | 1 minute     |
+| Opening the link in a sign-in email                  | 5 a minute  | 1 minute     |
+
+Opening the link in a sign-in email too often does not show a red line. Instead, a page titled **Too many requests** opens, with "Try again in" and the time left, for example "Try again in 42 seconds." By default, sign-in links can be opened 5 times a minute from the same network. The person who runs your server can change this. People who share a network, such as an office, share this limit. Wait for the time shown, then click the link again or reload the page. The link still works if it is less than 15 minutes old and you have not used it yet.
 
 For how the wait is shown, see [Usage limits](/guide/reference/usage-limits#what-the-message-says). For limits on resetting your password, see [Reset a forgotten password](/guide/account/change-or-reset-your-password#reset-a-forgotten-password).
 

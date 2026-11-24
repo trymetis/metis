@@ -10,12 +10,7 @@ import type { db } from "@/db";
 import * as schema from "@/db/schema";
 import { CLIENT_IP_HEADER } from "@/lib/client-ip-header";
 import type { rateLimit } from "@/services/rate-limit";
-import {
-  AUTH_DEFAULT_RATE_LIMIT,
-  AUTH_PATH_RATE_LIMITS,
-  AUTH_RATE_LIMIT_SCOPE,
-  RATE_LIMITS,
-} from "@/services/rate-limits";
+import { AUTH_RATE_LIMIT_SCOPE, type AuthRateLimits, RATE_LIMITS } from "@/services/rate-limits";
 
 import { native } from "./native";
 import { type CompletedSignIn, signInNotifier } from "./sign-in-notifier";
@@ -30,6 +25,7 @@ export interface AuthDeps {
   db: typeof db;
   mcpAudience: string;
   rateLimit: typeof rateLimit;
+  rateLimits: AuthRateLimits;
   secondaryStorage: Options["secondaryStorage"];
   sendMagicLink: Parameters<typeof magicLink>[0]["sendMagicLink"];
   sendResetPassword: NonNullable<Options["emailAndPassword"]>["sendResetPassword"];
@@ -68,10 +64,10 @@ export function authOptions(deps: AuthDeps) {
     advanced: { ipAddress: { ipAddressHeaders: [CLIENT_IP_HEADER] } },
     rateLimit: {
       enabled: true,
-      window: AUTH_DEFAULT_RATE_LIMIT.windowSec,
-      max: AUTH_DEFAULT_RATE_LIMIT.limit,
+      window: deps.rateLimits.default.windowSec,
+      max: deps.rateLimits.default.limit,
       customRules: Object.fromEntries(
-        Object.entries(AUTH_PATH_RATE_LIMITS).map(([path, rule]) => [
+        Object.entries(deps.rateLimits.paths).map(([path, rule]) => [
           path,
           rule && { window: rule.windowSec, max: rule.limit },
         ]),
@@ -101,6 +97,7 @@ export function authOptions(deps: AuthDeps) {
         redirectPaths: ["/magic-link/verify"],
         onRedirect: deps.onTwoFactorRedirect,
         onEvent: deps.onTwoFactorEvent,
+        rateLimit: deps.rateLimits.twoFactor,
       }),
       signInNotifier(deps.onSignIn),
       native(),

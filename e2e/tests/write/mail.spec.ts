@@ -1,6 +1,6 @@
 import { PEOPLE } from "@metis/e2e/lib/cast";
 import { env } from "@metis/e2e/lib/env";
-import { RETRY_LABEL } from "@metis/e2e/lib/llm-scenarios";
+import { COMPOSE_AI, RETRY_LABEL } from "@metis/e2e/lib/llm-scenarios";
 import type { Page } from "@playwright/test";
 
 import { expect, type Rpc, RpcError, test, uniqueName } from "../fixtures";
@@ -826,6 +826,80 @@ export default function mailSpecs() {
         .poll(async () => (await findIn(rpc, account, "inbox", subject))?.isRead)
         .toBe(true);
     }
+  });
+
+  test("a stance chip under a message and Draft apology each open a reply the AI wrote", async ({
+    page,
+    rpc,
+    account,
+  }) => {
+    const subject = `Re: ${COMPOSE_AI.subject}`;
+    await openTarget(page, account, "inbox", COMPOSE_AI.subject);
+    await page
+      .getByRole("group", { name: "Reply with stance" })
+      .getByRole("button", { name: "Accept", exact: true })
+      .click();
+    await expect(page.getByRole("dialog", { name: /^Reply/ })).toBeVisible();
+    await expect(composerBody(page)).toContainText(/\w{3,}/);
+    await closeComposer(page);
+    await discardDrafts(rpc, account, subject);
+
+    await messageToolbar(page).getByRole("button", { name: "Draft apology" }).click();
+    const apology = confirmDialog(page, "Draft an apology");
+    await apology
+      .getByRole("textbox", { name: "What are you apologizing for?" })
+      .fill(COMPOSE_AI.apology.situation);
+    await apology.getByRole("button", { name: "Draft reply", exact: true }).click();
+    await expect(page.getByRole("dialog", { name: /^Reply/ })).toBeVisible();
+    await expect(composerBody(page)).toContainText(/\w{3,}/);
+    await closeComposer(page);
+    await discardDrafts(rpc, account, subject);
+  });
+
+  test("Stance in a reply completes what was typed, and Undo brings the typed text back", async ({
+    page,
+    rpc,
+    account,
+  }) => {
+    const subject = `Re: ${COMPOSE_AI.subject}`;
+    await openTarget(page, account, "inbox", COMPOSE_AI.subject);
+    await openReply(page);
+    const box = composer(page);
+    const body = composerBody(page);
+    await body.click();
+    await page.keyboard.press("ControlOrMeta+Home");
+    await page.keyboard.type(COMPOSE_AI.draft.text);
+    const toolbar = box.getByRole("toolbar", { name: "Formatting" });
+    await toolbar.getByRole("button", { name: "Stance" }).click();
+    await page.getByRole("menuitem", { name: "Accept", exact: true }).click();
+    await expect(body).not.toContainText(COMPOSE_AI.draft.text, { timeout: 60_000 });
+    await expect(body).toContainText(/\w{3,}/);
+    await toolbar.getByRole("button", { name: "Undo", exact: true }).click();
+    await expect(body).toContainText(COMPOSE_AI.draft.text);
+    await closeComposer(page);
+    await discardDrafts(rpc, account, subject);
+  });
+
+  test("Rewrite replaces the selected text with the AI's edit, Undo restores it, and Discard draft removes the message", async ({
+    page,
+    account,
+  }) => {
+    await goToFolder(page, account);
+    await folders(page).getByRole("button", { name: "Compose", exact: true }).click();
+    const box = composer(page);
+    const body = composerBody(page);
+    await body.click();
+    await page.keyboard.type(COMPOSE_AI.rewrite.text);
+    await page.keyboard.press("ControlOrMeta+a");
+    const toolbar = box.getByRole("toolbar", { name: "Formatting" });
+    await toolbar.getByRole("button", { name: "Rewrite" }).click();
+    await page.getByRole("menuitem", { name: "Shorten", exact: true }).click();
+    await expect(body).not.toContainText(COMPOSE_AI.rewrite.text, { timeout: 60_000 });
+    await expect(body).toContainText(/\w{3,}/);
+    await toolbar.getByRole("button", { name: "Undo", exact: true }).click();
+    await expect(body).toContainText(COMPOSE_AI.rewrite.text);
+    await box.getByRole("button", { name: "Discard draft", exact: true }).click();
+    await expect(box).toHaveCount(0);
   });
 
   test.describe("malformed and oversized mail", () => {

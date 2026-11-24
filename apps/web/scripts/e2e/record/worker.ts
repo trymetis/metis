@@ -6,6 +6,7 @@ const STEPS: Record<Step, () => Promise<{ run(ctx: StepContext): Promise<void> }
   world: () => import("./steps/world"),
   mail: () => import("./steps/mail"),
   "smart-replies": () => import("./steps/smart-replies"),
+  "compose-ai": () => import("./steps/compose-ai"),
   chat: () => import("./steps/chats"),
   workflows: () => import("./steps/workflows"),
   "late-arrival": () => import("./steps/late-arrival"),

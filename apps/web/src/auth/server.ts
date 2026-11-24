@@ -16,7 +16,7 @@ import {
   sendResetPasswordEmail,
   sendVerificationEmail,
 } from "@/services/mailer";
-import { rateLimit } from "@/services/rate-limit";
+import { authRateLimits, rateLimit } from "@/services/rate-limit";
 import { createWorkspace, personalWorkspaceName, setDefaultWorkspaceSlug } from "@/workspace";
 
 import { BANNED_MESSAGE, userBanned } from "./ban";
@@ -95,6 +95,7 @@ function buildAuth(cfg: InstanceConfig) {
       db,
       mcpAudience: MCP_AUDIENCE,
       rateLimit,
+      rateLimits: authRateLimits(),
       secondaryStorage: toSecondaryStorage(),
       sendMagicLink: async ({ email, url }) => {
         await sendMagicLinkEmail({ to: email, url });

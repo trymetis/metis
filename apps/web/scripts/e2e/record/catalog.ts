@@ -3,7 +3,16 @@ import { z } from "zod";
 
 export const scenarioSchema = z.object({
   id: z.string(),
-  step: z.enum(["world", "mail", "smart-replies", "chat", "workflows", "late-arrival", "mcp"]),
+  step: z.enum([
+    "world",
+    "mail",
+    "smart-replies",
+    "compose-ai",
+    "chat",
+    "workflows",
+    "late-arrival",
+    "mcp",
+  ]),
   arg: z.string().optional(),
   from: z.string().nullable(),
   reads: z.array(z.string()),
@@ -95,6 +104,7 @@ export function catalog(driveKinds: string[]): Scenario[] {
       timeoutMs: 30 * MINUTE,
     }),
     scenario({ id: "smart-replies", step: "smart-replies", from: "world" }),
+    scenario({ id: "compose-ai", step: "compose-ai", from: "world" }),
     scenario({
       id: "chat:calendar",
       step: "chat",

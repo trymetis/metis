@@ -31,8 +31,9 @@ test("an empty search highlights nothing, shows the search help, and Enter opens
   page,
   account,
 }) => {
-  await page.goto(mailPath(account));
+  await page.goto(workspacePath(account, "/workflow"));
   const dialog = await openSearch(page);
+  await expect(searchBox(page)).toHaveText("");
   const preview = dialog.getByRole("complementary", { name: "Preview" });
   await expect(preview.getByRole("heading", { name: "Search everything" })).toBeVisible();
   await expect(preview).toContainText("after:");

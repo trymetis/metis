@@ -91,7 +91,7 @@ test("the workflows list searches by name and opens a workflow at its own addres
   account,
 }) => {
   await page.goto(workspacePath(account, "/workflow"));
-  await page.getByRole("textbox", { name: "Search workflows" }).fill("rebrand");
+  await page.getByRole("textbox", { name: "Search workflows" }).fill("label rebrand");
   await expect(workflowList(page).getByRole("listitem")).toHaveCount(1);
   await row(page, "Label rebrand mail").getByRole("link").first().click();
   await expect(page).toHaveURL(/\/workflow\/[^/?]+$/);
@@ -191,8 +191,7 @@ test("a bad graph shows its validation error and is not saved", async ({ page, a
   );
   const trigger = page
     .getByRole("application")
-    .getByRole("group")
-    .filter({ has: page.getByText("Mail arrives", { exact: true }) });
+    .getByRole("group", { name: "Run by hand", exact: true });
   await trigger.getByRole("button", { name: "Remove step" }).click();
   await expect(trigger).toHaveCount(0);
   await page.getByRole("button", { name: "Save", exact: true }).click();

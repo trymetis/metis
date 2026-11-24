@@ -28,6 +28,7 @@ Invalid configuration:
 | `app.ownerEmail`                       | `METIS_OWNER_EMAIL`                                 |
 | `app.setupCode`                        | `METIS_SETUP_CODE`                                  |
 | `maintenance.since`                    | `METIS_MAINTENANCE`                                 |
+| `rateLimitOverrides`                   | `METIS_RATELIMIT_OVERRIDES`                         |
 
 ## Core
 
@@ -267,6 +268,198 @@ See [Owner dashboard](/self-hosting/operate/owner-dashboard#audit-log).
 | Variable                     | Kind    | What it does                                                                                                                                                                                                                                                                           | Default |
 | ---------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | `METIS_AUDIT_RETENTION_DAYS` | Startup | How many days the audit log keeps each event. A whole number, 1 or more. Every day at 03:30 UTC, events older than this are deleted, so lowering it removes older events at the next run. It cannot be changed in the dashboard. In the config file, the key is `audit.retentionDays`. | `365`   |
+
+## Rate limits
+
+| Variable                    | Kind    | What it does                                                                                                                                                                          | Default |
+| --------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `METIS_RATELIMIT_OVERRIDES` | Startup | Changes the built-in rate limits. A JSON object. It cannot be changed in the dashboard. In the config file, the key is `rateLimitOverrides`. See [below](#metis_ratelimit_overrides). | Not set |
+
+### METIS_RATELIMIT_OVERRIDES
+
+A rate limit sets how many times something may be done within a window of time. Metis Suite has built-in rate limits for mail, calendar, drive, contacts, AI features, invites, sign-in and more. With this variable, you can raise or lower each limit listed below. When neither this variable nor the config file's `rateLimitOverrides` is set, every limit keeps its default. An empty variable counts as not set.
+
+The value is a JSON object with up to two keys:
+
+- **`app`:** the app's own limits, by name.
+- **`auth`:** the limits for sign-in, sign-up, password resets, two-factor, emailed sign-in links, signing in to the desktop and mobile apps, and the sign-in requests of MCP clients.
+
+Each limit you change is an object with one or both of these fields:
+
+| Field       | What it sets                                                                       |
+| ----------- | ---------------------------------------------------------------------------------- |
+| `limit`     | How many times something may be done within the window. A whole number, 1 or more. |
+| `windowSec` | The length of the window, in seconds. A whole number, 1 or more.                   |
+
+Set at least one of the two. A field you leave out keeps its default, and so does every limit you do not name. No other field is allowed.
+
+On a server the `metis` CLI runs, put the value in single quotes so your shell passes it as one piece:
+
+```bash
+sudo metis config set 'METIS_RATELIMIT_OVERRIDES={"app":{"mailSession":{"limit":600}},"auth":{"paths":{"/sign-in/email":{"limit":20}}}}'
+```
+
+This example raises the mail limit to 600 requests a minute for each person, and email and password sign-in to 20 a minute from each IP address. The other limits keep their defaults. It is not a dashboard setting, so the command only writes it to `.env` and restarts the app and the workers (preflight runs first). On a container platform or Vercel, set it on the app (and on the worker, if you run one) and redeploy.
+
+When someone reaches a limit, they see the same message as with the defaults. It says what there was too much of and when to try again, for example "Too many requests. Try again in 42 seconds." The wait it shows is at most the `windowSec` you set. From 1 minute up, it is rounded up to whole minutes, so a `windowSec` of 90 can show "Try again in 2 minutes". The [User Guide](/guide/reference/usage-limits) gives the message for each feature.
+
+With the `memory` cache and more than one process, a person can go past a limit. Use `redis` or `upstash` instead. See `METIS_CACHE_DRIVER` under [Cache](#cache).
+
+#### Limits in `app`
+
+Unless the table says otherwise, each limit counts per person.
+
+| Name                      | Default `limit` | Default `windowSec` | What it limits                                                                                                                                                                                       |
+| ------------------------- | --------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mailSession`             | 300             | 60                  | Every mail request, across all of a person's mailboxes, including **Print** and **View original**                                                                                                    |
+| `calendarSession`         | 300             | 60                  | Every calendar request                                                                                                                                                                               |
+| `driveSession`            | 300             | 60                  | Every drive request                                                                                                                                                                                  |
+| `addressBookSession`      | 300             | 60                  | Every contacts request                                                                                                                                                                               |
+| `mailSend`                | 60              | 60                  | Sending mail                                                                                                                                                                                         |
+| `scheduleSend`            | 30              | 60                  | Scheduling a send                                                                                                                                                                                    |
+| `resolveSend`             | 20              | 60                  | Opening or resolving unconfirmed sends and unconfirmed workflow steps                                                                                                                                |
+| `mailImageProxy`          | 600             | 60                  | Remote images loaded through the mail image proxy                                                                                                                                                    |
+| `mailContacts`            | 20              | 60                  | Address suggestions while writing                                                                                                                                                                    |
+| `mailUnsubscribeInfo`     | 60              | 60                  | Checking whether a message can be unsubscribed from                                                                                                                                                  |
+| `mailUnsubscribe`         | 30              | 60                  | Unsubscribing ("Too many unsubscribe requests")                                                                                                                                                      |
+| `mailSubscriptionsScan`   | 10              | 300                 | Scans for mailing lists ("Too many scans"), per mailbox, and separately for **All inboxes**                                                                                                          |
+| `mailClassify`            | 30              | 60                  | AI labels                                                                                                                                                                                            |
+| `threadSummary`           | 30              | 60                  | Thread summaries                                                                                                                                                                                     |
+| `phishingAnalyze`         | 30              | 60                  | Phishing checks                                                                                                                                                                                      |
+| `smartReplies`            | 30              | 60                  | Smart replies                                                                                                                                                                                        |
+| `draftApology`            | 30              | 60                  | **Draft reply** in the **Draft an apology** dialog                                                                                                                                                   |
+| `draftStance`             | 30              | 60                  | The stance buttons and **Stance** in the composer                                                                                                                                                    |
+| `rewriteText`             | 30              | 60                  | **Rewrite** in the composer                                                                                                                                                                          |
+| `aiChat`                  | 20              | 60                  | Messages to the Mail, Calendar, Drive and Contacts AI panels, as one shared limit                                                                                                                    |
+| `aiWorkspaceChat`         | 20              | 60                  | Messages to **Workspace AI** (the **Workspace Assistant**)                                                                                                                                           |
+| `agentReferenceSuggest`   | 120             | 60                  | The `@` reference picker in the assistant                                                                                                                                                            |
+| `search`                  | 240             | 60                  | Searches ("Too many searches")                                                                                                                                                                       |
+| `searchSuggest`           | 240             | 60                  | Search suggestions ("Too many suggestions")                                                                                                                                                          |
+| `driveDownload`           | 120             | 60                  | Drive downloads                                                                                                                                                                                      |
+| `driveRelayDownload`      | 120             | 60                  | Relayed drive downloads                                                                                                                                                                              |
+| `driveRelayUpload`        | 600             | 60                  | Relayed drive uploads                                                                                                                                                                                |
+| `mcp`                     | 120             | 60                  | Calls, per MCP client                                                                                                                                                                                |
+| `cimdMetadataFetch`       | 20              | 60                  | Fetching an MCP client's metadata document, per origin. A client over the limit is refused with "client_id URL is not permitted by the server's fetch policy", which does not say when to try again. |
+| `workflowTestRun`         | 10              | 60                  | Workflow test runs                                                                                                                                                                                   |
+| `workflowDecisionPreview` | 10              | 60                  | **Try on recent mail** in the workflow editor                                                                                                                                                        |
+| `workflowInbound`         | 120             | 60                  | Webhook calls, per webhook trigger                                                                                                                                                                   |
+| `inviteSend`              | 100             | 3600                | Invites, per inviter in each workspace. Account invites, such as those sent from **Dashboard**, **Accounts**, **Invites**, are counted on their own for each inviter, with the same values.          |
+| `signupFirst`             | 10              | 3600                | Creating the owner account on `/setup`, per IP address                                                                                                                                               |
+| `signupInvitePreview`     | 30              | 3600                | Opening an invite link, per IP address                                                                                                                                                               |
+| `signupInvite`            | 10              | 3600                | Accepting an invite, per IP address                                                                                                                                                                  |
+| `connectionsCredential`   | 10              | 3600                | Connecting an account with a password ("Too many connection attempts")                                                                                                                               |
+| `userPreferences`         | 30              | 60                  | Changes to privacy and preference settings                                                                                                                                                           |
+| `dataExport`              | 5               | 600                 | Data exports ("Too many exports")                                                                                                                                                                    |
+
+These limits count attempts at **Confirm it's you** for one action. Their message is "Too many attempts. Try again in", followed by the time left.
+
+| Name                 | Default `limit` | Default `windowSec` | The action                                                                                                                                                                |
+| -------------------- | --------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mcpClientCreate`    | 10              | 300                 | Adding an MCP client                                                                                                                                                      |
+| `mcpClientEnable`    | 10              | 300                 | Turning an MCP client on                                                                                                                                                  |
+| `mcpConsentRegister` | 10              | 300                 | Approving an MCP client when it asks for access                                                                                                                           |
+| `deleteAccount`      | 5               | 300                 | Deleting your account                                                                                                                                                     |
+| `transferOwnership`  | 10              | 300                 | Transferring a workspace's ownership                                                                                                                                      |
+| `mailboxPolicyOn`    | 10              | 300                 | Turning on AI or phishing detection for a mailbox                                                                                                                         |
+| `calendarAiOn`       | 10              | 300                 | Turning on AI for a calendar                                                                                                                                              |
+| `driveAiOn`          | 10              | 300                 | Turning on AI for a drive                                                                                                                                                 |
+| `addressBookAiOn`    | 10              | 300                 | Turning on AI for an address book                                                                                                                                         |
+| `workspaceDelete`    | 10              | 300                 | Deleting a workspace                                                                                                                                                      |
+| `workspacePolicy`    | 10              | 300                 | Changing a workspace's AI and phishing detection settings                                                                                                                 |
+| `memberRole`         | 10              | 300                 | Making a member an admin                                                                                                                                                  |
+| `instanceUsers`      | 10              | 300                 | Changing a role, banning, unbanning and removing someone on the dashboard's **Users** page, and sending an account invite with an admin or observer role from **Invites** |
+| `instanceConfig`     | 10              | 300                 | In the dashboard: **Save changes**, **Save anyway**, **Restore**, **Restore anyway** and **Reset to environment**                                                         |
+| `instanceUpdate`     | 10              | 300                 | Upgrading and undoing an upgrade in the dashboard                                                                                                                         |
+
+#### Limits in `auth`
+
+These limits count per IP address. `auth` has three keys:
+
+- **`default`:** every other sign-in and account request that is not in the table below, such as signing out. 60 per 60 seconds.
+- **`twoFactor`:** the other two-factor requests, such as setting up or removing a method, backup codes and starting a passkey check. 3 per 10 seconds.
+- **`paths`:** the limits below, by path.
+
+| Path                         | Default `limit` | Default `windowSec` | What it covers                                                                                                                  |
+| ---------------------------- | --------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `/sign-in/email`             | 10              | 60                  | Signing in with email and password                                                                                              |
+| `/sign-in/magic-link`        | 5               | 3600                | Asking for a sign-in link (**Email me a sign-in link**)                                                                         |
+| `/sign-up/email`             | 5               | 3600                | **Create account**, when open sign-up is on                                                                                     |
+| `/request-password-reset`    | 5               | 3600                | Asking for a reset link (**Forgot password?**)                                                                                  |
+| `/send-verification-email`   | 5               | 3600                | **Resend verification email**                                                                                                   |
+| `/two-factor/verify`         | 10              | 60                  | The two-factor check at sign-in, and confirming with a passkey in **Confirm it's you**                                          |
+| `/native/code`               | 10              | 60                  | **Continue as** (followed by the account's email) on the browser page that signs in the desktop or mobile app                   |
+| `/native/exchange`           | 10              | 60                  | The desktop or mobile app finishing its sign-in                                                                                 |
+| `/native/connect-ticket`     | 20              | 60                  | Connecting an account from the desktop or mobile app                                                                            |
+| `/magic-link/verify`         | 5               | 60                  | Opening the link from an **Email me a sign-in link** email                                                                      |
+| `/oauth2/authorize`          | 30              | 60                  | The browser page where you sign in and approve an MCP client that asks for access                                               |
+| `/oauth2/token`              | 20              | 60                  | An MCP client getting or renewing its access                                                                                    |
+| `/oauth2/register`           | 5               | 60                  | An MCP client trying to register itself. Metis Suite refuses these registrations, so this only limits how often they are tried. |
+| `/oauth2/introspect`         | 100             | 60                  | Checking whether an access token is valid                                                                                       |
+| `/oauth2/revoke`             | 30              | 60                  | An MCP client giving up its access                                                                                              |
+| `/oauth2/userinfo`           | 60              | 60                  | An MCP client reading the signed-in account's basic details                                                                     |
+| `/oauth2/client/rotate-keys` | 5               | 60                  | Replacing an OAuth client's keys                                                                                                |
+| `/sign-in/*`                 | 3               | 10                  | Any other sign-in request                                                                                                       |
+| `/sign-up/*`                 | 3               | 10                  | Any other sign-up request                                                                                                       |
+| `/change-password`           | 3               | 10                  | Changing a password                                                                                                             |
+| `/change-email`              | 3               | 10                  | Changing an email address                                                                                                       |
+
+For the requests an MCP client makes itself, the IP address is the one of the machine it runs on.
+
+Over an `auth` limit, the answer has the status `429` and a `Retry-After` header that gives the wait in seconds. The wait is the time left in the window, so it is at most the `windowSec` of that limit.
+
+- **A browser that opens a sign-in address**, such as the link in a sign-in email or the page where an MCP client asks for access, gets a page titled **Too many requests**. It says "Try again in" and the time left, for example "Try again in 42 seconds." The page is never cached.
+- **Every other request**, such as the token requests an MCP client makes, gets the body `{"message":"Too many requests. Please try again later."}`. The body does not say when to try again; only the header does.
+- **The forms on the Metis Suite sign-in pages** show their own line under the form, such as "Too many requests. Try again in 1 minute."
+
+After the wait, open the link again or let the MCP client try again.
+
+Only the paths in this table can be changed. The two-factor lockout (10 failed attempts, then 15 minutes) and the limit of 5 wrong codes in one sign-in are not part of this variable and cannot be changed.
+
+#### In the config file
+
+In the config file, the key is `rateLimitOverrides`, with the same `app` and `auth` objects inside it. For example, in YAML:
+
+```yaml
+rateLimitOverrides:
+  app:
+    mailSession:
+      limit: 600
+  auth:
+    paths:
+      "/sign-in/email":
+        limit: 20
+```
+
+In TOML, put each path in quotes:
+
+```toml
+[rateLimitOverrides.app]
+mailSession = { limit = 600 }
+
+[rateLimitOverrides.auth.paths]
+"/sign-in/email" = { limit = 20 }
+```
+
+The key can also hold the same JSON as a string. See [The optional config file](/self-hosting/configure/how-configuration-works#the-optional-config-file) for how it combines with the environment.
+
+#### When a value is wrong
+
+A wrong value stops the app, the worker and preflight from starting. On a server the `metis` CLI runs, `metis config set` shows "Preflight failed:" and the app that was running keeps running. Fix the value and run the command again. The error names what is wrong:
+
+| Problem                                                                 | Line in the error                                                                                 |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Not JSON, not an object, or a top-level key other than `app` and `auth` | `rateLimitOverrides: METIS_RATELIMIT_OVERRIDES must be a JSON object with app and auth overrides` |
+| A limit with neither `limit` nor `windowSec`                            | `rateLimitOverrides.app.mailSession: set limit, windowSec or both`                                |
+| A name in `app` that does not exist                                     | `rateLimitOverrides.app: Unrecognized key: "mailSesion"`                                          |
+| A path that cannot be changed                                           | `rateLimitOverrides.auth.paths: Unrecognized key: "/sign-out"`                                    |
+| A key in `auth` other than `default`, `twoFactor` and `paths`           | `rateLimitOverrides.auth: Unrecognized key: "path"`                                               |
+| A field other than `limit` and `windowSec`                              | `rateLimitOverrides.app.mailSession: Unrecognized key: "scope"`                                   |
+| `0` for `limit`                                                         | `rateLimitOverrides.app.mailSession.limit: Too small: expected number to be >=1`                  |
+| `0` for `windowSec`                                                     | `rateLimitOverrides.app.mailSession.windowSec: Too small: expected number to be >=1`              |
+| A number in quotes                                                      | `rateLimitOverrides.app.mailSession.limit: Invalid input: expected number, received string`       |
+| A number that is not whole                                              | `rateLimitOverrides.app.mailSession.limit: Invalid input: expected int, received number`          |
+
+A limit with only an unknown field also shows the line `set limit, windowSec or both`.
 
 ## Maintenance mode
 
