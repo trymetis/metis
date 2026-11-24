@@ -8,6 +8,7 @@ import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalRespons
 import { AlertTriangle, Bot, type LucideIcon } from "lucide-react";
 import { useMemo } from "react";
 
+import { chatErrorText } from "@/ai/chat-error";
 import { AGENT_DROP_ID, TURN_PART_TYPE, viewerTimeZone } from "@/ai/turn";
 import {
   Conversation,
@@ -187,7 +188,7 @@ export function AgentPanel<T extends { id: string }>({
                 <div className="flex-1">
                   <p className="font-medium text-destructive-text text-sm">{name} hit a problem</p>
                   <p className="mt-1 wrap-break-word text-destructive-muted text-xs">
-                    {error.message}
+                    {chatErrorText(error)}
                   </p>
                   <Button className="mt-2" onClick={() => regenerate()} size="sm" variant="outline">
                     Retry

@@ -35,7 +35,7 @@ Otherwise the invite is refused with "Ask the instance owner or an instance admi
 - **7 days.** An invite expires 7 days after it was sent.
 - **Can be revoked.** Until it is used, it can be canceled. Workspace owners and admins do this under **Pending invites** on the **Members** page. The instance owner and admins do it with the trash button under **Pending account invites** in **Dashboard**, **Accounts**, **Invites**. An instance admin cannot revoke an invite that makes someone an admin.
 - **Can be declined.** The invited person can turn down a workspace invite.
-- **10 an hour.** Each person can send up to 10 invites an hour into each workspace. Account invites have their own limit of 10 an hour per person.
+- **100 an hour.** Each person can send up to 100 invites an hour into each workspace. Account invites have their own limit of 100 an hour per person. Past the limit, the invite is refused with "Too many requests. Try again in 1 hour.", or the time left. In the workspace **Invite** dialog, it shows after "These invites failed." next to the address. Wait for that time, then send the invite again.
 
 Some invites are refused when you send them:
 
@@ -103,6 +103,8 @@ Metis Suite then:
 
 You do not need to verify your email. The invite already proves the address is yours.
 
+You can try to create your account from an invite 10 times an hour. After that, a red line under the form says "Too many requests. Try again in 1 hour.", or the time left. Wait for that time, then click **Create account** again.
+
 ### If the invite does not work
 
 The page shows **Invite unavailable** and a reason. Click **Go to sign in** to leave.
@@ -116,6 +118,7 @@ The page shows **Invite unavailable** and a reason. Click **Go to sign in** to l
 | "This invite is no longer valid. Ask the instance owner or an instance admin to invite you again." | The person who sent this account invite can no longer send it, for example because they are no longer an instance admin or their account was deleted. Ask the instance owner or an instance admin for a new invite. |
 | "Ask the instance owner or an instance admin to invite this person."                               | The instance became invite-only after this workspace invite was sent, and its sender cannot invite new people to the instance. Ask the instance owner or an instance admin to invite you.                           |
 | "This invite was sent to a different email address. …"                                             | You are signed in with another account. Sign out, open the link again and sign in as invited.                                                                                                                       |
+| "Too many requests. Try again in 1 hour." (or a shorter time)                                      | The invite page was opened too many times. It can be opened 30 times an hour. Wait for the time shown, then open the link again.                                                                                    |
 
 ## Where invites are recorded
 

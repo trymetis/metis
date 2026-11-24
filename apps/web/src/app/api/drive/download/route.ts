@@ -5,12 +5,14 @@ import { getDriveSession } from "@/drive/session";
 import { failureStatus } from "@/lib/errors/provider-error";
 import { sanitizeError } from "@/lib/errors/sanitize-error";
 import { rateLimit, tooManyRequests } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const workspaceSlug = searchParams.get("w");
   const driveSlug = searchParams.get("d");
   const fileId = searchParams.get("id");
+  const resolveOnly = searchParams.get("resolve") === "1";
 
   if (!workspaceSlug || !driveSlug || !fileId) {
     return Response.json({ error: "Missing parameters" }, { status: 400 });
@@ -19,11 +21,7 @@ export async function GET(request: Request) {
   const session = await getDriveSession(await nextHeaders(), workspaceSlug, driveSlug);
   if (!session) return new Response("Unauthorized", { status: 401 });
 
-  const rl = await rateLimit(session.userId, {
-    scope: "drive-download",
-    limit: 120,
-    windowSec: 60,
-  });
+  const rl = await rateLimit(session.userId, RATE_LIMITS.driveDownload);
   if (!rl.ok) return tooManyRequests(rl);
 
   try {
@@ -33,7 +31,7 @@ export async function GET(request: Request) {
       return Response.json({ error: target.reason, webUrl: target.webUrl }, { status: 409 });
     }
 
-    return Response.redirect(target.url, 302);
+    return resolveOnly ? Response.json({ url: target.url }) : Response.redirect(target.url, 302);
   } catch (err) {
     if (err instanceof DriveNotVisibleError) {
       return Response.json({ error: err.clientMessage }, { status: 404 });

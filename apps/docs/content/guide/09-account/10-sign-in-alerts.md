@@ -65,7 +65,7 @@ Act quickly:
 
 The card shows your email address and says that alerts go there "each time someone signs in to this account, with the device, IP address and time, so a sign-in you didn’t make doesn’t go unnoticed." The switch is on the right side of the card.
 
-Your choice is saved right away. There is no **Save** button, and you do not need a code. If the change cannot be saved, the switch goes back to how it was. A message tells you what went wrong, or says "Could not save". If you change your settings many times in a short time, you see "Too many requests. Please slow down." Wait a minute and try again.
+Your choice is saved right away. There is no **Save** button, and you do not need a code. If the change cannot be saved, the switch goes back to how it was. A message tells you what went wrong, or says "Could not save". This switch shares a limit of 30 changes a minute with your other settings. See [Privacy settings](/guide/account/privacy-settings#limit-on-changes).
 
 The setting is for your whole account. It is the same in every workspace.
 

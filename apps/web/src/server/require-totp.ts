@@ -2,26 +2,19 @@ import "server-only";
 import { ORPCError } from "@orpc/server";
 
 import { invalidSecondFactorMessage, verify2FA } from "@/auth/server";
-import { rateLimit } from "@/services/rate-limit";
+import { RateLimitedError, rateLimit } from "@/services/rate-limit";
+import type { RateLimitRule } from "@/services/rate-limits";
 
 export async function requireTotp(opts: {
   userId: string;
   code: string | undefined;
   headers: Headers;
-  scope: string;
+  rule: RateLimitRule;
   message: string;
-  limit?: number;
 }): Promise<void> {
-  const rl = await rateLimit(opts.userId, {
-    scope: opts.scope,
-    limit: opts.limit ?? 10,
-    windowSec: 300,
-  });
+  const rl = await rateLimit(opts.userId, opts.rule);
   if (!rl.ok) {
-    throw new ORPCError("TOO_MANY_REQUESTS", {
-      message: "Too many attempts. Please slow down.",
-      data: { retryAfterSec: Math.ceil(rl.resetMs / 1000) },
-    });
+    throw new RateLimitedError(rl, "attempts");
   }
 
   if (!opts.code) {

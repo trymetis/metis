@@ -319,6 +319,7 @@ export function EmailDetail() {
   );
   const {
     methods: unsubMethods,
+    limited: unsubLimited,
     status: unsubStatus,
     setStatus: setUnsubStatus,
   } = useUnsubscribeInfo(selectedEmail);
@@ -592,7 +593,8 @@ export function EmailDetail() {
         stance,
       });
       reply(res.bodyHtml);
-    } catch {
+    } catch (err) {
+      toast.error(err instanceof Error && err.message ? err.message : "Couldn't draft that reply");
     } finally {
       setStanceLoading(null);
     }
@@ -623,8 +625,9 @@ export function EmailDetail() {
         window.open(result.url, "_blank", "noopener,noreferrer");
       }
       setUnsubStatus(result.status);
-    } catch {
+    } catch (err) {
       setUnsubStatus("failed");
+      toast.error(err instanceof Error && err.message ? err.message : "Couldn't unsubscribe");
     } finally {
       setUnsubBusy(false);
     }
@@ -811,18 +814,25 @@ export function EmailDetail() {
             </>
           )}
         </ToolBtn>
-        {unsubMethods.length > 0 && (
+        {(unsubMethods.length > 0 || unsubLimited) && (
           <ToolBtn
             onClick={handleUnsubscribe}
-            disabled={unsubBusy || unsubStatus === "done" || unsubStatus === "manual"}
+            disabled={
+              Boolean(unsubLimited) ||
+              unsubBusy ||
+              unsubStatus === "done" ||
+              unsubStatus === "manual"
+            }
             title={
-              unsubStatus === "done"
-                ? "You unsubscribed from this sender"
-                : unsubStatus === "manual"
-                  ? "We opened their unsubscribe page — finish it there"
-                  : unsubStatus === "failed"
-                    ? "Unsubscribe failed — click to retry"
-                    : "Unsubscribe from this sender"
+              unsubLimited
+                ? unsubLimited
+                : unsubStatus === "done"
+                  ? "You unsubscribed from this sender"
+                  : unsubStatus === "manual"
+                    ? "We opened their unsubscribe page — finish it there"
+                    : unsubStatus === "failed"
+                      ? "Unsubscribe failed — click to retry"
+                      : "Unsubscribe from this sender"
             }
           >
             {unsubBusy ? (
@@ -1705,9 +1715,12 @@ function ThreadSummaryCard({
 
   if (error) {
     return (
-      <div className="my-4 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-[12px] text-destructive-muted">
-        <AlertTriangle className="size-3.5 shrink-0 text-destructive-text" />
-        Couldn't summarize this thread.
+      <div className="my-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-[12px] text-destructive-muted">
+        <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-destructive-text" />
+        <div className="min-w-0">
+          <div>Couldn't summarize this thread.</div>
+          <div className="mt-0.5 wrap-break-word text-[11px]">{error}</div>
+        </div>
       </div>
     );
   }

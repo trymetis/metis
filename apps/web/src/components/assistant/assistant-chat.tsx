@@ -11,6 +11,7 @@ import { AlertTriangle, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { chatErrorText } from "@/ai/chat-error";
 import { WORKSPACE_REFERENCE_TYPES } from "@/ai/references";
 import { TURN_PART_TYPE, type WorkspaceTurnEnvelope, workspaceTurn } from "@/ai/turn";
 import { AgentChatMessage } from "@/components/agent/agent-chat-message";
@@ -153,7 +154,7 @@ export function AssistantChat({
                         Workspace Assistant hit a problem
                       </p>
                       <p className="mt-1 wrap-break-word text-destructive-muted text-sm">
-                        {error.message}
+                        {chatErrorText(error)}
                       </p>
                       <Button
                         className="mt-2"

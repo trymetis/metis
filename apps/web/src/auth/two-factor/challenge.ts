@@ -5,6 +5,8 @@ import { deleteSessionCookie, expireCookie, setSessionCookie } from "better-auth
 import { generateRandomString } from "better-auth/crypto";
 import { parseUserOutput } from "better-auth/db";
 
+import { tryAgainIn } from "@/lib/rate-limit-message";
+
 import { TWO_FACTOR_ERROR_CODES } from "./errors";
 import type { TwoFactorMethod } from "./methods";
 import {
@@ -154,8 +156,13 @@ export async function beginAttempt(ctx: GenericEndpointContext, pending: Pending
 
 export async function assertNotLocked(ctx: GenericEndpointContext, state: TwoFactorRow) {
   if (!state.lockedUntil) return;
-  if (new Date(state.lockedUntil).getTime() > Date.now()) {
-    throw APIError.from("TOO_MANY_REQUESTS", TWO_FACTOR_ERROR_CODES.ACCOUNT_TEMPORARILY_LOCKED);
+  const leftMs = new Date(state.lockedUntil).getTime() - Date.now();
+  if (leftMs > 0) {
+    const locked = TWO_FACTOR_ERROR_CODES.ACCOUNT_TEMPORARILY_LOCKED;
+    throw APIError.from("TOO_MANY_REQUESTS", {
+      ...locked,
+      message: `${locked.message} ${tryAgainIn(leftMs / 1000)}`,
+    });
   }
   await ctx.context.adapter.incrementOne({
     model: TWO_FACTOR_MODEL,

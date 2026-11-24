@@ -7,6 +7,7 @@ import { deleteAddressBook, getAddressBook, listAccountAddressBooks } from "@/co
 import { listProviderBooks } from "@/contacts/available";
 import { db } from "@/db";
 import { addressBook, addressBookWorkspace, connection } from "@/db/schema";
+import { RATE_LIMITS } from "@/services/rate-limits";
 
 import { appSession } from "../middlewares/app-session";
 import { requireTotp } from "../require-totp";
@@ -82,7 +83,7 @@ export const addressBooksRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "address-book-ai-on",
+          rule: RATE_LIMITS.addressBookAiOn,
           message: "Confirm it's you to turn AI on",
         });
       }
@@ -120,7 +121,7 @@ export const addressBooksRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "address-book-ai-on",
+          rule: RATE_LIMITS.addressBookAiOn,
           message: "Confirm it's you to turn AI on everywhere",
         });
       }

@@ -25,7 +25,8 @@ When you open a conversation, cards above it summarize what it is about. While t
 />
 
 - If a message has nothing worth summarizing, you see "No summary for this email".
-- If the summary could not be made, you see "Couldn't summarize this thread." You also see this when AI is off for the mailbox.
+- If the summary could not be made, you see "Couldn't summarize this thread." with the reason under it.
+- When AI is off for the mailbox, no summary cards show.
 - Drafts have no summary cards.
 - Everyone who can see the mailbox sees the same summaries.
 - Every link in a card is checked against the links in the message and cleaned of tracking. See [Privacy and safety when reading](/guide/mail/privacy-and-safety).
@@ -76,7 +77,7 @@ Under **Reply with stance** in the **Reply** bar, pick how you want to answer: *
 
 The AI writes a short reply of two to four sentences in that stance. The composer opens with the reply and the original message quoted, ready for you to check and send.
 
-These buttons are not shown on drafts. When AI is off for the mailbox, they are still shown but do nothing.
+These buttons are not shown on drafts. When AI is off for the mailbox, they are still shown. Clicking one shows "AI is turned off for this mailbox" at the bottom of the screen. If a reply cannot be written, the message says why, or "Couldn't draft that reply".
 
 ## Draft an apology
 
@@ -99,7 +100,26 @@ These buttons are not shown on drafts. When AI is off for the mailbox, they are 
 
 If something goes wrong, the dialog shows the problem, such as "AI is turned off for this mailbox" or "Failed to draft apology".
 
-If you use the AI tools very quickly, you may see "Too many requests. Please slow down." Wait a moment and try again.
+## If you use AI help very often
+
+These AI tools each have their own limit of 30 a minute: summary cards, smart replies, **Reply with stance**, and **Draft reply** in the **Draft an apology** dialog.
+
+[AI labels](/guide/mail/labels#how-messages-get-a-label) have a limit of their own too. When you scroll through a lot of mail very quickly, some labels can take up to a minute to appear.
+
+Other limits:
+
+- The phishing check: see [Phishing warnings](/guide/mail/phishing-warnings#if-the-check-could-not-run).
+- The Mail AI panel: see [Limits and troubleshooting](/guide/assistant/limits-and-troubleshooting#a-reply-fails).
+
+When you reach a limit, the tool stops until the wait is over, at most 1 minute. Where a message shows, it says "Too many requests. Try again in 20 seconds.", or the time left. What you see depends on the tool:
+
+| Tool                  | What you see                                                                                                                                                    |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Summary cards         | "Couldn't summarize this thread." with the message under it. The card does not try again on its own. After the wait, open the message again or reload the page. |
+| Smart replies         | No message. The suggestions do not show yet. They try again on their own after the wait.                                                                        |
+| AI labels             | No message. The list tries again on its own after the wait, and the labels appear.                                                                              |
+| **Reply with stance** | A short message at the bottom of the screen. After the wait, pick the stance again.                                                                             |
+| **Draft reply**       | The message in the **Draft an apology** dialog. After the wait, click **Draft reply** again.                                                                    |
 
 ## The Mail AI panel
 

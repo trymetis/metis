@@ -3,7 +3,8 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 import { getInstanceConfig } from "@/config/runtime";
 import { forwardedClient, inIpList, ipList } from "@/services/client-ip";
-import { rateLimit } from "@/services/rate-limit";
+import { rateLimit, tooManyRequests } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 
 import { errorCode } from "../diagnostics";
 import { fireEvent } from "../discovery";
@@ -25,13 +26,9 @@ function reject(status: number, error: string): Response {
   return Response.json({ error }, { status });
 }
 
-async function limited(endpointId: string): Promise<boolean> {
-  const result = await rateLimit(endpointId, {
-    scope: "workflow-inbound",
-    limit: 120,
-    windowSec: 60,
-  });
-  return !result.ok;
+async function limited(endpointId: string): Promise<Response | null> {
+  const result = await rateLimit(endpointId, RATE_LIMITS.workflowInbound);
+  return result.ok ? null : tooManyRequests(result);
 }
 
 async function readBody(request: Request): Promise<string | null> {
@@ -188,7 +185,8 @@ async function handleChannel(request: Request, endpoint: EndpointRow): Promise<R
 
 export async function handleInbound(request: Request, endpointId: string): Promise<Response> {
   try {
-    if (await limited(endpointId)) return reject(429, "Too many requests");
+    const refused = await limited(endpointId);
+    if (refused) return refused;
     const endpoint = await getEndpoint(endpointId);
     if (!endpoint) return reject(404, "Unknown endpoint");
     switch (endpoint.kind) {

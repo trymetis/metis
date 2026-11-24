@@ -9,6 +9,7 @@ import { signOut } from "@/auth/client";
 import { clearLocalData } from "@/auth/local-data";
 import { nativeAuthLink, nativeReturnPath } from "@/auth/native-link";
 import { NativeCard } from "@/components/native-card";
+import { rateLimitMessage } from "@/lib/rate-limit-message";
 import { route } from "@/lib/route";
 
 const codeResponseSchema = z.object({
@@ -39,6 +40,11 @@ export function NativeLoginConfirm({
         body: JSON.stringify({ challenge }),
       });
       const body = codeResponseSchema.safeParse(await res.json().catch(() => null)).data;
+      const wait = res.status === 429 ? Number(res.headers.get("X-Retry-After")) : NaN;
+      if (Number.isFinite(wait) && wait > 0) {
+        setError(rateLimitMessage(wait));
+        return;
+      }
       if (!res.ok || !body?.code) {
         setError(body?.message ?? "Could not sign in to the Metis app");
         return;

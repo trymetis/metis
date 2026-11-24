@@ -4,6 +4,7 @@ import { type MailScope, policyForMailbox } from "@/mail/session";
 import { mailValue, readMail } from "@/ops/values";
 import { decideOne, decisionEnabled, decisionUsageProvider } from "@/services/decision";
 import { enforceRateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 
 import {
   type DecisionAnswer,
@@ -40,11 +41,7 @@ export async function previewDecision(args: {
   node: Pick<GraphNode, "params">;
   limit: number;
 }): Promise<DecisionPreview> {
-  await enforceRateLimit(args.userId, {
-    scope: "workflow-decision-preview",
-    limit: 10,
-    windowSec: 60,
-  });
+  await enforceRateLimit(args.userId, RATE_LIMITS.workflowDecisionPreview);
   if (!decisionEnabled("workflowNode")) {
     return { ok: false, message: "Ask and Branch steps are turned off on this instance" };
   }

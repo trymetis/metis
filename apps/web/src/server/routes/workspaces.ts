@@ -20,7 +20,8 @@ import {
   revokeWorkspaceInvite,
 } from "@/invites";
 import { deleteAssistantThreads } from "@/mastra/memory";
-import { rateLimit } from "@/services/rate-limit";
+import { RateLimitedError, rateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 import type { WorkspaceAiPolicy, WorkspacePhishingDetectionPolicy } from "@/types/workspace";
 import {
   changeMemberRole,
@@ -115,7 +116,7 @@ export const workspacesRouter = {
         userId: context.appUser.userId,
         code: input.code,
         headers: context.headers,
-        scope: "workspace-delete",
+        rule: RATE_LIMITS.workspaceDelete,
         message: "Confirm it's you to delete this workspace",
       });
 
@@ -197,7 +198,7 @@ export const workspacesRouter = {
         userId: context.appUser.userId,
         code: input.code,
         headers: context.headers,
-        scope: "workspace-policy",
+        rule: RATE_LIMITS.workspacePolicy,
         message: "Confirm it's you to change these settings",
       });
 
@@ -303,7 +304,7 @@ export const workspacesRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "member-role",
+          rule: RATE_LIMITS.memberRole,
           message: "Confirm it's you to make someone an admin",
         });
       }
@@ -331,16 +332,9 @@ export const workspacesRouter = {
   transferOwnership: workspaceSession(transferOwnershipInputSchema)
     .output(okSchema)
     .handler(async ({ input, context }) => {
-      const rl = await rateLimit(context.appUser.userId, {
-        scope: "transfer-ownership",
-        limit: 10,
-        windowSec: 300,
-      });
+      const rl = await rateLimit(context.appUser.userId, RATE_LIMITS.transferOwnership);
       if (!rl.ok) {
-        throw new ORPCError("TOO_MANY_REQUESTS", {
-          message: "Too many attempts. Please slow down.",
-          data: { retryAfterSec: Math.ceil(rl.resetMs / 1000) },
-        });
+        throw new RateLimitedError(rl, "attempts");
       }
 
       const verified = await verify2FA({

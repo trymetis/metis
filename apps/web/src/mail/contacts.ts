@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { getCache } from "@/services/cache";
 import { enforceRateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 import type { Recipient } from "@/types/mail";
 
 import type { MailAdapter } from "./adapter";
@@ -69,11 +70,7 @@ export async function suggestContacts(opts: {
   const cached = await cachedContacts(mailboxIds, field);
   if (cached) return cached;
 
-  await enforceRateLimit(
-    opts.userId,
-    { scope: "mail-contacts", limit: 20, windowSec: 60 },
-    "Too many requests. Please wait a moment.",
-  );
+  await enforceRateLimit(opts.userId, RATE_LIMITS.mailContacts);
 
   const [sent, inbox] = await Promise.all([
     opts.adapter.listMessages("sent", undefined, 50).catch(() => null),

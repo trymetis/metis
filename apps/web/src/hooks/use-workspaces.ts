@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { Route } from "next";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { orpc, rpc } from "@/lib/orpc";
 import { getQueryClient, refreshQueries } from "@/lib/query-client";
@@ -105,8 +106,12 @@ export function useWorkspaces() {
       orpc.user
         .updatePreferences({ workspaceOrder: orderedIds })
         .then((saved) => updateCachedPreferences(saved))
-        .catch((err) => {
+        .catch((err: unknown) => {
           console.error("[workspace-rail] reorder failed to save", err);
+          if (prefs) updateCachedPreferences(prefs);
+          toast.error(
+            err instanceof Error && err.message ? err.message : "Could not save the new order",
+          );
         });
     },
     [prefs],

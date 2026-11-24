@@ -7,7 +7,8 @@ import {
   workspaceReferenceScope,
 } from "@/ai/reference-directory";
 import { WORKSPACE_REFERENCE_TYPES } from "@/ai/references";
-import { rateLimit } from "@/services/rate-limit";
+import { RateLimitedError, rateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 import { getWorkspacePolicy } from "@/workspace";
 import { workspaceAllowsAi } from "@/workspace/policy";
 
@@ -36,15 +37,9 @@ export const agentReferencesRouter = {
     .output(suggestReferencesOutputSchema)
     .handler(async ({ input, context }) => {
       await requireWorkspaceAi(context.appUser.workspaceId);
-      const rl = await rateLimit(context.appUser.userId, {
-        scope: "agent-reference-suggest",
-        limit: 120,
-        windowSec: 60,
-      });
+      const rl = await rateLimit(context.appUser.userId, RATE_LIMITS.agentReferenceSuggest);
       if (!rl.ok) {
-        throw new ORPCError("TOO_MANY_REQUESTS", {
-          message: "Slow down a moment",
-        });
+        throw new RateLimitedError(rl);
       }
 
       const scope = await workspaceReferenceScope(context.appUser, WORKSPACE_REFERENCE_TYPES);

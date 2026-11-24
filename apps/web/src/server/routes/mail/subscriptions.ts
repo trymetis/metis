@@ -22,6 +22,7 @@ import {
   unsubscribeStatusSchema,
 } from "@/server/schema";
 import { RateLimitedError, rateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 
 export const subscriptionsRouter = {
   infoForMessage: mailSession(unsubscribeInfoInputSchema)
@@ -29,16 +30,9 @@ export const subscriptionsRouter = {
     .handler(async ({ input, context }) => {
       const { mail } = context;
 
-      const rl = await rateLimit(mail.userId, {
-        scope: "mail-unsubscribe-info",
-        limit: 60,
-        windowSec: 60,
-      });
+      const rl = await rateLimit(mail.userId, RATE_LIMITS.mailUnsubscribeInfo);
       if (!rl.ok) {
-        throw new ORPCError("TOO_MANY_REQUESTS", {
-          message: "Too many requests. Please wait a moment.",
-          data: { retryAfterSec: Math.ceil(rl.resetMs / 1000) },
-        });
+        throw new RateLimitedError(rl);
       }
 
       const adapter = mail.adapter;

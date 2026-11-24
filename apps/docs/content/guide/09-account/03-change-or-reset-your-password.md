@@ -19,6 +19,8 @@ When it works, you see "Password changed. Other sessions were signed out." Every
 
 If you got a [sign-in alert](/guide/account/sign-in-alerts) for a sign-in you did not make, change your password this way right away.
 
+You can try to change your password 3 times every 10 seconds. After that, you see "Too many requests. Try again in 8 seconds.", or the time left. Wait for that time, then try again.
+
 ## Reset a forgotten password
 
 1. On the sign-in page, click **Forgot password?**.
@@ -36,5 +38,7 @@ If you got a [sign-in alert](/guide/account/sign-in-alerts) for a sign-in you di
 If you see "This reset link is invalid or has expired.", the link is too old or no longer valid. Start again from **Forgot password?** to get a new one.
 
 If you see "Passwords do not match", the two password fields are different. Type the same password in both.
+
+You can ask for a reset link 5 times an hour. After that, the **Reset your password** page shows "Too many requests. Try again in 1 hour.", or the time left. Wait for that time, then click **Send reset link** again. See [Usage limits](/guide/reference/usage-limits#what-the-message-says).
 
 To go back without resetting, click **Back to sign in**.

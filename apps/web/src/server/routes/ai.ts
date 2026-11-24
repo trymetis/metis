@@ -12,6 +12,7 @@ import { drafterAgent } from "@/mastra/agents/drafter";
 import { getLlm } from "@/services/llm";
 import { getPhishingDetection, phishingDetectionEnabled } from "@/services/phishing-detection";
 import { RateLimitedError, rateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS, type RateLimitRule } from "@/services/rate-limits";
 import type { AnalysisResult } from "@/types/analysis";
 
 import { mailSession } from "../middlewares/mail-session";
@@ -27,13 +28,10 @@ import {
   threadSummaryOutputSchema,
 } from "../schema";
 
-async function rateLimitOrThrow(userId: string, scope: string) {
-  const rl = await rateLimit(userId, { scope, limit: 30, windowSec: 60 });
+async function rateLimitOrThrow(userId: string, rule: RateLimitRule) {
+  const rl = await rateLimit(userId, rule);
   if (!rl.ok) {
-    throw new ORPCError("TOO_MANY_REQUESTS", {
-      message: "Too many requests. Please slow down.",
-      data: { retryAfterSec: Math.ceil(rl.resetMs / 1000) },
-    });
+    throw new RateLimitedError(rl);
   }
 }
 
@@ -81,8 +79,6 @@ export const aiRouter = {
           message: "Phishing detection is disabled",
         });
       }
-      await rateLimitOrThrow(mail.userId, "phishing-analyze");
-
       try {
         const scoped = scopeMessage(mail, input.id);
         if (!policyForMailbox(mail, scoped.mailboxId).phishingDetection) {
@@ -94,6 +90,7 @@ export const aiRouter = {
         if (cached) {
           return forViewer(cached);
         }
+        await rateLimitOrThrow(mail.userId, RATE_LIMITS.phishingAnalyze);
 
         const adapter = mail.adapter;
         const rawB64 = await adapter.getRaw(input.id);
@@ -114,7 +111,7 @@ export const aiRouter = {
 
         return forViewer(analysis);
       } catch (err) {
-        if (err instanceof ORPCError) throw err;
+        if (err instanceof ORPCError || err instanceof RateLimitedError) throw err;
         throw new ORPCError("BAD_GATEWAY", { cause: err });
       }
     }),
@@ -124,7 +121,7 @@ export const aiRouter = {
     .handler(async ({ input, context }) => {
       const { mail } = context;
       requireAi(mail, input.id);
-      await rateLimitOrThrow(mail.userId, "smart-replies");
+      await rateLimitOrThrow(mail.userId, RATE_LIMITS.smartReplies);
 
       try {
         return { replies: await generateSmartReplies(mail, input) };
@@ -141,7 +138,7 @@ export const aiRouter = {
     .handler(async ({ input, context }) => {
       const { mail } = context;
       requireAi(mail, input.messageId);
-      await rateLimitOrThrow(mail.userId, "draft-apology");
+      await rateLimitOrThrow(mail.userId, RATE_LIMITS.draftApology);
 
       const adapter = mail.adapter;
       const body = await adapter.getMessage(input.messageId);
@@ -192,7 +189,7 @@ Write the apology body.`,
     .handler(async ({ input, context }) => {
       const { mail } = context;
       requireAi(mail, input.messageId);
-      await rateLimitOrThrow(mail.userId, "draft-stance");
+      await rateLimitOrThrow(mail.userId, RATE_LIMITS.draftStance);
 
       const adapter = mail.adapter;
       const body = await adapter.getMessage(input.messageId);

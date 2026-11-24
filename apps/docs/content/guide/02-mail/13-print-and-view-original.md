@@ -88,6 +88,7 @@ Both pages can show an error instead of the message:
 
 - "Message not found", with "The link does not name a message." or "This mailbox is not available to you."
 - "Could not load the message", with the reason.
+- "Too many requests", with "Too many requests. Try again in 20 seconds.", or the time left. Opening these pages counts toward your mail limit of 300 requests a minute. See [Usage limits](/guide/reference/usage-limits#mail-calendar-drive-and-contacts). Wait for that time (at most 1 minute), then reload the page.
 
 ## In the desktop and mobile apps
 

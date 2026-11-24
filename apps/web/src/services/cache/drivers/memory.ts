@@ -78,6 +78,10 @@ export function createMemoryDriver(): CacheDriver {
       existing.value = String(next);
       return next;
     },
+    async ttlMs(key) {
+      const expiresAt = read(key)?.expiresAt;
+      return expiresAt ? Math.max(0, expiresAt - Date.now()) : null;
+    },
     async hget(key, field) {
       return read(key)?.fields?.get(field) ?? null;
     },

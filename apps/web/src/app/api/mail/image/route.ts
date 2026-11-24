@@ -5,6 +5,7 @@ import { getInstanceConfig } from "@/config/runtime";
 import { safeRequest } from "@/lib/ssrf";
 import { sniffImageType } from "@/mail/render/image-type";
 import { rateLimit, tooManyRequests } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 
 const USER_AGENT = "Mozilla/5.0";
 const TIMEOUT_MS = 10_000;
@@ -38,11 +39,7 @@ export async function GET(request: Request) {
   if (!appUser) return fail(401);
   if (!appUser.twoFactorEnabled) return fail(403);
 
-  const rl = await rateLimit(appUser.userId, {
-    scope: "mail-image-proxy",
-    limit: 600,
-    windowSec: 60,
-  });
+  const rl = await rateLimit(appUser.userId, RATE_LIMITS.mailImageProxy);
   if (!rl.ok) return tooManyRequests(rl);
 
   const target = decodeTarget(new URL(request.url).searchParams.get("u"));

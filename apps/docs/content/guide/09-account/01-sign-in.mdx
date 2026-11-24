@@ -85,13 +85,14 @@ If you close the passkey prompt or wait too long, you see "The passkey request w
 
 ### If something goes wrong
 
-| Message                                                                                              | What to do                                                                            |
-| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| "Invalid code"                                                                                       | The authenticator code was wrong. Wait for a new code in your app and try again.      |
-| "Invalid backup code"                                                                                | The backup code was wrong. Check it, or use another one.                              |
-| "Passkey verification failed"                                                                        | Click **Use your passkey** again, or use another way to confirm.                      |
-| "Too many attempts. Sign in again to get a new challenge."                                           | Click **Cancel and sign out**, then sign in again with your password or a magic link. |
-| "Too many failed verification attempts. Your account is temporarily locked. Please try again later." | Wait a while, then sign in again.                                                     |
+| Message                                                                                               | What to do                                                                                                      |
+| ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| "Invalid code"                                                                                        | The authenticator code was wrong. Wait for a new code in your app and try again.                                |
+| "Invalid backup code"                                                                                 | The backup code was wrong. Check it, or use another one.                                                        |
+| "Passkey verification failed"                                                                         | Click **Use your passkey** again, or use another way to confirm.                                                |
+| "Too many attempts. Sign in again to get a new challenge."                                            | Click **Cancel and sign out**, then sign in again with your password or a magic link.                           |
+| "Too many failed verification attempts. Your account is temporarily locked. Try again in 15 minutes." | You entered 10 wrong codes. Your account is locked for 15 minutes. Wait for the time shown, then sign in again. |
+| "Too many requests. Try again in 30 seconds."                                                         | You clicked **Verify** more than 10 times in a minute. Wait for the time shown, then try again.                 |
 
 ### Cancel
 
@@ -142,6 +143,20 @@ If your instance allows anyone to sign up, the sign-in page has two tabs: **Sign
 ### If your email is not verified
 
 If you try to sign in before you verify your email, you see "Verify your email before signing in." Click **Resend verification email** to get a new link. When you see "Verification email sent. Check your inbox.", open the email and click the link.
+
+## If you try too many times
+
+Each sign-in action has a limit. When you reach it, the page shows a red line under the form, such as "Too many requests. Try again in 1 hour." The time is how long you still have to wait. Wait for that time, then try again.
+
+| Action                                               | Limit       | Longest wait |
+| ---------------------------------------------------- | ----------- | ------------ |
+| **Sign in**                                          | 10 a minute | 1 minute     |
+| **Email me a magic link**                            | 5 an hour   | 1 hour       |
+| **Create account**                                   | 5 an hour   | 1 hour       |
+| **Resend verification email**                        | 5 an hour   | 1 hour       |
+| **Verify** on the **Two-factor authentication** page | 10 a minute | 1 minute     |
+
+For how the wait is shown, see [Usage limits](/guide/reference/usage-limits#what-the-message-says). For limits on resetting your password, see [Reset a forgotten password](/guide/account/change-or-reset-your-password#reset-a-forgotten-password).
 
 ## If your account is banned
 

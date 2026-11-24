@@ -14,7 +14,7 @@ export const TWO_FACTOR_ERROR_CODES = defineErrorCodes({
     "You need at least one way to confirm it's you. Add another one first, or turn off two-factor authentication.",
   TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE: "Too many attempts. Sign in again to get a new challenge.",
   ACCOUNT_TEMPORARILY_LOCKED:
-    "Too many failed verification attempts. Your account is temporarily locked. Please try again later.",
+    "Too many failed verification attempts. Your account is temporarily locked.",
   INVALID_TWO_FACTOR_COOKIE: "Invalid two factor cookie",
   METHOD_NOT_AVAILABLE: "That method isn't set up for this account",
   PASSKEY_NOT_FOUND: "Passkey not found",

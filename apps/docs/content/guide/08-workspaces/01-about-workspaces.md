@@ -50,7 +50,8 @@ To add a passkey or an authenticator app, or to choose your default, see [Two-fa
 
 - A wrong code shows "Invalid authenticator or backup code".
 - If you wait too long after **Passkey confirmed**, you see "Your passkey confirmation expired. Confirm with your passkey again." Click **Confirm again** under **Passkey confirmed**, use your passkey, then click the box's button again.
-- Too many tries in a short time shows "Too many attempts. Please slow down." Wait a few minutes and try again.
+- Each kind of change allows 10 tries every 5 minutes. For example, turning AI on for mailboxes is one kind, deleting a workspace is another, and making someone an admin is a third. Deleting your account allows 5 tries every 5 minutes.
+- After too many tries, you see "Too many attempts. Try again in 4 minutes.", or the time left. Wait for that time (at most 5 minutes), then try again.
 
 ## Names cannot be changed
 

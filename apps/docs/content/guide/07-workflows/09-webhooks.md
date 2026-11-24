@@ -55,7 +55,7 @@ Use the address you copied from the trigger. The one above is an example.
 
 To avoid starting the same run twice when a service sends a request again, add an `Idempotency-Key` header. Only the first 200 characters of the key count. A second request with the same key does not start another run.
 
-Each webhook takes up to 120 requests a minute.
+Each webhook takes up to 120 requests a minute. Past that, it answers `429` with a `Retry-After` header that gives the seconds to wait (at most 60). Send the request again after that time.
 
 ## What the run sees
 
@@ -71,16 +71,16 @@ For example, `trigger.body.email` reads the `email` field of the body. See [Expr
 
 The address answers with JSON. A refused request gets an `error` message.
 
-| Code  | Meaning                                                                                                  |
-| ----- | -------------------------------------------------------------------------------------------------------- |
-| `202` | Accepted. The answer includes `accepted` and the `runId` of the new run.                                 |
-| `400` | "The body is not JSON", or a required body field is missing: "The body is missing" and the field's name. |
-| `401` | "Wrong secret or signature"                                                                              |
-| `403` | "Not allowed from this address" or "A required header is missing or wrong"                               |
-| `404` | "This webhook is not accepting events" (the workflow is turned off or deleted), or "Unknown endpoint"    |
-| `413` | "The body is larger than 256 KB"                                                                         |
-| `429` | "Too many requests"                                                                                      |
-| `500` | "The event could not be recorded"                                                                        |
+| Code  | Meaning                                                                                                                    |
+| ----- | -------------------------------------------------------------------------------------------------------------------------- |
+| `202` | Accepted. The answer includes `accepted` and the `runId` of the new run.                                                   |
+| `400` | "The body is not JSON", or a required body field is missing: "The body is missing" and the field's name.                   |
+| `401` | "Wrong secret or signature"                                                                                                |
+| `403` | "Not allowed from this address" or "A required header is missing or wrong"                                                 |
+| `404` | "This webhook is not accepting events" (the workflow is turned off or deleted), or "Unknown endpoint"                      |
+| `413` | "The body is larger than 256 KB"                                                                                           |
+| `429` | "Too many requests. Try again in 20 seconds.", or the time left. The answer also has `retryAfterSec`, the seconds to wait. |
+| `500` | "The event could not be recorded"                                                                                          |
 
 ## Good to know
 

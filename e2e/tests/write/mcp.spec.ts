@@ -30,7 +30,7 @@ import {
 
 const { expect } = test;
 
-const MCP_CALLS_PER_MINUTE = 60;
+const MCP_CALLS_PER_MINUTE = 120;
 
 interface McpClientRow {
   clientId: string;
@@ -335,7 +335,7 @@ export default function mcpSpecs() {
       }
     });
 
-    await test.step("the 61st call in a minute is a 429 with Retry-After", async () => {
+    await test.step("the 121st call in a minute is a 429 with Retry-After", async () => {
       let last: Response | undefined;
       for (let i = 0; i < 2 * MCP_CALLS_PER_MINUTE + 1; i++) {
         last = await postMcp(token, modernBody("tools/list"), modernHeaders("tools/list"));

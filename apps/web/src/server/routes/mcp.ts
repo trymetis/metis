@@ -18,7 +18,8 @@ import { MCP_PRESETS } from "@/mcp/presets";
 import { uniqueMcpClientSlug } from "@/mcp/slug";
 import { isMcpToolEnabled, mcpToolsFor, sensitiveToolsTurnedOn } from "@/mcp/tools";
 import { listMcpWorkspaces } from "@/mcp/workspaces";
-import { rateLimit } from "@/services/rate-limit";
+import { RateLimitedError, rateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 
 import { appSession } from "../middlewares/app-session";
 import {
@@ -154,16 +155,9 @@ export const mcpRouter = {
     .input(createMcpClientInputSchema)
     .output(createMcpClientOutputSchema)
     .handler(async ({ input, context }) => {
-      const rl = await rateLimit(context.appUser.userId, {
-        scope: "mcp-client-create",
-        limit: 10,
-        windowSec: 300,
-      });
+      const rl = await rateLimit(context.appUser.userId, RATE_LIMITS.mcpClientCreate);
       if (!rl.ok) {
-        throw new ORPCError("TOO_MANY_REQUESTS", {
-          message: "Too many attempts. Please slow down.",
-          data: { retryAfterSec: Math.ceil(rl.resetMs / 1000) },
-        });
+        throw new RateLimitedError(rl, "attempts");
       }
 
       const preset = MCP_PRESETS[input.preset];
@@ -229,16 +223,9 @@ export const mcpRouter = {
       const client = await ownedClient(input.clientId, context.appUser.userId);
 
       if (input.enabled) {
-        const rl = await rateLimit(context.appUser.userId, {
-          scope: "mcp-client-enable",
-          limit: 10,
-          windowSec: 300,
-        });
+        const rl = await rateLimit(context.appUser.userId, RATE_LIMITS.mcpClientEnable);
         if (!rl.ok) {
-          throw new ORPCError("TOO_MANY_REQUESTS", {
-            message: "Too many attempts. Please slow down.",
-            data: { retryAfterSec: Math.ceil(rl.resetMs / 1000) },
-          });
+          throw new RateLimitedError(rl, "attempts");
         }
         if (!input.code) {
           throw new ORPCError("BAD_REQUEST", {
@@ -489,16 +476,9 @@ export const mcpRouter = {
     .input(registerMcpConsentClientInputSchema)
     .output(z.object({ status: z.literal(true) }))
     .handler(async ({ input, context }) => {
-      const rl = await rateLimit(context.appUser.userId, {
-        scope: "mcp-consent-register",
-        limit: 10,
-        windowSec: 300,
-      });
+      const rl = await rateLimit(context.appUser.userId, RATE_LIMITS.mcpConsentRegister);
       if (!rl.ok) {
-        throw new ORPCError("TOO_MANY_REQUESTS", {
-          message: "Too many attempts. Please slow down.",
-          data: { retryAfterSec: Math.ceil(rl.resetMs / 1000) },
-        });
+        throw new RateLimitedError(rl, "attempts");
       }
 
       const [existing] = await db

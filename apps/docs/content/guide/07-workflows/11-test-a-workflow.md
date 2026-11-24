@@ -76,4 +76,4 @@ Click **Stop replaying** (the **X**) to go back to a normal test. Runs from befo
 - **A test needs a trigger.** Without one, the tab says "Add a trigger to test from."
 - **AI steps still ask the AI model.** Everything else changes nothing.
 - **Waits do not wait.** **Delay**, **Wait until**, **Wait for** and **Ask for approval** go on at once, as the lines above describe.
-- **You can run up to 10 tests a minute.** After that, you see "Too many requests. Please slow down."
+- **You can run up to 10 tests a minute.** After that, you see "Too many requests. Try again in 20 seconds.", or the time left. Wait for that time (at most 1 minute), then click **Run test** again.

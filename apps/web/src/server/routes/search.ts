@@ -29,6 +29,7 @@ import { isEmptySearch, parseSearch, type SearchDiagnostic } from "@/search/quer
 import { createSavedSearch, deleteSavedSearch, listSavedSearches } from "@/search/saved";
 import { searchLocal } from "@/search/sources";
 import { enforceRateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 import { listWorkspaceWorkflows } from "@/workflow";
 import { workflowScopeFor } from "@/workflow/scope";
 import { listWorkspaceMembers } from "@/workspace";
@@ -52,8 +53,6 @@ import {
   workspaceScopeSchema,
 } from "../schema";
 
-const SEARCH_RATE = { scope: "search", limit: 240, windowSec: 60 };
-const SUGGEST_RATE = { scope: "search-suggest", limit: 240, windowSec: 60 };
 const SUGGEST_LIMIT = 8;
 
 interface Prepared {
@@ -66,7 +65,7 @@ async function prepare(
   appUser: WorkspaceUserSession,
   input: { q: string; timeZone?: string },
 ): Promise<Prepared> {
-  await enforceRateLimit(appUser.userId, SEARCH_RATE, "Too many searches. Please wait a moment.");
+  await enforceRateLimit(appUser.userId, RATE_LIMITS.search, "searches");
   const timeZone = input.timeZone && isValidTimeZone(input.timeZone) ? input.timeZone : "UTC";
   const parsed = parseSearch(input.q.trim(), timeZone);
   if (!parsed.ok) {
@@ -249,11 +248,7 @@ export const searchRouter = {
     .output(searchSuggestOutputSchema)
     .handler(async ({ input, context }) => {
       const { appUser } = context;
-      await enforceRateLimit(
-        appUser.userId,
-        SUGGEST_RATE,
-        "Too many suggestions. Please wait a moment.",
-      );
+      await enforceRateLimit(appUser.userId, RATE_LIMITS.searchSuggest, "suggestions");
       const values = await suggest(appUser, input.key.toLowerCase(), input.prefix);
       return { values: values.slice(0, SUGGEST_LIMIT) };
     }),

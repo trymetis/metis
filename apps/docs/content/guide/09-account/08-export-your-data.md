@@ -64,7 +64,7 @@ Your export holds only the mailboxes, calendars, drives and address books you co
 
 ## If the download does not work
 
-- If you see "Too many exports. Try again in a few minutes.", wait a few minutes and click **Download export** again. You can download up to 5 exports every 10 minutes.
+- You can download up to 5 exports every 10 minutes. After that, the card shows "Too many exports. Try again in 10 minutes.", or the time left. Wait for that time, then click **Download export** again.
 - If something else goes wrong, the card shows what happened, or "Could not export your data". Try again later.
 
 Before you [delete your account](/guide/account/delete-your-account), download an export so you keep a copy.

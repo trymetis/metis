@@ -7,6 +7,7 @@ import { streamContactsChat } from "@/mastra/chat-streams";
 import { contactsChatInputSchema } from "@/server/schema";
 import { aiEnabled } from "@/services/llm";
 import { rateLimit, tooManyRequests } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 
 export async function POST(request: Request) {
   if (!aiEnabled()) return new Response(null, { status: 404 });
@@ -33,11 +34,7 @@ export async function POST(request: Request) {
   const session = await getAddressBookSession(h, body.workspaceSlug, body.addressBookSlug);
   if (!session) return new Response("Unauthorized", { status: 401 });
 
-  const rl = await rateLimit(session.userId, {
-    scope: "ai-chat",
-    limit: 20,
-    windowSec: 60,
-  });
+  const rl = await rateLimit(session.userId, RATE_LIMITS.aiChat);
   if (!rl.ok) return tooManyRequests(rl);
 
   const stream = await streamContactsChat(session, h, {

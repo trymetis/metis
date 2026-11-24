@@ -29,12 +29,13 @@ When a file in a batch fails, Metis stops there. The files after it are not uplo
 
 The message tells you why. The common ones:
 
-| Message                                                  | What it means                                                                                                                                                   |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| "Files over N MB cannot be transferred for this drive"   | Some drives send files through your Metis server, which has a size limit for them. Your administrator sets that limit. The number in the message is that limit. |
-| "Too many transfers are running. Wait for one to finish" | You have too many uploads or downloads running on these drives. Wait for one to finish, then try again.                                                         |
-| "This link is invalid or has expired"                    | Metis could not accept the upload. Try again. If it keeps happening, tell your administrator.                                                                   |
-| "Upload failed"                                          | Something else went wrong. The message may include more detail from the drive.                                                                                  |
+| Message                                                  | What it means                                                                                                                                                                      |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Files over N MB cannot be transferred for this drive"   | Some drives send files through your Metis server, which has a size limit for them. Your administrator sets that limit. The number in the message is that limit.                    |
+| "Too many transfers are running. Wait for one to finish" | You have too many uploads or downloads running on these drives. Wait for one to finish, then try again.                                                                            |
+| "Too many requests. Try again in 20 seconds."            | Drives that send files through your Metis server take up to 600 uploads a minute from you. The message shows how long is left, at most 1 minute. Wait, then upload the rest again. |
+| "This link is invalid or has expired"                    | Metis could not accept the upload. Try again. If it keeps happening, tell your administrator.                                                                                      |
+| "Upload failed"                                          | Something else went wrong. The message may include more detail from the drive.                                                                                                     |
 
 If an upload to a WebDAV, FTP or SFTP drive fails, Metis removes the partial file. If a file with that name was already there, check it after the failure.
 

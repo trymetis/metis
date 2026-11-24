@@ -90,12 +90,12 @@ Everyone else joins by invitation. As the owner, you invite people from **Dashbo
 
 ## If the setup page does not work
 
-| What you see                                                              | What it means                                                                                            |
-| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| **Not available**, "This page isn't available."                           | No setup code is set. Set one, for example with `sudo metis config set METIS_SETUP_CODE=K7QM-2HXP-9RTA`. |
-| "That setup code isn't valid"                                             | The code does not match. Copy it again from `.env`.                                                      |
-| "Too many requests. Please slow down."                                    | Too many attempts in a short time. Wait a few minutes.                                                   |
-| "Account created, but sign-in failed. Try signing in from the home page." | The account exists. Sign in from the home page.                                                          |
+| What you see                                                              | What it means                                                                                                                                 |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Not available**, "This page isn't available."                           | No setup code is set. Set one, for example with `sudo metis config set METIS_SETUP_CODE=K7QM-2HXP-9RTA`.                                      |
+| "That setup code isn't valid"                                             | The code does not match. Copy it again from `.env`.                                                                                           |
+| "Too many requests. Try again in 1 hour."                                 | The setup page takes 10 attempts an hour from each IP address. The message shows the time left, up to 1 hour. Wait that long, then try again. |
+| "Account created, but sign-in failed. Try signing in from the home page." | The account exists. Sign in from the home page.                                                                                               |
 
 :::note[Need a different owner email?]
 `METIS_OWNER_EMAIL` decides which address the setup page accepts. To use another address, run `sudo metis config set METIS_OWNER_EMAIL=alice@example.com` with that address. The command writes it to `.env` and restarts the app on it.

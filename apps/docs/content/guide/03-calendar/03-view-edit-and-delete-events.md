@@ -68,7 +68,7 @@ Metis Suite has no option to change or delete every occurrence at once. To chang
 
 When the event is deleted, the calendar refreshes and the event's details close.
 
-If the event cannot be deleted, it stays in your calendar and its details stay open. A message explains why, such as "Couldn't delete that event. Try again." or "You don't have permission to delete that event." You can try again. If the message says there were too many requests, wait a moment and try again. If it says "This account needs to be reconnected.", reconnect the account and try again.
+If the event cannot be deleted, it stays in your calendar and its details stay open. A message explains why, such as "Couldn't delete that event. Try again." or "You don't have permission to delete that event." You can try again. For other messages, see [Messages when a change fails](#messages-when-a-change-fails).
 
 ## Answer an invitation
 
@@ -85,4 +85,14 @@ What happens next depends on your provider:
 
 On Google Calendar and CalDAV calendars, you can answer only if your email address is on the event's guest list. If it is not, the message "You are not an attendee on this event" appears and your answer is not saved.
 
-If your answer cannot be sent, a message appears, such as "Couldn't send your reply. Try again." You can try again. If the message says there were too many requests, wait a moment and try again. If it says "This account needs to be reconnected.", reconnect the account and try again.
+If your answer cannot be sent, a message appears, such as "Couldn't send your reply. Try again." You can try again. For other messages, see [Messages when a change fails](#messages-when-a-change-fails).
+
+## Messages when a change fails
+
+When deleting an event or answering an invitation fails, these messages tell you what to do:
+
+| Message                                                         | What to do                                                                                                                             |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| A message that says "too many requests just now"                | Your calendar provider is busy. Wait a moment and try again.                                                                           |
+| "Too many requests. Try again in 20 seconds." (or another time) | Wait that long (at most 1 minute), then try again. See [Usage limits](/guide/reference/usage-limits#mail-calendar-drive-and-contacts). |
+| "This account needs to be reconnected."                         | Reconnect the account and try again.                                                                                                   |

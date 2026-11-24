@@ -88,6 +88,8 @@ Anyone who can see the run can resolve its steps. The AI assistant cannot do it 
 
 If the run is still going, the dialog says "This run is still being handled. Wait for it to finish, then resolve the step." Close it and try again later.
 
+Together, you can open the **Resolve** dialog and resolve up to 20 times a minute. This counts these steps and [unconfirmed sends](/guide/mail/schedule-a-send#resolve-an-unconfirmed-send) together. After that, a message at the bottom of the screen says "Too many requests. Try again in 20 seconds.", or the time left. Wait for that time (at most 1 minute), then try again.
+
 ### Confirm that it went through
 
 For every step except **Add an invitation file**, the dialog looks at the provider for a match and lists up to five. Each one has a **This is it** button.

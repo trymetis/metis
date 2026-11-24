@@ -32,13 +32,14 @@ Other drive types do not have this action.
 
 The reason shows as a short message at the bottom of the screen. Some messages have an **Open** button that opens the file at the provider instead.
 
-| Message                                                        | What it means                                                                                                          |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| "Folders cannot be downloaded"                                 | Only files can be downloaded.                                                                                          |
-| "Google does not offer this document in a downloadable format" | This kind of Google file cannot be downloaded. Use **Open** to view it in Google Drive.                                |
-| "Google did not offer a download link for this file"           | Google did not allow the download. Use **Open** to get it from Google Drive.                                           |
-| "OneDrive did not offer a download link for this file"         | OneDrive did not allow the download. Use **Open** to get it from OneDrive.                                             |
-| "We couldn't find that."                                       | The file no longer exists, or a [folder restriction](/guide/drive/folder-restrictions) hides it in this workspace.     |
-| "Files over N MB cannot be transferred for this drive"         | Some drives send files through your Metis server, which has a size limit for them. Your administrator sets that limit. |
-| "Too many transfers are running. Wait for one to finish"       | Wait for one of your other transfers to finish, then try again.                                                        |
-| "That file could not be downloaded"                            | Something else went wrong. Try again.                                                                                  |
+| Message                                                        | What it means                                                                                                                     |
+| -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| "Folders cannot be downloaded"                                 | Only files can be downloaded.                                                                                                     |
+| "Google does not offer this document in a downloadable format" | This kind of Google file cannot be downloaded. Use **Open** to view it in Google Drive.                                           |
+| "Google did not offer a download link for this file"           | Google did not allow the download. Use **Open** to get it from Google Drive.                                                      |
+| "OneDrive did not offer a download link for this file"         | OneDrive did not allow the download. Use **Open** to get it from OneDrive.                                                        |
+| "We couldn't find that."                                       | The file no longer exists, or a [folder restriction](/guide/drive/folder-restrictions) hides it in this workspace.                |
+| "Files over N MB cannot be transferred for this drive"         | Some drives send files through your Metis server, which has a size limit for them. Your administrator sets that limit.            |
+| "Too many transfers are running. Wait for one to finish"       | Wait for one of your other transfers to finish, then try again.                                                                   |
+| "Too many requests. Try again in 20 seconds."                  | You can download or preview up to 120 files a minute. The message shows how long is left, at most 1 minute. Wait, then try again. |
+| "That file could not be downloaded"                            | Something else went wrong. Try again.                                                                                             |

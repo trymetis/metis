@@ -31,7 +31,7 @@ See also [AGENTS.md](../AGENTS.md) (scope as explicit input), [auth.md](auth.md)
   - `appSession` answers no session with `UNAUTHORIZED` and a session without 2FA with `FORBIDDEN`.
   - `workspaceSession` answers an unknown workspace with `FORBIDDEN`.
   - `mailSession`, `calendarSession` and `driveSession` answer an unknown slug with `NOT_FOUND`.
-- **`mailSession`, `calendarSession` and `driveSession` rate-limit every procedure per user, one bucket per resource kind** (`MAIL_RATE`, `CALENDAR_RATE`, `DRIVE_RATE` in their middleware files).
+- **`mailSession`, `calendarSession` and `driveSession` rate-limit every procedure per user, one bucket per resource kind** (`RATE_LIMITS.mailSession`, `calendarSession`, `driveSession`, `addressBookSession`).
   - The bucket is a floor that covers every procedure, including new ones; a procedure with a costlier action (sending, classifying, scanning) adds its own tighter limit on top.
   - It counts before the resource is resolved, so a flood of unknown slugs is limited too.
 - **`signup.*` is the only namespace on bare `base`: public and IP rate-limited** ([auth.md](auth.md)). `signup.invitePreview` reads the session when there is one; `invites.accept` and `invites.decline` use `appSession`.
@@ -41,13 +41,24 @@ See also [AGENTS.md](../AGENTS.md) (scope as explicit input), [auth.md](auth.md)
 
 - **Only authored error codes keep their message.**
   - `base` passes an `ORPCError` whose code is in `AUTHORED_CODES` through unchanged.
-  - It maps a `RateLimitedError` thrown by a domain function's `enforceRateLimit` to `TOO_MANY_REQUESTS` with its `retryAfterSec`.
+  - It maps a `RateLimitedError`, thrown by a procedure or by a domain function's `enforceRateLimit`, to `TOO_MANY_REQUESTS` with its `retryAfterSec`.
   - It maps a `NotVisibleError` (`src/lib/errors/not-visible.ts`), thrown directly or as the cause of a wrapped error, to `NOT_FOUND` with its `clientMessage`. Calendar visibility checks throw it with their own message; drive's `DriveNotVisibleError` sets a neutral one ([drive.md](drive.md)).
   - It maps a `BadRequestError` (`src/lib/errors/bad-request.ts`), thrown directly or as a cause, to `BAD_REQUEST` with its message. The account resolvers throw it for a missing choice ("Pick which calendar account / drive / mailbox …") and the calendar providers for an answer from someone not on the guest list, so the user, agents and MCP read the same text.
   - Every other error is logged and its message replaced by `sanitizeError`, so a raw provider or database message never reaches the client.
   - `sanitizeError` words a 403 as a permission problem only when the provider gives no error reason or a permission reason (`PERMISSION_REASONS`); a rate-limit reason reads as too many requests, and any other reason as a failed request, because Google answers some bad requests with 403.
   - Each procedure a user triggers gets its wording in `OPERATIONS`, keyed by procedure path; one without an entry reads "do that".
   - Throw an authored code for any message the user should read.
+- **Every rate limit's values live in one table, `src/services/rate-limits.ts`**: `RATE_LIMITS` for the app's own limits, `AUTH_PATH_RATE_LIMITS`, `AUTH_DEFAULT_RATE_LIMIT` and `AUTH_TWO_FACTOR_RATE_LIMIT` for Better Auth.
+  - A call site names its entry (`RATE_LIMITS.mailSend`); it never writes a scope, count or window inline.
+  - The Better Auth entries restate the library's own defaults for the paths the app uses, so no limit is implicit.
+  - Operators cannot change them.
+- **A limit counts work, not views**: a limit in front of a cache is checked only on a miss (thread summaries via `buildThreadSummary`'s `beforeModel`, the phishing check after `getCachedAnalysis`, the subscriptions scan after its cached result).
+- **Every rate limit is reported with `RateLimitedError(result, subject)`, never a hand-built `TOO_MANY_REQUESTS`**, so each message reads "Too many <subject>. Try again in <wait>." from `src/lib/rate-limit-message.ts` → `rateLimitMessage`.
+  - The wait is the bucket's remaining time (`CacheDriver.ttlMs`), not the whole window.
+  - Plain routes answer with `tooManyRequests`, whose JSON `error` carries the same text and whose `Retry-After` header carries the wait; the agent panels and the Workspace Assistant show that `error` instead of the raw body (`src/ai/chat-error.ts` → `chatErrorText`).
+  - Better Auth's 429s carry only `X-Retry-After`; `src/auth/client.ts` rewrites them to the same text.
+  - Agent and MCP tools pass a `RateLimitedError`'s message through as the tool error (`withToolErrors` in `src/mastra/toolkit/resolve.ts`), so the assistant and MCP clients get the same text.
+  - Clients read the wait from an error with `rateLimitWait` (same file) to retry after it: the toolbar unsubscribe check, smart replies and the mail list's AI labels do.
 - **A procedure that wraps a rate-limited domain call in its own `try` rethrows `RateLimitedError`** before mapping the rest to `BAD_GATEWAY` (as in `src/server/routes/ai.ts` and `mail/subscriptions.ts`).
 - **Workspace admin procedures pass `context.appUser.workspaceRole` to `src/workspace/admin.ts`** and map its `forbidden` flag to `FORBIDDEN`.
 

@@ -18,7 +18,8 @@ import {
   upsertCredentialConnection,
 } from "@/connections";
 import { isRecord } from "@/lib/guards";
-import { rateLimit } from "@/services/rate-limit";
+import { RateLimitedError, rateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 import { getWorkspaceBySlug } from "@/workspace";
 
 import { appSession } from "../middlewares/app-session";
@@ -141,15 +142,9 @@ export const connectionsRouter = {
         });
       }
 
-      const rl = await rateLimit(userId, {
-        scope: "connections-credential",
-        limit: 10,
-        windowSec: 3600,
-      });
+      const rl = await rateLimit(userId, RATE_LIMITS.connectionsCredential);
       if (!rl.ok) {
-        throw new ORPCError("TOO_MANY_REQUESTS", {
-          message: "Too many connection attempts — try again later",
-        });
+        throw new RateLimitedError(rl, "connection attempts");
       }
 
       const target = input.attachToWorkspaceSlug

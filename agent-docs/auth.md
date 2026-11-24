@@ -26,7 +26,7 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
 | Bans                                          | `src/auth/ban.ts` → `isBanned`, `activeBan`, `userBanned`, `BANNED_MESSAGE` · columns `user.banned`, `ban_reason`, `ban_expires` (Better Auth `additionalFields` in `src/auth/base.ts`) · set in `src/dashboard/users.ts` → `banUser`, `unbanUser` ([dashboard.md](dashboard.md))               |
 | Session lookup for the app                    | `src/auth/session.ts` → `getAppUser`                                                                                                                                                                                                                                                            |
 | Legal consent                                 | `src/auth/legal-consent.ts` → `legalConfig`, `enforceLegalConsent`                                                                                                                                                                                                                              |
-| Rate limiting                                 | `src/services/rate-limit.ts` → `rateLimit` · client IP `src/services/client-ip.ts` → `clientIp`, `forwardedClient` · Better Auth rules in `authOptions` → `rateLimit.customRules`                                                                                                               |
+| Rate limiting                                 | `src/services/rate-limit.ts` → `rateLimit` · client IP `src/services/client-ip.ts` → `clientIp`, `forwardedClient` · Better Auth rules in `src/services/rate-limits.ts` → `AUTH_PATH_RATE_LIMITS`, mapped into `authOptions` → `rateLimit.customRules`                                          |
 | Sign-in alerts                                | plugin `src/auth/sign-in-notifier.ts` → `signInNotifier` · sender `src/auth/sign-in-alert.ts` → `sendSignInAlert` · email `src/services/mailer/send.ts` → `sendSignInAlertEmail` · switch `src/app/settings/security/_components/sign-in-alerts-section.tsx` · pref `user_prefs.sign_in_alerts` |
 | Schema regeneration                           | `scripts/auth-generate.ts` · `src/auth/generate.ts` → `auth` (`{ options }`) · output `src/db/auth-schema.ts`                                                                                                                                                                                   |
 
@@ -164,7 +164,7 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
   - A missed pass breaks the build in `src/server/routes/mcp.ts`, so it is loud.
 - **`src/auth/base.ts` must import nothing that reaches `import "server-only"`**, because the Better Auth CLI refuses such a config.
   - Everything server-only (`config`, `db`, `MCP_AUDIENCE`, `rateLimit`) arrives through `AuthDeps`: `server.ts` passes the real ones, `generate.ts` passes placeholders and an in-memory libSQL.
-  - `@/db` and `@/services/rate-limit` are `import type` only.
+  - `@/db` and `@/services/rate-limit` are `import type` only; `@/services/rate-limits` is a plain table and imported by value.
   - Keep the `server-only` imports in source; the CLI is what adapts.
 - **`generate.ts` exports `auth = { options }`, not a `betterAuth()` instance.** Constructing one runs plugin `init`, whose oauth-provider resource seed queries `oauth_resource` and crashes the CLI against the empty database.
 
@@ -182,7 +182,7 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
 - **Pages that check 2FA too.** The server pages and layouts under `/w` that redirect before rendering check `twoFactorEnabled` after `getAppUser` and redirect to `/2fa/setup`.
 - **Step-up on Better Auth endpoints.** `hooks.before` in `src/auth/server.ts` requires a code in `x-totp-code` for the password- and session-changing endpoints and for accepting `/oauth2/consent`.
 - **Session cost.** `proxy` reads the real session (`getAuth().api.getSession`), which is cheap behind the cookie cache; turning 2FA on or off refreshes that cache.
-- **Rate limiting.** Better Auth's limits run on `secondaryStorage` over the cache driver; `rateLimit` does an atomic `incr(key, ttl)` on the same driver for its callers. Both resolve the driver per call (`getCache()`), so a cache switch drops the counters and nothing else.
+- **Rate limiting.** Better Auth's limits run through `rateLimit` as its `customStorage` (scope `auth`), so their `X-Retry-After` is the bucket's time left, not the rule's window; `rateLimit` does an atomic `incr(key, ttl)` on the cache driver. It resolves the driver per call (`getCache()`), so a cache switch drops the counters and nothing else.
 - **The CLI and the `@/` alias.** `scripts/auth-generate.ts` symlinks `apps/web/node_modules/@ → ../src`, runs `bunx auth@latest generate` against `src/auth/generate.ts`, and removes the symlink in a `finally`, because the CLI's jiti loader cannot resolve `@/`.
 
 ## Deliberate limits

@@ -15,6 +15,7 @@ import { invite, user as userTable, workspace, workspaceMember } from "@/db/sche
 import type { AccountInvite, DashboardInvitesInput } from "@/server/schema";
 import { sendSignupInviteEmail, sendWorkspaceInviteEmail } from "@/services/mailer";
 import { enforceRateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 import {
   canGrantInstanceRole,
   canManageAccountInvites,
@@ -190,11 +191,10 @@ export async function createInvite(opts: {
     return { error: INVITE_SIGN_UP_REFUSED, forbidden: true };
   }
 
-  await enforceRateLimit(`${opts.workspace?.id ?? "account"}:${opts.inviter.userId}`, {
-    scope: "invite-send",
-    limit: 10,
-    windowSec: 60 * 60,
-  });
+  await enforceRateLimit(
+    `${opts.workspace?.id ?? "account"}:${opts.inviter.userId}`,
+    RATE_LIMITS.inviteSend,
+  );
 
   const now = new Date();
   const workspaceId = opts.workspace?.id ?? null;

@@ -7,6 +7,7 @@ import { ownsThread, workspaceMemory } from "@/mastra/memory";
 import { workspaceChatInputSchema } from "@/server/schema";
 import { aiEnabled } from "@/services/llm";
 import { rateLimit, tooManyRequests } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 
 export async function POST(request: Request) {
   if (!aiEnabled()) return new Response(null, { status: 404 });
@@ -39,11 +40,7 @@ export async function POST(request: Request) {
     return new Response("Not found", { status: 404 });
   }
 
-  const rl = await rateLimit(session.userId, {
-    scope: "ai-workspace-chat",
-    limit: 20,
-    windowSec: 60,
-  });
+  const rl = await rateLimit(session.userId, RATE_LIMITS.aiWorkspaceChat);
   if (!rl.ok) return tooManyRequests(rl);
 
   const stream = await streamWorkspaceChat(

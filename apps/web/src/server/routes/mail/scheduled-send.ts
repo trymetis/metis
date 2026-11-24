@@ -17,7 +17,8 @@ import {
   retryScheduledSendInputSchema,
   retryScheduledSendOutputSchema,
 } from "@/server/schema";
-import { rateLimit } from "@/services/rate-limit";
+import { RateLimitedError, rateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 import {
   cancelScheduledSend,
   inspectUnconfirmedSend,
@@ -128,15 +129,8 @@ export const scheduledSendRouter = {
 };
 
 async function limitResolve(userId: string): Promise<void> {
-  const rl = await rateLimit(userId, {
-    scope: "resolve-send",
-    limit: 20,
-    windowSec: 60,
-  });
+  const rl = await rateLimit(userId, RATE_LIMITS.resolveSend);
   if (!rl.ok) {
-    throw new ORPCError("TOO_MANY_REQUESTS", {
-      message: "Too many requests. Please slow down.",
-      data: { retryAfterSec: Math.ceil(rl.resetMs / 1000) },
-    });
+    throw new RateLimitedError(rl);
   }
 }

@@ -204,17 +204,17 @@ To delete your own account, use **Settings**, **Security**. See [Delete your acc
 
 ### If an action is refused
 
-| Message                                                                                     | What it means                                                                                                                                                            |
-| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| "Invalid authenticator or backup code"                                                      | The code was wrong or too old. Wait for a new code and try again.                                                                                                        |
-| "Your passkey confirmation expired. Confirm with your passkey again."                       | Too much time passed after you confirmed with your passkey. Click **Confirm again** under **Passkey confirmed**, use your passkey, then click the dialog's button again. |
-| "Too many attempts. Please slow down."                                                      | Role changes, bans, unbans, removals and invites that make someone an admin or observer share one limit: 10 attempts every 5 minutes. Wait a few minutes.                |
-| "This user isn't banned"                                                                    | The ban already ended, or someone else unbanned the account. Reload the page.                                                                                            |
-| "The owner's role comes from METIS_OWNER_EMAIL"                                             | The owner's role cannot be changed in the dashboard. To hand the instance over, see [Hand the instance to a new owner](#hand-the-instance-to-a-new-owner).               |
-| "The instance owner can't be banned" or "The instance owner can't be removed"               | Nobody can ban or remove the owner.                                                                                                                                      |
-| "You can't ban yourself" or "Delete your own account from Settings → Security instead"      | You cannot ban or remove your own account here.                                                                                                                          |
-| "Only the instance owner can grant or change an admin role"                                 | Only the owner can make someone an admin, or change an admin's role.                                                                                                     |
-| "Only the instance owner can ban an admin" or "Only the instance owner can remove an admin" | Only the owner can ban or remove an admin.                                                                                                                               |
+| Message                                                                                     | What it means                                                                                                                                                                                                           |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Invalid authenticator or backup code"                                                      | The code was wrong or too old. Wait for a new code and try again.                                                                                                                                                       |
+| "Your passkey confirmation expired. Confirm with your passkey again."                       | Too much time passed after you confirmed with your passkey. Click **Confirm again** under **Passkey confirmed**, use your passkey, then click the dialog's button again.                                                |
+| "Too many attempts. Try again in 4 minutes."                                                | Role changes, bans, unbans, removals and invites that make someone an admin or observer share one limit: 10 attempts every 5 minutes. The message shows the time left, up to 5 minutes. Wait that long, then try again. |
+| "This user isn't banned"                                                                    | The ban already ended, or someone else unbanned the account. Reload the page.                                                                                                                                           |
+| "The owner's role comes from METIS_OWNER_EMAIL"                                             | The owner's role cannot be changed in the dashboard. To hand the instance over, see [Hand the instance to a new owner](#hand-the-instance-to-a-new-owner).                                                              |
+| "The instance owner can't be banned" or "The instance owner can't be removed"               | Nobody can ban or remove the owner.                                                                                                                                                                                     |
+| "You can't ban yourself" or "Delete your own account from Settings → Security instead"      | You cannot ban or remove your own account here.                                                                                                                                                                         |
+| "Only the instance owner can grant or change an admin role"                                 | Only the owner can make someone an admin, or change an admin's role.                                                                                                                                                    |
+| "Only the instance owner can ban an admin" or "Only the instance owner can remove an admin" | Only the owner can ban or remove an admin.                                                                                                                                                                              |
 
 ### Where these changes are recorded
 
@@ -248,7 +248,7 @@ Some invites are refused:
 - "The instance owner's address can't be invited".
 - "That email already has a pending invite": revoke the pending invite first, or wait for it to be used or to expire.
 - "Only the instance owner can invite an admin".
-- "Too many requests. Please slow down.": each person can send up to 10 account invites an hour.
+- "Too many requests. Try again in 1 hour.", with the time left: each person can send up to 100 account invites an hour. Wait for the time shown, then invite again.
 
 If the invite email cannot be sent, no invite is created. You see "The invite email couldn't be sent, so no invite was created. Ask the instance owner to check the mail settings, then try again." The owner is the exception: the invite is created anyway, and a box shows its link with "The invite email couldn't be sent. As the instance owner you can copy the link and send it yourself; it works only for the invited address." This is recorded in the audit log as **Invite link shown**. Admins are never shown a link. See [Outgoing email](/self-hosting/configure/outgoing-email).
 
@@ -480,7 +480,7 @@ The new values are checked against the real service, with the same checks as a s
 - **If the values are not valid, or the reset would quarantine connections that the dialog did not list,** the dialog shows why and nothing is stored. Close it and click **Reset to environment** again to see the new list.
 - **If someone else saved a change after you opened the page,** you see the usual "The configuration changed since you opened it" message. Reload the page and try again.
 
-Confirmations for **Save changes**, **Save anyway**, **Restore**, **Restore anyway** and **Reset to environment** share one limit: 10 attempts every 5 minutes. Every attempt counts, whether you use an authenticator code, a backup code or a passkey. Past it, you see "Too many attempts. Please slow down."
+Confirmations for **Save changes**, **Save anyway**, **Restore**, **Restore anyway** and **Reset to environment** share one limit: 10 attempts every 5 minutes. Every attempt counts, whether you use an authenticator code, a backup code or a passkey. Past it, you see "Too many attempts. Try again in 4 minutes.", with the time left, up to 5 minutes. Wait that long, then try again.
 
 ### History
 

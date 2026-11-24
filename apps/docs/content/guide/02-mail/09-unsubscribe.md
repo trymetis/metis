@@ -26,7 +26,9 @@ After you click it, the button changes:
 
 - **Unsubscribed**: you are off the list.
 - If the sender's page opened in a new tab, the button shows **Unsubscribed**; point at it to see that you still need to finish on their page.
-- If it failed, the button goes back to **Unsubscribe**, and its tooltip says it failed. Click it to retry.
+- If it failed, the button goes back to **Unsubscribe**, and its tooltip says it failed. Click the button to retry. If Metis Suite could not try at all, for example because you reached the unsubscribe limit (see [Limits](#limits)), a message at the bottom of the screen says why.
+
+Metis Suite can look for the unsubscribe option in up to 60 messages a minute. If you open more, the **Unsubscribe** button shows greyed out, and its tooltip says "Too many requests. Try again in 20 seconds.", or the time left (at most 1 minute). So the button can also show on a message whose sender offers no way to unsubscribe. The button checks again on its own after the wait. If it is still greyed out after a minute, open the message again. If the sender offers no way to unsubscribe, the button then goes away.
 
 ## Find all your mailing lists
 
@@ -55,10 +57,13 @@ Click **Unsubscribe** on the sender's row. The row shows "Working…" and then *
 
 Click **Rescan** to check your latest mail again.
 
-If you see "Too many scans. Please wait a moment.", wait a little before you click **Rescan** again. If you see "Too many unsubscribe requests. Please slow down.", wait a moment, then continue.
+If you click **Rescan** within 5 minutes of the last scan, you see the same list. Mail that arrived since then shows only after those 5 minutes. Each sender's **Unsubscribed** state is always up to date.
 
 ## Limits
 
 - The scan looks at your latest 100 Inbox emails. When a Zoho mailbox is involved, it looks at the latest 50.
 - If no mailing lists are found, the page says "No mailing lists found in your recent inbox."
 - A sender with no unsubscribe option cannot be unsubscribed here. You may see "This sender didn't offer a way to unsubscribe."
+- Each mailbox can be scanned 10 times every 5 minutes, by everyone who can see it together. **All inboxes** has its own 10 scans every 5 minutes. Searching subscriptions, and asking the assistant or a connected AI app about your mailing lists, also use up these limits.
+- Past the limit, you see "Too many scans. Try again in 3 minutes.", or the time left, in place of the list. Wait for that time (at most 5 minutes), then click **Rescan**.
+- You can click **Unsubscribe** up to 30 times a minute, in the toolbar, on this page, in search, and through the assistant or a connected AI app together. Unsubscribing from up to 25 selected senders at once with **Unsubscribe (3)** counts as one time. Past that, you see "Too many unsubscribe requests. Try again in 20 seconds.", or the time left. In the toolbar and in search, it shows in a message at the bottom of the screen. On the **Subscriptions** page, it shows on the row of each sender you picked. Wait for that time (at most 1 minute), then continue.

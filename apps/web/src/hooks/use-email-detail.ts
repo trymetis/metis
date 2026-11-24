@@ -5,6 +5,7 @@ import { skipToken, useQueries, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { rpc } from "@/lib/orpc";
+import { rateLimitWait } from "@/lib/rate-limit-message";
 import { textToHtml } from "@/mail/text";
 import { useMailStore } from "@/store/mail-store";
 import type { Attachment, Email, UnsubscribeMethod, UnsubscribeStatus } from "@/types/mail";
@@ -41,6 +42,13 @@ const NO_ATTACHMENTS: Attachment[] = [];
 const NO_MESSAGES: ThreadMessage[] = [];
 const NO_REPLIES: SmartReply[] = [];
 
+const RATE_LIMIT_RETRIES = 5;
+
+const retryWhenRateLimited = {
+  retry: (count: number, err: unknown) => count < RATE_LIMIT_RETRIES && rateLimitWait(err) !== null,
+  retryDelay: (_count: number, err: unknown) => (rateLimitWait(err) ?? 1) * 1000,
+};
+
 export function bodyFrom(data: { bodyHtml?: string; bodyText?: string }): MessageBody {
   if (data.bodyHtml) return { kind: "html", html: data.bodyHtml };
   if (data.bodyText) return { kind: "text", text: data.bodyText };
@@ -58,6 +66,7 @@ export function usePhishingAnalysis(emailId: string | undefined, enabled = true)
   const query = useQuery(
     rpc.ai.analyzePhishing.queryOptions({
       input: emailId && enabled ? { ...scope, id: emailId } : skipToken,
+      staleTime: Infinity,
     }),
   );
   return {
@@ -73,8 +82,13 @@ export function useUnsubscribeInfo(email: Email | null) {
   const query = useQuery(
     rpc.mail.subscriptions.infoForMessage.queryOptions({
       input: wanted ? { ...scope, id: wanted.id, senderEmail: wanted.from } : skipToken,
+      staleTime: Infinity,
+      ...retryWhenRateLimited,
     }),
   );
+  const failure = query.error ?? query.failureReason;
+  const limited =
+    wanted && !query.data && rateLimitWait(failure) !== null ? (failure?.message ?? null) : null;
   const emailId = email?.id ?? null;
   const [override, setOverride] = useState<{
     emailId: string | null;
@@ -91,7 +105,12 @@ export function useUnsubscribeInfo(email: Email | null) {
     [emailId],
   );
 
-  return { methods: wanted ? (query.data?.methods ?? NO_METHODS) : NO_METHODS, status, setStatus };
+  return {
+    methods: wanted ? (query.data?.methods ?? NO_METHODS) : NO_METHODS,
+    limited,
+    status,
+    setStatus,
+  };
 }
 
 export function useAttachments(emailId: string | undefined): Attachment[] {
@@ -209,6 +228,8 @@ export function useSmartReplies(email: Email | null, enabled = true) {
               snippet: email.snippet,
             }
           : skipToken,
+      staleTime: Infinity,
+      ...retryWhenRateLimited,
     }),
   );
   const inbox = enabled && email?.folder === "inbox";
@@ -227,6 +248,7 @@ export function useThreadSummary(email: Email | null, enabled = true) {
   const query = useQuery(
     rpc.ai.threadSummary.queryOptions({
       input: id && wanted ? { ...scope, messageId: id, threadId } : skipToken,
+      staleTime: Infinity,
     }),
   );
 
@@ -236,6 +258,6 @@ export function useThreadSummary(email: Email | null, enabled = true) {
   return {
     result: shown ? (query.data ?? null) : null,
     loading: shown && query.isFetching,
-    error: shown && query.error ? query.error.message || "Summary failed" : null,
+    error: shown && query.error ? query.error.message || "Try again in a moment." : null,
   };
 }

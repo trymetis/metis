@@ -14,7 +14,8 @@ An MCP client can use the same kinds of tools as the Workspace Assistant, plus a
 - **There is no approval step.** A sensitive tool works only after you turn it on for that client. Once it is on, the client can use it without asking you.
 - **Some actions follow workspace roles.** For example, only workspace owners and admins can delete workflows or remove members, whether they use a client or not.
 - **It cannot change its own access.** No tool changes your AI switches or any client's settings.
-- **Requests are limited.** If a client sends too many requests in a minute, it is told to wait and try again.
+- **Requests are limited.** Each client can make up to 120 requests a minute. Past that, the client is told how many seconds to wait, at most 1 minute.
+- **Tools have the app's limits.** A tool call that reaches one of the limits you meet in the app, such as for subscription scans, summaries or invites, fails with the same kind of message, for example "Too many scans. Try again in 3 minutes." See [Usage limits](/guide/reference/usage-limits).
 
 ## Non-sensitive tools
 

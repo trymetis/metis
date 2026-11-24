@@ -7,6 +7,7 @@ import { listProviderCalendars } from "@/calendar/available";
 import { deleteCalendar, getCalendar, listAccountCalendars } from "@/connections";
 import { db } from "@/db";
 import { calendar, calendarWorkspace, connection } from "@/db/schema";
+import { RATE_LIMITS } from "@/services/rate-limits";
 
 import { appSession } from "../middlewares/app-session";
 import { requireTotp } from "../require-totp";
@@ -82,7 +83,7 @@ export const calendarsRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "calendar-ai-on",
+          rule: RATE_LIMITS.calendarAiOn,
           message: "Confirm it's you to turn AI on",
         });
       }
@@ -120,7 +121,7 @@ export const calendarsRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "calendar-ai-on",
+          rule: RATE_LIMITS.calendarAiOn,
           message: "Confirm it's you to turn AI on everywhere",
         });
       }

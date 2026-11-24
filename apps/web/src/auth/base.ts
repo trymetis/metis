@@ -10,6 +10,12 @@ import type { db } from "@/db";
 import * as schema from "@/db/schema";
 import { CLIENT_IP_HEADER } from "@/lib/client-ip-header";
 import type { rateLimit } from "@/services/rate-limit";
+import {
+  AUTH_DEFAULT_RATE_LIMIT,
+  AUTH_PATH_RATE_LIMITS,
+  AUTH_RATE_LIMIT_SCOPE,
+  RATE_LIMITS,
+} from "@/services/rate-limits";
 
 import { native } from "./native";
 import { type CompletedSignIn, signInNotifier } from "./sign-in-notifier";
@@ -62,20 +68,25 @@ export function authOptions(deps: AuthDeps) {
     advanced: { ipAddress: { ipAddressHeaders: [CLIENT_IP_HEADER] } },
     rateLimit: {
       enabled: true,
-      storage: "secondary-storage",
-      window: 60,
-      max: 60,
-      customRules: {
-        "/get-session": false,
-        "/sign-in/magic-link": { window: 60 * 60, max: 5 },
-        "/request-password-reset": { window: 60 * 60, max: 5 },
-        "/send-verification-email": { window: 60 * 60, max: 5 },
-        "/sign-in/email": { window: 60, max: 10 },
-        "/sign-up/email": { window: 60 * 60, max: 5 },
-        "/two-factor/verify": { window: 60, max: 10 },
-        "/native/code": { window: 60, max: 10 },
-        "/native/exchange": { window: 60, max: 10 },
-        "/native/connect-ticket": { window: 60, max: 20 },
+      window: AUTH_DEFAULT_RATE_LIMIT.windowSec,
+      max: AUTH_DEFAULT_RATE_LIMIT.limit,
+      customRules: Object.fromEntries(
+        Object.entries(AUTH_PATH_RATE_LIMITS).map(([path, rule]) => [
+          path,
+          rule && { window: rule.windowSec, max: rule.limit },
+        ]),
+      ),
+      customStorage: {
+        consume: async (key, rule) => {
+          const rl = await deps.rateLimit(key, {
+            scope: AUTH_RATE_LIMIT_SCOPE,
+            limit: rule.max,
+            windowSec: rule.window,
+          });
+          return rl.ok
+            ? { allowed: true, retryAfter: null }
+            : { allowed: false, retryAfter: Math.max(1, Math.ceil(rl.resetMs / 1000)) };
+        },
       },
     },
     plugins: [
@@ -128,11 +139,7 @@ export function authOptions(deps: AuthDeps) {
           } catch {
             return false;
           }
-          const rl = await deps.rateLimit(origin, {
-            scope: "cimd-metadata-fetch",
-            limit: 20,
-            windowSec: 60,
-          });
+          const rl = await deps.rateLimit(origin, RATE_LIMITS.cimdMetadataFetch);
           return rl.ok;
         },
       }),

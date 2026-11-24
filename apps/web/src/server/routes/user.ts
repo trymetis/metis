@@ -9,7 +9,8 @@ import { isOwnerEmail } from "@/auth/owner";
 import { getAuth, invalidSecondFactorMessage, verify2FA } from "@/auth/server";
 import { db } from "@/db";
 import { mailRemoteAllow, session, userPrefs } from "@/db/schema";
-import { rateLimit } from "@/services/rate-limit";
+import { RateLimitedError, rateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 import { getWorkspaceBySlug, planAccountDelete, setDefaultWorkspaceSlug } from "@/workspace";
 
 import { appSession } from "../middlewares/app-session";
@@ -55,16 +56,9 @@ async function storedPreferences(userId: string): Promise<UserPreferences> {
 }
 
 async function limitPreferenceWrites(userId: string) {
-  const rl = await rateLimit(userId, {
-    scope: "user-preferences",
-    limit: 30,
-    windowSec: 60,
-  });
+  const rl = await rateLimit(userId, RATE_LIMITS.userPreferences);
   if (!rl.ok) {
-    throw new ORPCError("TOO_MANY_REQUESTS", {
-      message: "Too many requests. Please slow down.",
-      data: { retryAfterSec: Math.ceil(rl.resetMs / 1000) },
-    });
+    throw new RateLimitedError(rl);
   }
 }
 
@@ -82,16 +76,9 @@ async function assertCanDeleteAccount(
     });
   }
 
-  const rl = await rateLimit(appUser.userId, {
-    scope: "delete-account",
-    limit: 5,
-    windowSec: 300,
-  });
+  const rl = await rateLimit(appUser.userId, RATE_LIMITS.deleteAccount);
   if (!rl.ok) {
-    throw new ORPCError("TOO_MANY_REQUESTS", {
-      message: "Too many attempts. Please slow down.",
-      data: { retryAfterSec: Math.ceil(rl.resetMs / 1000) },
-    });
+    throw new RateLimitedError(rl, "attempts");
   }
 
   if (email.toLowerCase() !== appUser.user.email.toLowerCase()) {
@@ -285,16 +272,9 @@ export const userRouter = {
     }),
 
   exportData: appSession.output(dataExportSchema).handler(async ({ context }) => {
-    const rl = await rateLimit(context.appUser.userId, {
-      scope: "data-export",
-      limit: 5,
-      windowSec: 600,
-    });
+    const rl = await rateLimit(context.appUser.userId, RATE_LIMITS.dataExport);
     if (!rl.ok) {
-      throw new ORPCError("TOO_MANY_REQUESTS", {
-        message: "Too many exports. Try again in a few minutes.",
-        data: { retryAfterSec: Math.ceil(rl.resetMs / 1000) },
-      });
+      throw new RateLimitedError(rl, "exports");
     }
     return buildDataExport(context.appUser.userId);
   }),

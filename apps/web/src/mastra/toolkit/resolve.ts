@@ -4,6 +4,7 @@ import type { ResolvedAddressBook } from "@/contacts/aggregate";
 import { type DriveSurface, driveSurfaceFor } from "@/drive/aggregate";
 import { sanitizeError } from "@/lib/errors/sanitize-error";
 import type { Resolved } from "@/ops/scope";
+import { RateLimitedError } from "@/services/rate-limit";
 
 import {
   type AgentMailbox,
@@ -20,7 +21,8 @@ export async function withToolErrors<R>(fn: () => Promise<R>): Promise<R | { err
   try {
     return await fn();
   } catch (err) {
-    if (err instanceof ToolRefusal) return { error: err.message };
+    if (err instanceof ToolRefusal || err instanceof RateLimitedError)
+      return { error: err.message };
     console.error("[agent-tool]", err);
     return { error: sanitizeError(err) };
   }

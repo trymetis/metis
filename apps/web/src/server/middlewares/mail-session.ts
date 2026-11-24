@@ -5,16 +5,15 @@ import type { ZodType } from "zod";
 import type { WorkspaceUserSession } from "@/auth/session";
 import { mailSessionFor } from "@/mail/session";
 import { enforceRateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 
 import type { MailboxScope } from "../schema";
 import { workspaceSession } from "./workspace-session";
 
-const MAIL_RATE = { scope: "mail-session", limit: 300, windowSec: 60 };
-
 const resolveMailbox = os
   .$context<{ appUser: WorkspaceUserSession }>()
   .middleware(async ({ context, next }, input: { mailboxSlug: string }) => {
-    await enforceRateLimit(context.appUser.userId, MAIL_RATE);
+    await enforceRateLimit(context.appUser.userId, RATE_LIMITS.mailSession);
     const mail = await mailSessionFor(context.appUser, input.mailboxSlug);
     if (!mail) {
       throw new ORPCError("NOT_FOUND", { message: "Unknown mailbox" });

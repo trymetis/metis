@@ -40,6 +40,7 @@ This page lists the limits a workflow has to fit, how long run data is kept, and
 | **Runs at the same time**                        | 1 to 20                                                                            |
 | Rate limit period                                | 1 to 10080 minutes                                                                 |
 | Test runs                                        | Up to 10 a minute                                                                  |
+| Opening or resolving unconfirmed steps           | Up to 20 a minute, together with unconfirmed sends                                 |
 | Items to pick from in a test run                 | The 15 newest                                                                      |
 | Pinned sample                                    | 64 KB                                                                              |
 | Runs in the editor's **Runs** tab                | The latest 20                                                                      |

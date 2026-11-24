@@ -1,11 +1,18 @@
 import "server-only";
 import { inArray } from "drizzle-orm";
+import { z } from "zod";
 
 import { db } from "@/db";
 import { mailUnsubscribe } from "@/db/schema";
 import { sanitizeError } from "@/lib/errors/sanitize-error";
-import type { BulkUnsubscribeResult, SubscriptionSender } from "@/server/schema";
+import {
+  type BulkUnsubscribeResult,
+  type SubscriptionSender,
+  subscriptionSenderSchema,
+} from "@/server/schema";
+import { getCache } from "@/services/cache";
 import { enforceRateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 import type { Email } from "@/types/mail";
 
 import type { MailAdapter } from "./adapter";
@@ -17,6 +24,15 @@ import {
   performOneClickUnsubscribe,
   unsubscribeMethods,
 } from "./unsubscribe";
+
+const SCAN_CACHE_SEC = 5 * 60;
+
+const cachedScanSchema = z.object({
+  senders: z.array(subscriptionSenderSchema.omit({ unsubscribedStatus: true })),
+  scanned: z.number(),
+});
+
+type CachedScan = z.infer<typeof cachedScanSchema>;
 
 interface SenderGroup {
   senderEmail: string;
@@ -78,16 +94,20 @@ async function mapChunked<T, R>(
   return results;
 }
 
-export async function scanSubscriptions(
-  mail: Pick<MailScope, "userId" | "adapter" | "mailboxes">,
-  requestedScanLimit: number,
-): Promise<{ senders: SubscriptionSender[]; scanned: number }> {
-  await enforceRateLimit(
-    mail.userId,
-    { scope: "mail-subscriptions-scan", limit: 10, windowSec: 300 },
-    "Too many scans. Please wait a moment.",
-  );
+async function readCachedScan(key: string): Promise<CachedScan | null> {
+  const raw = await getCache().get(key);
+  if (!raw) return null;
+  try {
+    return cachedScanSchema.safeParse(JSON.parse(raw)).data ?? null;
+  } catch {
+    return null;
+  }
+}
 
+async function runScan(
+  mail: Pick<MailScope, "adapter" | "mailboxes">,
+  requestedScanLimit: number,
+): Promise<CachedScan> {
   const adapter = mail.adapter;
   const hasZoho = mail.mailboxes.some((m) => m.provider === "zoho");
   const scanLimit = hasZoho ? Math.min(requestedScanLimit, 50) : requestedScanLimit;
@@ -103,13 +123,7 @@ export async function scanSubscriptions(
     return { group: g, methods };
   });
 
-  const unsubRows = await db
-    .select()
-    .from(mailUnsubscribe)
-    .where(inArray(mailUnsubscribe.mailboxId, mailboxIds(mail)));
-  const statusBySender = new Map(unsubRows.map((r) => [r.senderEmail, r.status]));
-
-  const senders: SubscriptionSender[] = withInfo
+  const senders = withInfo
     .filter((x): x is NonNullable<typeof x> => x !== null)
     .map(({ group, methods }) => ({
       senderEmail: group.senderEmail,
@@ -119,22 +133,47 @@ export async function scanSubscriptions(
       latestDate: group.latest.date,
       latestSubject: group.latest.subject,
       methods,
-      unsubscribedStatus: statusBySender.get(group.senderEmail),
     }))
     .toSorted((a, b) => b.count - a.count);
 
   return { senders, scanned: emails.length };
 }
 
+export async function scanSubscriptions(
+  mail: Pick<MailScope, "userId" | "adapter" | "mailboxes">,
+  requestedScanLimit: number,
+): Promise<{ senders: SubscriptionSender[]; scanned: number }> {
+  const ids = mailboxIds(mail);
+  const scope = ids.toSorted().join(",");
+  const key = `subscriptions-scan:${scope}:${requestedScanLimit}`;
+
+  let scan = await readCachedScan(key);
+  if (!scan) {
+    await enforceRateLimit(scope, RATE_LIMITS.mailSubscriptionsScan, "scans");
+    scan = await runScan(mail, requestedScanLimit);
+    await getCache().set(key, JSON.stringify(scan), SCAN_CACHE_SEC);
+  }
+
+  const unsubRows = await db
+    .select()
+    .from(mailUnsubscribe)
+    .where(inArray(mailUnsubscribe.mailboxId, ids));
+  const statusBySender = new Map(unsubRows.map((r) => [r.senderEmail, r.status]));
+
+  return {
+    senders: scan.senders.map((sender) => ({
+      ...sender,
+      unsubscribedStatus: statusBySender.get(sender.senderEmail),
+    })),
+    scanned: scan.scanned,
+  };
+}
+
 export async function unsubscribeSenders(
   mail: Pick<MailScope, "userId" | "adapter" | "mailboxes" | "isAggregate">,
   items: { messageId: string; senderEmail: string }[],
 ): Promise<BulkUnsubscribeResult[]> {
-  await enforceRateLimit(
-    mail.userId,
-    { scope: "mail-unsubscribe", limit: 30, windowSec: 60 },
-    "Too many unsubscribe requests. Please slow down.",
-  );
+  await enforceRateLimit(mail.userId, RATE_LIMITS.mailUnsubscribe, "unsubscribe requests");
 
   const results: BulkUnsubscribeResult[] = [];
 

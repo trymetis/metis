@@ -18,6 +18,7 @@ import {
 } from "@/mcp/auth";
 import { aiEnabled } from "@/services/llm";
 import { rateLimit, tooManyRequests } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 
 const handle = async (request: Request, jwt: JWTPayload) => {
   if (!aiEnabled()) return new Response(null, { status: 404 });
@@ -59,11 +60,7 @@ const handle = async (request: Request, jwt: JWTPayload) => {
     );
   }
 
-  const rl = await rateLimit(client.clientId, {
-    scope: "mcp",
-    limit: 60,
-    windowSec: 60,
-  });
+  const rl = await rateLimit(client.clientId, RATE_LIMITS.mcp);
   if (!rl.ok) return tooManyRequests(rl);
 
   touchMcpClient(client.clientId);

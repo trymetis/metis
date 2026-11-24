@@ -1,5 +1,4 @@
 import "server-only";
-import { ORPCError } from "@orpc/server";
 import { and, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
@@ -25,7 +24,8 @@ import {
   setOnMessagesInputSchema,
   setOnMessagesOutputSchema,
 } from "@/server/schema";
-import { rateLimit } from "@/services/rate-limit";
+import { RateLimitedError, rateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 
 export const labelsRouter = {
   listEmails: mailSession(listLabelledInputSchema)
@@ -66,16 +66,9 @@ export const labelsRouter = {
     .handler(async ({ input, context }) => {
       const { mail } = context;
 
-      const rl = await rateLimit(mail.userId, {
-        scope: "mail-classify",
-        limit: 30,
-        windowSec: 60,
-      });
+      const rl = await rateLimit(mail.userId, RATE_LIMITS.mailClassify);
       if (!rl.ok) {
-        throw new ORPCError("TOO_MANY_REQUESTS", {
-          message: "Too many requests. Please slow down.",
-          data: { retryAfterSec: Math.ceil(rl.resetMs / 1000) },
-        });
+        throw new RateLimitedError(rl);
       }
 
       return { labels: await classifyMessages(mail, input.items) };

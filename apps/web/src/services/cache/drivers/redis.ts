@@ -93,6 +93,11 @@ export function createRedisDriver(cfg: RedisCacheConfig): CacheDriver {
         }),
       );
     },
+    async ttlMs(key) {
+      const c = await connected();
+      const ms = await c.pTTL(prefixed(key));
+      return ms >= 0 ? ms : null;
+    },
     async hget(key, field) {
       const c = await connected();
       return (await c.hGet(prefixed(key), field)) ?? null;

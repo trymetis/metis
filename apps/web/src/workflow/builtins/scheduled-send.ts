@@ -7,6 +7,7 @@ import type { ResolvedMailbox } from "@/mail/aggregate";
 import { forSender, type MailScope } from "@/mail/session";
 import type { ScheduledSendItem as ScheduledSendView } from "@/server/schema";
 import { enforceRateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 import type { DraftPayload, MailSignatureKind } from "@/types/mail";
 
 import { expr, literal } from "../expr";
@@ -123,11 +124,7 @@ export async function scheduleOutgoing(opts: {
   scheduledFor: string;
   signature?: MailSignatureKind | null;
 }): Promise<{ id: string; scheduledFor: string; addedBcc: string[] } | { error: string }> {
-  await enforceRateLimit(opts.mail.userId, {
-    scope: "schedule-send",
-    limit: 30,
-    windowSec: 60,
-  });
+  await enforceRateLimit(opts.mail.userId, RATE_LIMITS.scheduleSend);
 
   const when = new Date(opts.scheduledFor);
   if (Number.isNaN(when.getTime())) {

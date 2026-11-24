@@ -2,13 +2,12 @@ import "server-only";
 import PostalMime, { type Address, type Email as ParsedEmail } from "postal-mime";
 
 import { sanitizeError } from "@/lib/errors/sanitize-error";
-import { rateLimit, tooManyRequests } from "@/services/rate-limit";
+import { RateLimitedError, rateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 
 import { readRawMessage } from "../raw";
 import { getMailSession } from "../session";
 import { errorPage } from "./page-document";
-
-const MAIL_RATE = { scope: "mail-session", limit: 300, windowSec: 60 };
 
 export function parseRaw(raw: string): Promise<ParsedEmail> {
   return PostalMime.parse(raw, { attachmentEncoding: "arraybuffer" });
@@ -42,8 +41,13 @@ export async function readPageSource(
   if (!id) return errorPage(400, "Message not found", "The link does not name a message.");
   const mail = await getMailSession(headers, workspaceSlug, mailboxSlug);
   if (!mail) return errorPage(404, "Message not found", "This mailbox is not available to you.");
-  const limited = await rateLimit(mail.userId, MAIL_RATE);
-  if (!limited.ok) return tooManyRequests(limited);
+  const limited = await rateLimit(mail.userId, RATE_LIMITS.mailSession);
+  if (!limited.ok) {
+    const { message, retryAfterSec } = new RateLimitedError(limited);
+    const page = await errorPage(429, "Too many requests", message);
+    page.headers.set("Retry-After", String(retryAfterSec));
+    return page;
+  }
   try {
     return await readRawMessage(mail.adapter, id);
   } catch (err) {

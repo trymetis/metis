@@ -19,7 +19,9 @@ Actions in search follow the same rules as everywhere else. For example, only th
 
 - **Mail** and **Files** show a first set of results and **Load more** for the rest.
 - Every other group except **Commands**, **Settings** and **Workspaces** shows at most 8 results, or 16 for **Calendars** and **Address books**. Add words or filters to find one that is not shown.
-- If you search a great many times in a short while, search asks you to wait: **Some places could not be searched** then shows "Too many searches. Please wait a moment." Wait a moment, then search again.
+- You can run at least 60 searches a minute. Each **Load more** counts as a search. Search also runs each time you pause while typing.
+- Past the limit, the dialog shows "Some places could not be searched:" followed by "Too many searches. Try again in 20 seconds.", or the time left. The message can show more than once, separated by dots. Wait for that time (at most 1 minute), then search again.
+- If you reach the limit while clicking **Load more**, the results you already have stay, and the same message shows. Wait for that time, then click **Load more** again.
 
 ## Events
 
@@ -52,8 +54,10 @@ Actions in search follow the same rules as everywhere else. For example, only th
 
 ## Subscriptions
 
-- **Subscriptions** can be searched only a few times every few minutes. Each time, search reads the newest 50 messages in each inbox.
-- If **Some places could not be searched** lists subscription, wait a few minutes, then search again.
+- Each time, search reads the newest 50 messages in each inbox.
+- New subscriptions can take up to 5 minutes to show in search. Searching again within that time shows the same list.
+- Searches use up the scan limit of each mailbox they read. See [Unsubscribe from mailing lists](/guide/mail/unsubscribe#limits).
+- Past the limit, the dialog shows, for example, "Some places could not be searched: subscription (Too many scans. Try again in 3 minutes.)". Wait for that time (at most 5 minutes), then search again.
 
 ## Chats and workflow runs
 

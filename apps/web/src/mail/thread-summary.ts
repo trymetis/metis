@@ -8,6 +8,7 @@ import { summarizerAgent } from "@/mastra/agents/summarizer";
 import { decideOne, decisionEnabled, decisionUsageProvider } from "@/services/decision";
 import { getLlm, structuredOutput } from "@/services/llm";
 import { enforceRateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 import type { ThreadSummary } from "@/types/thread-summary";
 
 import { getThreadSummary, saveThreadSummary } from "./cache";
@@ -259,6 +260,7 @@ export async function buildThreadSummary(
   session: MailScope,
   messageId: string,
   threadId?: string,
+  beforeModel?: () => Promise<void>,
 ): Promise<SummaryResponse> {
   const scopedThread = scopeMessage(session, threadId ?? messageId);
   const model = `${getLlm().summary.modelId}#${SUMMARY_FORMAT}`;
@@ -292,6 +294,8 @@ export async function buildThreadSummary(
       cached: true,
     };
   }
+
+  await beforeModel?.();
 
   try {
     const lastIdx = current ? msgs.findIndex((m) => m.key === current.lastMessageId) : -1;
@@ -343,12 +347,9 @@ export async function summarizeThread(
   messageId: string,
   threadId?: string,
 ): Promise<{ cards: SummaryCard[]; spec: Spec | null }> {
-  await enforceRateLimit(session.userId, {
-    scope: "thread-summary",
-    limit: 30,
-    windowSec: 60,
-  });
-  const { cards } = await buildThreadSummary(session, messageId, threadId);
+  const { cards } = await buildThreadSummary(session, messageId, threadId, () =>
+    enforceRateLimit(session.userId, RATE_LIMITS.threadSummary),
+  );
   return {
     cards,
     spec: cards.length > 0 ? buildSummarySpec(cards) : null,

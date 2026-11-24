@@ -158,6 +158,9 @@ See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mai
 ### Other rules
 
 - **Unsubscribe results are mailbox-scoped**: the sender dropped the address, not the person.
+- **A subscriptions scan is cached for its mailboxes for 5 minutes** (`scanSubscriptions`, key over the sorted mailbox ids and scan size), and its rate limit counts per mailbox set, only on a miss; **Rescan**, search and the assistant reuse it, and the unsubscribe statuses are read fresh every time.
+- **A message's unsubscribe check (`mail.subscriptions.infoForMessage`) is fetched once per message per session** (`useUnsubscribeInfo`, `staleTime: Infinity`), because a message's `List-Unsubscribe` headers never change and each check is a provider call.
+  - Over its limit, the toolbar shows **Unsubscribe** disabled with the wait as its tooltip and the query retries after the wait.
 - **The RFC 8058 one-click POST is SSRF-guarded**: https only, no IP literal, no localhost, sent through `safeRequest` (`src/lib/ssrf.ts`).
 - **`undo-send-toast.tsx` is presentational and imports no store.** `startSend` schedules `fire()` and calls `showUndoSendToast` itself, so the send does not depend on a mounted component and the two stay out of an import cycle.
 - **Codes, OTPs and links in mail are stored and cached like any other content.** An "Expires in X min" label is display only; a derived copy adds no protection to a mailbox that has leaked.

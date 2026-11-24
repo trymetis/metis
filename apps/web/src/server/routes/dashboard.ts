@@ -39,6 +39,7 @@ import { deleteInstanceTheme, listInstanceThemes, saveInstanceTheme } from "@/da
 import { rollbackRelease, startUpgrade, updatesEnabled, updatesStatus } from "@/dashboard/updates";
 import { banUser, listInstanceUsers, removeUser, setUserRole, unbanUser } from "@/dashboard/users";
 import { createInvite, listAccountInvites, revokeAccountInvite } from "@/invites";
+import { RATE_LIMITS } from "@/services/rate-limits";
 import { themeJson } from "@/theme/store";
 
 import {
@@ -158,7 +159,7 @@ export const dashboardRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "instance-users",
+          rule: RATE_LIMITS.instanceUsers,
           message: "Confirm it's you to change this role",
         });
         const result = await setUserRole({
@@ -179,7 +180,7 @@ export const dashboardRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "instance-users",
+          rule: RATE_LIMITS.instanceUsers,
           message: "Confirm it's you to ban this user",
         });
         const result = await banUser({
@@ -201,7 +202,7 @@ export const dashboardRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "instance-users",
+          rule: RATE_LIMITS.instanceUsers,
           message: "Confirm it's you to unban this user",
         });
         const result = await unbanUser({
@@ -221,7 +222,7 @@ export const dashboardRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "instance-users",
+          rule: RATE_LIMITS.instanceUsers,
           message: "Confirm it's you to remove this user",
         });
         const result = await removeUser({
@@ -253,7 +254,7 @@ export const dashboardRouter = {
             userId: context.appUser.userId,
             code: input.code,
             headers: context.headers,
-            scope: "instance-users",
+            rule: RATE_LIMITS.instanceUsers,
             message: "Confirm it's you to invite someone with an instance role",
           });
         }
@@ -386,7 +387,7 @@ export const dashboardRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "instance-config",
+          rule: RATE_LIMITS.instanceConfig,
           message: "Confirm it's you to change the configuration",
         });
         return saveConfigSections(input, context.appUser.userId);
@@ -409,7 +410,7 @@ export const dashboardRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "instance-config",
+          rule: RATE_LIMITS.instanceConfig,
           message: "Confirm it's you to restore that version",
         });
         return revertConfig(input, context.appUser.userId);
@@ -424,7 +425,7 @@ export const dashboardRouter = {
             userId: context.appUser.userId,
             code: input.code,
             headers: context.headers,
-            scope: "instance-config",
+            rule: RATE_LIMITS.instanceConfig,
             message: "Confirm it's you to reset this section",
           });
         }
@@ -469,7 +470,7 @@ export const dashboardRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "instance-update",
+          rule: RATE_LIMITS.instanceUpdate,
           message: "Confirm it's you to upgrade",
         });
         return startUpgrade(input.version, context.appUser.userId);
@@ -484,7 +485,7 @@ export const dashboardRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "instance-update",
+          rule: RATE_LIMITS.instanceUpdate,
           message: "Confirm it's you to undo the upgrade",
         });
         return rollbackRelease(context.appUser.userId);

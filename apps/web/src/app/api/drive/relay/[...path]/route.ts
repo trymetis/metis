@@ -14,6 +14,7 @@ import { failureStatus } from "@/lib/errors/provider-error";
 import { sanitizeError } from "@/lib/errors/sanitize-error";
 import { maintenanceResponse } from "@/maintenance/response";
 import { rateLimit, tooManyRequests } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 import type { DriveStream } from "@/types/drive";
 
 const INVALID_LINK = "This link is invalid or has expired";
@@ -53,11 +54,7 @@ export async function GET(request: Request) {
   const grant = await verifyRelayRequest("GET", new URL(request.url));
   if (!grant) return Response.json({ error: INVALID_LINK }, { status: 403 });
 
-  const rl = await rateLimit(grant.userId, {
-    scope: "drive-relay-download",
-    limit: 120,
-    windowSec: 60,
-  });
+  const rl = await rateLimit(grant.userId, RATE_LIMITS.driveRelayDownload);
   if (!rl.ok) return tooManyRequests(rl);
 
   const release = acquireRelaySlot(grant.userId);
@@ -107,11 +104,7 @@ export async function PUT(request: Request) {
   const grant = await verifyRelayRequest("PUT", new URL(request.url));
   if (!grant) return refuse(403, INVALID_LINK);
 
-  const rl = await rateLimit(grant.userId, {
-    scope: "drive-relay-upload",
-    limit: 60,
-    windowSec: 60,
-  });
+  const rl = await rateLimit(grant.userId, RATE_LIMITS.driveRelayUpload);
   if (!rl.ok) return closing(tooManyRequests(rl));
 
   const declared = Number(request.headers.get("content-length") ?? "");

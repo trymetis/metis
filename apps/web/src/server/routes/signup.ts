@@ -8,7 +8,8 @@ import { ownerSignup } from "@/auth/signup";
 import { config } from "@/config";
 import { previewInvite, signUpFromInvite } from "@/invites";
 import { clientIp } from "@/services/client-ip";
-import { rateLimit } from "@/services/rate-limit";
+import { RateLimitedError, rateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS, type RateLimitRule } from "@/services/rate-limits";
 
 import { base } from "../middlewares/base";
 import {
@@ -20,17 +21,10 @@ import {
   inviteTokenInputSchema,
 } from "../schema";
 
-async function limit(headers: Headers, scope: string, limitPerHour: number): Promise<void> {
-  const result = await rateLimit(clientIp(headers) ?? "unknown", {
-    scope,
-    limit: limitPerHour,
-    windowSec: 60 * 60,
-  });
+async function limit(headers: Headers, rule: RateLimitRule): Promise<void> {
+  const result = await rateLimit(clientIp(headers) ?? "unknown", rule);
   if (!result.ok) {
-    throw new ORPCError("TOO_MANY_REQUESTS", {
-      message: "Too many requests. Please slow down.",
-      data: { retryAfterSec: Math.ceil(result.resetMs / 1000) },
-    });
+    throw new RateLimitedError(result);
   }
 }
 
@@ -39,7 +33,7 @@ export const signupRouter = {
     .input(firstSignupInputSchema)
     .output(firstSignupOutputSchema)
     .handler(async ({ input, context }) => {
-      await limit(context.headers, "signup-first", 10);
+      await limit(context.headers, RATE_LIMITS.signupFirst);
 
       if (!config.app.setupCode) {
         console.warn(
@@ -78,7 +72,7 @@ export const signupRouter = {
     .input(inviteTokenInputSchema)
     .output(invitePreviewOutputSchema)
     .handler(async ({ input, context }) => {
-      await limit(context.headers, "signup-invite-preview", 30);
+      await limit(context.headers, RATE_LIMITS.signupInvitePreview);
 
       const session = await getAuth().api.getSession({ headers: context.headers });
       const result = await previewInvite(
@@ -95,7 +89,7 @@ export const signupRouter = {
     .input(inviteSignupInputSchema)
     .output(inviteSignupOutputSchema)
     .handler(async ({ input, context }) => {
-      await limit(context.headers, "signup-invite", 10);
+      await limit(context.headers, RATE_LIMITS.signupInvite);
 
       const result = await signUpFromInvite({
         token: input.token,

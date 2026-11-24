@@ -61,7 +61,13 @@ function slot<T>(
 ): Slot<T> {
   if (!active) return empty();
   if (query.error && !items) return { ...empty<T>(), errors: [message(query.error)] };
-  return { items: items ?? [], loading: query.isFetching, more, errors: errors ?? [] };
+  const failed = query.error && !query.isFetching ? [message(query.error)] : [];
+  return {
+    items: items ?? [],
+    loading: query.isFetching,
+    more,
+    errors: [...(errors ?? []), ...failed],
+  };
 }
 
 function uniqueById<T extends { id: string }>(items: T[]): T[] {

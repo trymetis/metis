@@ -6,6 +6,7 @@ import { appActor, recordAuditEvent } from "@/audit";
 import { deleteMailbox, getMailbox, listAccountMailboxes } from "@/connections";
 import { db } from "@/db";
 import { connection, mailbox, mailboxWorkspace } from "@/db/schema";
+import { RATE_LIMITS } from "@/services/rate-limits";
 
 import { appSession } from "../middlewares/app-session";
 import { requireTotp } from "../require-totp";
@@ -90,7 +91,7 @@ export const mailboxesRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "mailbox-policy-on",
+          rule: RATE_LIMITS.mailboxPolicyOn,
           message: `Confirm it's you to turn ${turningOn} on`,
         });
       }
@@ -129,7 +130,7 @@ export const mailboxesRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "mailbox-policy-on",
+          rule: RATE_LIMITS.mailboxPolicyOn,
           message: `Confirm it's you to turn ${turningOn} on everywhere`,
         });
       }

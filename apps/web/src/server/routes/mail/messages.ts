@@ -39,7 +39,8 @@ import {
   starMessageInputSchema,
   successSchema,
 } from "@/server/schema";
-import { rateLimit } from "@/services/rate-limit";
+import { RateLimitedError, rateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 import type { Email } from "@/types/mail";
 import {
   cancelSnooze,
@@ -165,16 +166,9 @@ export const messagesRouter = {
     .handler(async ({ input, context }) => {
       const { mail } = context;
 
-      const rl = await rateLimit(mail.userId, {
-        scope: "mail-send",
-        limit: 60,
-        windowSec: 60,
-      });
+      const rl = await rateLimit(mail.userId, RATE_LIMITS.mailSend);
       if (!rl.ok) {
-        throw new ORPCError("TOO_MANY_REQUESTS", {
-          message: "Too many requests. Please slow down.",
-          data: { retryAfterSec: Math.ceil(rl.resetMs / 1000) },
-        });
+        throw new RateLimitedError(rl);
       }
 
       const { workspaceSlug: _ws, mailboxSlug: _mb, fromMailboxSlug: _from, ...draft } = input;

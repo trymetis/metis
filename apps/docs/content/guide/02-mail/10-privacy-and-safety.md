@@ -37,7 +37,11 @@ You can also click an image placeholder in the message to load the images.
 
 If the banner also says "They load through this server, which hides your address but not the open itself.", your instance fetches images for you. The sender then cannot see your internet address or device, but can still tell the message was opened.
 
-If saving a choice fails, you see "Could not save that choice". Try again.
+Up to 600 images a minute can load this way. Past that, images do not load for up to a minute. Then open the message again to load them.
+
+If saving a choice fails, a message at the bottom of the screen says why. Try again.
+
+You can make up to 30 **Always from** choices a minute, together with some other settings. See [Privacy settings](/guide/account/privacy-settings#limit-on-changes). Past that, you see "Too many requests. Try again in 20 seconds.", or the time left. Wait for that time (at most 1 minute), then click the button again.
 
 ## Trackers are removed
 

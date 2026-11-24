@@ -4,14 +4,18 @@ import { harness } from "./harness";
 import { RpcError } from "./rpc";
 
 const MAX_WAIT_SEC = 300;
-const TOTP_LIMITED = "Too many attempts. Please slow down.";
+const TOTP_LIMITED = "Too many attempts. Try again in ";
 
 export async function withTotp<T>(run: (code: string) => Promise<T>): Promise<T> {
   for (;;) {
     try {
       return await run(await harness.totp());
     } catch (err) {
-      if (!(err instanceof RpcError) || err.status !== 429 || err.message !== TOTP_LIMITED) {
+      if (
+        !(err instanceof RpcError) ||
+        err.status !== 429 ||
+        !err.message.startsWith(TOTP_LIMITED)
+      ) {
         throw err;
       }
       const wait = z.object({ retryAfterSec: z.number() }).safeParse(err.data).data?.retryAfterSec;

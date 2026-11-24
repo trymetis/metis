@@ -22,6 +22,7 @@ import { scanSubscriptions } from "@/mail/subscriptions";
 import { assistantThreadTexts, assistantThreadTitle, listAssistantThreads } from "@/mastra/memory";
 import { suggestPeople } from "@/people";
 import type { LocalSearchHit } from "@/server/schema";
+import { RateLimitedError } from "@/services/rate-limit";
 import { MAIL_FOLDERS } from "@/types/mail";
 import { listWorkspaceRuns, listWorkspaceWorkflows } from "@/workflow";
 import { workflowScopeFor } from "@/workflow/scope";
@@ -679,7 +680,7 @@ export async function searchLocal(
           .map((c) => c.hit);
       } catch (err) {
         console.error(`[search] ${kind} failed:`, err);
-        errors.push(kind);
+        errors.push(err instanceof RateLimitedError ? `${kind} (${err.message})` : kind);
         return [];
       }
     }),

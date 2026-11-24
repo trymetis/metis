@@ -6,6 +6,7 @@ import { appActor, recordAuditEvent } from "@/audit";
 import { deleteDrive, getDrive, listAccountDrives } from "@/connections";
 import { db } from "@/db";
 import { connection, drive, driveWorkspace } from "@/db/schema";
+import { RATE_LIMITS } from "@/services/rate-limits";
 
 import { appSession } from "../middlewares/app-session";
 import { requireTotp } from "../require-totp";
@@ -64,7 +65,7 @@ export const drivesRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "drive-ai-on",
+          rule: RATE_LIMITS.driveAiOn,
           message: "Confirm it's you to turn AI on",
         });
       }
@@ -102,7 +103,7 @@ export const drivesRouter = {
           userId: context.appUser.userId,
           code: input.code,
           headers: context.headers,
-          scope: "drive-ai-on",
+          rule: RATE_LIMITS.driveAiOn,
           message: "Confirm it's you to turn AI on everywhere",
         });
       }

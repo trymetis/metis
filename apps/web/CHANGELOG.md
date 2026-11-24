@@ -6,6 +6,12 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 ## Unreleased
 
+- Every "too many requests" message, including sign-in, two-factor lockout, the AI assistants, View original and webhook answers, says how long to wait before trying again. Thread summaries, **Reply with stance**, **Unsubscribe** and reordering workspaces show the message instead of failing silently; a reorder that can't be saved goes back to the old order.
+- Opening a message again no longer checks again whether you can unsubscribe from it. If that check is rate-limited, **Unsubscribe** shows greyed out with the wait.
+- Reopening a message no longer counts toward the thread summary, phishing check and smart reply limits; only new AI work does. Smart replies and AI labels that hit their limit try again on their own after the wait.
+- A subscriptions scan is reused for 5 minutes, so **Rescan**, searching subscriptions or asking the assistant again doesn't use up the scan limit, which now counts per mailbox.
+- Uploads to WebDAV, FTP, FTPS, SFTP and relayed S3 drives allow 600 files a minute instead of 60, and each drive download counts once toward its limit.
+- You can send up to 100 workspace or account invites an hour instead of 10, and an MCP client can make 120 calls a minute instead of 60.
 - **Sign out everywhere** with **Also sign out this device** signs this browser out at once, instead of leaving it signed in for up to two minutes.
 - Passkeys work for two-factor authentication on par with an authenticator app: set it up with either one, and add the other later under **Settings** → **Security**.
 - You can choose which one Metis Suite asks for first, the authenticator app or a passkey, and pick another one, or a backup code, each time you sign in or confirm a change.

@@ -45,6 +45,10 @@ export function createUpstashDriver(cfg: UpstashCacheConfig): CacheDriver {
     async incr(key, ttlSec) {
       return Number(await redis.eval(INCR_EXPIRE, [prefixed(key)], [String(ttlSec)]));
     },
+    async ttlMs(key) {
+      const ms = await redis.pttl(prefixed(key));
+      return ms >= 0 ? ms : null;
+    },
     async hget(key, field) {
       return redis.hget<string>(prefixed(key), field);
     },

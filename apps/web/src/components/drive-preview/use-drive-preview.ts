@@ -20,6 +20,8 @@ import {
 import type { DriveEntryRow } from "@/server/schema";
 import { ALL_DRIVES_SLUG } from "@/workspace/path";
 
+const downloadTargetSchema = z.object({ url: z.string() });
+
 const routeErrorSchema = z.object({
   error: z.string().optional(),
   webUrl: z.string().optional(),
@@ -60,12 +62,14 @@ export async function downloadDriveFile(
 ): Promise<void> {
   const url = driveDownloadUrl(workspaceSlug, driveSlug, fileId);
   try {
-    const res = await fetch(url, { redirect: "manual" });
-    if (res.type === "opaqueredirect" || res.ok) {
-      window.location.href = url;
+    const res = await fetch(`${url}&resolve=1`);
+    const json: unknown = await res.json().catch(() => null);
+    const target = res.ok ? downloadTargetSchema.safeParse(json).data : undefined;
+    if (target) {
+      window.location.href = target.url;
       return;
     }
-    const body = routeErrorSchema.safeParse(await res.json()).data;
+    const body = routeErrorSchema.safeParse(json).data;
     toast.error(body?.error ?? "That file could not be downloaded", {
       action: body?.webUrl
         ? {

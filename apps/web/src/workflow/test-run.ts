@@ -1,6 +1,7 @@
 import "server-only";
 import { listEventValues, listFileValues, findFolderPath, listMail, readMail } from "@/ops/values";
 import { enforceRateLimit } from "@/services/rate-limit";
+import { RATE_LIMITS } from "@/services/rate-limits";
 import { isMailFolder } from "@/types/mail";
 
 import {
@@ -280,7 +281,7 @@ export async function testRunGraph(args: {
   fromNodeId?: string;
 }): Promise<TestRunResult | string> {
   const { scope, graph } = args;
-  await enforceRateLimit(scope.userId, { scope: "workflow-test-run", limit: 10, windowSec: 60 });
+  await enforceRateLimit(scope.userId, RATE_LIMITS.workflowTestRun);
 
   const invalid = await checkGraph(graph, scope);
   if (invalid) return invalid;

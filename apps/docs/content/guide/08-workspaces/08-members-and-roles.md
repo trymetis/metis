@@ -69,7 +69,7 @@ Each person gets an email titled with your name and the workspace's name, with a
 - **People with an account** can accept the invite from the link.
 - **People with no account yet** create their account straight from the invite link, and join the workspace at the same time. This works when your instance has open sign-up, or when you are also the instance owner or an instance admin. Otherwise the invite is refused with "Ask the instance owner or an instance admin to invite this person."
 - An invite works only for the email address you invited. If someone signed in with another account opens the link, they cannot use it to join.
-- You can send up to 10 invites an hour into this workspace. Invites you send into your other workspaces count separately.
+- You can send up to 100 invites an hour into this workspace. Invites you send into your other workspaces count separately. Past the limit, the dialog shows "Too many requests. Try again in 1 hour." (or the time left) next to the address. Wait for that time, then send again.
 - If some invites fail, they stay in the dialog with the reason, after "These invites failed." Fix them and send again, or close the dialog.
 - If the invite email cannot be sent, no invite is created. The instance owner is the exception: the dialog shows the link so they can copy it and send it themselves. Nobody else is shown the link.
 

@@ -44,6 +44,7 @@ import { useCustomLabels } from "@/hooks/use-custom-labels";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
 import { useMailboxScope } from "@/hooks/use-workspace-path";
 import { orpc } from "@/lib/orpc";
+import { rateLimitWait } from "@/lib/rate-limit-message";
 import { formatEmailDate, getInitials, groupByThread } from "@/lib/utils";
 import {
   customLabelMark,
@@ -210,7 +211,12 @@ export function EmailList({ folder, view }: EmailListProps) {
           setCachedLabels(scope, (current) => ({ ...current, ...classified }));
         }
       })
-      .catch(() => {})
+      .catch(async (err: unknown) => {
+        const wait = rateLimitWait(err);
+        if (wait === null) return;
+        await new Promise((resolve) => setTimeout(resolve, wait * 1000));
+        for (const e of batch) run.attempted.delete(e.id);
+      })
       .finally(() => setClassifying(false));
   }, [emails, labels, scope, aiEnabled, labelsReady, classifying]);
 
