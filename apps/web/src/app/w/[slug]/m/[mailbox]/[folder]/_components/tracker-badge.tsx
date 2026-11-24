@@ -70,7 +70,7 @@ export function TrackerBadge({
           {vendors.map(([name, count]) => (
             <li key={name} className="flex items-center justify-between gap-3 text-[12px]">
               <span className="truncate text-muted-foreground">{name}</span>
-              <span className="tabular-nums text-faint">×{count}</span>
+              <span className="shrink-0 text-right tabular-nums text-faint">{count}</span>
             </li>
           ))}
         </ul>

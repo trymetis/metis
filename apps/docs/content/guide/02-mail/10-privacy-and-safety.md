@@ -20,12 +20,16 @@ Messages follow the app's light or dark theme. A message that was not designed f
 
 ## Remote images are blocked
 
-Images stored on the sender's server can tell the sender when and where you opened the message. So Metis Suite blocks them until you say otherwise. A banner above the message says how many images were blocked, for example "3 remote images blocked".
+Images stored on the sender's server can tell the sender when and where you opened the message. So Metis Suite blocks them until you say otherwise.
 
-<img src="/images/mail/blocked-images.webp" alt="The remote images blocked banner with its three buttons" class="dark:hidden" />
-<img src="/images/mail/blocked-images-dark.webp" alt="The remote images blocked banner with its three buttons" class="hidden dark:block" />
+When images were blocked, a small round chip shows under the date, to the left of the green shield (see [Trackers are removed](#trackers-are-removed)). It has a crossed-out picture icon and the number of blocked images. Point at it to see, for example, "3 remote images blocked". On an earlier message in a conversation, the chip shows in that message's card once you expand it.
 
-The banner has three buttons:
+Click the chip to open a small window. Its title says how many images were blocked, and its text says "Remote images can tell the sender when and where you opened this message."
+
+<img src="/images/mail/blocked-images.webp" alt="The blocked images window open under a message, with its three buttons" class="dark:hidden" />
+<img src="/images/mail/blocked-images-dark.webp" alt="The blocked images window open under a message, with its three buttons" class="hidden dark:block" />
+
+The window has three buttons:
 
 | Button                                 | What it does                                                                              |
 | -------------------------------------- | ----------------------------------------------------------------------------------------- |
@@ -33,13 +37,13 @@ The banner has three buttons:
 | **Always from** (the sender's address) | Always loads images from this sender.                                                     |
 | **Always from** (the sender's domain)  | Always loads images from this domain and its subdomains.                                  |
 
-You can also click an image placeholder in the message to load the images.
+After **Load images**, the chip goes away. You can also click an image placeholder in the message to load its images.
 
-If the banner also says "They load through this server, which hides your address but not the open itself.", your instance fetches images for you. The sender then cannot see your internet address or device, but can still tell the message was opened.
+If the window also says "They load through this server, which hides your address but not the open itself.", your instance fetches images for you. The sender then cannot see your internet address or device, but can still tell the message was opened.
 
 Up to 600 images a minute can load this way. Past that, images do not load for up to a minute. Then open the message again to load them.
 
-If saving a choice fails, a message at the bottom of the screen says why. Try again.
+If saving an **Always from** choice fails, a message at the bottom of the screen says why, or "Could not save that choice". Try again.
 
 You can make up to 30 **Always from** choices a minute, together with some other settings. See [Privacy settings](/guide/account/privacy-settings#limit-on-changes). Past that, you see "Too many requests. Try again in 20 seconds.", or the time left. Wait for that time (at most 1 minute), then click the button again.
 
@@ -47,7 +51,9 @@ You can make up to 30 **Always from** choices a minute, together with some other
 
 Some emails hide tiny tracking images or links. Metis Suite removes known trackers before the message is shown, whatever your image settings. They are also removed from the quoted text when you reply or forward.
 
-When trackers were removed, a green shield with a number appears under the date. Click it to see the list of trackers by name, or "Unknown tracker" when the name is not known.
+When trackers were removed, a green shield chip with a number appears under the date. On an earlier message in a conversation, it shows in that message's card once you expand it. Point at the chip to see, for example, "Blocked 2 trackers" followed by their names.
+
+Click the chip to open a small window. It says "Removed before the message was shown, so the sender cannot tell through them that you opened it." Below that, it lists each tracker by name, with the number removed on the right. Trackers whose name is not known are listed last, as "Unknown tracker".
 
 <img src="/images/mail/tracker-badge.webp" alt="The tracker popover listing the trackers removed from a message" class="dark:hidden" />
 <img src="/images/mail/tracker-badge-dark.webp" alt="The tracker popover listing the trackers removed from a message" class="hidden dark:block" />

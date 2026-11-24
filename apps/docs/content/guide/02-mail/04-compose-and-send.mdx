@@ -1,9 +1,9 @@
 ---
 title: Compose and send
-description: Write a new message, reply, reply all and forward, add attachments, a Drive link or a signature, undo a send, and work with drafts.
+description: Write a new message, reply, reply all and forward, format your text, add attachments, a Drive link or a signature, undo a send, and work with or discard drafts.
 ---
 
-This page covers everything about writing mail: a new message, replies and forwards, attachments, and what happens after you click **Send**. For signatures and the workspace footer, see [Signatures and the mail footer](/guide/mail/signatures).
+This page covers everything about writing mail: a new message, replies and forwards, formatting, attachments, drafts, and what happens after you click **Send**. For signatures and the workspace footer, see [Signatures and the mail footer](/guide/mail/signatures).
 
 ## Write a new message
 
@@ -36,12 +36,12 @@ This page covers everything about writing mail: a new message, replies and forwa
 
 <img
   src="/images/mail/composer.webp"
-  alt="The composer with a recipient, a subject and the Cc field open"
+  alt="The composer with a recipient, a subject, the Cc field open and the formatting bar"
   class="dark:hidden"
 />
 <img
   src="/images/mail/composer-dark.webp"
-  alt="The composer with a recipient, a subject and the Cc field open"
+  alt="The composer with a recipient, a subject, the Cc field open and the formatting bar"
   class="hidden dark:block"
 />
 
@@ -54,6 +54,8 @@ A few details about recipients:
 If you click **Send** without a recipient or a subject, a red strip says "To and Subject are required."
 
 To close the composer, click the **X** at its top right (**Close compose**), or press Esc. Clicking outside the composer does not close it. Any change you have not saved yet is saved first, so what you wrote stays in **Drafts** (see [Drafts](#drafts)). If you changed nothing, the composer closes without saving a draft, unless the message opened with text already in it (see [Drafts](#drafts)). If the **Link** box is open, Esc closes only that box.
+
+To throw the message away instead of keeping it, click **Discard draft**. See [Discard a draft](#discard-a-draft).
 
 ## Where the composer opens
 
@@ -69,13 +71,13 @@ Only one composer is open at a time. If you start another message while one is o
 
 The composer's title tells you what you are writing:
 
-| Title                                                             | Where it comes from                                                                                                                                                                                                                                                                     |
-| ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **New message**                                                   | **Compose** in the sidebar, **m** then **c**, **Compose mail** in search, **Email** in a person's menu, on a contact card or as an action on a person in search, and **Attach to a new mail** on a Drive file in search.                                                                |
-| "Reply to" and the sender's name, for example "Reply to Ana Lima" | The **Write a reply…** box in the **Reply** bar, **m** then **r** with a message open (not in **Drafts**), **Reply all**, a smart reply, **Reply with stance**, and **Draft reply** in the **Draft an apology** dialog. If the sender has no name, the title shows their email address. |
-| **Reply**                                                         | **Reply** on a message in search, and a reopened draft that is a reply (see [Drafts](#drafts)).                                                                                                                                                                                         |
-| **Forward**                                                       | **Forward** in the toolbar.                                                                                                                                                                                                                                                             |
-| **Draft**                                                         | **Edit draft** on a saved draft.                                                                                                                                                                                                                                                        |
+| Title                                                             | Where it comes from                                                                                                                                                                                                                                                           |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **New message**                                                   | **Compose** in the sidebar, **m** then **c**, **Compose mail** in search, **Email** in a person's menu, on a contact card or as an action on a person in search, and **Attach to a new mail** on a Drive file in search.                                                      |
+| "Reply to" and the sender's name, for example "Reply to Ana Lima" | **Reply** in the toolbar, **m** then **r** with a message open (not in **Drafts**), **Reply all**, a smart reply, a stance button such as **Accept**, and **Draft reply** in the **Draft an apology** dialog. If the sender has no name, the title shows their email address. |
+| **Reply**                                                         | **Reply** on a message in search, and a reopened draft that is a reply (see [Drafts](#drafts)).                                                                                                                                                                               |
+| **Forward**                                                       | **Forward** in the toolbar.                                                                                                                                                                                                                                                   |
+| **Draft**                                                         | **Edit draft** on a saved draft.                                                                                                                                                                                                                                              |
 
 When you click **Undo** after you send, the composer opens again with the same title as the message you sent. See [Undo a send](#undo-a-send).
 
@@ -83,21 +85,32 @@ A reply you start from search uses your default signature for replies and lands 
 
 ## Format your message
 
+The formatting bar is the row of buttons between **Subject** and your message. It shows in every composer: a new message, a reply, a forward and a draft you reopen. Point at a formatting button to see its name. A button looks pressed when its formatting is in use where your cursor is. In a narrow window, the bar wraps onto a second line.
+
+From left to right, the formatting bar has:
+
+- **Bold**, **Italic**, **Underline** and **Strikethrough**
+- **Bullet list**, **Numbered list**, **Quote** and **Code**. **Code** shows the selected words in a code font, inside the sentence.
+- **Alignment**: a menu with **Align left**, **Align center**, **Align right** and **Justify**. Its icon shows the alignment where your cursor is.
+- **Link**: add, change or remove a link (see [Add a link](#add-a-link))
+- **Undo** and **Redo**. They are greyed out when there is nothing to undo or redo.
+- **Clear formatting**: with text selected, it removes text styles such as bold and code, and links. It also turns lists and quotes back into plain paragraphs and sets the alignment back to left. With no text selected, it does this for the paragraph where your cursor is, but keeps its text styles and links.
+- **Rewrite** and **Stance**: let AI edit your text or write your reply. They show only when AI is on. See [Let AI help you write](#let-ai-help-you-write).
+
 The bar under the message has these buttons:
 
-- **Bold**, **Italic** and **Underline**
-- **Bullet list** and **Numbered list**
-- **Link**: add, change or remove a link (see [Add a link](#add-a-link))
 - **Attach files**: pick one or more files from your computer
 - **Link a file from Drive**: see [Link a file from Drive](#link-a-file-from-drive)
 - **Signature**: pick another signature, or **No signature**. It shows only when there is a signature for the mailbox in **From**. See [Pick a signature while you write](/guide/mail/signatures#pick-a-signature-while-you-write).
+
+On the right of that bar are **Discard draft** (the trash icon, see [Discard a draft](#discard-a-draft)), **Send** and the arrow for **Schedule send** (see [Schedule a send](/guide/mail/schedule-a-send)).
 
 If your workspace has a mail footer, it is added to the end of the message when it is sent. You do not see it in the composer. See [The workspace mail footer](/guide/mail/signatures#the-workspace-mail-footer).
 
 ### Add a link
 
 1. Select the text you want to link. To change a link, click inside it. To add a new link with its address as the text, just place the cursor where it should go.
-2. Click **Link**. A small box opens above the bar, with an address field and **Apply**.
+2. Click **Link** in the formatting bar. A small box opens above the **Link** button, with an address field and **Apply**.
 3. Type the address, then click **Apply** or press Enter.
 
 What **Apply** does depends on where you started:
@@ -140,7 +153,7 @@ If the file has no link you can share, you see "That file has no shareable link 
 
 ## Reply
 
-Open the message. Click the **Reply** bar at the bottom of the reading pane to open it. It also opens when you scroll to the end of the message. Click **Write a reply…**. The composer opens with a title such as "Reply to Ana Lima", and with:
+Open the message and click **Reply** in the toolbar above it. **Reply**, **Reply all** and **Forward** are icons: point at one to see its name. The composer opens with a title such as "Reply to Ana Lima", and with:
 
 - **To** set to the sender, or to their reply address if they gave one. If you wrote the original message, the reply goes to its original recipients.
 - the subject starting with "Re:"
@@ -148,11 +161,11 @@ Open the message. Click the **Reply** bar at the bottom of the reading pane to o
 
 If there is a default signature for replies and forwards, it goes under your text and above the quote. See [Signatures and the mail footer](/guide/mail/signatures).
 
-In **All inboxes**, **From** starts on the mailbox the message arrived in. The signature, the draft and the send follow that mailbox. The same goes for **Reply all**, smart replies, **Reply with stance** and **Draft reply**.
+In **All inboxes**, **From** starts on the mailbox the message arrived in. The signature, the draft and the send follow that mailbox. The same goes for **Reply all**, smart replies, the stance buttons and **Draft reply**.
 
 The quote is folded away. Click **Show quoted text** to see it and **Hide quoted text** to fold it again. Click the **X** next to it (**Remove quoted text**) to leave the quote out. Known trackers are always removed from the quote.
 
-You can also press **m** then **r** while a message is open. It opens the same reply as **Write a reply…**. With no message open, it does nothing. It also does nothing on a message in **Drafts**. To keep working on a draft, use **Edit draft** (see [Drafts](#drafts)).
+You can also press **m** then **r** while a message is open. It opens the same reply as **Reply** in the toolbar. With no message open, it does nothing. It also does nothing on a message in **Drafts**. To keep working on a draft, use **Edit draft** (see [Drafts](#drafts)).
 
 ### Replies from Outlook mailboxes
 
@@ -165,7 +178,7 @@ A reply you send from an Outlook mailbox goes out as a reply in the same convers
 
 ## Reply all
 
-**Reply all** is in the toolbar when the message went to more than one person in **To** and **Cc**. It opens a reply like the one above, and also adds the original **To** and **Cc** recipients. Your own addresses are left out.
+**Reply all** is in the toolbar, next to **Reply**, when the message went to more than one address in **To** and **Cc** together. It opens a reply like the one above, and also adds the original **To** and **Cc** recipients. Your own addresses are left out.
 
 ## Forward
 
@@ -182,25 +195,18 @@ In **All inboxes**, **From** starts on the mailbox the message arrived in, and t
 The original message's attachments are not included when you forward. To pass them on, download them and attach them to the forward yourself.
 :::
 
-## Reply from the bottom of a message
+## Let AI write the reply
 
-A **Reply** bar sits at the bottom of the reading pane. It does not show on messages in **Drafts**. It opens when you scroll to the end of a message, or when you click it. When it is closed, it may show how many smart replies are ready, for example **3 smart replies**.
+When AI is on for the workspace and the mailbox, round buttons at the end of a message can write a reply for you: smart replies and the stance buttons, such as **Accept** or **Polite decline**. They sit after the attachments. They do not show on messages in **Drafts**. See [AI help in mail](/guide/mail/ai-help#smart-replies).
 
-Inside you find:
+## Let AI help you write
 
-- **Reply with stance** and **Smart replies**, which write a reply for you with AI. See [AI help in mail](/guide/mail/ai-help).
-- A box with **Reply to** followed by the sender's name, and **Write a reply…**. Click it to open the composer. The reply starts empty, with the original message quoted and folded away.
+Two buttons at the end of the formatting bar use AI while you write:
 
-<img
-  src="/images/mail/reply-footer.webp"
-  alt="The reply bar open under a message, with smart replies and the Write a reply box"
-  class="dark:hidden"
-/>
-<img
-  src="/images/mail/reply-footer-dark.webp"
-  alt="The reply bar open under a message, with smart replies and the Write a reply box"
-  class="hidden dark:block"
-/>
+- **Rewrite** edits the text you select. You can make it clearer, shorter, more formal or friendlier. See [Rewrite your text](/guide/mail/ai-help#rewrite-your-text).
+- **Stance** writes your reply in the stance you pick, such as **Accept** or **Polite decline**, from the message you are answering and what you typed so far. It shows only in a reply. See [Stance in the composer](/guide/mail/ai-help#stance-in-the-composer).
+
+Both replace text in your message, and **Undo** in the formatting bar brings your own text back. See [Where these buttons show](/guide/mail/ai-help#where-these-buttons-show) for when they appear.
 
 ## Undo a send
 
@@ -210,7 +216,7 @@ When you click **Send**, the message waits for five seconds before it goes out. 
 - If you do nothing, the notice shows "Sending…" and then "Email sent". If a workflow added a BCC address to the message, the notice also says so, for example "A workflow added Bcc: archive@example.com", and stays on screen longer. See [Add a BCC to outgoing mail](/guide/workflows/add-a-bcc-to-outgoing-mail).
 - If sending fails, the notice shows "Send failed" with the reason.
 
-When you undo a send, the composer brings back the **From** mailbox, **To**, **Cc**, **Bcc**, the subject, your text with its signature, and all attachments. A reply keeps its link to the message it answers, so if you send it again, it still goes out as a reply in the conversation. If you were replying, the quoted message comes back as part of your text, not folded away. Your signature comes back as it was when you sent, so a signature you removed stays removed. No second signature is added.
+When you undo a send, the composer brings back the **From** mailbox, **To**, **Cc**, **Bcc**, the subject, your text with its signature, and all attachments. A reply keeps its link to the message it answers, so if you send it again, it still goes out as a reply in the conversation. For a reply or a forward, the quoted or forwarded message comes back folded away, even if you had opened it. A quote you removed stays removed. **Show quoted text** and **Remove quoted text** work as usual. Your signature comes back as it was when you sent, so a signature you removed stays removed. No second signature is added.
 
 You can send up to 60 messages a minute. After that, the notice shows "Send failed" with "Too many requests. Try again in 20 seconds.", or the time left. The message is not sent and does not come back to the composer. Wait for that time (at most 1 minute), then write it again.
 
@@ -220,7 +226,7 @@ To send at a later time instead, see [Schedule a send](/guide/mail/schedule-a-se
 
 While you write, Metis Suite saves your draft with your mail provider about 1.5 seconds after you stop typing. If you keep typing, it still saves at least every 10 seconds. A save happens when you change **To**, **Cc**, **Bcc**, the subject, the text, the **From** mailbox (only before the first save) or the attachments, pick a signature, or remove the quoted text. Nothing is saved until the message has a **To** recipient, a subject or some text. Next to the composer's title you see "Saving draft…", then "Draft saved". If saving fails, it says "Couldn't save draft".
 
-A reply you never change is not saved as a draft. The signature and the quote that are added for you do not count as changes. A message that opens with text already in it (a smart reply, a **Reply with stance** reply, **Draft reply** in the **Draft an apology** dialog, **Attach to a new mail** from search, or a message brought back by **Undo**) is saved shortly after it opens.
+A reply you never change is not saved as a draft. The signature and the quote that are added for you do not count as changes. A message that opens with text already in it (a smart reply, a reply from a stance button, **Draft reply** in the **Draft an apology** dialog, **Attach to a new mail** from search, or a message brought back by **Undo**) is saved shortly after it opens.
 
 Your saved drafts are in the **Drafts** folder. To keep working on one:
 
@@ -240,3 +246,17 @@ Reopening a draft does not add a signature. With Outlook mailboxes, a signature 
 When you click **Send**, the saved draft is removed. When you schedule a message, the composer closes. A draft that was saved while you wrote stays in **Drafts**.
 
 On Zoho Mail and IMAP mailboxes, each save stores the draft as a new copy and removes the old one. In Metis Suite you keep editing the same draft, but another mail app may show the draft being replaced. The old copy is deleted for good. It does not go to **Trash**. When you send from a Zoho Mail or IMAP mailbox, the draft is also deleted for good.
+
+### Discard a draft
+
+To throw away the message you are writing, click **Discard draft**. It is the trash icon just left of **Send**. There is no keyboard shortcut for it.
+
+The composer closes, and the saved draft is deleted from **Drafts** right away. A notice says "Draft discarded" with an **Undo** button. It stays for about 4 seconds, and longer while you point at it.
+
+Click **Undo** to get the message back. The composer opens again with everything you had: **From**, **To**, **Cc**, **Bcc**, the subject, your text and signature, the quoted text and the attachments. A reply keeps its place in the conversation. About 1.5 seconds later, the message is saved again as a new draft, as long as it has a **To** recipient, a subject or some text (see [Drafts](#drafts)). Until it is saved, you can still change **From**.
+
+If there is nothing to lose, the composer just closes and no notice shows. That happens when no draft was saved yet and the message has no text, subject, recipient or attachment. A reply or a forward starts with a recipient or a subject, so discarding one usually shows the notice.
+
+If the draft cannot be deleted, you see "Couldn't delete the draft. It's still in Drafts." To try again, open the draft with **Edit draft** and click **Discard draft**. If the delete fails and you also click **Undo** on the "Draft discarded" notice, **Drafts** ends up with two copies. Discard the one you don't need.
+
+Closing the composer with the **X** or Esc does not discard anything. A draft that was saved stays in **Drafts**.

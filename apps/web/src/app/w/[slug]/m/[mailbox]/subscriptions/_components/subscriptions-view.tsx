@@ -4,8 +4,17 @@ import { Button } from "@metis/ui/components/button";
 import { ScrollArea } from "@metis/ui/components/scroll-area";
 import { cn } from "@metis/ui/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BellOff, Check, ExternalLink, Loader2, MailX, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import {
+  ArrowDown,
+  ArrowUp,
+  BellOff,
+  Check,
+  ExternalLink,
+  Loader2,
+  MailX,
+  RefreshCw,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 
 import { MobileAsideTrigger } from "@/components/mobile-aside";
 import { useMailboxScope } from "@/hooks/use-workspace-path";
@@ -33,6 +42,71 @@ interface UnsubscribeResult {
   error?: string;
 }
 
+const NO_SENDERS: SubscriptionSender[] = [];
+
+type SenderSortKey = "sender" | "count" | "latest";
+interface SenderSort {
+  key: SenderSortKey;
+  dir: "asc" | "desc";
+}
+
+function sortSenders<
+  T extends { senderName?: string; senderEmail: string; count: number; latestDate: string },
+>(senders: readonly T[], sort: SenderSort): T[] {
+  const sign = sort.dir === "asc" ? 1 : -1;
+  return senders.toSorted((a, b) => {
+    if (sort.key === "count") return sign * (a.count - b.count);
+    if (sort.key === "latest") return sign * (Date.parse(a.latestDate) - Date.parse(b.latestDate));
+    return sign * (a.senderName || a.senderEmail).localeCompare(b.senderName || b.senderEmail);
+  });
+}
+
+function SortHeader({
+  label,
+  sortKey,
+  sort,
+  onSort,
+  className,
+}: {
+  label: string;
+  sortKey: SenderSortKey;
+  sort: SenderSort;
+  onSort: (sort: SenderSort) => void;
+  className?: string;
+}) {
+  const active = sort.key === sortKey;
+  return (
+    <th
+      className={cn("pb-2 font-medium", className)}
+      aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
+    >
+      <button
+        type="button"
+        onClick={() =>
+          onSort({
+            key: sortKey,
+            dir: active
+              ? sort.dir === "asc"
+                ? "desc"
+                : "asc"
+              : sortKey === "sender"
+                ? "asc"
+                : "desc",
+          })
+        }
+        className={cn(
+          "inline-flex items-center gap-1 hover:text-foreground",
+          active && "text-foreground",
+        )}
+      >
+        {label}
+        {active &&
+          (sort.dir === "asc" ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />)}
+      </button>
+    </th>
+  );
+}
+
 const METHOD_LABEL: Record<UnsubscribeMethod, string> = {
   one_click: "Automatic",
   mailto: "We'll email them",
@@ -44,13 +118,14 @@ export function SubscriptionsView() {
   const queryClient = useQueryClient();
   const subscriptions = rpc.mail.subscriptions.list;
   const query = useQuery(subscriptions.queryOptions({ input: scope }));
-  const senders: SubscriptionSender[] = query.data?.senders ?? [];
+  const senders: SubscriptionSender[] = query.data?.senders ?? NO_SENDERS;
   const scanned = query.data?.scanned ?? 0;
   const loading = query.isFetching;
   const error = query.error ? query.error.message || "Failed to scan subscriptions" : null;
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [working, setWorking] = useState<Set<string>>(new Set());
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [sort, setSort] = useState<SenderSort>({ key: "count", dir: "desc" });
 
   function load() {
     setSelected(new Set());
@@ -61,6 +136,7 @@ export function SubscriptionsView() {
   const selectable = pending.filter(
     (s) => s.unsubscribedStatus !== "manual" && !working.has(s.senderEmail),
   );
+  const sorted = useMemo(() => sortSenders(senders, sort), [senders, sort]);
   const allSelected = selectable.length > 0 && selectable.every((s) => selected.has(s.senderEmail));
 
   function toggle(senderEmail: string) {
@@ -198,103 +274,117 @@ export function SubscriptionsView() {
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-2">
-              <label className="flex w-fit cursor-pointer items-center gap-2 px-1 pb-1 text-[12px] text-muted-foreground">
-                <input
-                  type="checkbox"
-                  checked={allSelected}
-                  onChange={toggleAll}
-                  className="h-3.5 w-3.5 accent-brand"
-                />
-                Select all
-              </label>
-
-              {senders.map((s) => {
-                const isWorking = working.has(s.senderEmail);
-                const done = s.unsubscribedStatus === "done";
-                const manual = s.unsubscribedStatus === "manual";
-                const rowError = errors[s.senderEmail];
-                // oxlint-disable-next-line typescript/no-non-null-assertion --mail/subscriptions.ts omits senders with zero methods
-                const primaryMethod = s.methods[0]!;
-                return (
-                  <div
-                    key={s.senderEmail}
-                    className={cn(
-                      "flex flex-wrap items-start gap-3 rounded-xl border border-border bg-surface px-4 py-3",
-                      done && "opacity-60",
-                    )}
-                  >
+            <table className="w-full table-fixed border-collapse text-[13px]">
+              <thead>
+                <tr className="border-b border-border text-left text-[11px] font-medium text-faint">
+                  <th className="w-8 pb-2">
                     <input
                       type="checkbox"
-                      checked={selected.has(s.senderEmail)}
-                      onChange={() => toggle(s.senderEmail)}
-                      disabled={done || manual || isWorking}
-                      className="mt-1 h-3.5 w-3.5 shrink-0 accent-brand"
-                      aria-label={`Select ${s.senderName || s.senderEmail}`}
+                      checked={allSelected}
+                      onChange={toggleAll}
+                      aria-label="Select all senders"
+                      className="size-3.5 accent-brand"
                     />
-
-                    <div className="min-w-48 flex-1">
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span className="max-w-full truncate text-[13px] font-medium text-foreground">
-                          {s.senderName || s.senderEmail}
-                        </span>
-                        <span className="shrink-0 rounded-full bg-active px-1.5 text-[11px] tabular-nums text-muted-foreground">
-                          {s.count}
-                        </span>
-                        <span className="shrink-0 rounded border border-border px-1.5 py-px text-[10px] uppercase tracking-wide text-faint">
-                          {METHOD_LABEL[primaryMethod]}
-                        </span>
-                        <span className="ml-auto shrink-0 text-[11px] tabular-nums text-faint">
-                          {formatRelativeDate(s.latestDate)}
-                        </span>
-                      </div>
-                      <div className="mt-0.5 truncate font-mono text-[11px] text-faint">
-                        {s.senderEmail}
-                      </div>
-                      <div className="mt-0.5 truncate text-[12px] text-muted-foreground">
-                        {s.latestSubject}
-                      </div>
-                      {rowError && (
-                        <div className="mt-1 text-[11px] text-destructive-text">{rowError}</div>
-                      )}
-                      {manual && (
-                        <div className="mt-1 text-[11px] text-primary">
-                          We opened their unsubscribe page — finish it there.
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="ml-auto flex shrink-0 items-center">
-                      {done ? (
-                        <span className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] text-primary">
-                          <Check className="h-3 w-3" strokeWidth={2.5} />
-                          Unsubscribed
-                        </span>
-                      ) : isWorking ? (
-                        <span className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] text-faint">
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                          Working…
-                        </span>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="xs"
-                          onClick={() => unsubscribe([s])}
-                          className="text-[11px] text-muted-foreground"
+                  </th>
+                  <SortHeader label="Sender" sortKey="sender" sort={sort} onSort={setSort} />
+                  <SortHeader
+                    label="Emails"
+                    sortKey="count"
+                    sort={sort}
+                    onSort={setSort}
+                    className="w-20 text-right"
+                  />
+                  <SortHeader
+                    label="Last received"
+                    sortKey="latest"
+                    sort={sort}
+                    onSort={setSort}
+                    className="w-32 max-md:hidden"
+                  />
+                  <th className="w-28 pb-2 font-medium max-md:hidden">Method</th>
+                  <th className="w-32 pb-2" aria-label="Action" />
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map((s) => {
+                  const isWorking = working.has(s.senderEmail);
+                  const done = s.unsubscribedStatus === "done";
+                  const manual = s.unsubscribedStatus === "manual";
+                  const rowError = errors[s.senderEmail];
+                  // oxlint-disable-next-line typescript/no-non-null-assertion --mail/subscriptions.ts omits senders with zero methods
+                  const primaryMethod = s.methods[0]!;
+                  return (
+                    <tr
+                      key={s.senderEmail}
+                      className={cn("border-b border-border-soft align-top", done && "opacity-60")}
+                    >
+                      <td className="py-2.5">
+                        <input
+                          type="checkbox"
+                          checked={selected.has(s.senderEmail)}
+                          onChange={() => toggle(s.senderEmail)}
+                          disabled={done || manual || isWorking}
+                          className="mt-0.5 size-3.5 accent-brand"
+                          aria-label={`Select ${s.senderName || s.senderEmail}`}
+                        />
+                      </td>
+                      <td className="min-w-0 py-2.5 pr-3">
+                        <div
+                          className="truncate font-medium text-foreground"
+                          title={`${s.senderEmail}\nLatest: ${s.latestSubject}`}
                         >
-                          {s.methods[0] === "link" ? (
-                            <ExternalLink className="h-3 w-3" />
-                          ) : (
-                            <BellOff className="h-3 w-3" />
-                          )}
-                          {manual ? "Open again" : "Unsubscribe"}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                          {s.senderName || s.senderEmail}
+                        </div>
+                        {rowError && (
+                          <div className="mt-0.5 text-[11px] text-destructive-text">{rowError}</div>
+                        )}
+                        {manual && (
+                          <div className="mt-0.5 text-[11px] text-primary">
+                            We opened their unsubscribe page. Finish it there.
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-2.5 pr-3 text-right tabular-nums text-muted-foreground">
+                        {s.count}
+                      </td>
+                      <td className="py-2.5 pr-3 tabular-nums text-faint max-md:hidden">
+                        {formatRelativeDate(s.latestDate)}
+                      </td>
+                      <td className="py-2.5 pr-3 text-[12px] text-faint max-md:hidden">
+                        {METHOD_LABEL[primaryMethod]}
+                      </td>
+                      <td className="py-2 text-right">
+                        {done ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] text-primary">
+                            <Check className="size-3" strokeWidth={2.5} />
+                            Unsubscribed
+                          </span>
+                        ) : isWorking ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] text-faint">
+                            <Loader2 className="size-3 animate-spin" />
+                            Working…
+                          </span>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="xs"
+                            onClick={() => unsubscribe([s])}
+                            className="text-[11px] text-muted-foreground"
+                          >
+                            {primaryMethod === "link" ? (
+                              <ExternalLink className="size-3" />
+                            ) : (
+                              <BellOff className="size-3" />
+                            )}
+                            {manual ? "Open again" : "Unsubscribe"}
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           )}
         </div>
       </ScrollArea>

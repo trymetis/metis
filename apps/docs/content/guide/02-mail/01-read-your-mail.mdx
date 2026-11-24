@@ -88,26 +88,68 @@ The button at the top of the sidebar shows the mailbox you are in. Click it to o
 When your workspace has more than one mailbox, the first item in the menu is **All inboxes** ("Every mailbox in this workspace"). It merges every mailbox into one view.
 
 - Every folder, action and shortcut works in All inboxes.
-- Each message row shows a chip naming its mailbox, so you can tell them apart.
-- If one mailbox fails to load, the others still show, and a banner names the mailbox that could not load.
+- Each message row shows a chip with its mailbox's address, and a chip naming its provider when the message has no label, so you can tell them apart. See [Chips on a row](#chips-on-a-row).
+- If one mailbox fails to load, the others still show. A banner names the mailbox that could not load, such as "Couldn't load ana@example.com. Try Refresh." Click **Refresh** to try again. When more than one mailbox fails, the banner lists every address.
 
 ## The message list
 
-The heading shows the folder name. Under it are the search box, a row of tabs and the list of messages.
+In the Inbox, **Read later** and the other folders that show a message list, the heading shows the folder name, with the **Refresh** button at the right end of the heading, before **Mail AI** when AI is on. Under it are the search box, a row of tabs and the list of messages.
 
-Each row shows:
+Each row has two lines. The first line shows:
 
 - a checkbox to select the message
-- the sender
 - a star
+- the sender's name, or their address when there is no name
+- the subject
 - a count when the conversation has more than one message
-- the date
-- the subject and the first words of the message
-- chips for the mailbox (in All inboxes only), the label, and the provider (**Gmail**, **Outlook**, **Zoho** or **Mail**)
+
+The second line shows:
+
+- up to two chips
+- a paperclip when the message has attachments
+- the first words of the message, or the conversation's **TL;DR**
+- the date, at the right
 
 Unread messages are tinted and have a colored bar on the left. Messages in the same conversation are grouped into one row that shows the latest message.
 
-The list loads more messages as you scroll down, and shows "end of list" when there are no more. It also checks for new mail on its own about once a minute, and again when you come back to the browser tab. You never need to reload the page. This check does not update the **Unread** or **Starred** tab or a label filter. They refresh when you switch to them from another list. Opening or closing a message does not refresh them.
+### Chips on a row
+
+The label chip comes first, when the message has a [label](/guide/mail/labels). In **All inboxes**, a row also shows a chip with the mailbox's address, then a chip naming the provider: **Gmail**, **Outlook**, **Zoho**, or **Mail** for any other kind of mailbox. In a single mailbox, rows show only the label chip.
+
+A row shows at most two chips. When a message in **All inboxes** has a label, you see the label and the mailbox's address, then **+1** in place of the provider chip. You cannot open the **+1** to see the hidden chip.
+
+### The paperclip
+
+The paperclip shows when the latest message in the conversation has attachments. A conversation where only an earlier message has a file shows no paperclip. Pictures that sit inside the message text usually do not count as attachments.
+
+### The TL;DR on a row
+
+When a conversation has a **TL;DR** [summary card](/guide/mail/ai-help#summary-cards), its row shows that TL;DR in place of the first words of the message. This needs AI to be turned on for the workspace and for the mailbox. In **All inboxes**, conversations from a mailbox with AI off show their first words.
+
+- A row never makes a summary itself. A summary is made when someone opens the conversation, or when the Workspace Assistant or an AI app you connected summarizes it. Until then, the row shows the first words.
+- When you open the conversation, the row switches to the TL;DR as soon as the summary shows in the reading pane. You do not need to reload the page.
+- When the [Workspace Assistant](/guide/assistant/use-workspace-ai) or an [AI app you connected](/guide/assistant/connect-an-ai-client) makes the summary, the row shows the TL;DR by the next time you open a conversation that shows a summary or reload the page. It can show sooner: when new mail arrives in the list, when more rows load as you scroll, or when you come back to the list after more than 5 minutes.
+- When a newer message shows in the row, the row goes back to the first words of that message. It shows the TL;DR again once the conversation is summarized again.
+- Conversations with "No summary for this email" and conversations whose summary failed show the first words.
+- Automated notifications, such as a code or a delivery update, usually get no **TL;DR**. Their rows keep showing their first words.
+
+### Check for new mail
+
+The list loads more messages as you scroll down, and shows "end of list" when there are no more. You never need to reload the page.
+
+The list checks for new mail on its own every 5 minutes while its browser tab is showing. It also checks when you come back to the tab, if the last check was more than two and a half minutes ago. So new mail usually shows within 5 minutes.
+
+To check at once, click **Refresh** (the circular arrows at the right end of the heading). The icon spins while it works. Refresh updates the list you are looking at: the folder and its tab, the **Unread** or **Starred** tab, a label filter, your search results, or **Read later**.
+
+The automatic check does not update the **Unread** or **Starred** tab, a label filter or a search. Click **Refresh** to update them. They also refresh when you switch to them from another list. Opening or closing a message does not refresh them.
+
+If a refresh fails, a message at the bottom of the screen shows the reason, or "Couldn't refresh the list". The messages already in the list stay as they were. Click **Refresh** again to retry.
+
+If you refresh or open mail very quickly, the reason can be "Too many requests. Try again in 20 seconds.", or the time left. Wait that long (at most 1 minute), then click **Refresh** again. See [Usage limits](/guide/reference/usage-limits#mail-calendar-drive-and-contacts).
+
+If a list cannot load at all, you see "Couldn't load your inbox" (or the name of the folder you are in) with the reason and a **Try again** button. **Refresh** does the same as **Try again** there.
+
+### Empty lists
 
 If a folder has nothing in it, you see **No emails** and a note such as "Your inbox is empty" on the **All** tab, or "Nothing in this filter" on any other tab. With a label filter on, the note follows the tab that is underlined. If the folder has more mail to check, a **Load more** button shows under the note. Click it to check the next batch. On **Unread**, **Starred** or a label filter, grey loading placeholders may show while it checks. See [Find and filter mail](/guide/mail/find-and-filter-mail#tabs).
 
@@ -120,14 +162,16 @@ The reading pane shows:
 - the subject, which stays at the top while you scroll
 - the sender's name and address
 - a recipients line, such as **To:** with the first two names. Click it to see the full **To** and **Cc** lists.
-- the date
-- the message itself
+- the date, with small chips under it when remote images were blocked or trackers were removed (see [Privacy and safety when reading](/guide/mail/privacy-and-safety))
+- the summary, folded into one line unless you opened its cards before, when AI is on (see [AI help in mail](/guide/mail/ai-help#summary-cards))
+- the earlier messages in the conversation, folded (see [Read a conversation](#read-a-conversation))
+- the message itself, then its attachments, then smart replies and the stance buttons (**Accept**, **Polite decline** and the rest) when AI is on
 
 Click the sender's picture, the sender's name or address, or a person in the full **To** and **Cc** lists to open a menu for that person. It offers **Open contact** if they are already saved, or **Add to contacts** if not, then **Email**, **Invite to an event**, **Search everything with** and their name, and **Copy email**. A small book icon shows who is saved already: a badge on the sender's picture, and an icon after each saved person in the **To** and **Cc** lists. See [Save contacts from mail](/guide/contacts/save-contacts-from-mail).
 
 A long message is cut short with **Show full message**. Click it to read the rest, and **Show less** to fold it again.
 
-Use **Prev** and **Next** in the toolbar to move through the list without going back to it. When the list shows beside the message, it scrolls to show the row of each message you move to. **Back** closes the message.
+The toolbar above the message starts with three icons: **Back**, **Previous message** and **Next message**. Point at an icon to see its name. Use **Previous message** and **Next message** to move through the list without going back to it. They are greyed out at either end of the list. When the list shows beside the message, it scrolls to show the row of each message you move to. **Back** closes the message. For the other buttons in the toolbar, see [Organize mail](/guide/mail/organize-mail).
 
 When nothing is open, the pane says **Select a message to read**.
 

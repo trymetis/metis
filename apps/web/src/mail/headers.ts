@@ -15,6 +15,10 @@ export function pickHeaders(
   return out;
 }
 
+export function isMixedMultipart(contentType: string | undefined): boolean {
+  return /^\s*multipart\/mixed\b/i.test(contentType ?? "");
+}
+
 function mimeText(raw: string): string {
   if (/^[A-Za-z-]+:/m.test(raw.slice(0, 2000))) return raw;
   try {

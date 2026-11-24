@@ -27,6 +27,8 @@ import {
   ChevronDown,
   Loader2,
   MailOpen,
+  Paperclip,
+  RefreshCw,
   Star,
   Tag as TagIcon,
   Trash2,
@@ -34,8 +36,10 @@ import {
 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { AgentToggle } from "@/components/agent/agent-toggle";
+import { IconButton } from "@/components/icon-button";
 import { MobileAsideTrigger } from "@/components/mobile-aside";
 import { usePlatformPolicy } from "@/components/platform-policy-context";
 import { useScopePolicy } from "@/components/scope-policy-context";
@@ -55,18 +59,21 @@ import {
 import { showLabelUndo } from "@/mail/label-undo";
 import {
   listSource,
+  refetchMailLists,
   refreshListOnSwitch,
   refreshMailListHead,
+  refreshMailSearch,
   refreshReadLaterList,
   setCachedLabels,
   useEmailSource,
   useMailLabels,
   useMutedThreadIds,
+  useSummaryPreviews,
 } from "@/mail/mail-cache";
 import { mailboxChipStyle } from "@/mail/mailbox-color";
 import { type MailListView, useMailStore } from "@/store/mail-store";
 import type { Email, MailFolder } from "@/types/mail";
-import { mailPath } from "@/workspace/path";
+import { ALL_MAILBOXES_SLUG, mailPath } from "@/workspace/path";
 
 interface EmailListProps {
   folder: MailFolder;
@@ -104,7 +111,9 @@ const TABS: { id: FilterTab; label: string }[] = [
 
 const PRIMARY_EXCLUDED_LABELS = new Set(["promotional", "social", "newsletter", "transactions"]);
 
-const ROW_ESTIMATE = 76;
+const MAIL_POLL_MS = 5 * 60_000;
+const ROW_ESTIMATE = 58;
+const MAX_ROW_TAGS = 2;
 const ROW_OVERSCAN = 30;
 export function EmailList({ folder, view }: EmailListProps) {
   const scope = useMailboxScope();
@@ -171,7 +180,7 @@ export function EmailList({ folder, view }: EmailListProps) {
     refreshListOnSwitch(scope, folder, listSource(readLaterMode, urlLabel, activeTab));
   }, [scope, folder, readLaterMode, urlLabel, activeTab]);
 
-  usePollingRefresh(async () => {
+  const { markRan } = usePollingRefresh(async () => {
     if (listError) {
       retryList();
       return;
@@ -179,7 +188,29 @@ export function EmailList({ folder, view }: EmailListProps) {
     if (useMailStore.getState().submittedSearch) return;
     if (readLaterMode) await refreshReadLaterList(scope).catch(() => {});
     else await refreshMailListHead(scope, folder).catch(() => {});
-  });
+  }, MAIL_POLL_MS);
+
+  const [refreshing, setRefreshing] = useState(false);
+  async function refreshNow() {
+    markRan();
+    if (listError) {
+      retryList();
+      return;
+    }
+    setRefreshing(true);
+    try {
+      const search = useMailStore.getState().submittedSearch;
+      if (search) await refreshMailSearch(scope, search);
+      else if (readLaterMode) await refreshReadLaterList(scope, { throwOnError: true });
+      else if (source.kind === "label" || source.kind === "state") {
+        await refetchMailLists({ throwOnError: true });
+      } else await refreshMailListHead(scope, folder);
+    } catch (err) {
+      toast.error(err instanceof Error && err.message ? err.message : "Couldn't refresh the list");
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   function runSearch(q: string) {
     submitSearch(q);
@@ -267,6 +298,16 @@ export function EmailList({ folder, view }: EmailListProps) {
     }
     return groupByThread(filtered);
   }, [emails, activeTab, labels, urlLabel, folder, mutedThreadIds, readLaterMode, selectedEmail]);
+
+  const previewThreads = useMemo(
+    () =>
+      visibleThreads.map(({ latest }) => ({
+        threadId: latest.threadId ?? latest.id,
+        latestDate: latest.date,
+      })),
+    [visibleThreads],
+  );
+  const tldrs = useSummaryPreviews(scope, previewThreads, platformAi && aiEnabled);
 
   // oxlint-disable-next-line react/incompatible-library -- TanStack Virtual is used as documented; the React Compiler is not enabled
   const virtualizer = useVirtualizer({
@@ -366,7 +407,7 @@ export function EmailList({ folder, view }: EmailListProps) {
     <div className="flex h-full w-full flex-col overflow-hidden border-r bg-surface border-border">
       {mailboxErrors.length > 0 && (
         <div className="shrink-0 border-b border-border-soft bg-surface px-4.5 py-2 text-[12px] text-faint">
-          Couldn't load {mailboxErrors.map((m) => m.mailboxEmail).join(", ")} — try Refresh.
+          Couldn't load {mailboxErrors.map((m) => m.mailboxEmail).join(", ")}. Try Refresh.
         </div>
       )}
       <div className="shrink-0 border-b px-4.5 pb-3 pt-4.5 border-border-soft">
@@ -375,6 +416,15 @@ export function EmailList({ folder, view }: EmailListProps) {
           <h1 className="mr-auto text-[22px] font-medium leading-tight tracking-tight text-foreground">
             {folderLabel}
           </h1>
+          <IconButton
+            label="Refresh"
+            size="icon-sm"
+            variant="ghost"
+            className="text-faint"
+            onClick={() => void refreshNow()}
+          >
+            <RefreshCw className={cn("size-4", refreshing && "animate-spin")} />
+          </IconButton>
           {platformAi && aiEnabled && (
             <AgentToggle
               label="Mail AI"
@@ -533,7 +583,7 @@ export function EmailList({ folder, view }: EmailListProps) {
               <div
                 // oxlint-disable-next-line react/no-array-index-key --static skeleton placeholders
                 key={i}
-                className="h-16 animate-pulse rounded-md bg-hover"
+                className="h-12 animate-pulse rounded-md bg-hover"
               />
             ))}
           </div>
@@ -591,6 +641,8 @@ export function EmailList({ folder, view }: EmailListProps) {
                       email={group.latest}
                       threadCount={group.count}
                       labelInfo={labelInfo}
+                      tldr={tldrs[group.latest.threadId ?? group.latest.id]}
+                      allMailboxes={scope.mailboxSlug === ALL_MAILBOXES_SLUG}
                       isSelected={selectedEmail?.id === group.latest.id}
                       isChecked={selectedIds.has(group.latest.id)}
                       onSelect={handleSelect}
@@ -643,6 +695,8 @@ interface EmailRowProps {
   email: Email;
   threadCount?: number;
   labelInfo?: { label: string; bg: string; fg: string };
+  tldr?: string;
+  allMailboxes: boolean;
   isSelected: boolean;
   isChecked: boolean;
   onSelect: (email: Email) => void;
@@ -654,6 +708,8 @@ function EmailRow({
   email,
   threadCount = 1,
   labelInfo,
+  tldr,
+  allMailboxes,
   isSelected,
   isChecked,
   onSelect,
@@ -664,7 +720,19 @@ function EmailRow({
     id: `email:${email.id}`,
     data: { email },
   });
-  const mailboxChip = email.mailboxEmail ? mailboxChipStyle(email.mailboxEmail) : null;
+  const mailboxChip =
+    allMailboxes && email.mailboxEmail ? mailboxChipStyle(email.mailboxEmail) : null;
+  const tags = [
+    ...(labelInfo ? [{ label: labelInfo.label, color: labelInfo.bg, fg: labelInfo.fg }] : []),
+    ...(mailboxChip
+      ? [
+          { label: mailboxChip.label, color: mailboxChip.bg, fg: mailboxChip.fg },
+          providerTag(email.provider),
+        ]
+      : []),
+  ];
+  const shownTags = tags.slice(0, MAX_ROW_TAGS);
+  const hiddenTags = tags.length - shownTags.length;
 
   return (
     // oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- dnd-kit's attributes give the row role="button" and tabIndex 0; it holds the checkbox button, so it cannot be a <button>
@@ -680,7 +748,7 @@ function EmailRow({
         }
       }}
       className={cn(
-        "group relative w-full cursor-pointer border-b border-border-soft px-4.5 py-3.5 text-left transition-colors",
+        "group relative w-full cursor-pointer border-b border-border-soft px-4.5 py-2.5 text-left transition-colors",
         isDragging && "opacity-40",
         isSelected
           ? "bg-selected"
@@ -693,109 +761,109 @@ function EmailRow({
         <span className="absolute top-0 bottom-0 left-0 w-0.5 rounded-r-xs bg-primary" />
       )}
 
-      <div className="mb-1 flex items-baseline justify-between">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={onCheck}
+          className={cn(
+            "flex size-3.5 shrink-0 items-center justify-center rounded-[3px] border transition-all",
+            isChecked
+              ? "border-primary bg-primary"
+              : "border-faint bg-transparent hover:border-foreground",
+          )}
+          aria-label={isChecked ? "Deselect" : "Select"}
+        >
+          {isChecked && <Check className="size-2.5 text-primary-foreground" />}
+        </button>
+        <button
+          type="button"
+          onClick={(e) => onStar(e, email)}
+          className={cn(
+            "shrink-0 transition-opacity hover:opacity-70",
+            email.isStarred ? "text-primary opacity-100" : "opacity-30",
+          )}
+          aria-label={email.isStarred ? "Unstar" : "Star"}
+        >
+          <Star
+            className="size-3.25"
+            fill={email.isStarred ? "currentColor" : "none"}
+            strokeWidth={2}
+          />
+        </button>
         <span
           className={cn(
-            "flex max-w-45 items-center gap-1.5 truncate text-[13px] font-medium",
-            !email.isRead ? "text-foreground" : "text-muted-foreground",
+            "w-36 shrink-0 truncate text-[13px]",
+            !email.isRead ? "font-medium text-foreground" : "text-muted-foreground",
           )}
         >
-          <button
-            type="button"
-            onClick={onCheck}
-            className={cn(
-              "flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-[3px] border transition-all",
-              isChecked
-                ? "border-primary bg-primary"
-                : "border-faint bg-transparent hover:border-foreground",
-            )}
-            aria-label={isChecked ? "Deselect" : "Select"}
-          >
-            {isChecked && <Check className="h-2.5 w-2.5 text-primary-foreground" />}
-          </button>
-          <span className="truncate">
-            {email.fromName || email.from || getInitials(email.from)}
-          </span>
-          <button
-            type="button"
-            onClick={(e) => onStar(e, email)}
-            className={cn(
-              "transition-opacity hover:opacity-70",
-              email.isStarred ? "text-primary opacity-100" : "opacity-30",
-            )}
-            aria-label={email.isStarred ? "Unstar" : "Star"}
-          >
-            <Star
-              className="size-3.25"
-              fill={email.isStarred ? "currentColor" : "none"}
-              strokeWidth={2}
-            />
-          </button>
+          {email.fromName || email.from || getInitials(email.from)}
         </span>
-        <span className="flex shrink-0 items-center gap-1.5">
-          {threadCount > 1 && (
-            <span className="rounded-full bg-brand-soft px-1.5 py-px text-[10px] font-medium tabular-nums text-primary">
-              {threadCount}
-            </span>
+        <span
+          className={cn(
+            "min-w-0 flex-1 truncate text-[13px]",
+            !email.isRead ? "font-medium text-foreground" : "text-muted-foreground",
           )}
-          <span className="text-[11px] tabular-nums text-faint">{formatEmailDate(email.date)}</span>
+        >
+          {email.subject}
         </span>
+        {threadCount > 1 && (
+          <span className="shrink-0 rounded-full bg-brand-soft px-1.5 py-px text-[10px] font-medium tabular-nums text-primary">
+            {threadCount}
+          </span>
+        )}
       </div>
 
-      <div
-        className={cn(
-          "mb-1 truncate text-[13px]",
-          !email.isRead ? "font-medium text-foreground" : "font-normal text-muted-foreground",
+      <div className="mt-1 flex items-center gap-2 pl-11">
+        {shownTags.map((tag) => (
+          <Tag key={tag.label} label={tag.label} color={tag.color} fg={tag.fg} />
+        ))}
+        {hiddenTags > 0 && <span className="shrink-0 text-[10px] text-faint">+{hiddenTags}</span>}
+        {email.hasAttachments && (
+          <Paperclip className="size-3 shrink-0 text-faint" aria-label="Has attachments" />
         )}
-      >
-        {email.subject}
-      </div>
-
-      {email.snippet && <div className="truncate text-[12px] text-faint">{email.snippet}</div>}
-
-      <div className="mt-1.75 flex flex-wrap gap-1.5">
-        {mailboxChip && (
-          <Tag label={mailboxChip.label} color={mailboxChip.bg} fg={mailboxChip.fg} />
-        )}
-        {labelInfo && <Tag label={labelInfo.label} color={labelInfo.bg} fg={labelInfo.fg} />}
-        <Tag
-          label={
-            email.provider === "google"
-              ? "Gmail"
-              : email.provider === "microsoft"
-                ? "Outlook"
-                : email.provider === "zoho"
-                  ? "Zoho"
-                  : "Mail"
-          }
-          color={
-            email.provider === "google"
-              ? "color-mix(in srgb, var(--brand) 12%, transparent)"
-              : email.provider === "microsoft"
-                ? "color-mix(in srgb, var(--provider-microsoft) 15%, transparent)"
-                : email.provider === "zoho"
-                  ? "color-mix(in srgb, var(--provider-zoho) 15%, transparent)"
-                  : "color-mix(in srgb, var(--provider-neutral) 12%, transparent)"
-          }
-          fg={
-            email.provider === "google"
-              ? "var(--brand-on-tint)"
-              : email.provider === "microsoft"
-                ? "var(--provider-microsoft)"
-                : email.provider === "zoho"
-                  ? "var(--provider-zoho)"
-                  : "var(--provider-neutral)"
-          }
-        />
+        <span className="min-w-0 flex-1 truncate text-[12px] text-faint">
+          {tldr ?? email.snippet}
+        </span>
+        <span className="shrink-0 text-[11px] tabular-nums text-faint">
+          {formatEmailDate(email.date)}
+        </span>
       </div>
     </div>
   );
 }
 
+const PROVIDER_TAGS: Record<string, { label: string; color: string; fg: string }> = {
+  google: {
+    label: "Gmail",
+    color: "color-mix(in srgb, var(--brand) 12%, transparent)",
+    fg: "var(--brand-on-tint)",
+  },
+  microsoft: {
+    label: "Outlook",
+    color: "color-mix(in srgb, var(--provider-microsoft) 15%, transparent)",
+    fg: "var(--provider-microsoft)",
+  },
+  zoho: {
+    label: "Zoho",
+    color: "color-mix(in srgb, var(--provider-zoho) 15%, transparent)",
+    fg: "var(--provider-zoho)",
+  },
+};
+
+const MAIL_PROVIDER_TAG = {
+  label: "Mail",
+  color: "color-mix(in srgb, var(--provider-neutral) 12%, transparent)",
+  fg: "var(--provider-neutral)",
+};
+
+function providerTag(provider: string): { label: string; color: string; fg: string } {
+  return PROVIDER_TAGS[provider] ?? MAIL_PROVIDER_TAG;
+}
+
 function Tag({ label, color, fg }: { label: string; color: string; fg: string }) {
   return (
     <span
-      className="rounded-full px-1.75 py-px text-[10px] font-medium tracking-wider"
+      className="shrink-0 rounded-full px-1.75 py-px text-[10px] font-medium tracking-wider"
       style={{ background: color, color: fg }}
     >
       {label}

@@ -39,6 +39,7 @@ export const RATE_LIMITS = {
   smartReplies: { scope: "smart-replies", limit: 30, windowSec: MINUTE },
   draftApology: { scope: "draft-apology", limit: 30, windowSec: MINUTE },
   draftStance: { scope: "draft-stance", limit: 30, windowSec: MINUTE },
+  rewriteText: { scope: "rewrite-text", limit: 30, windowSec: MINUTE },
   aiChat: { scope: "ai-chat", limit: 20, windowSec: MINUTE },
   aiWorkspaceChat: { scope: "ai-workspace-chat", limit: 20, windowSec: MINUTE },
   agentReferenceSuggest: { scope: "agent-reference-suggest", limit: 120, windowSec: MINUTE },

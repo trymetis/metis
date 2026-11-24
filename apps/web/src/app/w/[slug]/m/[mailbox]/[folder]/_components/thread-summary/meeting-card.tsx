@@ -30,7 +30,6 @@ import { ALL_CALENDARS_SLUG } from "@/workspace/path";
 
 import { AddToCalendar } from "./add-to-calendar";
 import {
-  Actions,
   CardAction,
   CardLink,
   CardShell,
@@ -116,14 +115,22 @@ export function MeetingCard({ props }: { props: SummaryCardProps<"Meeting"> }) {
       icon={Video}
       label="Meeting"
       aside={
-        props.status !== "scheduled" ? (
-          <Badge variant={cancelled ? "destructive" : "outline"}>{humanize(props.status)}</Badge>
-        ) : onCalendar ? (
-          <Badge variant="outline">
-            <CalendarCheck />
-            On your calendar
-          </Badge>
-        ) : null
+        <>
+          {props.status !== "scheduled" ? (
+            <Badge variant={cancelled ? "destructive" : "outline"}>{humanize(props.status)}</Badge>
+          ) : onCalendar ? (
+            <Badge variant="outline">
+              <CalendarCheck />
+              On your calendar
+            </Badge>
+          ) : null}
+          {!cancelled &&
+            (onCalendar ? (
+              <Rsvp event={onCalendar} />
+            ) : (
+              <AddToCalendar props={props} intent="primary" />
+            ))}
+        </>
       }
     >
       <Title>
@@ -141,12 +148,34 @@ export function MeetingCard({ props }: { props: SummaryCardProps<"Meeting"> }) {
           </Detail>
         )}
         {props.location && (
-          <Detail icon={MapPin} label="Where">
+          <Detail
+            icon={MapPin}
+            label="Where"
+            action={
+              !cancelled &&
+              directions && (
+                <CardLink href={directions} icon={MapPin} iconOnly>
+                  Directions
+                </CardLink>
+              )
+            }
+          >
             {props.location}
           </Detail>
         )}
         {meetingHost && (
-          <Detail icon={Video} label="Online">
+          <Detail
+            icon={Video}
+            label="Online"
+            action={
+              !cancelled &&
+              props.meetingUrl && (
+                <CardLink href={props.meetingUrl} intent="primary" icon={Video}>
+                  Join
+                </CardLink>
+              )
+            }
+          >
             {meetingHost}
           </Detail>
         )}
@@ -172,25 +201,6 @@ export function MeetingCard({ props }: { props: SummaryCardProps<"Meeting"> }) {
           <TriangleAlert className="size-3.5 shrink-0" />
           Conflicts with {conflicts.map((c) => c.title).join(", ")}
         </p>
-      )}
-      {!cancelled && (
-        <Actions>
-          {props.meetingUrl && (
-            <CardLink href={props.meetingUrl} intent="primary" icon={Video}>
-              Join
-            </CardLink>
-          )}
-          {onCalendar ? (
-            <Rsvp event={onCalendar} />
-          ) : (
-            <AddToCalendar props={props} intent={props.meetingUrl ? "secondary" : "primary"} />
-          )}
-          {directions && (
-            <CardLink href={directions} icon={MapPin}>
-              Directions
-            </CardLink>
-          )}
-        </Actions>
       )}
     </CardShell>
   );

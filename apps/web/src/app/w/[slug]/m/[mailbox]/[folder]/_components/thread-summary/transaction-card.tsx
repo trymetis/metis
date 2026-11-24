@@ -15,7 +15,7 @@ import {
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { Actions, CardLink, CardShell, Detail, Details, Title } from "./card-parts";
+import { CardLink, CardShell, Detail, Details, Title } from "./card-parts";
 import { formatMoney, formatWhen } from "./format";
 
 type TransactionProps = SummaryCardProps<"Transaction">;
@@ -41,9 +41,16 @@ export function TransactionCard({ props }: { props: TransactionProps }) {
       icon={direction.icon}
       label={props.institution ?? "Transaction"}
       aside={
-        <Badge variant={props.direction === "failed" ? "destructive" : "outline"}>
-          {direction.label}
-        </Badge>
+        <>
+          <Badge variant={props.direction === "failed" ? "destructive" : "outline"}>
+            {direction.label}
+          </Badge>
+          {props.detailsUrl && (
+            <CardLink href={props.detailsUrl} intent="primary">
+              {props.direction === "request" ? "Review request" : "View details"}
+            </CardLink>
+          )}
+        </>
       }
     >
       <div className="flex items-baseline justify-between gap-3">
@@ -79,13 +86,6 @@ export function TransactionCard({ props }: { props: TransactionProps }) {
           </Detail>
         )}
       </Details>
-      {props.detailsUrl && (
-        <Actions>
-          <CardLink href={props.detailsUrl} intent="primary">
-            {props.direction === "request" ? "Review request" : "View details"}
-          </CardLink>
-        </Actions>
-      )}
     </CardShell>
   );
 }

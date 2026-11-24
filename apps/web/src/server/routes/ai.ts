@@ -7,7 +7,7 @@ import { htmlToText, truncate } from "@/lib/utils";
 import { cacheAnalysis, getCachedAnalysis } from "@/mail/cache";
 import { type MailSession, policyForMailbox, scopeMessage } from "@/mail/session";
 import { generateSmartReplies } from "@/mail/smart-replies";
-import { summarizeThread } from "@/mail/thread-summary";
+import { cachedTldrs, summarizeThread } from "@/mail/thread-summary";
 import { drafterAgent } from "@/mastra/agents/drafter";
 import { getLlm } from "@/services/llm";
 import { getPhishingDetection, phishingDetectionEnabled } from "@/services/phishing-detection";
@@ -22,8 +22,13 @@ import {
   draftApologyInputSchema,
   draftReplyOutputSchema,
   draftStanceInputSchema,
+  REWRITE_MODES,
+  rewriteTextInputSchema,
+  rewriteTextOutputSchema,
   smartRepliesInputSchema,
   smartRepliesOutputSchema,
+  summaryPreviewsInputSchema,
+  summaryPreviewsOutputSchema,
   threadSummaryInputSchema,
   threadSummaryOutputSchema,
 } from "../schema";
@@ -44,6 +49,21 @@ function requireAi(mail: MailSession, messageId: string) {
   }
   return scoped;
 }
+
+function requireMailboxAi(mail: MailSession) {
+  if (!mail.mailboxes.every((m) => policyForMailbox(mail, m.mailboxId).ai)) {
+    throw new ORPCError("FORBIDDEN", {
+      message: "AI is turned off for this mailbox",
+    });
+  }
+}
+
+const REWRITE_GUIDANCE: Record<(typeof REWRITE_MODES)[number], string> = {
+  rewrite: "Rewrite it to read more clearly, keeping its meaning, facts and length about the same.",
+  shorten: "Make it shorter: keep every fact, request and date, and drop filler.",
+  formal: "Make it more formal and professional, keeping its meaning and facts.",
+  friendly: "Make it warmer and friendlier, keeping its meaning and facts.",
+};
 
 function recordDraftUsage(
   mail: MailSession,
@@ -222,7 +242,14 @@ ${emailContext}
 
 Stance: ${input.stance}
 ${stanceGuidance[input.stance]}
-
+${
+  input.draft?.trim()
+    ? `
+The user has started writing this reply. Keep their points and wording where they fit, and complete it in the stance:
+${input.draft.trim()}
+`
+    : ""
+}
 Write the reply body.`,
         {
           instructions: `You draft a reply in a specific stance the user has chosen. Rules:
@@ -257,5 +284,32 @@ Write the reply body.`,
         if (err instanceof RateLimitedError) throw err;
         throw new ORPCError("BAD_GATEWAY", { cause: err });
       }
+    }),
+
+  summaryPreviews: mailSession(summaryPreviewsInputSchema)
+    .output(summaryPreviewsOutputSchema)
+    .handler(async ({ input, context }) => ({
+      tldrs: await cachedTldrs(context.mail, input.threads),
+    })),
+
+  rewriteText: mailSession(rewriteTextInputSchema)
+    .output(rewriteTextOutputSchema)
+    .handler(async ({ input, context }) => {
+      const { mail } = context;
+      requireMailboxAi(mail);
+      await rateLimitOrThrow(mail.userId, RATE_LIMITS.rewriteText);
+
+      const result = await drafterAgent.generate(
+        `${REWRITE_GUIDANCE[input.mode]}\n\nText:\n${input.text}`,
+        {
+          instructions: `You edit a passage the user selected in an email they are writing. Rules:
+- Return only the edited passage, with no preface, quotes or explanation.
+- Keep the user's language, names, numbers, dates and links exactly.
+- Keep line breaks between paragraphs; no greeting or signature unless the passage has one.`,
+        },
+      );
+
+      recordDraftUsage(mail, result);
+      return { text: result.text.trim() };
     }),
 };

@@ -70,6 +70,7 @@ See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mai
 - **Editing a custom label changes its name and color, never its key** (`updateCustomLabel`), because label rows and workflows store the key.
 - **The list, its search results, labels, mute and read later live in the TanStack Query cache** (`mail-cache.ts`); `mail-store` keeps only UI state and the `updateEmail` / `removeEmail(s)` actions, which write into every cached list and search result.
   - `useMailList` pages `messages.list` with `useInfiniteQuery` (staleTime `Infinity`); polling and re-entering a folder fetch the first page and merge it in (`refreshMailListHead`), so loaded pages stay.
+  - The list polls every 5 minutes (`MAIL_POLL_MS`), because each tick is a provider list call per mailbox; the header's **Refresh** runs the same refresh at once (a search or a filtered tab refetches its own list) and pushes the next tick back (`markRan`).
   - Other readers of the list (shortcuts, agent panel, detail) observe the cache without fetching (`useCurrentEmails`); `selectedView` tells them whether the folder list or the read-later list is showing.
 - **Read later is its own list, not a filter over a folder's pages.** The `[folder]` route serves `read-later` as `FolderView` with `view="read-later"`, so it keeps the list and reading pane; `mail.readLater.listEmails` (`listReadLaterEmails`) reads each saved id from the provider.
   - A saved message shows wherever it was moved: `followMoves` re-keys its read-later row, and the list never pages the folder to find it.
@@ -132,12 +133,13 @@ See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mai
   - New message, Edit draft, reply, reply all, forward, smart replies, the AI drafts, the search actions and Undo all feed the same dialog, on every mail page.
   - It is a large `Dialog` on desktop and a bottom `Sheet` on phones. It closes with its close button or Escape, never with a click outside, so a misclick cannot drop a long message.
   - Callers pass the kind (`new`, `reply`, `forward`) and, for a reply, the sender's name for the title; nothing infers the kind from the fields.
-  - Reply, reply all and forward are built once, in `src/hooks/use-reply-actions.ts` → `useReplyActions`, which both the message toolbar and the `m r` chord use, so the chord opens the same reply as **Write a reply…**.
-  - On a draft the `m r` chord does nothing, as the Reply bar is hidden there.
+  - Reply, reply all and forward are built once, in `src/hooks/use-reply-actions.ts` → `useReplyActions`, which both the message toolbar and the `m r` chord use, so the chord opens the same reply as the toolbar's **Reply**.
+  - On a draft the `m r` chord does nothing, as the toolbar shows **Edit draft** instead of **Reply** there.
   - A reply or forward starts its sender on the message's own mailbox (`mailboxSlug`, which only `all` lists set), so a reply from `all` never goes out from another mailbox and keeps its `replyToMessageId` through `forSender`.
   - Mail shortcuts do nothing while a compose session is open (`useKeyboardShortcuts` checks the store at key time): focus can rest on a composer button, and a bare `j` or `m e` must never act on the message behind the dialog.
 - **Undo reopens exactly the payload that was about to go out** (`undo-send-store` → `cancel`): recipients, Bcc, attachments, the sending mailbox, the threading headers, and the compose kind and title carried as `ComposeReopen`.
-  - The quote is already merged into the body, so it reopens as text.
+  - `ComposeReopen` also carries the editor body and the quote apart, so a reply or forward comes back with its quote folded and **Stance** never rewrites or counts it.
+  - `cancel` schedules a save itself (`touch`), because a body without the quote may have no text and `open` saves only typed text.
   - The signature is marked settled (`keepSignature`), so the composer never adds one the sender had removed.
 - **The draft lives in the store, not the component** (`ComposeSession`): recipients, subject, body, quote, attachments, threading headers, draft id and save status.
   - The editor writes its HTML into the session on every transaction, and the form renders the session; nothing is copied back out of the component.
@@ -153,11 +155,23 @@ See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mai
   - Edit draft starts the sender on the draft's mailbox.
 - **A saved draft's sender is fixed: the composer locks From once the session has a draft id**, because a draft id names a message in one mailbox and no provider can update it through another; the save route rejects a composite id from another mailbox.
 - **IMAP replaces a re-saved draft with a new id and deletes the old message**, so each save that returns a new id removes the old one from the lists and the selection (`removeEmail`) and refreshes the Drafts head; a list never offers a draft that no longer exists.
+- **The formatting bar sits above the message area and is always shown** (`compose-formatting-bar.tsx` → `ComposeFormattingBar`); it reads the editor through `useEditorState`, since Tiptap 3 does not re-render on every transaction.
+  - It only offers what `EXTENSIONS` installs; text colour and highlight would need new extensions.
+- **Rewrite follows the sending mailbox's AI switch; Stance follows the answered message's mailbox** (`composeAi` and `stanceAi` from `useWorkspaceMailboxes` → `ai`), never the open folder's.
+  - `ComposeSession.replyMailbox` holds the answered message's mailbox, because **From** can change before the first save and `ai.draftStance` checks the message's mailbox; `useReplyActions` sets it from the message, `ComposeReopen` carries it through Undo after a send, and without it the URL's mailbox is used (or **From** in All inboxes).
+  - **Rewrite** sends the selected text, cut at the signature (`typedEnd`), to `ai.rewriteText` (rewrite, shorten, formal, friendly) and replaces it with the answer as paragraphs.
+  - **Stance** in a reply sends the text above the signature (`typedParagraphs`) as `draft` to `ai.draftStance`, and the answer replaces everything before the signature (`replaceTypedContent`); the editor's Undo brings the text back.
+  - One runs at a time (`busy` greys both menus), and the editor is read-only meanwhile (`setEditable(false, false)`, no update event) so nothing typed is overwritten.
+  - Toolbar commands still apply while it is read-only, so **Rewrite** maps its range through every transaction (`transaction.mapping`) and drops the answer if the range collapsed.
+  - Both refuse more than 4,000 characters in the browser with a toast saying so (`AI_TEXT_MAX`, matching the schemas), instead of the server's generic validation error.
+- **Discard deletes at once and offers Undo** (`useComposeStore` → `discard`, `restore`): it snapshots the session, deletes the saved draft through `finish("delete")`, and Undo reopens the snapshot as a new draft; a session with nothing worth keeping closes with no toast.
+  - A failed delete shows an error toast through `finish`'s `onDeleteFailed`; the send path passes none.
 - **The message area is the dialog's only scroll container, inside a dialog of fixed height.** ProseMirror scrolls the caret into view in its nearest scrolling ancestor (with `scrollThreshold` and `scrollMargin` on the editor); a composer that grows with its content has nothing to scroll and types below the screen.
 
 ### Other rules
 
 - **Unsubscribe results are mailbox-scoped**: the sender dropped the address, not the person.
+- **Replying starts from the toolbar** (`email-detail.tsx`): Reply, Reply all and Forward are icon buttons; smart replies and the reply-with-stance chips sit inline after the message, and nothing overlays the content; the stance chips and **Draft apology** render only where AI is on (`aiEnabled`, which in All inboxes reads the message's own mailbox policy from `workspaceMailboxes.list`).
 - **A subscriptions scan is cached for its mailboxes for 5 minutes** (`scanSubscriptions`, key over the sorted mailbox ids and scan size), and its rate limit counts per mailbox set, only on a miss; **Rescan**, search and the assistant reuse it, and the unsubscribe statuses are read fresh every time.
 - **A message's unsubscribe check (`mail.subscriptions.infoForMessage`) is fetched once per message per session** (`useUnsubscribeInfo`, `staleTime: Infinity`), because a message's `List-Unsubscribe` headers never change and each check is a provider call.
   - Over its limit, the toolbar shows **Unsubscribe** disabled with the wait as its tooltip and the query retries after the wait.
@@ -165,6 +179,12 @@ See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mai
 - **`undo-send-toast.tsx` is presentational and imports no store.** `startSend` schedules `fire()` and calls `showUndoSendToast` itself, so the send does not depend on a mounted component and the two stay out of an import cycle.
 - **Codes, OTPs and links in mail are stored and cached like any other content.** An "Expires in X min" label is display only; a derived copy adds no protection to a mailbox that has leaked.
 - **IMAP needs a long-lived process** (Docker / `next start`): the pool lives in module memory, so on a serverless host every invocation reconnects.
+- **A list row is two lines** (`EmailRow` in `email-list.tsx`): checkbox, star, sender and subject, then at most `MAX_ROW_TAGS` tags with "+N", a paperclip, the preview and the date.
+  - The mailbox chip and the provider tag show only in All inboxes (`scope.mailboxSlug`), where they tell mailboxes apart, even though some single-mailbox search results also carry `mailboxEmail`.
+  - The paperclip reads `Email.hasAttachments`, which each adapter sets from data its list call already returns: Graph's `hasAttachments`, Zoho's `hasAttachment`, a gateway row's attachments, and a top `Content-Type` of `multipart/mixed` for Gmail and IMAP (`isMixedMultipart` in `src/mail/headers.ts`), so inline-only images do not count.
+  - The preview is the thread's cached TL;DR when one exists (`ai.summaryPreviews` → `cachedTldrs` in `src/mail/thread-summary.ts`, a stored-summary read for mailboxes with AI on that never runs a model), else `snippet`.
+  - The TL;DR is used only when the stored summary was saved after the row's latest message's date, so a thread with newer mail shows its snippet until it is opened and summarized again; the date, not the message id, is compared because the summary's last message can sit in another folder (a sent reply). A summary that loads in the reading pane refreshes the previews (`refreshSummaryPreviews`); one made by the Workspace Assistant or an MCP client shows when the previews next refetch.
+  - **Refresh** surfaces a failed refetch as a toast on every list (`throwOnError` on the refetch helpers), while polling stays silent.
 - **The list row shows `snippet` as the adapter returns it, so every adapter returns plain text.**
   - IMAP builds it with the gateways' `snippetOf` ([gateways.md](gateways.md)).
   - Gmail's API returns `snippet` HTML-escaped, so `gmail.ts` decodes it with `decodeHTML`; Graph's `bodyPreview` and Zoho's decoded `summary` are already plain text.

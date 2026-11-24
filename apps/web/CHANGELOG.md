@@ -6,57 +6,89 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 ## Unreleased
 
-- Every "too many requests" message, including sign-in, two-factor lockout, the AI assistants, View original and webhook answers, says how long to wait before trying again. Thread summaries, **Reply with stance**, **Unsubscribe** and reordering workspaces show the message instead of failing silently; a reorder that can't be saved goes back to the old order.
+### Upgrade notes
+
+- Contains a database migration that moves each account's authenticator app into its own table and adds a table for passkeys. Two-factor setups made before the upgrade keep working.
+- Passkeys belong to the server's address: after the server moves to a new address, passkeys stop working there, and users sign in with their authenticator app or a backup code and add a passkey again.
+- Thread summaries use a new format, so each conversation's summary is built again the first time it is opened after the upgrade, which is one model call per conversation.
+- The rate-limit counters for sign-in, sign-up, password resets and two-factor checks start from zero after the upgrade.
+
+### Added
+
+- Passkeys for two-factor authentication, on par with an authenticator app: set it up with either one, and add the other later under **Settings** → **Security**.
+- You can choose which one Metis Suite asks for first, the authenticator app or a passkey, and pick another one, or a backup code, each time you sign in or confirm a change.
+- An authenticator app or a passkey can be removed on its own, as long as you keep one way to confirm it's you. Adding or removing either shows in **Security activity**. Turning two-factor authentication off removes them all and asks for your password and a confirmation.
+- Workflows: a list of your workflows with search, each one's trigger, last run, when it was updated and an on/off switch. **Approvals** and **Runs** are at the top, and each workflow opens on its own page with its own address.
+- **New workflow** asks for a name and a template. The workflow is created turned off, and the template opens in the editor for you to finish and save.
+- Each workflow has its own **Runs** page, under **More workflow actions** in the editor.
+- A **Refresh** button in the mail list.
+- Drag files from Drive, or contacts from the list, onto the open AI panel to attach them, as you already can with emails and events. Files and contacts you send stay visible in the conversation, as emails and events do.
+- The Calendar, Drive and Contacts AI panels have **Clear chat**, like Mail AI.
+- Each chat in the Workspace Assistant has a menu to **Rename**, **Pin** or **Delete** it, and pinned chats stay at the top.
+- On a contact, click an email address to write to it or a phone number to call it, and copy either with the button beside it.
+- The composer has a formatting bar above the text: bold, italic, underline, strikethrough, lists, quote, code, alignment, link, undo, redo and clear formatting.
+- **Rewrite** in the composer edits the selected text with AI: rewrite it, shorten it, or make it more formal or friendlier.
+- **Stance** in a reply writes the reply in the stance you pick, from the message and what you have typed so far, and replaces your text; the editor's undo brings it back.
+- **Discard draft** in the composer deletes the draft at once, with **Undo** in the notice that follows.
+
+### Changed
+
+- The mail list shows each message on two lines: sender and subject, then labels, a paperclip for attachments, a preview (the conversation's TL;DR once it has one) and the date. The Gmail, Outlook or Zoho tag shows only in All inboxes.
+- The mail list checks for new mail every 5 minutes instead of every minute, besides when you come back to the tab.
+- A message's summary starts collapsed to one line: the TL;DR and a chip for each card. Click it to open the cards; Metis Suite remembers whether you keep them open. A conversation gets at most one TL;DR, and notifications get none.
+- Summary card actions sit next to what they act on: copy and track beside the tracking number, Join beside the meeting link, Directions beside the address, and whole-card actions such as Pay or Save contact in the card's header.
+- **Reply** is in the message toolbar, which uses icons for Back, Previous, Next, Reply, Reply all, Forward, Star, Archive, Delete and Print. Smart replies and reply-with-stance chips appear right after the message instead of in a panel that covered it, and the stance chips and **Draft apology** show only where AI is on.
+- Blocked remote images show as a small chip next to the trackers chip; it opens the explanation with **Load images** and **Always from**.
+- **Subscriptions** is a table you can sort by sender, number of emails or last received.
+- The composer is a large window that fills most of the screen, for new messages, drafts, replies and forwards alike, and slides up as a sheet on phones. A long message scrolls inside it and keeps the line you are typing in view. A click outside no longer closes it: use the close button or Escape.
+- Drafts save shortly after you pause typing, and a reply you never touched is not saved as a draft. **Edit draft** opens the whole saved draft, with its Bcc, attachments and, for a reply, its place in the conversation, as far as the mail provider stores them.
+- **Reply** opens the composer with the reply ready, so a reply is written in one editor.
+- **From** can't be changed once a draft has been saved, so saves never go to a mailbox that doesn't hold the draft.
+- Confirmation boxes ask you to **Confirm it's you** and take your authenticator app, a passkey or a backup code, instead of asking only for an authenticator code.
+- Every "too many requests" message, including sign-in, the two-factor lockout, the AI assistants, MCP clients, View original and webhook answers, says how long to wait before trying again. Webhook and MCP answers over a limit also carry a `Retry-After` header and a `retryAfterSec` field.
 - Opening a message again no longer checks again whether you can unsubscribe from it. If that check is rate-limited, **Unsubscribe** shows greyed out with the wait.
 - Reopening a message no longer counts toward the thread summary, phishing check and smart reply limits; only new AI work does. Smart replies and AI labels that hit their limit try again on their own after the wait.
 - A subscriptions scan is reused for 5 minutes, so **Rescan**, searching subscriptions or asking the assistant again doesn't use up the scan limit, which now counts per mailbox.
-- Uploads to WebDAV, FTP, FTPS, SFTP and relayed S3 drives allow 600 files a minute instead of 60, and each drive download counts once toward its limit.
+- Uploads to WebDAV, FTP, FTPS, SFTP and relayed S3 drives allow 600 files a minute instead of 60.
 - You can send up to 100 workspace or account invites an hour instead of 10, and an MCP client can make 120 calls a minute instead of 60.
-- **Sign out everywhere** with **Also sign out this device** signs this browser out at once, instead of leaving it signed in for up to two minutes.
-- Passkeys work for two-factor authentication on par with an authenticator app: set it up with either one, and add the other later under **Settings** → **Security**.
-- You can choose which one Metis Suite asks for first, the authenticator app or a passkey, and pick another one, or a backup code, each time you sign in or confirm a change.
-- An authenticator app or a passkey can be removed on its own, as long as you keep one way to confirm it's you. Adding or removing either shows in **Security activity**. Turning two-factor authentication off removes them all and asks for your password and a confirmation.
-- Confirmation boxes ask you to **Confirm it's you** and take your authenticator app, a passkey or a backup code, instead of asking only for an authenticator code.
-- The composer is a large window that fills most of the screen, for new messages, drafts, replies and forwards alike, and slides up as a sheet on phones. A long message scrolls inside it and keeps the line you are typing in view. A click outside no longer closes it: use the close button or Escape.
-- Drafts save shortly after you pause typing, and a reply you never touched is not saved as a draft. Edit draft opens the whole saved draft, with its Bcc, attachments and, for a reply, its place in the conversation, as far as the mail provider stores them.
-- The reply box under a message opens the composer with the reply ready, so a reply is written in one editor.
-- HTML messages use the full width of the reading pane, and a message wider than the pane shrinks to fit instead of cutting off its right side.
-- The **m** then **r** shortcut replies to the open message, the same as **Write a reply…**, instead of opening a blank message. It does nothing on a draft.
-- In **All inboxes**, a reply or forward starts on the mailbox the message arrived in, instead of your first mailbox.
-- In **All inboxes**, **Edit draft** starts on the draft's own mailbox and keeps saving to the same draft, and the draft is removed once you send it.
-- **From** can't be changed once a draft has been saved, so saves never go to a mailbox that doesn't hold the draft.
-- On Gmail, a draft opened with **Edit draft** saves again and is removed once you send it, instead of failing to save.
-- On Zoho Mail, saving or sending a draft no longer leaves copies of it in **Trash**.
-- Mail shortcuts do nothing while the composer is open, so a key pressed while writing can no longer move to another message, archive it or delete it.
-- **Undo** after sending brings back the whole message: Cc, Bcc, attachments, the mailbox it was sent from and, for a reply, its place in the conversation.
-- Replies sent from Outlook mailboxes land in the conversation they answer instead of going out as new messages, and a reply saved as a draft is stored in Outlook as a reply.
+- **Runs** (previously **Activity**) filters by status and by one or more workflows, and loads older runs 50 at a time, with no limit on how far back.
+- A run's page shows its graph beside the step details. A strip under the title shows the trigger, start, duration and attempt; **More about this run** shows the scheduled time, merged missed runs, who started it, who it runs as and which revision ran, by whom and when. Any error sits in a red banner with **Retry failed steps**.
+- In the workflow editor, a step's settings start with **Duplicate**, **Delete** and a menu with **Copy reference**, without the category and type tags. Steps that send or create something show a small dot on their card.
+- **Add step** searches as you type and shows the 10 best matches by name and description.
+- **Try on recent mail** opens as a **Preview** tab under the canvas, next to **Runs** and **Test run**, instead of a panel over the canvas.
+- An action waiting for your approval shows as a card above the message box, with **Approve** and **Decline** inside it. Press Ctrl/⌘ Enter to approve or Esc to decline; Enter alone no longer approves. With text in the message box, the send button reads **Decline with reason**.
+- The AI panels in Mail, Calendar, Drive and Contacts show what they work on in one line, such as the mailbox address or **All inboxes**. The button that opens them is in the same place and looks the same in every section, and in Mail it is named **Mail AI**.
+- Where AI is off for a mailbox, calendar, drive or address book, or for the workspace, its AI button and panel no longer appear, instead of a panel saying the assistant is turned off.
+- In the Workspace Assistant, search, collapse and **New chat** (a pencil) share one row above the chats, and the search shows even before your first chat.
+- Search boxes in Mail, Drive, Contacts and the MCP tool lists share one look, with a button to clear the search.
 - In Calendar, the sidebar button that adds an event is **New event**, shaped like **Compose** in Mail.
 - An event's details show its title on one row with **Edit event**, **More actions** and **Close**. **Delete event** is in the **More actions** menu.
 - A calendar without a color from its provider picks from the same colors as mailboxes, so its color may change once.
 - In Contacts, the list fills the page as a table (name, email, phone, organization, address book) until you open a contact, and **Close contact** returns to it. **New contact** is the button beside the filter.
-- On a contact, click an email address to write to it or a phone number to call it, and copy either with the button beside it. **Edit contact** sits at the top, with **Invite to event**, **Download** and **Delete contact** under **More actions**.
-- Contacts and email senders show two initials on a color picked from their address, so the same person has the same color everywhere.
-- An action waiting for your approval shows as a card above the message box, with **Approve** and **Decline** inside it. Press Ctrl/⌘ Enter to approve or Esc to decline; Enter alone no longer approves. With text in the message box, the send button reads **Decline with reason**.
-- The AI panels in Mail, Calendar, Drive and Contacts show what they work on in one line, such as the mailbox address or **All inboxes**. The button that opens them is in the same place and looks the same in every section, and in Mail it is named **Mail AI**.
-- In the Workspace Assistant, search, collapse and **New chat** (a pencil) share one row above the chats, and the search shows even before your first chat. Each chat has a menu to **Rename**, **Pin** or **Delete** it, and pinned chats stay at the top.
-- Search boxes in Mail, Drive, Contacts and the MCP tool lists share one look, with a button to clear the search.
-- The Calendar, Drive and Contacts AI panels have **Clear chat**, like Mail AI.
-- Drag files from Drive, or contacts from the list, onto the open AI panel to attach them, as you already can with emails and events. Files and contacts you send stay visible in the conversation, as emails and events do.
+- A contact shows **Edit contact** at the top, with **Invite to event**, **Download** and **Delete contact** under **More actions**.
+- Contacts, email senders, workspace members, the member preview and your account button in the left rail show two initials on a color picked from the address, so the same person has the same color everywhere.
+
+### Fixed
+
+- **Sign out everywhere** with **Also sign out this device** signs this browser out at once, instead of leaving it signed in for up to two minutes.
+- HTML messages use the full width of the reading pane, and a message wider than the pane shrinks to fit instead of cutting off its right side.
+- The **m** then **r** shortcut replies to the open message, the same as **Reply** in the toolbar, instead of opening a blank message. It does nothing on a draft.
+- Mail shortcuts do nothing while the composer is open, so a key pressed while writing can no longer move to another message, archive it or delete it.
+- In **All inboxes**, a reply or forward starts on the mailbox the message arrived in, instead of your first mailbox.
+- In **All inboxes**, **Edit draft** starts on the draft's own mailbox and keeps saving to the same draft, and the draft is removed once you send it.
+- On Gmail, a draft opened with **Edit draft** saves again and is removed once you send it, instead of failing to save.
+- On Zoho Mail, saving or sending a draft no longer leaves copies of it in **Trash**.
+- **Undo** after sending brings back the whole message: Cc, Bcc, attachments, the mailbox it was sent from and, for a reply, its place in the conversation. The quoted or forwarded message comes back folded away instead of as part of your text.
+- Replies sent from Outlook mailboxes land in the conversation they answer instead of going out as new messages, and a reply saved as a draft is stored in Outlook as a reply.
 - After Mail AI changes your mail, such as deleting, starring or labeling messages, the message list updates right away instead of at the next refresh.
-- **Workflows** opens a list of your workflows with search, each one's trigger, last run, when it was updated and an on/off switch. **Approvals** and **Runs** are at the top, and each workflow opens on its own page with its own address.
-- **New workflow** asks for a name and a template. The workflow is created turned off, and the template opens in the editor for you to finish and save.
-- **Runs** (previously **Activity**) filters by status and by one or more workflows, and loads older runs 50 at a time, with no limit on how far back. Each workflow has its own **Runs** page, under **More workflow actions** in the editor.
+- Thread summaries, **Reply with stance**, **Unsubscribe** and reordering workspaces show the error when they fail instead of failing silently, and a reorder that can't be saved goes back to the old order.
+- Each drive download counts once toward the download limit instead of twice.
+- **Draft apology**'s text box stops at 500 characters instead of failing when you go past them.
+- The selected colour in the label colour picker shows a check mark instead of a ring that was hard to see on light colours.
 - Leaving a workflow with unsaved changes through the left rail asks first, like the editor's back arrow.
 - A run's back arrow returns to the Runs page you opened it from.
 - In search, **Resume** and **Cancel** on a run are offered on the same runs as the run page (**Resume** now also on partial runs, **Cancel** on waiting runs) and show what actually happened, including when the run cannot be resumed. **Open the builder** is now **Open in the editor**.
-- Where AI is off for a mailbox, calendar, drive or address book, or for the workspace, its AI button and panel no longer appear, instead of a panel saying the assistant is turned off.
-- Workspace members, the member preview and your account button in the left rail show the same colored initials as contacts and mail senders.
 - In Calendar, with the AI panel open, the card of an event you drag follows the pointer from the start, as it does in Mail, Drive and Contacts.
-- In the workflow editor, a step's settings start with **Duplicate**, **Delete** and a menu with **Copy reference**, without the category and type tags. Steps that send or create something show a small dot on their card.
-- **Add step** searches as you type and shows the 10 best matches by name and description.
-- **Try on recent mail** opens as a **Preview** tab under the canvas, next to **Runs** and **Test run**, instead of a panel over the canvas.
-- A run's page shows its graph beside the step details. A strip under the title shows the trigger, start, duration and attempt; **More about this run** shows the scheduled time, merged missed runs, who started it, who it runs as and which revision ran, by whom and when. Any error sits in a red banner with **Retry failed steps**.
-- **Approve** and **Deny** on a waiting approval stay side by side.
 
 ## Releases
 

@@ -3,10 +3,10 @@ title: Print and view the original
 description: Print a message, or see its raw source with every header and its sender checks.
 ---
 
-**Print** and **View original** are the last buttons in the message toolbar, after **Delete** and **Draft apology**. In **Drafts** there is no **Draft apology**, so they come right after **Delete**.
+**Print** and **View original** are the last buttons in the message toolbar, after **Delete** and, when it shows, **Draft apology** (see [AI help in mail](/guide/mail/ai-help#where-these-buttons-show)). **Print** is an icon of a printer: point at it to see its name.
 
-<img src="/images/mail/message-toolbar.webp" alt="The message toolbar with Delete, Draft apology, Print and View original on its second row" class="dark:hidden" />
-<img src="/images/mail/message-toolbar-dark.webp" alt="The message toolbar with Delete, Draft apology, Print and View original on its second row" class="hidden dark:block" />
+<img src="/images/mail/message-toolbar.webp" alt="The message toolbar ending with Delete, Draft apology, Print and View original" class="dark:hidden" />
+<img src="/images/mail/message-toolbar-dark.webp" alt="The message toolbar ending with Delete, Draft apology, Print and View original" class="hidden dark:block" />
 
 ## Print a message
 

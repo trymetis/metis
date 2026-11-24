@@ -4,7 +4,7 @@ import { CalendarClock, CreditCard, Hash, Receipt } from "lucide-react";
 import { useNow } from "@/hooks/use-now";
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { Actions, CardLink, CardShell, Detail, Details, Title } from "./card-parts";
+import { CardLink, CardShell, Detail, Details, Title } from "./card-parts";
 import { formatMoney, formatWhen, humanize, parseWhen } from "./format";
 import { RemindButton } from "./remind-button";
 
@@ -19,9 +19,21 @@ export function BillCard({ props }: { props: SummaryCardProps<"Bill"> }) {
       icon={Receipt}
       label="Bill"
       aside={
-        <Badge variant={overdue ? "destructive" : "outline"}>
-          {overdue ? "Overdue" : humanize(props.status)}
-        </Badge>
+        <>
+          <Badge variant={overdue ? "destructive" : "outline"}>
+            {overdue ? "Overdue" : humanize(props.status)}
+          </Badge>
+          {props.status !== "paid" && (
+            <>
+              <RemindButton date={props.dueDate} daysBefore={1} />
+              {props.payUrl && (
+                <CardLink href={props.payUrl} intent="primary" icon={CreditCard}>
+                  Pay
+                </CardLink>
+              )}
+            </>
+          )}
+        </>
       }
     >
       <div className="flex items-baseline justify-between gap-3">
@@ -40,20 +52,6 @@ export function BillCard({ props }: { props: SummaryCardProps<"Bill"> }) {
           </Detail>
         )}
       </Details>
-      {props.status !== "paid" && (props.payUrl || props.dueDate) && (
-        <Actions>
-          {props.payUrl && (
-            <CardLink href={props.payUrl} intent="primary" icon={CreditCard}>
-              Pay
-            </CardLink>
-          )}
-          <RemindButton
-            date={props.dueDate}
-            daysBefore={1}
-            intent={props.payUrl ? "secondary" : "primary"}
-          />
-        </Actions>
-      )}
     </CardShell>
   );
 }

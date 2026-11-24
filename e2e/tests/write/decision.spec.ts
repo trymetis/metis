@@ -155,7 +155,9 @@ export default function decisionSpecs() {
             exact: true,
           }),
         ).toBeVisible();
-        await expect(page.getByRole("main").getByText("TL;DR", { exact: true })).toHaveCount(0);
+        await expect(
+          page.getByRole("main").getByRole("button", { name: "Show summary cards" }),
+        ).toHaveCount(0);
         expect(completions - smartReplies, `${subject}: summarizer calls`).toBe(0);
       }
     }

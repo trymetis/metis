@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { create } from "zustand";
 
 import { bodyAsHtml, bodyFrom } from "@/hooks/use-email-detail";
@@ -23,6 +24,7 @@ export interface ComposeAttachment {
 
 export interface ComposeInitial {
   from?: string;
+  replyMailbox?: string;
   to?: string;
   cc?: string;
   bcc?: string;
@@ -40,6 +42,10 @@ export interface ComposeInitial {
 export interface ComposeReopen {
   kind: ComposeKind;
   replyingTo: string | null;
+  replyMailbox?: string;
+  bodyHtml?: string;
+  quotedHtml?: string | null;
+  quoteImages?: RemoteImages;
 }
 
 export interface ComposeFields {
@@ -62,6 +68,7 @@ export interface ComposeSession extends ComposeFields {
   inReplyTo?: string;
   references?: string;
   replyToMessageId?: string;
+  replyMailbox?: string;
   draftId: string | null;
   loading: boolean;
   loadFailed: boolean;
@@ -87,7 +94,9 @@ interface ComposeState {
   touch: () => void;
   markSignature: (signature: { from: string; auto: boolean }) => void;
   close: () => void;
-  finish: (draft: "delete" | "keep") => void;
+  finish: (draft: "delete" | "keep", onDeleteFailed?: () => void) => void;
+  discard: () => void;
+  restore: (snapshot: ComposeSession) => void;
 }
 
 const SAVE_DEBOUNCE_MS = 1500;
@@ -284,6 +293,7 @@ export const useComposeStore = create<ComposeState>((set, get) => {
         inReplyTo: initial?.inReplyTo,
         references: initial?.references,
         replyToMessageId: initial?.replyToMessageId,
+        replyMailbox: initial?.replyMailbox,
         attachments: initial?.attachments ?? [],
         signature: initial?.keepSignature
           ? { from: initial.from ?? get().env?.defaultFrom ?? "", auto: false }
@@ -351,7 +361,7 @@ export const useComposeStore = create<ComposeState>((set, get) => {
 
     close: () => replace(null),
 
-    finish: (draft) => {
+    finish: (draft, onDeleteFailed) => {
       const { session, env } = get();
       if (!session) return;
       clearTimer();
@@ -369,11 +379,34 @@ export const useComposeStore = create<ComposeState>((set, get) => {
               useMailStore.getState().removeEmail(draftId);
               void refreshMailListHead(env.scope, "drafts").catch(() => {});
             },
-            () => {},
+            () => onDeleteFailed?.(),
           );
       };
       if (inFlight) inFlight.then(removeDraft, removeDraft);
       else removeDraft();
+    },
+
+    discard: () => {
+      const { session } = get();
+      if (!session) return;
+      const saved = savedIds.get(session.id) ?? session.draftId;
+      const worthKeeping =
+        saved !== null ||
+        session.typed ||
+        session.subject.trim() !== "" ||
+        session.to.length + session.cc.length + session.bcc.length > 0 ||
+        session.attachments.length > 0;
+      get().finish("delete", () => toast.error("Couldn't delete the draft. It's still in Drafts."));
+      if (!worthKeeping) return;
+      toast("Draft discarded", {
+        action: { label: "Undo", onClick: () => get().restore(session) },
+      });
+    },
+
+    restore: (snapshot) => {
+      const fresh = blankSession(snapshot.kind);
+      replace({ ...snapshot, id: fresh.id, draftId: null, status: fresh.status, loading: false });
+      schedule();
     },
   };
 });

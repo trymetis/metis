@@ -17,7 +17,7 @@ import {
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { Actions, CardLink, CardShell, CopyButton, Detail, Details, Title } from "./card-parts";
+import { CardLink, CardShell, CopyButton, Detail, Details, Title } from "./card-parts";
 import { directionsUrl, formatRange, humanize } from "./format";
 import { TicketBarcode } from "./ticket-barcode";
 
@@ -40,11 +40,21 @@ export function ReservationCard({ props }: { props: SummaryCardProps<"Reservatio
       icon={RESERVATION_ICONS[props.kind]}
       label={humanize(props.kind)}
       aside={
-        props.confirmationCode ? (
-          <span className="font-mono text-[11px] text-muted-foreground">
-            {props.confirmationCode}
-          </span>
-        ) : null
+        <>
+          {props.confirmationCode && (
+            <>
+              <span className="font-mono text-[11px] text-muted-foreground">
+                {props.confirmationCode}
+              </span>
+              <CopyButton text={props.confirmationCode} label="Copy confirmation" iconOnly />
+            </>
+          )}
+          {props.manageUrl && (
+            <CardLink href={props.manageUrl} intent="primary">
+              Manage booking
+            </CardLink>
+          )}
+        </>
       }
     >
       <Title>{props.title}</Title>
@@ -55,7 +65,18 @@ export function ReservationCard({ props }: { props: SummaryCardProps<"Reservatio
           </Detail>
         )}
         {(props.from || props.to) && (
-          <Detail icon={Route} label="Route">
+          <Detail
+            icon={Route}
+            label="Route"
+            action={
+              !props.location &&
+              directions && (
+                <CardLink href={directions} icon={MapPin} iconOnly>
+                  Directions
+                </CardLink>
+              )
+            }
+          >
             <span className="inline-flex flex-wrap items-center gap-x-1.5">
               {props.from && <span>{props.from}</span>}
               {props.from && props.to && (
@@ -66,7 +87,17 @@ export function ReservationCard({ props }: { props: SummaryCardProps<"Reservatio
           </Detail>
         )}
         {props.location && (
-          <Detail icon={MapPin} label="Where">
+          <Detail
+            icon={MapPin}
+            label="Where"
+            action={
+              directions && (
+                <CardLink href={directions} icon={MapPin} iconOnly>
+                  Directions
+                </CardLink>
+              )
+            }
+          >
             {props.location}
           </Detail>
         )}
@@ -84,27 +115,6 @@ export function ReservationCard({ props }: { props: SummaryCardProps<"Reservatio
         )}
       </Details>
       {props.barcode && <TicketBarcode barcode={props.barcode} />}
-      {(props.manageUrl || props.confirmationCode || directions) && (
-        <Actions>
-          {props.manageUrl && (
-            <CardLink href={props.manageUrl} intent="primary">
-              Manage booking
-            </CardLink>
-          )}
-          {props.confirmationCode && (
-            <CopyButton
-              text={props.confirmationCode}
-              label="Copy confirmation"
-              intent={props.manageUrl ? "secondary" : "primary"}
-            />
-          )}
-          {directions && (
-            <CardLink href={directions} icon={MapPin}>
-              Directions
-            </CardLink>
-          )}
-        </Actions>
-      )}
     </CardShell>
   );
 }

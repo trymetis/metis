@@ -87,6 +87,7 @@ interface ZohoMessage {
   receivedTime?: ZohoValue;
   sentDateInGMT?: ZohoValue;
   mailFormat?: string;
+  hasAttachment?: ZohoValue;
 }
 
 interface ZohoAttachmentInfo {
@@ -328,6 +329,7 @@ function zohoMessageToEmail(msg: ZohoMessage, folder: MailFolder, folderId: stri
     date: dateIso,
     isRead: status !== "0",
     isStarred: flagid === "flag_imp" || flagid === "flag_red",
+    hasAttachments: msg.hasAttachment === undefined ? undefined : String(msg.hasAttachment) !== "0",
     labels: [],
     provider: "zoho",
     folder,

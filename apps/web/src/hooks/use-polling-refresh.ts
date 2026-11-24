@@ -1,20 +1,24 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
-export function usePollingRefresh(refresh: () => void | Promise<void>, intervalMs = 60_000) {
+export function usePollingRefresh(
+  refresh: () => void | Promise<void>,
+  intervalMs = 60_000,
+): { markRan: () => void } {
   const refreshRef = useRef(refresh);
+  const lastRun = useRef(0);
   useEffect(() => {
     refreshRef.current = refresh;
   }, [refresh]);
 
   useEffect(() => {
-    let lastRun = Date.now();
+    lastRun.current = Date.now();
     const run = () => {
       if (document.visibilityState !== "visible") return;
       const now = Date.now();
-      if (now - lastRun < Math.min(intervalMs / 2, 15_000)) return;
-      lastRun = now;
+      if (now - lastRun.current < intervalMs / 2) return;
+      lastRun.current = now;
       void refreshRef.current();
     };
     const id = setInterval(run, intervalMs);
@@ -26,4 +30,9 @@ export function usePollingRefresh(refresh: () => void | Promise<void>, intervalM
       window.removeEventListener("focus", run);
     };
   }, [intervalMs]);
+
+  const markRan = useCallback(() => {
+    lastRun.current = Date.now();
+  }, []);
+  return { markRan };
 }

@@ -9,13 +9,13 @@ import { useWorkspaceScope } from "./use-workspace-path";
 
 export type MailboxEmailMap = Record<string, string>;
 
-export type MailboxOption = Pick<WorkspaceMailbox, "slug" | "email">;
+export type MailboxOption = Pick<WorkspaceMailbox, "slug" | "email"> & { ai: boolean };
 
 const NO_MAILBOXES: MailboxOption[] = [];
 const NO_EMAILS: MailboxEmailMap = {};
 
 function toOptions(res: { mailboxes: WorkspaceMailbox[] }): MailboxOption[] {
-  return res.mailboxes.map((m) => ({ slug: m.slug, email: m.email }));
+  return res.mailboxes.map((m) => ({ slug: m.slug, email: m.email, ai: m.policy.ai }));
 }
 
 function toEmailMap(res: { mailboxes: WorkspaceMailbox[] }): MailboxEmailMap {

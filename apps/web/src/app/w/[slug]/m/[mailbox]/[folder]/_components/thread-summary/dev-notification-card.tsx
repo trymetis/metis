@@ -14,7 +14,7 @@ import {
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { Actions, CardLink, CardShell, Detail, Details, Title } from "./card-parts";
+import { CardLink, CardShell, Detail, Details, Title } from "./card-parts";
 import { humanize } from "./format";
 
 type DevNotificationProps = SummaryCardProps<"DevNotification">;
@@ -51,11 +51,18 @@ export function DevNotificationCard({ props }: { props: DevNotificationProps }) 
       icon={Icon}
       label={`${PLATFORM_LABELS[props.platform]} · ${humanize(props.kind)}`}
       aside={
-        props.state ? (
-          <Badge variant={BAD_STATES.test(props.state) ? "destructive" : "outline"}>
-            {props.state}
-          </Badge>
-        ) : null
+        <>
+          {props.state && (
+            <Badge variant={BAD_STATES.test(props.state) ? "destructive" : "outline"}>
+              {props.state}
+            </Badge>
+          )}
+          {props.url && (
+            <CardLink href={props.url} intent="primary">
+              Open on {PLATFORM_LABELS[props.platform]}
+            </CardLink>
+          )}
+        </>
       }
     >
       <Title>{props.title}</Title>
@@ -71,13 +78,6 @@ export function DevNotificationCard({ props }: { props: DevNotificationProps }) 
           </Detail>
         )}
       </Details>
-      {props.url && (
-        <Actions>
-          <CardLink href={props.url} intent="primary">
-            Open on {PLATFORM_LABELS[props.platform]}
-          </CardLink>
-        </Actions>
-      )}
     </CardShell>
   );
 }

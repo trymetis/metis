@@ -3,7 +3,7 @@ import { ShoppingBag } from "lucide-react";
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { Actions, CardLink, CardShell, Title } from "./card-parts";
+import { CardLink, CardShell, Title, CompactActions } from "./card-parts";
 import { formatMoney } from "./format";
 
 export function OrderCard({ props }: { props: SummaryCardProps<"Order"> }) {
@@ -12,14 +12,32 @@ export function OrderCard({ props }: { props: SummaryCardProps<"Order"> }) {
     <CardShell
       icon={ShoppingBag}
       label="Order"
-      aside={props.status ? <Badge variant="outline">{props.status}</Badge> : null}
+      aside={
+        <>
+          {props.status && <Badge variant="outline">{props.status}</Badge>}
+          {props.orderUrl && !props.orderNumber && (
+            <CardLink href={props.orderUrl} intent="primary">
+              View order
+            </CardLink>
+          )}
+        </>
+      }
     >
       <div className="flex items-baseline justify-between gap-3">
         <Title>{props.merchant}</Title>
         {total && <span className="text-[14px] font-medium text-foreground">{total}</span>}
       </div>
       {props.orderNumber && (
-        <p className="font-mono text-[11px] text-faint">#{props.orderNumber}</p>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <p className="font-mono text-[11px] text-faint">#{props.orderNumber}</p>
+          {props.orderUrl && (
+            <CompactActions>
+              <CardLink href={props.orderUrl} intent="primary">
+                View order
+              </CardLink>
+            </CompactActions>
+          )}
+        </div>
       )}
       {props.items.length > 0 && (
         <ul className="mt-2 space-y-0.5">
@@ -39,13 +57,6 @@ export function OrderCard({ props }: { props: SummaryCardProps<"Order"> }) {
             );
           })}
         </ul>
-      )}
-      {props.orderUrl && (
-        <Actions>
-          <CardLink href={props.orderUrl} intent="primary">
-            View order
-          </CardLink>
-        </Actions>
       )}
     </CardShell>
   );

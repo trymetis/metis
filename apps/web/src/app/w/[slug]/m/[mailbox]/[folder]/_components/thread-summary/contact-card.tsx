@@ -23,17 +23,8 @@ import { route } from "@/lib/route";
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 import type { ContactDraft } from "@/server/schema";
 
-import {
-  Actions,
-  CardAction,
-  CardLink,
-  CardShell,
-  CopyButton,
-  Detail,
-  Details,
-  Title,
-} from "./card-parts";
-import { directionsUrl } from "./format";
+import { CardAction, CardLink, CardShell, CopyButton, Detail, Details, Title } from "./card-parts";
+import { directionsUrl, hostOf } from "./format";
 
 type ContactProps = SummaryCardProps<"Contact">;
 
@@ -70,77 +61,111 @@ export function ContactCard({ props }: { props: ContactProps }) {
   const [phone] = props.phones;
   const directions = directionsUrl(props.addresses[0]);
   return (
-    <CardShell icon={UserRound} label="Contact">
+    <CardShell
+      icon={UserRound}
+      label="Contact"
+      aside={
+        <>
+          {saved ? (
+            <CardAction
+              intent="primary"
+              icon={BookUser}
+              onClick={() => router.push(route(matchHref(workspaceSlug, saved)))}
+            >
+              Open contact
+            </CardAction>
+          ) : (
+            <CardAction
+              intent="primary"
+              icon={UserPlus}
+              onClick={() => saveContact.save(toDraft(props))}
+            >
+              Save contact
+            </CardAction>
+          )}
+          <CardAction
+            icon={Download}
+            iconOnly
+            onClick={() => downloadVcard(toDraft(props), crypto.randomUUID())}
+          >
+            Download contact card
+          </CardAction>
+        </>
+      }
+    >
       <Title>{props.name}</Title>
       {role && <p className="text-[12px] text-muted-foreground">{role}</p>}
       <Details columns="two">
         {props.emails.length > 0 && (
-          <Detail icon={Mail} label="Email">
+          <Detail
+            icon={Mail}
+            label="Email"
+            action={
+              email && (
+                <>
+                  <CardLink href={`mailto:${email}`} icon={Mail} iconOnly>
+                    Email
+                  </CardLink>
+                  <CopyButton text={email} label="Copy email" iconOnly />
+                </>
+              )
+            }
+          >
             {props.emails.join(", ")}
           </Detail>
         )}
         {props.phones.length > 0 && (
-          <Detail icon={Phone} label="Phone">
+          <Detail
+            icon={Phone}
+            label="Phone"
+            action={
+              phone && (
+                <CardLink href={`tel:${phone.replace(/[^\d+]/g, "")}`} icon={Phone} iconOnly>
+                  Call
+                </CardLink>
+              )
+            }
+          >
             {props.phones.join(", ")}
           </Detail>
         )}
-        {props.addresses.map((address) => (
-          <Detail key={address} icon={MapPin} label="Address" wide>
+        {props.addresses.map((address, i) => (
+          <Detail
+            key={address}
+            icon={MapPin}
+            label="Address"
+            wide
+            action={
+              i === 0 &&
+              directions && (
+                <CardLink href={directions} icon={MapPin} iconOnly>
+                  Directions
+                </CardLink>
+              )
+            }
+          >
             {address}
           </Detail>
         ))}
+        {props.websiteUrl && (
+          <Detail
+            icon={Globe}
+            label="Website"
+            action={
+              <CardLink href={props.websiteUrl} icon={Globe} iconOnly>
+                Website
+              </CardLink>
+            }
+          >
+            {hostOf(props.websiteUrl) ?? props.websiteUrl}
+          </Detail>
+        )}
         {props.note && (
           <Detail icon={StickyNote} label="Note" wide>
             {props.note}
           </Detail>
         )}
       </Details>
-      <Actions>
-        {saved ? (
-          <CardAction
-            intent="primary"
-            icon={BookUser}
-            onClick={() => router.push(route(matchHref(workspaceSlug, saved)))}
-          >
-            Open contact
-          </CardAction>
-        ) : (
-          <CardAction
-            intent="primary"
-            icon={UserPlus}
-            onClick={() => saveContact.save(toDraft(props))}
-          >
-            Save contact
-          </CardAction>
-        )}
-        <CardAction
-          icon={Download}
-          onClick={() => downloadVcard(toDraft(props), crypto.randomUUID())}
-        >
-          Download
-        </CardAction>
-        {email && (
-          <CardLink href={`mailto:${email}`} icon={Mail}>
-            Email
-          </CardLink>
-        )}
-        {email && <CopyButton text={email} label="Copy email" />}
-        {phone && (
-          <CardLink href={`tel:${phone.replace(/[^\d+]/g, "")}`} icon={Phone}>
-            Call
-          </CardLink>
-        )}
-        {props.websiteUrl && (
-          <CardLink href={props.websiteUrl} icon={Globe}>
-            Website
-          </CardLink>
-        )}
-        {directions && (
-          <CardLink href={directions} icon={MapPin}>
-            Directions
-          </CardLink>
-        )}
-      </Actions>
       {saveContact.dialog}
     </CardShell>
   );

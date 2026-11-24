@@ -107,6 +107,7 @@ export interface Email {
   mailboxSlug?: string;
   mailboxEmail?: string;
   attachments?: Attachment[];
+  hasAttachments?: boolean;
 }
 
 export interface Attachment {

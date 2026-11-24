@@ -5,13 +5,14 @@ import {
   type InfiniteData,
   type QueryKey,
   useInfiniteQuery,
+  useQueries,
   useQuery,
 } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 
 import { orpc, rpc } from "@/lib/orpc";
 import { getQueryClient, refreshQueries, refreshQuery } from "@/lib/query-client";
-import type { MailboxScope, MailListState } from "@/server/schema";
+import type { MailboxScope, MailListState, SummaryPreviewThread } from "@/server/schema";
 import type { Email, MailFolder } from "@/types/mail";
 
 const PAGE_SIZE = 100;
@@ -289,7 +290,7 @@ export async function refreshMailListHead(scope: MailboxScope, folder: MailFolde
   });
 }
 
-export async function refetchMailLists() {
+export async function refetchMailLists({ throwOnError = false } = {}) {
   const client = getQueryClient();
   await Promise.all(
     [
@@ -297,7 +298,7 @@ export async function refetchMailLists() {
       rpc.mail.messages.listInState.key({ type: "infinite" }),
       rpc.mail.labels.listEmails.key({ type: "infinite" }),
     ].map((queryKey) =>
-      client.refetchQueries({ queryKey, type: "active" }, { cancelRefetch: false }),
+      client.refetchQueries({ queryKey, type: "active" }, { cancelRefetch: false, throwOnError }),
     ),
   );
 }
@@ -467,11 +468,18 @@ export function useReadLaterList(scope: MailboxScope, search: string, fetching =
   };
 }
 
-export async function refreshReadLaterList(scope: MailboxScope) {
+export async function refreshMailSearch(scope: MailboxScope, search: string) {
+  await getQueryClient().refetchQueries(
+    { queryKey: mailSearchOptions(scope, search).queryKey, exact: true },
+    { cancelRefetch: false, throwOnError: true },
+  );
+}
+
+export async function refreshReadLaterList(scope: MailboxScope, { throwOnError = false } = {}) {
   const client = getQueryClient();
   const { queryKey } = savedEmailsOptions(scope);
   if (!client.getQueryData(queryKey) || client.isFetching({ queryKey }) > 0) return;
-  await client.refetchQueries({ queryKey, exact: true }, { cancelRefetch: false });
+  await client.refetchQueries({ queryKey, exact: true }, { cancelRefetch: false, throwOnError });
 }
 
 export function useMutedThreadIds(scope: MailboxScope): ReadonlySet<string> {
@@ -495,3 +503,40 @@ export const readLater = idSetCache<{ messageIds: string[] }>(
   (data) => data.messageIds,
   (data, messageIds) => ({ ...data, messageIds }),
 );
+
+const SUMMARY_PREVIEW_CHUNK = 100;
+
+export function refreshSummaryPreviews(): void {
+  void refreshQueries(rpc.ai.summaryPreviews.key());
+}
+const NO_PREVIEWS: Record<string, string> = {};
+
+export function useSummaryPreviews(
+  scope: MailboxScope,
+  threads: readonly SummaryPreviewThread[],
+  enabled: boolean,
+): Record<string, string> {
+  const chunks = useMemo(() => {
+    const sorted = threads.toSorted((a, b) => a.threadId.localeCompare(b.threadId));
+    const out: SummaryPreviewThread[][] = [];
+    for (let i = 0; i < sorted.length; i += SUMMARY_PREVIEW_CHUNK) {
+      out.push(sorted.slice(i, i + SUMMARY_PREVIEW_CHUNK));
+    }
+    return out;
+  }, [threads]);
+  const combine = useCallback(
+    (results: { data?: { tldrs: Record<string, string> } }[]) => {
+      if (!enabled || results.every((r) => !r.data)) return NO_PREVIEWS;
+      return Object.fromEntries(results.flatMap((r) => Object.entries(r.data?.tldrs ?? {})));
+    },
+    [enabled],
+  );
+  return useQueries({
+    queries: chunks.map((chunk) => ({
+      ...rpc.ai.summaryPreviews.queryOptions({ input: { ...scope, threads: chunk } }),
+      enabled,
+      staleTime: 5 * 60_000,
+    })),
+    combine,
+  });
+}

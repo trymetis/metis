@@ -167,6 +167,7 @@ export const emailSchema = z.object({
   mailboxSlug: z.string().optional(),
   mailboxEmail: z.string().optional(),
   attachments: z.array(attachmentSchema).optional(),
+  hasAttachments: z.boolean().optional(),
 });
 
 export const draftAttachmentSchema = z.object({
@@ -2517,6 +2518,20 @@ export const threadSummaryOutputSchema = z.object({
   spec: summarySpecSchema.nullable(),
 });
 
+export const summaryPreviewThreadSchema = z.object({
+  threadId: z.string().min(1),
+  latestDate: z.string(),
+});
+export type SummaryPreviewThread = z.infer<typeof summaryPreviewThreadSchema>;
+
+export const summaryPreviewsInputSchema = mailboxScopeSchema.extend({
+  threads: z.array(summaryPreviewThreadSchema).max(100),
+});
+
+export const summaryPreviewsOutputSchema = z.object({
+  tldrs: z.record(z.string(), z.string()),
+});
+
 export const assistantThreadSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -2901,9 +2916,21 @@ export const REPLY_STANCES = [
 
 export const replyStanceEnum = z.enum(REPLY_STANCES);
 
+export const REWRITE_MODES = ["rewrite", "shorten", "formal", "friendly"] as const;
+
+export const rewriteTextInputSchema = mailboxScopeSchema.extend({
+  text: z.string().trim().min(1).max(4000),
+  mode: z.enum(REWRITE_MODES),
+});
+
+export const rewriteTextOutputSchema = z.object({
+  text: z.string(),
+});
+
 export const draftStanceInputSchema = mailboxScopeSchema.extend({
   messageId: z.string().min(1),
   stance: replyStanceEnum,
+  draft: z.string().max(4000).optional(),
 });
 
 export const listMuteOutputSchema = z.object({

@@ -101,3 +101,25 @@ export function typedText(editor: Editor): string {
   });
   return text.trim();
 }
+
+export function typedParagraphs(editor: Editor): string {
+  const parts: string[] = [];
+  let atSignature = false;
+  editor.state.doc.forEach((node) => {
+    if (node.type.name === SIGNATURE_NODE) atSignature = true;
+    if (!atSignature) parts.push(node.textContent);
+  });
+  return parts.join("\n").trim();
+}
+
+export function typedEnd(editor: Editor): number {
+  return findSignature(editor)?.pos ?? editor.state.doc.content.size;
+}
+
+export function replaceTypedContent(editor: Editor, html: string): void {
+  editor
+    .chain()
+    .focus()
+    .insertContentAt({ from: 0, to: typedEnd(editor) }, html)
+    .run();
+}

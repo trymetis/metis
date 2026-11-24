@@ -14,6 +14,9 @@
         "waitFor": "main h2:has-text(\"Rebrand kickoff\")"
       },
       {
+        "click": "main >> role=button[name=\"Show summary cards\"]"
+      },
+      {
         "waitFor": "text=TL;DR"
       }
     ],
@@ -114,7 +117,7 @@
       "width": 1440,
       "height": 440
     },
-    "element": "div:has(> div > button[title=\"Previous message\"])",
+    "element": "div:has(> [role=\"toolbar\"][aria-label=\"Message actions\"])",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -127,7 +130,7 @@
         "waitFor": "main h2:has-text(\"Rebrand kickoff\")"
       },
       {
-        "click": "div:has(> button[title=\"Previous message\"]) >> role=button[name=\"Change label\"]"
+        "click": "[role=\"toolbar\"][aria-label=\"Message actions\"] >> role=button[name=\"Change label\"]"
       },
       {
         "waitFor": "role=menu[name=\"Change label\"]"
@@ -211,9 +214,9 @@
     ]
   },
   {
-    "name": "mail/reply-footer",
+    "name": "mail/quick-replies",
     "target": "all",
-    "element": "div:has(> div > button[title=\"Previous message\"])",
+    "element": "div:has(> [role=\"toolbar\"][aria-label=\"Message actions\"])",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -226,10 +229,7 @@
         "waitFor": "main h2:has-text(\"Rebrand kickoff\")"
       },
       {
-        "click": "role=button[name=\"Reply 3 smart replies\"]"
-      },
-      {
-        "waitFor": "role=button[name=/Write a reply…$/]"
+        "waitFor": "role=group[name=\"Smart replies\"] >> role=button >> nth=2"
       },
       {
         "wait": 600
@@ -316,7 +316,7 @@
       "width": 1440,
       "height": 420
     },
-    "element": "div:has(> div > button[title=\"Previous message\"])",
+    "element": "div:has(> [role=\"toolbar\"][aria-label=\"Message actions\"])",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -329,7 +329,7 @@
         "waitFor": "main h2:has-text(\"Rebrand kickoff\")"
       },
       {
-        "click": "div:has(> button[title=\"Previous message\"]) >> role=button[name=/^Snooze/]"
+        "click": "[role=\"toolbar\"][aria-label=\"Message actions\"] >> role=button[name=/^Snooze/]"
       },
       {
         "waitFor": "role=menu[name=\"Snooze\"]"
@@ -357,7 +357,7 @@
         "waitFor": "main h2:has-text(\"Rebrand kickoff\")"
       }
     ],
-    "element": "div:has(> button[title=\"Previous message\"])"
+    "element": "[role=\"toolbar\"][aria-label=\"Message actions\"]"
   },
   {
     "name": "mail/view-original",
@@ -470,10 +470,13 @@
         "waitFor": "main h2:has-text(\"This week at the shop\")"
       },
       {
-        "waitFor": "role=alert >> text=/remote images? blocked/"
+        "click": "main >> role=button[name=/remote images? blocked/]"
+      },
+      {
+        "waitFor": "role=dialog >> text=/remote images? blocked/"
       }
     ],
-    "element": "main [role=\"alert\"]:has-text(\"remote image\")",
+    "element": "role=dialog:has-text(\"remote image\")",
     "www": [
       {
         "name": "mail/images"
@@ -527,6 +530,9 @@
       },
       {
         "waitFor": "main h2:has-text(\"Your order A-42 has shipped\")"
+      },
+      {
+        "click": "main >> role=button[name=\"Show summary cards\"]"
       },
       {
         "waitFor": "text=Track package"
@@ -660,10 +666,10 @@
         "waitFor": "main h2:has-text(\"Your order A-42 has shipped\")"
       },
       {
-        "click": "div:has(> button[title=\"Previous message\"]) >> role=button[name=\"Read later\"]"
+        "click": "[role=\"toolbar\"][aria-label=\"Message actions\"] >> role=button[name=\"Read later\"]"
       },
       {
-        "waitFor": "div:has(> button[title=\"Previous message\"]) >> role=button[name=\"Saved\"]"
+        "waitFor": "[role=\"toolbar\"][aria-label=\"Message actions\"] >> role=button[name=\"Saved\"]"
       },
       {
         "wait": 800

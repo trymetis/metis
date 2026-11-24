@@ -145,12 +145,12 @@ const CARD_RULES = [
   "Mailing headers such as auto-submitted, precedence: bulk, list-id or list-unsubscribe mean the email is automated.",
   "Card types:",
   ...keysOf(CARD_DEFINITIONS).map(cardLine),
-  "- Summary: include it only when the conversation has substance the other cards do not capture — discussion, decisions, questions, requests, anything that needs a reply. An automated notification needs no Summary. When no other card applies, return exactly one Summary.",
+  "- tldr: fill it only when the conversation has substance the cards do not capture — discussion, decisions, questions, requests, anything that needs a reply. An automated notification gets null. When no card applies, fill it. It is the conversation's only TL;DR; never put a Summary in cards.",
   "Never invent values: use null when the email does not say. Copy URLs verbatim from the email's links. Write dates as ISO 8601 and resolve relative dates against the date of the message that mentions them.",
-  "Summary text is concrete and factual with no greetings or filler; keyPoints are most important first; actionItems list only outstanding tasks and who owns each.",
+  "The tldr is concrete and factual with no greetings or filler; keyPoints are most important first; actionItems list only outstanding tasks and who owns each.",
   "Reply only with json matching the requested schema.",
 ].join("\n");
 
 export const SYSTEM_FULL = `You turn an email conversation into TL;DR cards shown above the email.\n\n${CARD_RULES}`;
 
-export const SYSTEM_REFINE = `You maintain the TL;DR cards shown above an email conversation. Given the current cards and the new message(s), return the full UPDATED set of cards. Update a card in place when a new message is about the same thing (same order number, tracking number, invite UID, confirmation code, bill reference, transaction reference, subscription, pull request or issue number, document, the same person's contact, or a newer code or link from the same service), add cards for new things, drop cards the new messages make obsolete, and rewrite the Summary to reflect the latest state. Do not merely append.\n\n${CARD_RULES}`;
+export const SYSTEM_REFINE = `You maintain the TL;DR cards shown above an email conversation. Given the current cards and the new message(s), return the full UPDATED set of cards. Update a card in place when a new message is about the same thing (same order number, tracking number, invite UID, confirmation code, bill reference, transaction reference, subscription, pull request or issue number, document, the same person's contact, or a newer code or link from the same service), add cards for new things, drop cards the new messages make obsolete, and rewrite the tldr to reflect the latest state. Do not merely append.\n\n${CARD_RULES}`;

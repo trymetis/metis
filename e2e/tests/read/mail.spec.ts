@@ -8,6 +8,7 @@ import { expect, test } from "../fixtures";
 import { mailPath, workspacePath } from "../harness";
 import {
   anyRowLabel,
+  expandSummary,
   folders,
   mailList,
   mailRow,
@@ -70,10 +71,11 @@ test("opening a message shows its summary card and three smart replies", async (
   await showTab(page, "All");
   await openMail(page, "Rebrand kickoff");
   const main = page.getByRole("main");
+  await expandSummary(page);
   await expect(main.getByText("TL;DR", { exact: true })).toBeVisible();
-  await expect(
-    main.getByRole("button", { name: "Reply 3 smart replies", exact: true }),
-  ).toBeVisible();
+  await expect(main.getByRole("group", { name: "Smart replies" }).getByRole("button")).toHaveCount(
+    3,
+  );
   await expect(main.getByRole("button", { name: "Accept both" })).toBeVisible();
 });
 

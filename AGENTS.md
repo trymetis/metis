@@ -32,6 +32,7 @@
 - **A user-visible change adds a line under `## Unreleased` in its release track's changelog; a release is cut with `bun run release`, never by hand.**
   - The tracks: `apps/web/CHANGELOG.md` for the server (app, worker and preflight images), `apps/cli/CHANGELOG.md` for the `metis` CLI (commands, components, the service catalog, the `bootstrap` shim), `apps/gateway-{resend,ses,cloudflare}/CHANGELOG.md` for each mail gateway, `apps/desktop/CHANGELOG.md`, `apps/mobile/CHANGELOG.md`; the root `CHANGELOG.md` only links to them.
   - A line describes something users can do or find differently; purely visual polish (spacing, alignment) gets no line.
+  - Each line goes under the section a release file uses, in this order: `### Upgrade notes` (what an operator must do or know at upgrade: migrations, config, one-time costs), `### Added`, `### Changed`, `### Removed`, `### Fixed`, `### Security`; `bun run release` moves the section into the release file unchanged.
   - Each release's notes are one file in the root `releases/` folder, named after its tag (`app-v0.3.1.md`), and are never edited once published ([deployment.md](agent-docs/deployment.md)).
 - **Never commit secrets.** `.env*` is gitignored except `apps/web/.env.example`, `e2e/.env.fixture` and `e2e-cli/.env.fixture`.
 - **Source copied into the repo gets a `NOTICE` entry.** Dependencies need no license bookkeeping: `apps/web/scripts/licenses.ts` writes `THIRD_PARTY_LICENSES.txt` at image build.

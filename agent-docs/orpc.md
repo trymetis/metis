@@ -103,7 +103,7 @@ See also [AGENTS.md](../AGENTS.md) (scope as explicit input), [auth.md](auth.md)
   - Polling joins a running fetch with `refetch({ cancelRefetch: false })`.
   - A local edit buffer over loaded data (a draft, a selection) re-syncs at render time when the query's `data` reference changes.
   - Server data shared across components lives only in the query cache, never in a Zustand store or a module variable; code outside React reads and writes it through `getQueryClient()`. The shell cache mirrors part of it to IndexedDB (see Shell cache).
-  - `QueryProvider` turns off retries and refetch on window focus, so a page loads once on mount and on explicit refresh, and an error shows at once; `usePollingRefresh` or `refetchInterval` polls where a page needs it.
+  - `QueryProvider` turns off retries and refetch on window focus, so a page loads once on mount and on explicit refresh, and an error shows at once; `usePollingRefresh` or `refetchInterval` polls where a page needs it; `usePollingRefresh` also refreshes on focus or visibility at most once per half interval, and returns `markRan` so a manual refresh pushes the next tick back.
 - **The server client.** Server components call procedures in-process through `@/lib/orpc.server`, which the root `layout.tsx` imports so it initializes. No proxy runs on those calls, which is why `appSession` checks 2FA itself.
 - **Headers.** `base` reads `next/headers` once per call and puts them on `context.headers`, which every session middleware and `requireTotp` use.
 - **The shell cache** is a Dexie database (`metis-shell-cache`) with a `queries` table keyed by query hash and an `owner` row.

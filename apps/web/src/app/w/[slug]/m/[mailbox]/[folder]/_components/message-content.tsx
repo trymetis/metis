@@ -1,10 +1,17 @@
 "use client";
 
-import { Alert, AlertDescription, AlertTitle } from "@metis/ui/components/alert";
 import { Button } from "@metis/ui/components/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@metis/ui/components/popover";
 import { cn } from "@metis/ui/lib/utils";
 import { ImageOff } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { EmailFrame } from "@/components/email-frame";
@@ -14,16 +21,18 @@ import type { RemoteImages } from "@/mail/render/types";
 import type { RemoteAllowInput } from "@/server/schema";
 import { senderDomain, useMailPrivacyStore } from "@/store/mail-privacy-store";
 
-function RemoteContentBanner({
+export function RemoteImagesChip({
   count,
   sender,
   messageId,
   proxied,
+  className,
 }: {
   count: number;
   sender: string;
   messageId: string;
   proxied: boolean;
+  className?: string;
 }) {
   const loadOnce = useMailPrivacyStore((s) => s.loadOnce);
   const allowRemote = useMailPrivacyStore((s) => s.allowRemote);
@@ -42,19 +51,34 @@ function RemoteContentBanner({
     }
   }
 
+  const label = `${count} remote ${count === 1 ? "image" : "images"} blocked`;
+
   return (
-    <Alert className="mb-3 bg-surface">
-      <ImageOff />
-      <AlertTitle className="text-[13px]">
-        {count} remote {count === 1 ? "image" : "images"} blocked
-      </AlertTitle>
-      <AlertDescription className="text-[12px]">
-        <p>
-          Remote images can tell the sender when and where you opened this message.
-          {proxied &&
-            " They load through this server, which hides your address but not the open itself."}
-        </p>
-        <div className="mt-2 flex flex-wrap gap-1.5">
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Button
+            variant="outline"
+            size="xs"
+            aria-label={label}
+            title={label}
+            className={cn("rounded-full bg-surface text-[11px] text-muted-foreground", className)}
+          />
+        }
+      >
+        <ImageOff className="size-3" />
+        {count}
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-72">
+        <PopoverHeader>
+          <PopoverTitle className="text-[13px]">{label}</PopoverTitle>
+          <PopoverDescription className="text-[12px]">
+            Remote images can tell the sender when and where you opened this message.
+            {proxied &&
+              " They load through this server, which hides your address but not the open itself."}
+          </PopoverDescription>
+        </PopoverHeader>
+        <div className="flex flex-col items-start gap-1.5">
           <Button size="xs" variant="outline" disabled={busy} onClick={() => loadOnce(messageId)}>
             Load images
           </Button>
@@ -63,9 +87,10 @@ function RemoteContentBanner({
               size="xs"
               variant="outline"
               disabled={busy}
+              className="max-w-full"
               onClick={() => trust({ kind: "address", value: address })}
             >
-              Always from {address}
+              <span className="truncate">Always from {address}</span>
             </Button>
           )}
           {domain && (
@@ -73,14 +98,15 @@ function RemoteContentBanner({
               size="xs"
               variant="outline"
               disabled={busy}
+              className="max-w-full"
               onClick={() => trust({ kind: "domain", value: domain })}
             >
-              Always from {domain}
+              <span className="truncate">Always from {domain}</span>
             </Button>
           )}
         </div>
-      </AlertDescription>
-    </Alert>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -89,23 +115,23 @@ export function MessageContent({
   rendered,
   images,
   proxyEndpoint,
-  sender,
   messageId,
   title,
   className,
   frameClassName,
   textClassName,
+  onBlockedImages,
 }: {
   body: MessageBody | null;
   rendered: RenderedEmail | null;
   images: RemoteImages;
   proxyEndpoint: string | null;
-  sender: string;
   messageId: string;
   title?: string;
   className?: string;
   frameClassName?: string;
   textClassName?: string;
+  onBlockedImages?: (count: number) => void;
 }) {
   const [blocked, setBlocked] = useState(0);
   const countKey = `${messageId} ${images}`;
@@ -116,6 +142,12 @@ export function MessageContent({
     setCountFor(countKey);
     setBlocked(0);
   }
+
+  const blockedCount =
+    images === "block" && body?.kind === "html" && rendered ? rendered.remoteImages + blocked : 0;
+  useEffect(() => {
+    onBlockedImages?.(blockedCount);
+  }, [blockedCount, onBlockedImages]);
 
   if (!body) return null;
   if (body.kind === "error") {
@@ -143,17 +175,8 @@ export function MessageContent({
     );
   }
 
-  const blockedCount = rendered.remoteImages + blocked;
   return (
     <div className={className}>
-      {images === "block" && blockedCount > 0 && (
-        <RemoteContentBanner
-          count={blockedCount}
-          sender={sender}
-          messageId={messageId}
-          proxied={proxyEndpoint !== null}
-        />
-      )}
       <EmailFrame
         key={messageId}
         title={title}

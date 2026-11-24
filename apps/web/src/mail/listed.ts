@@ -37,6 +37,8 @@ export async function readListedEmail(
     isRead: meta.isRead ?? true,
     isStarred: meta.isStarred ?? false,
     labels: meta.labels ?? [],
+    hasAttachments:
+      meta.hasAttachments ?? (meta.attachments ? meta.attachments.length > 0 : undefined),
     provider: target.provider,
     folder: meta.folder ?? "inbox",
     ...(mail.isAggregate && box

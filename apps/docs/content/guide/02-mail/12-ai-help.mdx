@@ -1,9 +1,9 @@
 ---
 title: AI help in mail
-description: Summary cards, smart replies, replies in a chosen stance, apology drafts and the Mail AI panel.
+description: Summary cards, smart replies, replies in a chosen stance, rewriting text in the composer, apology drafts and the Mail AI panel.
 ---
 
-Metis Suite's AI can summarize a conversation, pull out what matters (a code, a delivery date, a meeting), and write replies for you. Replies it writes for you open in the composer, so you can check and edit them before you send.
+Metis Suite's AI can summarize a conversation, pull out what matters (a code, a delivery date, a meeting), and write replies for you. Replies it writes for you open in the composer, so you can check and edit them before you send. In the composer, it can also rewrite the text you select.
 
 :::note
 AI help needs AI to be turned on for your workspace and for the mailbox. Your workspace admin and the mailbox's owner control these settings. See [Workspaces](/guide/workspaces).
@@ -11,78 +11,201 @@ AI help needs AI to be turned on for your workspace and for the mailbox. Your wo
 
 ## Summary cards
 
-When you open a conversation, cards above it summarize what it is about. While they load, you see "Summarizing…". When a new message arrives in the conversation, the cards update.
+When you open a conversation, a summary shows above the message. While it loads, you see "Summarizing…". When a new message arrives in the conversation, the summary updates.
+
+- If a message has nothing worth summarizing, you see "No summary for this email".
+- If the summary could not be made, you see "Couldn't summarize this thread." with the reason under it.
+- When AI is off for the mailbox, no summary shows.
+- Drafts have no summary.
+- Everyone who can see the mailbox sees the same summaries.
+- Every link in a card is checked against the links in the message and cleaned of tracking. See [Privacy and safety when reading](/guide/mail/privacy-and-safety).
+
+### The summary line
+
+At first, the summary is folded into one tinted line. From left to right, the line shows:
+
+- a sparkle icon
+- the **TL;DR** text, cut short to fit the line
+- a small chip for each other card, such as **Package · Thu**
+- a down arrow
+
+Click the line to open all the cards. To fold them again, click **Show less** (with an up arrow) above the cards.
 
 <img
   src="/images/mail/summary-card.webp"
-  alt="A summary card above an open conversation"
+  alt="The summary cards opened above a message, with a Package card"
   class="dark:hidden"
 />
 <img
   src="/images/mail/summary-card-dark.webp"
-  alt="A summary card above an open conversation"
+  alt="The summary cards opened above a message, with a Package card"
   class="hidden dark:block"
 />
 
-- If a message has nothing worth summarizing, you see "No summary for this email".
-- If the summary could not be made, you see "Couldn't summarize this thread." with the reason under it.
-- When AI is off for the mailbox, no summary cards show.
-- Drafts have no summary cards.
-- Everyone who can see the mailbox sees the same summaries.
-- Every link in a card is checked against the links in the message and cleaned of tracking. See [Privacy and safety when reading](/guide/mail/privacy-and-safety).
+Metis Suite remembers your choice in this browser. When you open the cards, every summary you see in this browser shows its cards open, in every mailbox and workspace. When you click **Show less**, every summary starts folded again. If you clear this site's data in your browser, summaries start folded.
+
+When there is no **TL;DR**, the chips fill the line. Each chip names a card:
+
+- **Code** followed by the code itself, for a verification code, so you can read the code without opening the cards
+- **Meeting**, **Order**, **Package**, **Bill**, **Contact**, **Transaction** and **Subscription**
+- **Link**, **Security**, **Document**, **Offer** and **Digest**
+- **Update**, for a notification from GitHub, GitLab, Bitbucket, Jira, Linear or a similar service
+- for a booking, its kind: **Flight**, **Hotel**, **Train**, **Bus**, **Car**, **Restaurant**, **Event** or **Other**
+
+When a card has a date, its chip adds the short day of the week, for example **Package · Thu** or **Meeting · Mon**. That is the day the meeting starts, the package is expected (also after it arrives), the bill is due, a document must be signed, a subscription renews, its trial ends or its new price starts, or a booking begins.
+
+### The TL;DR card
+
+A conversation has at most one **TL;DR** card, and it always comes first. Automated notifications, such as a code, a delivery update or a receipt, usually get no **TL;DR**: only their own cards. A conversation that no other card fits gets a **TL;DR**.
+
+Once a conversation has a **TL;DR** card, its row in the message list shows the TL;DR in place of the first words of the message. See [The TL;DR on a row](/guide/mail/read-your-mail#the-tldr-on-a-row).
 
 ### Kinds of cards
 
 The card you get depends on the message.
 
-| Card                                                                        | What it shows                                                                                                                               | Buttons                                                                                                              |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| **TL;DR**                                                                   | A short summary, key points and **Action items**                                                                                            |                                                                                                                      |
-| Verification code                                                           | The code and when it expires                                                                                                                | **Copy code**                                                                                                        |
-| Link (password reset, sign-in link, verify email, invitation, confirmation) | What the link does, the account and service, and when it expires                                                                            | A button that opens the link, or **Open email** when the link is in the message                                      |
-| Security alert                                                              | **When**, **Device**, **Location** and **IP** of the activity                                                                               | **Wasn't you? Review activity**                                                                                      |
-| **Meeting**                                                                 | **When**, **Time zone**, **Where**, **Online**, **Organizer**, **Calendar** and **Guests**, with a warning if it conflicts with your events | **Join**, **Directions**, and **Add to calendar** or **Going?**                                                      |
-| **Order**                                                                   | The merchant, total, order number and items                                                                                                 | **View order**                                                                                                       |
-| **Package**                                                                 | When it arrives or arrived, a progress bar, **From**, **Carrier**, **Tracking** and **Items**                                               | **Track package**, **Copy tracking**, **Remind me**                                                                  |
-| Transaction                                                                 | A payment, refund, request or failed payment, with **When**, **Account**, **Balance** and **Reference**                                     | **View details** or **Review request**                                                                               |
-| **Bill**                                                                    | The payee, amount, **Due** date and status, or **Overdue**                                                                                  | **Pay**, **Remind me**                                                                                               |
-| **Subscription**                                                            | A renewal, trial ending, price change, failed payment or cancellation                                                                       | **Manage**, **Remind me**                                                                                            |
-| Reservation                                                                 | A flight, hotel, train, bus, car, restaurant or event, with **When**, **Route**, **Where** and a ticket code                                | **Manage booking**, **Copy confirmation**, **Directions**                                                            |
-| Shared document                                                             | A document shared with you, or waiting for your signature                                                                                   | **Open**, **Review and sign** or **View document**                                                                   |
-| Offer                                                                       | The deal, discount, terms, code and end date                                                                                                | **Copy code**, **Shop**                                                                                              |
-| Digest                                                                      | The items in a newsletter, each with a short summary                                                                                        | **Unsubscribe**                                                                                                      |
-| GitHub, GitLab, Bitbucket, Jira or Linear                                   | The item's state, where it is and who acted                                                                                                 | **Open on** the platform                                                                                             |
-| **Contact**                                                                 | **Email**, **Phone**, **Address** and **Note**                                                                                              | **Save contact** or **Open contact**, **Download**, **Email**, **Copy email**, **Call**, **Website**, **Directions** |
+| Card                                                                        | What it shows                                                                                                                               | Buttons                                                                                                                           |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| **TL;DR**                                                                   | A short summary, key points and **Action items**                                                                                            |                                                                                                                                   |
+| Verification code                                                           | The code and when it expires                                                                                                                | **Copy code**                                                                                                                     |
+| Link (password reset, sign-in link, verify email, invitation, confirmation) | What the link does, the account and service, and when it expires                                                                            | A button that opens the link, or **Open email** when the link is in the message                                                   |
+| Security alert                                                              | **When**, **Device**, **Location** and **IP** of the activity                                                                               | **Wasn't you? Review activity**                                                                                                   |
+| **Meeting**                                                                 | **When**, **Time zone**, **Where**, **Online**, **Organizer**, **Calendar** and **Guests**, with a warning if it conflicts with your events | **Join**, **Directions**, and **Add to calendar** or **Going?**                                                                   |
+| **Order**                                                                   | The merchant, total, order number and items                                                                                                 | **View order**                                                                                                                    |
+| **Package**                                                                 | When it arrives or arrived, a progress bar, **From**, **Carrier**, **Tracking** and **Items**                                               | **Remind me**, **Copy tracking**, **Track package**                                                                               |
+| Transaction                                                                 | A payment, refund, request or failed payment, with **When**, **Account**, **Balance** and **Reference**                                     | **View details** or **Review request**                                                                                            |
+| **Bill**                                                                    | The payee, amount, **Due** date and status, or **Overdue**                                                                                  | **Pay**, **Remind me**                                                                                                            |
+| **Subscription**                                                            | A renewal, trial ending, price change, failed payment or cancellation                                                                       | **Manage**, **Remind me**                                                                                                         |
+| Booking (named after its kind, such as **Flight** or **Hotel**)             | A flight, hotel, train, bus, car, restaurant or event, with its confirmation code, **When**, **Route**, **Where** and a ticket code         | **Copy confirmation**, **Manage booking**, **Directions**                                                                         |
+| Shared document                                                             | A document shared with you, or waiting for your signature                                                                                   | **Open**, **Review and sign** or **View document**                                                                                |
+| Offer                                                                       | The deal, discount, terms, code and end date                                                                                                | **Copy code**, **Shop**                                                                                                           |
+| Digest                                                                      | The items in a newsletter, each with a short summary                                                                                        | **Unsubscribe**                                                                                                                   |
+| GitHub, GitLab, Bitbucket, Jira or Linear                                   | The item's state, where it is and who acted                                                                                                 | **Open on** the platform                                                                                                          |
+| **Contact**                                                                 | **Email**, **Phone**, **Address**, **Website** and **Note**                                                                                 | **Save contact** or **Open contact**, **Download contact card**, **Email**, **Copy email**, **Call**, **Directions**, **Website** |
+
+### Where the buttons are
+
+Each card has a header with an icon and a name, such as **Package**, or the service the card is about, such as a shop or a bank. Badges, such as a status or an expiry date, and the buttons that act on the whole card sit on the right of the header. A button that acts on one detail sits right after that detail. For example, **Copy code** sits beside the code, and **View order** sits beside the order number.
+
+Some buttons are icons only: **Copy tracking**, **Copy confirmation**, **Copy email**, **Download contact card**, **Directions**, **Call**, **Email** and **Website**. Point at one to see its name.
+
+Card by card:
+
+- **Link cards:** the button that opens the link, or **Open email**, is in the header. It does not show once the link has expired. A line under the details says "This link has expired.", "The link is in the message." or "The link is in the email below."
+- **Meeting:** the header shows a **Cancelled** or **Updated** badge, or **On your calendar**, then **Add to calendar** or **Going?**. **Directions** is beside **Where**, and **Join** is beside **Online**. None of these buttons show on a cancelled meeting. **Guests** lists up to 4 names, then "+2" or how many more there are.
+- **Order:** **View order** sits beside the order number. With no order number, it is in the header.
+- **Package:** with a tracking number, **Copy tracking** and **Track package** sit beside it. Without one, **Track package** is in the header. **Remind me** shows in the header while the package is not delivered and its date is still ahead.
+- **Bill:** until the bill is paid, the header shows **Pay**, and **Remind me** while the day before the due date is still ahead.
+- **Subscription:** **Remind me** shows only when the badge says **Renews soon**, **Trial ending** or **Price change**.
+- **Booking:** the confirmation code, **Copy confirmation** and **Manage booking** are in the header. **Directions** is beside **Where**, or beside **Route** when there is no place. Flights, and places given as a web address, have no **Directions**.
+- **Offer:** the header shows **Until** and the end date, or **Expired**. **Shop** does not show once the offer has expired.
+- **Digest:** **Unsubscribe** in the header changes to **Unsubscribed**, **Finish in the opened tab** or **Unsubscribe failed**.
+- **Contact:** **Save contact** or **Open contact** and **Download contact card** are in the header. **Email** and **Copy email** sit beside the email address, **Call** beside the phone number, **Directions** beside the first address, and **Website** beside the website.
 
 A few buttons need more explanation:
 
-- **Copy** buttons show "Copied". If copying fails, you see "Couldn't copy to the clipboard".
-- **Remind me** snoozes the message until the date on the button. A bill reminder is set for the day before it is due, at 9 AM. A notice tells you when the message comes back. It returns to the folder it was in, the same way as with **Snooze**: from **Archive** it stays in **Archive**, from **Trash** it goes back to **Trash**, and from any other folder it comes back to your **Inbox**. See [Snooze and read later](/guide/mail/snooze-and-read-later).
-- On a contact card, **Save contact** saves the person to one of the workspace's address books. You pick which one. If someone already saved that email address in this workspace, the card shows **Open contact** instead. **Download** saves the contact as a `.vcf` file. See [Save contacts from mail](/guide/contacts/save-contacts-from-mail).
-- On a meeting card, **Add to calendar** opens a list of calendars you can add events to. Each calendar shows its [account name](/guide/calendar/views-and-navigation#how-calendar-accounts-are-named) under it. The guests are invited. You see "Added to" and the calendar's name when it worked, or "Couldn't add the event". If the meeting is already on your calendar, the card shows **On your calendar** and asks **Going?** with **Yes**, **Maybe** and **No**.
+- **Copy code** changes to "Copied" for about a second and a half. A copy icon changes to a check mark, and pointing at it shows "Copied". If copying fails, you see "Couldn't copy to the clipboard".
+- **Directions** opens a Google Maps search for the place in a new tab.
+- **Remind me** snoozes the message until the date on the button. A bill or subscription reminder is set for the day before, at 9 AM. A notice tells you when the message comes back, for example "This email comes back Thu, Nov 27 at 9:00 AM". The message returns to the folder it was in, the same way as with **Snooze**: from **Archive** it stays in **Archive**, from **Trash** it goes back to **Trash**, and from any other folder it comes back to your **Inbox**. See [Snooze and read later](/guide/mail/snooze-and-read-later).
+- On a contact card, **Save contact** saves the person to one of the workspace's address books. You pick which one. If someone already saved that email address in this workspace, the card shows **Open contact** instead. **Download contact card** saves the contact as a `.vcf` file. See [Save contacts from mail](/guide/contacts/save-contacts-from-mail).
+- On a meeting card, **Add to calendar** opens a list of calendars you can add events to. Each calendar shows its [account name](/guide/calendar/views-and-navigation#how-calendar-accounts-are-named) under it. The guests are invited. You see "Added to" and the calendar's name when it worked, or "Couldn't add the event". If there is no calendar you can add events to, the list says "No calendar you can write to in this workspace". If the meeting is already on your calendar, the card shows **On your calendar** and asks **Going?** with **Yes**, **Maybe** and **No**. If your answer cannot be sent, you see "Couldn't send your response".
 
 ## Smart replies
 
-For messages in your Inbox, the **Reply** bar at the bottom of the message offers short suggested replies. When the bar is closed, it shows how many are ready, for example **3 smart replies**.
+At the end of a message, after its attachments, rows of round buttons can write a reply for you. In the Inbox, the first row has smart replies. The stance buttons (see the next section) come after them, or alone in other folders.
 
-1. Open the **Reply** bar.
-2. Click a suggestion. To read each one in full first, click **Smart replies** to show them as cards.
-3. The composer opens as a reply with that text filled in. Edit it if you like, then send.
+<img
+  src="/images/mail/quick-replies.webp"
+  alt="An open message with smart replies and the stance buttons at its end"
+  class="dark:hidden"
+/>
+<img
+  src="/images/mail/quick-replies-dark.webp"
+  alt="An open message with smart replies and the stance buttons at its end"
+  class="hidden dark:block"
+/>
 
-Smart replies only appear in the Inbox, and only when AI is on for the mailbox.
+Smart replies are short suggested replies, each with a short label. They show only for messages in your Inbox. A small spinner shows while they load.
+
+1. Scroll to the end of the message.
+2. Point at a suggestion to read its full text.
+3. Click it. The composer opens as a reply with that text filled in. Edit it if you like, then send.
 
 ## Reply with stance
 
-Under **Reply with stance** in the **Reply** bar, pick how you want to answer: **Accept**, **Polite decline**, **Negotiate**, **Buy time**, **Clarify** or **Defer**.
+The stance row lets you pick how you want to answer: **Accept**, **Polite decline**, **Negotiate**, **Buy time**, **Clarify** or **Defer**. Point at one to see what it does, for example "Draft a reply: Accept". Unlike smart replies, these buttons show in every folder except **Drafts**.
 
-The AI writes a short reply of two to four sentences in that stance. The composer opens with the reply and the original message quoted, ready for you to check and send.
+The AI writes a short reply of two to four sentences in that stance. While it writes, the button you clicked shows a spinner and all six buttons are greyed out. The composer then opens with the reply and the original message quoted, ready for you to check and send.
 
-These buttons are not shown on drafts. When AI is off for the mailbox, they are still shown. Clicking one shows "AI is turned off for this mailbox" at the bottom of the screen. If a reply cannot be written, the message says why, or "Couldn't draft that reply".
+If a reply cannot be written, a message at the bottom of the screen says why, for example "AI is turned off for this mailbox", or a message starting "Couldn't draft that reply".
+
+### Stance in the composer
+
+You can also pick a stance while you write a reply. The AI then uses what you typed so far.
+
+1. Start a reply and type your points, or leave the text empty.
+2. Click **Stance** (the speech bubble with a question mark) in the formatting bar above your text. Point at it to read "Write the reply in a stance, from what you typed so far".
+3. Pick **Accept**, **Polite decline**, **Negotiate**, **Buy time**, **Clarify** or **Defer**.
+
+While it writes, **Stance** shows a spinner. You can't type in your message until it is done. **Stance** and **Rewrite** are both greyed out, so only one runs at a time. Pointing at **Rewrite** shows "Wait for Stance to finish". The AI reads the message you are answering and your text. It writes a reply of two to four sentences in that stance and keeps your points where they fit. With nothing typed, it writes a new reply.
+
+The reply replaces your text above the signature. Your signature and the quoted message stay as they were. To get your own text back, click **Undo** in the formatting bar.
+
+**Stance** works on up to 4,000 characters of your text above the signature. If you typed more, you see "Stance works on up to 4,000 characters of your text. Shorten it and try again." Nothing is sent to the AI. Shorten your text, then pick the stance again.
+
+If the reply cannot be written, a message at the bottom of the screen says why, for example "AI is turned off for this mailbox", or a message starting "Couldn't draft that reply". Your text stays as it was.
+
+## Rewrite your text
+
+**Rewrite** edits the text you select in the composer.
+
+1. In your message, select the text you want to change.
+2. Click **Rewrite** (the sparkle icon) in the formatting bar above your text. Point at it to read "Edit the selected text with AI".
+3. Pick one of these:
+   - **Rewrite**: makes the text clearer, at about the same length.
+   - **Shorten**: makes it shorter, and keeps its facts, requests and dates.
+   - **More formal**: makes it more formal and professional.
+   - **Friendlier**: makes it warmer and friendlier.
+
+While it works, **Rewrite** shows a spinner. You can't type in your message until it is done, but the formatting buttons still work. **Rewrite** and **Stance** are both greyed out, so only one runs at a time. Pointing at **Stance** shows "Wait for Rewrite to finish". The new text then takes the place of the text you selected.
+
+A few details:
+
+- With no text selected, **Rewrite** is greyed out. Pointing at it shows "Select text to edit it with AI".
+- **Rewrite** changes only your text above the signature. If your selection runs into the signature, the signature stays as it was. If your selection has no text above the signature (for example only the signature, or text below it), you see "Select text above your signature to rewrite it." Select text above the signature, then try again.
+- The new text comes back as plain paragraphs. Formatting inside the selection, such as bold or a list, is lost.
+- To get your own text back, click **Undo** in the formatting bar.
+
+You can select up to 4,000 characters. If you select more, you see "Select up to 4,000 characters to rewrite." Nothing is sent to the AI. Select a shorter part, then try again.
+
+If the text cannot be rewritten, a message at the bottom of the screen says why, for example "AI is turned off for this mailbox", or a message starting "Couldn't rewrite that text". Your text stays as it was.
+
+## Where these buttons show
+
+Smart replies, the stance buttons and **Draft apology** show only when AI is on for the workspace and for the mailbox. When AI is off, you do not see them. None of them show on messages in **Drafts**.
+
+In the composer, **Rewrite** and **Stance** also need AI to be on for the workspace. Each one follows a different mailbox, so you can see one without the other:
+
+| Button      | Shows when                                                                                                                                                          |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Rewrite** | AI is on for the mailbox in **From**. If you change **From**, the button shows or hides to match. It shows in every kind of message: new, reply, forward and draft. |
+| **Stance**  | AI is on for the mailbox of the message you are answering, whatever **From** is set to. It shows only in a reply.                                                   |
+
+**Stance** shows in a reply you open with:
+
+- **Reply** or **Reply all**
+- **m** then **r**
+- a smart reply or a stance button
+- **Draft reply** in the **Draft an apology** dialog
+- **Reply** in search
+- **Undo** after you send or discard a reply (not a reply draft you reopened with **Edit draft**)
+
+**Stance** does not show in a new message, in a forward, or in a reply draft you reopen with **Edit draft**.
 
 ## Draft an apology
 
 1. Open the message you want to answer.
-2. Click **Draft apology** in the toolbar. It is not shown on drafts.
+2. Click **Draft apology** in the toolbar.
 3. In **What are you apologizing for?**, describe what happened, in up to 500 characters.
 4. Pick a **Tone**: **Brief**, **Warm** or **Formal**. **Warm** is picked first.
 5. Click **Draft reply**. While it works, the button says "Drafting…". The composer then opens with the apology as a reply.
@@ -98,11 +221,11 @@ These buttons are not shown on drafts. When AI is off for the mailbox, they are 
   class="hidden dark:block"
 />
 
-If something goes wrong, the dialog shows the problem, such as "AI is turned off for this mailbox" or "Failed to draft apology".
+If something goes wrong, the dialog shows the problem, such as "Too many requests. Try again in 20 seconds.", or "Failed to draft apology".
 
 ## If you use AI help very often
 
-These AI tools each have their own limit of 30 a minute: summary cards, smart replies, **Reply with stance**, and **Draft reply** in the **Draft an apology** dialog.
+These AI tools each have their own limit of 30 a minute: summary cards, smart replies, the stance buttons, **Rewrite** in the composer, and **Draft reply** in the **Draft an apology** dialog. **Stance** in the composer counts toward the same limit as the stance buttons under a message.
 
 [AI labels](/guide/mail/labels#how-messages-get-a-label) have a limit of their own too. When you scroll through a lot of mail very quickly, some labels can take up to a minute to appear.
 
@@ -113,13 +236,15 @@ Other limits:
 
 When you reach a limit, the tool stops until the wait is over, at most 1 minute. Where a message shows, it says "Too many requests. Try again in 20 seconds.", or the time left. What you see depends on the tool:
 
-| Tool                  | What you see                                                                                                                                                    |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Summary cards         | "Couldn't summarize this thread." with the message under it. The card does not try again on its own. After the wait, open the message again or reload the page. |
-| Smart replies         | No message. The suggestions do not show yet. They try again on their own after the wait.                                                                        |
-| AI labels             | No message. The list tries again on its own after the wait, and the labels appear.                                                                              |
-| **Reply with stance** | A short message at the bottom of the screen. After the wait, pick the stance again.                                                                             |
-| **Draft reply**       | The message in the **Draft an apology** dialog. After the wait, click **Draft reply** again.                                                                    |
+| Tool                       | What you see                                                                                                                                                    |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Summary cards              | "Couldn't summarize this thread." with the message under it. The card does not try again on its own. After the wait, open the message again or reload the page. |
+| Smart replies              | No message. The small spinner keeps turning, and the suggestions show on their own after the wait.                                                              |
+| AI labels                  | No message. The list tries again on its own after the wait, and the labels appear.                                                                              |
+| Stance buttons             | A short message at the bottom of the screen. After the wait, pick the stance again.                                                                             |
+| **Stance** in the composer | A short message at the bottom of the screen. Your text stays as it was. After the wait, pick the stance again.                                                  |
+| **Rewrite**                | A short message at the bottom of the screen. Your text stays as it was. After the wait, select the text and pick the option again.                              |
+| **Draft reply**            | The message in the **Draft an apology** dialog. After the wait, click **Draft reply** again.                                                                    |
 
 ## The Mail AI panel
 

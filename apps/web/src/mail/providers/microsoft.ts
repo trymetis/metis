@@ -153,6 +153,7 @@ function msMessageToEmail(msg: Message, folder: MailFolder): Email {
     isStarred: msg.flag?.flagStatus === "flagged",
     provider: "microsoft",
     folder,
+    hasAttachments: msg.hasAttachments ?? undefined,
   };
 }
 

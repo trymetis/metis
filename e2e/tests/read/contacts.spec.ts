@@ -4,7 +4,7 @@ import { SEEDED_CONTACTS } from "@metis/e2e/lib/contacts";
 
 import { expect, test } from "../fixtures";
 import { mailPath, workspacePath } from "../harness";
-import { mailRow, openMail, rowLabel } from "../mail";
+import { expandSummary, mailRow, openMail, rowLabel } from "../mail";
 import { openSearch, typeQuery } from "../search";
 
 function contactList(page: import("@playwright/test").Page) {
@@ -139,11 +139,12 @@ test("a summary Contact card for a saved person offers Open contact and Download
     rowLabel(mailRow(page, "Introducing Lena Hoffmann (Kaltwasser GmbH)"), "Work"),
   ).toBeVisible();
   await openMail(page, "Introducing Lena Hoffmann (Kaltwasser GmbH)");
+  await expandSummary(page);
   const main = page.getByRole("main");
   await expect(main.getByText("Lena Hoffmann", { exact: true }).first()).toBeVisible();
   await expect(main.getByRole("button", { name: "Save contact", exact: true })).toHaveCount(0);
   const download = page.waitForEvent("download");
-  await main.getByRole("button", { name: "Download", exact: true }).first().click();
+  await main.getByRole("button", { name: "Download contact card", exact: true }).first().click();
   expect((await download).suggestedFilename()).toMatch(/\.vcf$/);
   await main.getByRole("button", { name: "Open contact", exact: true }).first().click();
   await expect(page).toHaveURL(/\/p\/all\/all\/[^/]+$/);
@@ -159,8 +160,11 @@ test("a summary Contact card for someone not saved offers Save contact", async (
     rowLabel(mailRow(page, "Introducing Layla Haddad from Saffron & Sage"), "Work"),
   ).toBeVisible();
   await openMail(page, "Introducing Layla Haddad from Saffron & Sage");
+  await expandSummary(page);
   const main = page.getByRole("main");
   await expect(main.getByRole("button", { name: "Save contact", exact: true })).toBeVisible();
-  await expect(main.getByRole("button", { name: "Download", exact: true })).toBeVisible();
+  await expect(
+    main.getByRole("button", { name: "Download contact card", exact: true }),
+  ).toBeVisible();
   await expect(main.getByRole("button", { name: "Open contact", exact: true })).toHaveCount(0);
 });

@@ -4,7 +4,7 @@ import { ShoppingCart, TicketPercent } from "lucide-react";
 import { useNow } from "@/hooks/use-now";
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { Actions, CardLink, CardShell, CopyButton, Title } from "./card-parts";
+import { CardLink, CardShell, CopyButton, Title } from "./card-parts";
 import { formatWhen, parseWhen } from "./format";
 
 export function OfferCard({ props }: { props: SummaryCardProps<"Offer"> }) {
@@ -16,11 +16,18 @@ export function OfferCard({ props }: { props: SummaryCardProps<"Offer"> }) {
       icon={TicketPercent}
       label={props.merchant}
       aside={
-        props.expiresAt ? (
-          <Badge variant={expired ? "destructive" : "outline"}>
-            {expired ? "Expired" : `Until ${formatWhen(props.expiresAt)}`}
-          </Badge>
-        ) : null
+        <>
+          {props.expiresAt && (
+            <Badge variant={expired ? "destructive" : "outline"}>
+              {expired ? "Expired" : `Until ${formatWhen(props.expiresAt)}`}
+            </Badge>
+          )}
+          {props.shopUrl && !expired && (
+            <CardLink href={props.shopUrl} intent="primary" icon={ShoppingCart}>
+              Shop
+            </CardLink>
+          )}
+        </>
       }
     >
       <div className="flex items-baseline justify-between gap-3">
@@ -37,13 +44,6 @@ export function OfferCard({ props }: { props: SummaryCardProps<"Offer"> }) {
           </span>
           <CopyButton text={props.code} label="Copy code" />
         </div>
-      )}
-      {props.shopUrl && !expired && (
-        <Actions>
-          <CardLink href={props.shopUrl} intent="primary" icon={ShoppingCart}>
-            Shop
-          </CardLink>
-        </Actions>
       )}
     </CardShell>
   );

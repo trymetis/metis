@@ -44,14 +44,14 @@ Both messages have a **Contacts settings** link that opens the workspace's conta
 
 ## Save a contact from the summary card
 
-When AI is on for a mailbox, cards above a conversation summarize it. A message about a person can get a **Contact** card. See [AI help in mail](/guide/mail/ai-help#kinds-of-cards).
+When AI is on for a mailbox, a summary shows above each conversation. A message about a person can get a **Contact** card. If the summary is folded into one line, click the line to open its cards. See [AI help in mail](/guide/mail/ai-help#kinds-of-cards).
 
 <img src="/images/contacts/summary-contact-card.webp" alt="A Contact summary card on an email with the Save contact button" class="dark:hidden" />
 <img src="/images/contacts/summary-contact-card-dark.webp" alt="A Contact summary card on an email with the Save contact button" class="hidden dark:block" />
 
 - **Save contact** opens the same **Save contact** dialog. The new contact gets everything the card found: the name, organization, job title, email addresses, phone numbers, addresses, website and note.
 - **Open contact** shows instead when someone already saved that email address in this workspace.
-- **Download** saves the contact as a `.vcf` file you can import somewhere else.
+- **Download contact card** (the download icon) saves the contact as a `.vcf` file you can import somewhere else.
 
 ## Where your saved contacts show up
 

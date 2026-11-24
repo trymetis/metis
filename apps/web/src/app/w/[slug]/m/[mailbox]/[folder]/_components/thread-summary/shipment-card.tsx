@@ -4,7 +4,7 @@ import { Hash, Package, ShoppingBag, Store, Truck } from "lucide-react";
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { Actions, CardLink, CardShell, CopyButton, Detail, Details, Title } from "./card-parts";
+import { CardLink, CardShell, CopyButton, Detail, Details, Title } from "./card-parts";
 import { formatWhen, humanize } from "./format";
 import { RemindButton } from "./remind-button";
 
@@ -30,7 +30,17 @@ export function ShipmentCard({ props }: { props: SummaryCardProps<"Shipment"> })
     <CardShell
       icon={Package}
       label="Package"
-      aside={<Badge variant={problem ? "destructive" : "outline"}>{humanize(props.status)}</Badge>}
+      aside={
+        <>
+          <Badge variant={problem ? "destructive" : "outline"}>{humanize(props.status)}</Badge>
+          {props.status !== "delivered" && <RemindButton date={props.expectedAt} />}
+          {props.trackingUrl && !props.trackingNumber && (
+            <CardLink href={props.trackingUrl} intent="primary" icon={Truck}>
+              Track package
+            </CardLink>
+          )}
+        </>
+      }
     >
       <Title>
         {props.status === "delivered"
@@ -61,7 +71,20 @@ export function ShipmentCard({ props }: { props: SummaryCardProps<"Shipment"> })
           </Detail>
         )}
         {props.trackingNumber && (
-          <Detail icon={Hash} label="Tracking">
+          <Detail
+            icon={Hash}
+            label="Tracking"
+            action={
+              <>
+                <CopyButton text={props.trackingNumber} label="Copy tracking" iconOnly />
+                {props.trackingUrl && (
+                  <CardLink href={props.trackingUrl} intent="primary" icon={Truck}>
+                    Track package
+                  </CardLink>
+                )}
+              </>
+            }
+          >
             <span className="font-mono">{props.trackingNumber}</span>
           </Detail>
         )}
@@ -71,23 +94,6 @@ export function ShipmentCard({ props }: { props: SummaryCardProps<"Shipment"> })
           </Detail>
         )}
       </Details>
-      {(props.trackingUrl || props.trackingNumber || props.expectedAt) && (
-        <Actions>
-          {props.trackingUrl && (
-            <CardLink href={props.trackingUrl} intent="primary" icon={Truck}>
-              Track package
-            </CardLink>
-          )}
-          {props.trackingNumber && (
-            <CopyButton
-              text={props.trackingNumber}
-              label="Copy tracking"
-              intent={props.trackingUrl ? "secondary" : "primary"}
-            />
-          )}
-          {props.status !== "delivered" && <RemindButton date={props.expectedAt} />}
-        </Actions>
-      )}
     </CardShell>
   );
 }

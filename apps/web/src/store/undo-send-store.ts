@@ -119,11 +119,14 @@ export const useUndoSendStore = create<UndoSendState>((set, get) => {
         reopen?.kind ?? "new",
         {
           from: current.fromMailboxSlug,
+          replyMailbox: reopen?.replyMailbox,
           to: payload.to.join(", "),
           cc: payload.cc?.join(", "),
           bcc: payload.bcc?.join(", "),
           subject: payload.subject,
-          bodyHtml: payload.bodyHtml,
+          bodyHtml: reopen?.bodyHtml ?? payload.bodyHtml,
+          quotedHtml: reopen?.quotedHtml ?? undefined,
+          quoteImages: reopen?.quoteImages,
           inReplyTo: payload.inReplyTo,
           references: payload.references,
           replyToMessageId: payload.replyToMessageId,
@@ -138,6 +141,7 @@ export const useUndoSendStore = create<UndoSendState>((set, get) => {
         },
         reopen?.replyingTo ?? undefined,
       );
+      useComposeStore.getState().touch();
 
       clearAfter(current.id, 4000);
     },

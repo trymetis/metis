@@ -22,7 +22,7 @@ import type { ReactNode } from "react";
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { Actions, CardAction, CardLink, CardShell, Detail, Details, Title } from "./card-parts";
+import { CardAction, CardLink, CardShell, Detail, Details, Title } from "./card-parts";
 import { ExpiryBadge, useExpiry } from "./expiry";
 import { formatWhen, hostOf } from "./format";
 import { useSummaryActions } from "./summary-context";
@@ -55,7 +55,25 @@ export function ActionLinkCard({ props }: { props: ActionLinkProps }) {
   const sent = formatWhen(props.issuedAt);
 
   return (
-    <CardShell icon={purpose.icon} label={purpose.label} aside={<ExpiryBadge expiry={expiry} />}>
+    <CardShell
+      icon={purpose.icon}
+      label={purpose.label}
+      aside={
+        <>
+          <ExpiryBadge expiry={expiry} />
+          {!expiry.expired &&
+            (props.url ? (
+              <CardLink href={props.url} intent="primary" icon={purpose.icon}>
+                {props.label}
+              </CardLink>
+            ) : showEmail ? (
+              <CardAction intent="primary" icon={MailOpen} onClick={showEmail}>
+                Open email
+              </CardAction>
+            ) : null)}
+        </>
+      }
+    >
       <Title>{props.label}</Title>
       <Details columns="two">
         {props.confirms && (
@@ -99,19 +117,8 @@ export function ActionLinkCard({ props }: { props: ActionLinkProps }) {
       </Details>
       {expiry.expired ? (
         <Hint icon={TimerOff}>This link has expired.</Hint>
-      ) : props.url ? (
-        <Actions>
-          <CardLink href={props.url} intent="primary" icon={purpose.icon}>
-            {props.label}
-          </CardLink>
-        </Actions>
-      ) : showEmail ? (
-        <Actions>
-          <CardAction intent="primary" icon={MailOpen} onClick={showEmail}>
-            Open email
-          </CardAction>
-          <span className="text-[12px] text-faint">The link is in the message.</span>
-        </Actions>
+      ) : props.url ? null : showEmail ? (
+        <Hint icon={Info}>The link is in the message.</Hint>
       ) : (
         <Hint icon={Info}>The link is in the email below.</Hint>
       )}

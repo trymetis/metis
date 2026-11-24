@@ -25,26 +25,24 @@ import { Link } from "@tiptap/extension-link";
 import { Placeholder } from "@tiptap/extension-placeholder";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { Underline } from "@tiptap/extension-underline";
-import { type Editor, EditorContent, useEditor } from "@tiptap/react";
+import type { Transaction } from "@tiptap/pm/state";
+import { type Editor, EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import { StarterKit } from "@tiptap/starter-kit";
 import { escapeText } from "entities";
 import {
-  Bold,
   Calendar,
   ChevronDown,
   Clock,
   HardDrive,
-  Italic,
   Link2,
-  List,
-  ListOrdered,
   Paperclip,
   Send,
   Signature,
-  UnderlineIcon,
+  Trash2,
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import {
   type DrivePick,
@@ -52,7 +50,9 @@ import {
   SHARE_LINK_PROVIDERS,
 } from "@/components/drive-picker-dialog";
 import { EmailFrame } from "@/components/email-frame";
+import { IconButton } from "@/components/icon-button";
 import { PickTimeDialog } from "@/components/pick-time-dialog";
+import { usePlatformPolicy } from "@/components/platform-policy-context";
 import { useContactSuggestions } from "@/hooks/use-contact-suggestions";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useMailPrivacy, useRenderedEmail } from "@/hooks/use-mail-privacy";
@@ -72,14 +72,18 @@ import {
 } from "@/store/compose-store";
 import { useUndoSendStore } from "@/store/undo-send-store";
 import type { MailSignatureKind, MailSignatureScope } from "@/types/mail";
-import { ALL_DRIVES_SLUG } from "@/workspace/path";
+import { ALL_DRIVES_SLUG, ALL_MAILBOXES_SLUG } from "@/workspace/path";
 
+import { ComposeFormattingBar, type ReplyStance, type RewriteMode } from "./compose-formatting-bar";
 import { RecipientField } from "./recipient-field";
 import {
   hasSignature,
+  replaceTypedContent,
   SIGNATURE_META,
   setSignature,
   SignatureBlock,
+  typedEnd,
+  typedParagraphs,
   typedText,
 } from "./signature-block";
 
@@ -91,6 +95,7 @@ const COMPOSE_TITLES: Record<ComposeKind, string> = {
 };
 
 const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024;
+const AI_TEXT_MAX = 4000;
 const MAX_TOTAL_BYTES = 25 * 1024 * 1024;
 const CARET_CLEARANCE_PX = 48;
 
@@ -142,6 +147,15 @@ function presetTime(label: string): Date {
     d.setHours(9, 0, 0, 0);
   }
   return d;
+}
+
+function paragraphsHtml(text: string): string {
+  return text
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => `<p>${escapeText(line)}</p>`)
+    .join("");
 }
 
 function composeTitle(session: ComposeSession): string {
@@ -282,6 +296,17 @@ function ComposeForm({ session, defaultFrom }: { session: ComposeSession; defaul
   const [customScheduleOpen, setCustomScheduleOpen] = useState(false);
   const [pendingScheduleTime, setPendingScheduleTime] = useState<Date | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [rewriting, setRewriting] = useState(false);
+  const [stanceLoading, setStanceLoading] = useState<ReplyStance | null>(null);
+  const discard = useComposeStore((s) => s.discard);
+  const platformAi = usePlatformPolicy().ai;
+  const mailboxAi = (slug: string | undefined) =>
+    platformAi && (mailboxes.find((m) => m.slug === slug)?.ai ?? false);
+  const composeAi = mailboxAi(fromMailboxSlug);
+  const stanceAi = mailboxAi(
+    session.replyMailbox ??
+      (scope.mailboxSlug === ALL_MAILBOXES_SLUG ? fromMailboxSlug : scope.mailboxSlug),
+  );
   const [drivePickerOpen, setDrivePickerOpen] = useState(false);
   const canLinkFromDrive =
     useQuery(
@@ -382,6 +407,71 @@ function ComposeForm({ session, defaultFrom }: { session: ComposeSession; defaul
     }
   }
 
+  async function rewriteSelection(mode: RewriteMode) {
+    if (!editor || rewriting || stanceLoading) return;
+    const { from, to: selectionEnd } = editor.state.selection;
+    const range = { from, to: Math.min(selectionEnd, typedEnd(editor)) };
+    const text =
+      range.to > range.from ? editor.state.doc.textBetween(range.from, range.to, "\n").trim() : "";
+    if (!text) {
+      toast.error("Select text above your signature to rewrite it.");
+      return;
+    }
+    if (text.length > AI_TEXT_MAX) {
+      toast.error("Select up to 4,000 characters to rewrite.");
+      return;
+    }
+    setRewriting(true);
+    editor.setEditable(false, false);
+    const follow = ({ transaction }: { transaction: Transaction }) => {
+      range.from = transaction.mapping.map(range.from, 1);
+      range.to = transaction.mapping.map(range.to, -1);
+    };
+    editor.on("transaction", follow);
+    try {
+      const result = await orpc.ai.rewriteText({
+        workspaceSlug: scope.workspaceSlug,
+        mailboxSlug: fromMailboxSlug,
+        text,
+        mode,
+      });
+      if (range.to > range.from) {
+        editor.chain().focus().insertContentAt(range, paragraphsHtml(result.text)).run();
+      }
+    } catch (err) {
+      toast.error(err instanceof Error && err.message ? err.message : "Couldn't rewrite that text");
+    } finally {
+      editor.off("transaction", follow);
+      editor.setEditable(true, false);
+      setRewriting(false);
+    }
+  }
+
+  async function draftInStance(stance: ReplyStance) {
+    if (!editor || !session.replyToMessageId || stanceLoading || rewriting) return;
+    const draft = typedParagraphs(editor);
+    if (draft.length > AI_TEXT_MAX) {
+      toast.error("Stance works on up to 4,000 characters of your text. Shorten it and try again.");
+      return;
+    }
+    setStanceLoading(stance);
+    editor.setEditable(false, false);
+    try {
+      const { bodyHtml } = await orpc.ai.draftStance({
+        ...scope,
+        messageId: session.replyToMessageId,
+        stance,
+        ...(draft && { draft }),
+      });
+      replaceTypedContent(editor, bodyHtml);
+    } catch (err) {
+      toast.error(err instanceof Error && err.message ? err.message : "Couldn't draft that reply");
+    } finally {
+      editor.setEditable(true, false);
+      setStanceLoading(null);
+    }
+  }
+
   function handleSend() {
     if (to.length === 0 || !subject.trim()) {
       setError("To and Subject are required.");
@@ -391,6 +481,12 @@ function ComposeForm({ session, defaultFrom }: { session: ComposeSession; defaul
     startSend(composePayload(session), scope, fromMailboxSlug, {
       kind: session.kind,
       replyingTo: session.replyingTo,
+      ...(session.replyMailbox && { replyMailbox: session.replyMailbox }),
+      ...(session.quotedHtml && {
+        bodyHtml: session.bodyHtml,
+        quotedHtml: session.quotedHtml,
+        quoteImages: session.quoteImages,
+      }),
     });
     finish("delete");
   }
@@ -532,6 +628,20 @@ function ComposeForm({ session, defaultFrom }: { session: ComposeSession; defaul
         </Field>
       </div>
 
+      <ComposeFormattingBar
+        editor={editor}
+        link={<LinkButton editor={editor} />}
+        ai={composeAi}
+        rewriting={rewriting}
+        busy={rewriting || stanceLoading !== null}
+        onRewrite={(mode) => void rewriteSelection(mode)}
+        stance={
+          stanceAi && session.kind === "reply" && session.replyToMessageId
+            ? { loading: stanceLoading, onPick: (s) => void draftInStance(s) }
+            : null
+        }
+      />
+
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-4">
         <EditorContent editor={editor} className="flex flex-1 flex-col" />
         {quotedHtml && (
@@ -613,42 +723,6 @@ function ComposeForm({ session, defaultFrom }: { session: ComposeSession; defaul
 
       <div className="flex items-center justify-between border-t px-4 py-3 border-border-soft shrink-0 max-md:gap-2">
         <div className="flex gap-0.5 max-md:min-w-0 max-md:overflow-x-auto">
-          <FmtBtn
-            title="Bold"
-            active={editor?.isActive("bold")}
-            onClick={() => editor?.chain().focus().toggleBold().run()}
-          >
-            <Bold className="h-3 w-3" strokeWidth={2.5} />
-          </FmtBtn>
-          <FmtBtn
-            title="Italic"
-            active={editor?.isActive("italic")}
-            onClick={() => editor?.chain().focus().toggleItalic().run()}
-          >
-            <Italic className="h-3 w-3" strokeWidth={2.5} />
-          </FmtBtn>
-          <FmtBtn
-            title="Underline"
-            active={editor?.isActive("underline")}
-            onClick={() => editor?.chain().focus().toggleUnderline().run()}
-          >
-            <UnderlineIcon className="h-3 w-3" strokeWidth={2.5} />
-          </FmtBtn>
-          <FmtBtn
-            title="Bullet list"
-            active={editor?.isActive("bulletList")}
-            onClick={() => editor?.chain().focus().toggleBulletList().run()}
-          >
-            <List className="h-3 w-3" />
-          </FmtBtn>
-          <FmtBtn
-            title="Numbered list"
-            active={editor?.isActive("orderedList")}
-            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-          >
-            <ListOrdered className="h-3 w-3" />
-          </FmtBtn>
-          <LinkButton editor={editor} />
           <FmtBtn title="Attach files" onClick={() => fileInputRef.current?.click()}>
             <Paperclip className="h-3 w-3" />
           </FmtBtn>
@@ -689,6 +763,9 @@ function ComposeForm({ session, defaultFrom }: { session: ComposeSession; defaul
               Cancel schedule
             </Button>
           )}
+          <IconButton label="Discard draft" variant="ghost" size="icon-sm" onClick={discard}>
+            <Trash2 className="size-3.5" />
+          </IconButton>
           <div className="flex overflow-hidden rounded-md bg-primary">
             <Button
               variant="ghost"
@@ -818,6 +895,7 @@ function FmtBtn({
       variant="ghost"
       size="icon-sm"
       onClick={onClick}
+      aria-label={title}
       title={title}
       className={cn(active ? "bg-hover text-foreground" : "text-faint")}
     >
@@ -873,7 +951,11 @@ function LinkButton({ editor }: { editor: Editor | null }) {
   const [open, setOpen] = useState(false);
   const [address, setAddress] = useState("");
   const [invalid, setInvalid] = useState(false);
-  const onLink = editor?.isActive("link") ?? false;
+  const onLink =
+    useEditorState({
+      editor,
+      selector: ({ editor: current }) => current?.isActive("link") ?? false,
+    }) ?? false;
 
   function openChange(next: boolean) {
     if (next) {

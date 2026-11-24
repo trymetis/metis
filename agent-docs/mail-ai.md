@@ -53,12 +53,16 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [mail.md](mail
 
 ### Summaries
 
-- **The model returns `{ cards }` and the server builds the json-render spec.** `buildSummarySpec` builds it and `summarySpecSchema` validates it, because json-render's `elements` map cannot be expressed in strict JSON Schema.
+- **The model returns `{ tldr, cards }`, and `cards` never holds a Summary** (`summaryOutputSchemaFor`), so a mail gets at most one TL;DR by construction and a notification gets `tldr: null`.
+  - `cardsFromOutput` stores the TL;DR as the first card, so the stored and rendered shape stays one card list; `outputFromCards` turns the stored list back into the model's shape for a refine.
+- **The server builds the json-render spec** (`buildSummarySpec`) and `summarySpecSchema` validates it, because json-render's `elements` map cannot be expressed in strict JSON Schema.
 - **The card registry is our own, on base-nova** (`@json-render/react`), because `@json-render/shadcn` pulls in Radix.
 - **Summary input is bounded so a huge or hostile email cannot reach the model whole.** The caps (HTML and text sizes, base64 and data-URI stripping, body caps, JSON-LD / microdata pruning, nested `message/rfc822` depth, per-attachment `maxBytes`) live in the input-bounding files in the code map.
 - **Images reach the summarizer only while the stored LLM section has summary vision on** (seeded from `METIS_LLM_SUMMARY_VISION`, read per summary).
 - **Every `url` / `*Url` a card returns, at any depth, is dropped unless it appears in the conversation's own links** (`allowedLinks`).
 - **Card actions reuse existing procedures and reading-pane handlers** through `SummaryActionsProvider`.
+- **An action sits next to what it acts on** (`card-parts.tsx`): a whole-card action goes in the `CardShell` header (`aside`), a per-value action in its `Detail`'s `action`, and both render compact (`CompactActions`); a universal action (copy, download, directions, call, email) is icon-only with a tooltip (`iconOnly`).
+- **The cards start collapsed to one line** (`SummaryPeek`): the TL;DR text and a chip per other card; the open/closed choice is a per-browser view preference (`useStoredItem`, `metis:mail-summary-expanded`).
 - **"Add to calendar" carries the Meeting card's attendees**, passing the email addresses in `attendees` to `calendarEvents.create`.
 - **The Contact card saves to an address book or downloads a `.vcf`.** Save contact opens the address-book picker with the card's fields, or Open contact when `contacts.lookup` finds one of its emails; Download keeps the `.vcf`; the card schema is unchanged ([contacts.md](contacts.md)).
 - **Summary output is capped (`maxOutputTokens`)**, because without a cap an OpenAI-compatible endpoint such as OpenRouter reserves the model's full maximum against the account's credit.

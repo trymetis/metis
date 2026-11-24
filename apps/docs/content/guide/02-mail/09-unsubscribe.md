@@ -34,23 +34,38 @@ Metis Suite can look for the unsubscribe option in up to 60 messages a minute. I
 
 Open **Subscriptions** in the sidebar. Metis Suite scans your most recent Inbox mail for mailing lists. While it looks, you see "Scanning your inbox for mailing lists…".
 
-The heading then shows how many senders it found and how many recent emails it checked. Each sender's row shows:
+The heading then shows how many senders it found and how many recent emails it checked, for example "12 senders found in your latest 100 inbox emails". The senders are listed in a table with these columns:
 
-- the sender's name and how many of their messages it found
-- how unsubscribing works for them (**Automatic**, **We'll email them** or **Finish on their site**)
-- the date, address and subject of their latest message
-- an **Unsubscribe** button
+| Column            | What it shows                                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------------------------------- |
+| (checkbox)        | Tick it to pick the sender. The checkbox in the header picks every sender you can still unsubscribe from.   |
+| **Sender**        | The sender's name. Point at it to see their address and "Latest:" with the subject of their latest message. |
+| **Emails**        | How many of their messages the scan found.                                                                  |
+| **Last received** | When their latest message arrived.                                                                          |
+| **Method**        | How unsubscribing works for them: **Automatic**, **We'll email them** or **Finish on their site**.          |
+| (no heading)      | The **Unsubscribe** button.                                                                                 |
 
-<img src="/images/mail/subscriptions.webp" alt="The Subscriptions folder listing mailing lists found in the inbox" class="dark:hidden" />
-<img src="/images/mail/subscriptions-dark.webp" alt="The Subscriptions folder listing mailing lists found in the inbox" class="hidden dark:block" />
+On a phone or in a narrow window, **Last received** and **Method** are hidden.
+
+<img src="/images/mail/subscriptions.webp" alt="The Subscriptions folder with a table of mailing lists found in the inbox" class="dark:hidden" />
+<img src="/images/mail/subscriptions-dark.webp" alt="The Subscriptions folder with a table of mailing lists found in the inbox" class="hidden dark:block" />
+
+### Sort the table
+
+The table starts sorted by **Emails**, with the most first. To sort by another column, click **Sender**, **Emails** or **Last received** at the top. An up or down arrow shows which column the table is sorted by.
+
+- The first click sorts **Sender** from A to Z, and **Emails** and **Last received** from the highest or newest.
+- Click the same column again to reverse the order.
+
+The order is not remembered. When you leave the page and come back, the table is sorted by **Emails** again.
 
 ### Unsubscribe from one sender
 
-Click **Unsubscribe** on the sender's row. The row shows "Working…" and then **Unsubscribed**. If the sender's page opens in a new tab, finish there. **Open again** opens their page a second time.
+Click **Unsubscribe** on the sender's row. The row shows "Working…". When it is done, the row stays in the table, greyed out, with a check mark and **Unsubscribed**. If the sender's page opens in a new tab, the row says "We opened their unsubscribe page. Finish it there." **Open again** opens their page a second time. If something goes wrong, the reason shows under the sender's name.
 
 ### Unsubscribe from many senders
 
-1. Tick the checkbox on each sender, or tick **Select all**.
+1. Tick the checkbox on each sender, or tick the checkbox at the top of the table to pick every sender you can still unsubscribe from.
 2. Click **Unsubscribe** at the top. It shows how many senders you picked, for example **Unsubscribe (3)**.
 
 ### Scan again

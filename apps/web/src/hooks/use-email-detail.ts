@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { rpc } from "@/lib/orpc";
 import { rateLimitWait } from "@/lib/rate-limit-message";
+import { refreshSummaryPreviews } from "@/mail/mail-cache";
 import { textToHtml } from "@/mail/text";
 import { useMailStore } from "@/store/mail-store";
 import type { Attachment, Email, UnsubscribeMethod, UnsubscribeStatus } from "@/types/mail";
@@ -254,6 +255,10 @@ export function useThreadSummary(email: Email | null, enabled = true) {
 
   const aiOff = query.error instanceof ORPCError && query.error.code === "FORBIDDEN";
   const shown = wanted && !aiOff;
+  const spec = query.data?.spec;
+  useEffect(() => {
+    if (spec) refreshSummaryPreviews();
+  }, [spec]);
 
   return {
     result: shown ? (query.data ?? null) : null,

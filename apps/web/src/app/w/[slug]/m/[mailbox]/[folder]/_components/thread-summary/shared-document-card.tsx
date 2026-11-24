@@ -12,7 +12,7 @@ import {
 import { useNow } from "@/hooks/use-now";
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { Actions, CardLink, CardShell, Detail, Details, Title } from "./card-parts";
+import { CardLink, CardShell, Detail, Details, Title } from "./card-parts";
 import { formatWhen, parseWhen } from "./format";
 
 type SharedDocumentProps = SummaryCardProps<"SharedDocument">;
@@ -39,9 +39,16 @@ export function SharedDocumentCard({ props }: { props: SharedDocumentProps }) {
       icon={kind.icon}
       label={props.provider ?? "Document"}
       aside={
-        <Badge variant={overdue ? "destructive" : "outline"}>
-          {overdue ? "Overdue" : kind.label}
-        </Badge>
+        <>
+          <Badge variant={overdue ? "destructive" : "outline"}>
+            {overdue ? "Overdue" : kind.label}
+          </Badge>
+          {props.openUrl && (
+            <CardLink href={props.openUrl} intent="primary" icon={kind.icon}>
+              {kind.action}
+            </CardLink>
+          )}
+        </>
       }
     >
       <Title>{props.title}</Title>
@@ -62,13 +69,6 @@ export function SharedDocumentCard({ props }: { props: SharedDocumentProps }) {
           </Detail>
         )}
       </Details>
-      {props.openUrl && (
-        <Actions>
-          <CardLink href={props.openUrl} intent="primary" icon={kind.icon}>
-            {kind.action}
-          </CardLink>
-        </Actions>
-      )}
     </CardShell>
   );
 }

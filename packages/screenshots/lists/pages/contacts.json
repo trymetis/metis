@@ -278,6 +278,9 @@
         "waitFor": "main h2:has-text(\"Introducing Layla Haddad from Saffron & Sage\")"
       },
       {
+        "click": "main >> role=button[name=\"Show summary cards\"]"
+      },
+      {
         "waitFor": "main >> role=button[name=\"Save contact\"]"
       }
     ],

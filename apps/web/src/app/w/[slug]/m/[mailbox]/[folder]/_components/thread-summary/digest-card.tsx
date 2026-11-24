@@ -4,7 +4,7 @@ import { MailX, Newspaper } from "lucide-react";
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { Actions, CardAction, CardShell } from "./card-parts";
+import { CardAction, CardShell } from "./card-parts";
 import { useSummaryActions } from "./summary-context";
 
 const UNSUBSCRIBE_LABELS = {
@@ -16,7 +16,23 @@ const UNSUBSCRIBE_LABELS = {
 export function DigestCard({ props }: { props: SummaryCardProps<"Digest"> }) {
   const unsubscribe = useSummaryActions()?.unsubscribe;
   return (
-    <CardShell icon={Newspaper} label={props.publication}>
+    <CardShell
+      icon={Newspaper}
+      label={props.publication}
+      aside={
+        unsubscribe?.available && (
+          <CardAction
+            icon={MailX}
+            disabled={
+              unsubscribe.busy || unsubscribe.status === "done" || unsubscribe.status === "manual"
+            }
+            onClick={unsubscribe.run}
+          >
+            {unsubscribe.status ? UNSUBSCRIBE_LABELS[unsubscribe.status] : "Unsubscribe"}
+          </CardAction>
+        )
+      }
+    >
       <ul className="space-y-2">
         {props.items.map((item) => (
           <li key={item.title} className="text-[12px]">
@@ -36,19 +52,6 @@ export function DigestCard({ props }: { props: SummaryCardProps<"Digest"> }) {
           </li>
         ))}
       </ul>
-      {unsubscribe?.available && (
-        <Actions>
-          <CardAction
-            icon={MailX}
-            disabled={
-              unsubscribe.busy || unsubscribe.status === "done" || unsubscribe.status === "manual"
-            }
-            onClick={unsubscribe.run}
-          >
-            {unsubscribe.status ? UNSUBSCRIBE_LABELS[unsubscribe.status] : "Unsubscribe"}
-          </CardAction>
-        </Actions>
-      )}
     </CardShell>
   );
 }

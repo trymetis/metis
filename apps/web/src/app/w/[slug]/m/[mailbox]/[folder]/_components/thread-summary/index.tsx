@@ -2,8 +2,10 @@
 
 import type { Spec } from "@json-render/core";
 import { defineRegistry, JSONUIProvider, Renderer } from "@json-render/react";
+import { ChevronUp } from "lucide-react";
 import { useMemo } from "react";
 
+import { useStoredItem, writeStoredItem } from "@/hooks/use-stored-item";
 import { isRecord } from "@/lib/guards";
 import { summaryCatalog } from "@/mail/summary-catalog";
 
@@ -23,13 +25,16 @@ import { ShipmentCard } from "./shipment-card";
 import { SubscriptionCard } from "./subscription-card";
 import { SummaryCard } from "./summary-card";
 import { type SummaryActions, SummaryActionsProvider } from "./summary-context";
+import { SummaryPeek } from "./summary-peek";
 import { TransactionCard } from "./transaction-card";
 
 export type { SummaryActions } from "./summary-context";
 
+const EXPANDED_KEY = "metis:mail-summary-expanded";
+
 const { registry } = defineRegistry(summaryCatalog, {
   components: {
-    Stack: ({ children }) => <div className="my-4 space-y-2">{children}</div>,
+    Stack: ({ children }) => <div className="mt-1.5 mb-4 space-y-2">{children}</div>,
     Summary: ({ props }) => <SummaryCard props={props} />,
     Otp: ({ props }) => <OtpCard props={props} />,
     ActionLink: ({ props }) => <ActionLinkCard props={props} />,
@@ -90,8 +95,23 @@ export function ThreadSummaryCards({
     () => (cleanUrl ? cleanSpecUrls(spec, cleanUrl) : spec),
     [spec, cleanUrl],
   );
+  const expanded = useStoredItem(EXPANDED_KEY) === "1";
+  if (!expanded) {
+    return <SummaryPeek spec={cleaned} onExpand={() => writeStoredItem(EXPANDED_KEY, "1")} />;
+  }
   return (
     <SummaryActionsProvider value={actions}>
+      <div className="mt-4 flex justify-end">
+        <button
+          type="button"
+          onClick={() => writeStoredItem(EXPANDED_KEY, null)}
+          aria-expanded={true}
+          className="flex items-center gap-1 text-[11px] text-faint hover:text-foreground"
+        >
+          Show less
+          <ChevronUp aria-hidden className="size-3" />
+        </button>
+      </div>
       <JSONUIProvider registry={registry}>
         <Renderer spec={cleaned} registry={registry} />
       </JSONUIProvider>

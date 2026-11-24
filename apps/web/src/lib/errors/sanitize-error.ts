@@ -47,6 +47,8 @@ const OPERATIONS: Record<string, string> = {
   "contacts.delete": "delete that contact",
   "ai.analyzePhishing": "check that email",
   "ai.threadSummary": "summarize that conversation",
+  "ai.rewriteText": "rewrite that text",
+  "ai.draftStance": "draft that reply",
   "signup.first": "create your account",
   "signup.invitePreview": "check that invite",
   "signup.invite": "create your account",

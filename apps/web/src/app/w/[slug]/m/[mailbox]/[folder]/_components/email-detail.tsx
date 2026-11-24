@@ -67,8 +67,10 @@ import { viewerTimeZone } from "@/ai/turn";
 import { PersonMenu, SavedBadge } from "@/components/contacts/person-menu";
 import { useSaveContact } from "@/components/contacts/use-save-contact";
 import { type DrivePick, DrivePickerDialog } from "@/components/drive-picker-dialog";
+import { IconButton } from "@/components/icon-button";
 import { PersonAvatar } from "@/components/person-avatar";
 import { PickTimeDialog } from "@/components/pick-time-dialog";
+import { usePlatformPolicy } from "@/components/platform-policy-context";
 import { useScopePolicy } from "@/components/scope-policy-context";
 import { base64ToBlob, uploadToDrive } from "@/drive/upload-client";
 import { useCurrentEmails } from "@/hooks/use-current-emails";
@@ -115,7 +117,7 @@ import { useMailStore } from "@/store/mail-store";
 import type { Attachment } from "@/types/mail";
 import { ALL_DRIVES_SLUG, mailPath } from "@/workspace/path";
 
-import { MessageContent } from "./message-content";
+import { MessageContent, RemoteImagesChip } from "./message-content";
 import { type SummaryActions, ThreadSummaryCards } from "./thread-summary";
 import { TrackerBadge } from "./tracker-badge";
 
@@ -156,6 +158,15 @@ const SNOOZE_PRESETS: { label: string; when: () => Date }[] = [
     },
   },
 ];
+
+const REPLY_STANCES = [
+  { key: "accept", label: "Accept" },
+  { key: "decline", label: "Polite decline" },
+  { key: "negotiate", label: "Negotiate" },
+  { key: "buy_time", label: "Buy time" },
+  { key: "clarify", label: "Clarify" },
+  { key: "defer", label: "Defer" },
+] as const;
 
 function RecipientLine({
   label,
@@ -255,7 +266,14 @@ export function EmailDetail() {
     }
   }
 
-  const { phishingDetection: phishingDetectionEnabled, ai: aiEnabled } = useScopePolicy();
+  const { phishingDetection: phishingDetectionEnabled, ai: scopeAi } = useScopePolicy();
+  const workspaceMailboxes = useQuery(
+    rpc.workspaceMailboxes.list.queryOptions({ input: { workspaceSlug: scope.workspaceSlug } }),
+  ).data?.mailboxes;
+  const messageMailbox = selectedEmail?.mailboxId
+    ? workspaceMailboxes?.find((m) => m.mailboxId === selectedEmail.mailboxId)
+    : undefined;
+  const aiEnabled = usePlatformPolicy().ai && (messageMailbox ? messageMailbox.policy.ai : scopeAi);
   const saveContact = useSaveContact();
   const contactAddresses = useMemo(
     () =>
@@ -332,7 +350,6 @@ export function EmailDetail() {
   const [downloadingAttachment, setDownloadingAttachment] = useState<string | null>(null);
 
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [smartRepliesExpanded, setSmartRepliesExpanded] = useState(false);
   const [apologyOpen, setApologyOpen] = useState(false);
   const [snoozePickerOpen, setSnoozePickerOpen] = useState(false);
   const [apologySituation, setApologySituation] = useState("");
@@ -341,25 +358,15 @@ export function EmailDetail() {
   const [apologyError, setApologyError] = useState<string | null>(null);
   const [stanceLoading, setStanceLoading] = useState<string | null>(null);
   const [bodyCapped, setBodyCapped] = useState(false);
+  const [blockedImages, setBlockedImages] = useState(0);
   const [bodyOverflows, setBodyOverflows] = useState(false);
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const [recipientsExpanded, setRecipientsExpanded] = useState(false);
-  const [replyRailOpen, setReplyRailOpen] = useState(false);
-  const [reachedEnd, setReachedEnd] = useState(false);
-  const wasAtEndRef = useRef(false);
-  const railDismissedRef = useRef(false);
   const scrollContentRef = useRef<HTMLDivElement | null>(null);
-  const footerOverlayRef = useRef<HTMLDivElement | null>(null);
-  const [footerOverlayHeight, setFooterOverlayHeight] = useState(0);
-  const replyFooterExpanded = reachedEnd || replyRailOpen;
-  const hasReplyFooter =
-    !!selectedEmail &&
-    (selectedEmail.folder !== "drafts" || smartRepliesLoading || smartReplies.length > 0);
 
   const [shownEmailId, setShownEmailId] = useState(selectedEmail?.id);
   if (selectedEmail?.id !== shownEmailId) {
     setShownEmailId(selectedEmail?.id);
-    setSmartRepliesExpanded(false);
     setApologyOpen(false);
     setApologySituation("");
     setApologyTone("warm");
@@ -367,13 +374,9 @@ export function EmailDetail() {
     setStanceLoading(null);
     setUnsubBusy(false);
     setRecipientsExpanded(false);
-    setReplyRailOpen(false);
-    setReachedEnd(false);
   }
 
   useEffect(() => {
-    wasAtEndRef.current = false;
-    railDismissedRef.current = false;
     const viewport = scrollContentRef.current?.closest<HTMLElement>(
       '[data-slot="scroll-area-viewport"]',
     );
@@ -405,50 +408,6 @@ export function EmailDetail() {
     return () => observer.disconnect();
     // oxlint-disable-next-line react/exhaustive-effect-dependencies -- remeasure overflow per email and whenever the body content lands.
   }, [body, rendered, isFetchingBody, selectedEmail?.id]);
-
-  useEffect(() => {
-    if (isFetchingBody) return;
-    const content = scrollContentRef.current;
-    const viewport = content?.closest<HTMLElement>('[data-slot="scroll-area-viewport"]');
-    if (!content || !viewport) return;
-    const distanceFromEnd = () =>
-      content.getBoundingClientRect().bottom - viewport.getBoundingClientRect().bottom;
-    const measure = () => {
-      const dist = distanceFromEnd();
-      const atEnd = dist <= 16;
-      if (dist >= 120) {
-        railDismissedRef.current = false;
-        setReachedEnd(false);
-      } else if (atEnd && !wasAtEndRef.current && !railDismissedRef.current) {
-        setReachedEnd(true);
-      }
-      wasAtEndRef.current = atEnd;
-    };
-    wasAtEndRef.current = distanceFromEnd() <= 16;
-    viewport.addEventListener("scroll", measure, { passive: true });
-    const observer = new ResizeObserver(measure);
-    observer.observe(viewport);
-    observer.observe(content);
-    return () => {
-      viewport.removeEventListener("scroll", measure);
-      observer.disconnect();
-    };
-    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- re-measure when the open email changes, not only when the body finishes loading.
-  }, [isFetchingBody, selectedEmail?.id]);
-
-  useEffect(() => {
-    const overlay = footerOverlayRef.current;
-    if (!overlay) {
-      setFooterOverlayHeight(0);
-      return;
-    }
-    const sync = () => setFooterOverlayHeight(overlay.offsetHeight);
-    sync();
-    const observer = new ResizeObserver(sync);
-    observer.observe(overlay);
-    return () => observer.disconnect();
-    // oxlint-disable-next-line react/exhaustive-effect-dependencies -- the overlay node mounts/unmounts with hasReplyFooter — the observer must re-attach when it appears.
-  }, [hasReplyFooter]);
 
   async function changeLabel(newLabel: string, newLabelName: string) {
     if (!selectedEmail) return;
@@ -711,19 +670,20 @@ export function EmailDetail() {
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col overflow-hidden bg-background">
-      <div className="flex shrink-0 items-center gap-1.5 overflow-x-auto border-b px-4 py-3 scrollbar-none md:flex-wrap md:gap-2 md:overflow-x-visible md:px-6 border-border-soft [&::-webkit-scrollbar]:hidden">
-        <ToolBtn onClick={() => setSelectedEmail(null)}>
-          <ChevronLeft className="size-3.25" strokeWidth={2} />
-          Back
-        </ToolBtn>
-        <ToolBtn onClick={() => navigateTo(prevId)} disabled={!prevId} title="Previous message">
-          <ChevronUp className="size-3.25" strokeWidth={2} />
-          Prev
-        </ToolBtn>
-        <ToolBtn onClick={() => navigateTo(nextId)} disabled={!nextId} title="Next message">
-          <ChevronDown className="size-3.25" strokeWidth={2} />
-          Next
-        </ToolBtn>
+      <div
+        role="toolbar"
+        aria-label="Message actions"
+        className="flex shrink-0 flex-wrap items-center gap-1.5 border-b px-4 py-3 md:gap-2 md:px-6 border-border-soft"
+      >
+        <IconToolBtn label="Back" onClick={() => setSelectedEmail(null)}>
+          <ChevronLeft className="size-3.5" strokeWidth={2} />
+        </IconToolBtn>
+        <IconToolBtn label="Previous message" onClick={() => navigateTo(prevId)} disabled={!prevId}>
+          <ChevronUp className="size-3.5" strokeWidth={2} />
+        </IconToolBtn>
+        <IconToolBtn label="Next message" onClick={() => navigateTo(nextId)} disabled={!nextId}>
+          <ChevronDown className="size-3.5" strokeWidth={2} />
+        </IconToolBtn>
         {selectedEmail.folder === "drafts" ? (
           <ToolBtn onClick={handleEditDraft}>
             <Pencil className="size-3.25" strokeWidth={2} />
@@ -731,16 +691,17 @@ export function EmailDetail() {
           </ToolBtn>
         ) : (
           <>
+            <IconToolBtn label="Reply" onClick={() => reply()}>
+              <Reply className="size-3.5" strokeWidth={2} />
+            </IconToolBtn>
             {selectedEmail.to.length + (selectedEmail.cc?.length ?? 0) > 1 && (
-              <ToolBtn onClick={replyAll}>
-                <ReplyAll className="size-3.25" strokeWidth={2} />
-                Reply all
-              </ToolBtn>
+              <IconToolBtn label="Reply all" onClick={replyAll}>
+                <ReplyAll className="size-3.5" strokeWidth={2} />
+              </IconToolBtn>
             )}
-            <ToolBtn onClick={forward}>
-              <Forward className="size-3.25" strokeWidth={2} />
-              Forward
-            </ToolBtn>
+            <IconToolBtn label="Forward" onClick={forward}>
+              <Forward className="size-3.5" strokeWidth={2} />
+            </IconToolBtn>
           </>
         )}
 
@@ -792,15 +753,14 @@ export function EmailDetail() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <ToolBtn onClick={handleStar}>
+        <IconToolBtn label={selectedEmail.isStarred ? "Starred" : "Star"} onClick={handleStar}>
           <Star
-            className="size-3.25"
+            className="size-3.5"
             strokeWidth={2}
             fill={selectedEmail.isStarred ? "var(--brand)" : "none"}
             color={selectedEmail.isStarred ? "var(--brand)" : "currentColor"}
           />
-          {selectedEmail.isStarred ? "Starred" : "Star"}
-        </ToolBtn>
+        </IconToolBtn>
         <ToolBtn onClick={handleToggleReadLater}>
           {readLaterIds.has(selectedEmail.id) ? (
             <>
@@ -896,23 +856,22 @@ export function EmailDetail() {
             Restore
           </ToolBtn>
         ) : (
-          <ToolBtn onClick={handleArchive}>
-            <Archive className="size-3.25" strokeWidth={2} />
-            Archive
-          </ToolBtn>
+          <IconToolBtn label="Archive" onClick={handleArchive}>
+            <Archive className="size-3.5" strokeWidth={2} />
+          </IconToolBtn>
         )}
-        <ToolBtn danger onClick={() => setConfirmDeleteOpen(true)}>
-          <Trash2 className="size-3.25" strokeWidth={2} />
-          Delete
-        </ToolBtn>
+        <IconToolBtn label="Delete" danger onClick={() => setConfirmDeleteOpen(true)}>
+          <Trash2 className="size-3.5" strokeWidth={2} />
+        </IconToolBtn>
 
-        {selectedEmail.folder !== "drafts" && (
+        {aiEnabled && selectedEmail.folder !== "drafts" && (
           <ToolBtn onClick={() => setApologyOpen(true)}>
             <HeartHandshake className="size-3.25" strokeWidth={2} />
             Draft apology
           </ToolBtn>
         )}
-        <ToolBtn
+        <IconToolBtn
+          label="Print"
           href={mailPath(
             scope.workspaceSlug,
             scope.mailboxSlug,
@@ -925,9 +884,8 @@ export function EmailDetail() {
             })}`,
           )}
         >
-          <Printer className="size-3.25" strokeWidth={2} />
-          Print
-        </ToolBtn>
+          <Printer className="size-3.5" strokeWidth={2} />
+        </IconToolBtn>
         <ToolBtn
           href={mailPath(
             scope.workspaceSlug,
@@ -1047,7 +1005,17 @@ export function EmailDetail() {
                 <div className="whitespace-nowrap text-[12px] text-faint">
                   {formatRelativeDate(selectedEmail.date)}
                 </div>
-                <TrackerBadge hits={rendered?.trackers ?? []} />
+                <div className="flex items-center gap-1.5">
+                  {blockedImages > 0 && (
+                    <RemoteImagesChip
+                      count={blockedImages}
+                      sender={selectedEmail.from}
+                      messageId={selectedEmail.id}
+                      proxied={privacy.proxyEndpoint !== null}
+                    />
+                  )}
+                  <TrackerBadge hits={rendered?.trackers ?? []} />
+                </div>
               </div>
             </div>
 
@@ -1123,10 +1091,10 @@ export function EmailDetail() {
                         rendered={rendered}
                         images={images}
                         proxyEndpoint={privacy.proxyEndpoint}
-                        sender={selectedEmail.from}
                         messageId={selectedEmail.id}
                         title={`Email: ${selectedEmail.subject || "(no subject)"}`}
                         textClassName="max-w-170 text-[15px] leading-[1.8]"
+                        onBlockedImages={setBlockedImages}
                       />
                     </div>
                   </div>
@@ -1151,7 +1119,6 @@ export function EmailDetail() {
                   rendered={null}
                   images="block"
                   proxyEndpoint={null}
-                  sender={selectedEmail.from}
                   messageId={selectedEmail.id}
                 />
               )}
@@ -1165,185 +1132,66 @@ export function EmailDetail() {
                 onSave={(messageId, att) => setSaveTarget({ messageId, att })}
                 className="mt-8 border-t pt-6 border-border-soft"
               />
-            </div>
-          </div>
-          <div aria-hidden style={{ height: footerOverlayHeight }} />
-        </ScrollArea>
 
-        {hasReplyFooter && (
-          <div
-            ref={footerOverlayRef}
-            className="absolute inset-x-0 bottom-0 z-10 border-t bg-panel border-border-soft"
-          >
-            <button
-              type="button"
-              onClick={() => {
-                if (replyFooterExpanded) {
-                  railDismissedRef.current = true;
-                  setReplyRailOpen(false);
-                  setReachedEnd(false);
-                } else {
-                  railDismissedRef.current = false;
-                  setReplyRailOpen(true);
-                }
-              }}
-              aria-expanded={replyFooterExpanded}
-              className="flex h-11 w-full items-center justify-between px-4 text-left transition-colors md:px-7 hover:bg-hover"
-            >
-              <span className="flex items-center gap-2 text-[10px] uppercase tracking-[1.5px] text-faint">
-                <Reply className="h-3.5 w-3.5 shrink-0" />
-                Reply
-                {!replyFooterExpanded && smartReplies.length > 0 && (
-                  <span className="rounded-full border px-2 py-0.5 text-[10px] normal-case tracking-normal border-border bg-surface text-primary">
-                    {smartReplies.length} smart {smartReplies.length === 1 ? "reply" : "replies"}
-                  </span>
-                )}
-                {!replyFooterExpanded && smartRepliesLoading && (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                )}
-              </span>
-              {replyFooterExpanded ? (
-                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-faint" />
-              ) : (
-                <ChevronUp className="h-3.5 w-3.5 shrink-0 text-faint" />
-              )}
-            </button>
-            <div
-              className={cn(
-                "grid transition-[grid-template-rows] duration-200 ease-out",
-                replyFooterExpanded ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
-              )}
-            >
-              <div
-                className={cn(
-                  "min-h-0 overflow-hidden transition-opacity duration-200",
-                  replyFooterExpanded ? "opacity-100" : "opacity-0",
-                )}
-              >
-                {selectedEmail.folder !== "drafts" && (
-                  <div className="border-t px-4 py-2 md:px-7 border-border-soft">
-                    <div className="mb-1.5 flex items-center gap-2">
-                      <span className="text-[10px] uppercase tracking-[1.5px] text-faint">
-                        Reply with stance
-                      </span>
-                      {stanceLoading && <Loader2 className="h-3 w-3 animate-spin text-faint" />}
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {(
-                        [
-                          { key: "accept", label: "Accept" },
-                          { key: "decline", label: "Polite decline" },
-                          { key: "negotiate", label: "Negotiate" },
-                          { key: "buy_time", label: "Buy time" },
-                          { key: "clarify", label: "Clarify" },
-                          { key: "defer", label: "Defer" },
-                        ] as const
-                      ).map((s) => (
+              {aiEnabled && selectedEmail.folder !== "drafts" && (
+                <section aria-label="Quick replies" className="mt-6 flex flex-col gap-2.5">
+                  {(smartRepliesLoading || smartReplies.length > 0) && (
+                    <div
+                      role="group"
+                      aria-label="Smart replies"
+                      className="flex flex-wrap items-center gap-1.5"
+                    >
+                      {smartRepliesLoading && (
+                        <Loader2 className="size-3 animate-spin text-faint" />
+                      )}
+                      {smartReplies.map((r) => (
                         <Button
-                          key={s.key}
+                          key={r.label}
                           variant="outline"
                           size="xs"
-                          onClick={() => handleDraftStance(s.key)}
-                          disabled={stanceLoading !== null}
-                          title={`Draft a ${s.label.toLowerCase()} reply`}
-                          className={cn(
-                            "rounded-full bg-surface text-[11px] text-muted-foreground",
-                            stanceLoading === s.key
-                              ? "opacity-70"
-                              : "hover:bg-brand-soft hover:border-primary/40 hover:text-primary",
-                          )}
+                          onClick={() => reply(`<p>${r.body.replace(/\n/g, "</p><p>")}</p>`)}
+                          title={r.body}
+                          className="rounded-full bg-surface text-[11px] text-primary hover:bg-brand-soft hover:border-primary/40"
                         >
-                          {stanceLoading === s.key ? (
-                            <Loader2 className="h-2.75 w-2.75 animate-spin" />
-                          ) : (
-                            <MessageCircleQuestion className="h-2.75 w-2.75" />
-                          )}
-                          {s.label}
+                          {r.label}
                         </Button>
                       ))}
                     </div>
-                  </div>
-                )}
-
-                {(smartRepliesLoading || smartReplies.length > 0) && (
-                  <div className="shrink-0 border-t px-4 py-2 md:px-7 border-border-soft">
-                    <div className="mb-1.5 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setSmartRepliesExpanded((s) => !s)}
-                        className="flex items-center gap-1 text-[10px] uppercase tracking-[1.5px] text-faint hover:text-muted-foreground"
-                        aria-expanded={smartRepliesExpanded}
-                      >
-                        Smart replies
-                        {smartRepliesExpanded ? (
-                          <ChevronDown className="h-2.75 w-2.75" />
-                        ) : (
-                          <ChevronUp className="h-2.75 w-2.75" />
+                  )}
+                  <div
+                    role="group"
+                    aria-label="Reply with stance"
+                    className="flex flex-wrap items-center gap-1.5"
+                  >
+                    {REPLY_STANCES.map((st) => (
+                      <Button
+                        key={st.key}
+                        variant="outline"
+                        size="xs"
+                        onClick={() => handleDraftStance(st.key)}
+                        disabled={stanceLoading !== null}
+                        title={`Draft a reply: ${st.label}`}
+                        className={cn(
+                          "rounded-full bg-surface text-[11px] text-muted-foreground",
+                          stanceLoading === st.key
+                            ? "opacity-70"
+                            : "hover:bg-brand-soft hover:border-primary/40 hover:text-primary",
                         )}
-                      </button>
-                      {smartRepliesLoading && (
-                        <Loader2 className="h-3 w-3 animate-spin text-faint" />
-                      )}
-                    </div>
-                    {smartRepliesExpanded ? (
-                      <div className="flex flex-wrap gap-2">
-                        {smartReplies.map((r) => (
-                          <button
-                            key={r.label}
-                            type="button"
-                            onClick={() => reply(`<p>${r.body.replace(/\n/g, "</p><p>")}</p>`)}
-                            className="group flex max-w-md items-start gap-2 rounded-lg border px-3 py-2 text-left transition-all bg-surface border-border hover:bg-brand-soft hover:border-primary/40"
-                          >
-                            <div className="min-w-0 flex-1">
-                              <div className="mb-0.5 text-[11px] font-medium uppercase tracking-wide text-primary">
-                                {r.label}
-                              </div>
-                              <div className="line-clamp-2 text-[12px] text-muted-foreground">
-                                {r.body}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap gap-1.5">
-                        {smartReplies.map((r) => (
-                          <Button
-                            key={r.label}
-                            variant="outline"
-                            size="xs"
-                            onClick={() => reply(`<p>${r.body.replace(/\n/g, "</p><p>")}</p>`)}
-                            title={r.body}
-                            className="rounded-full bg-surface text-[11px] uppercase tracking-wide text-primary hover:bg-brand-soft hover:border-primary/40"
-                          >
-                            {r.label}
-                          </Button>
-                        ))}
-                      </div>
-                    )}
+                      >
+                        {stanceLoading === st.key ? (
+                          <Loader2 className="size-2.75 animate-spin" />
+                        ) : (
+                          <MessageCircleQuestion className="size-2.75" />
+                        )}
+                        {st.label}
+                      </Button>
+                    ))}
                   </div>
-                )}
-
-                {selectedEmail.folder !== "drafts" && (
-                  <div className="border-t px-4 py-4 md:px-7 md:py-5 bg-panel border-border-soft">
-                    <button
-                      type="button"
-                      onClick={() => reply()}
-                      className="block w-full overflow-hidden rounded-[10px] border text-left transition-colors bg-surface border-border hover:border-primary/40"
-                    >
-                      <span className="block border-b px-3.5 pb-2 pt-2.5 text-[12px] border-border-soft text-faint">
-                        Reply to {fromName}
-                      </span>
-                      <span className="block min-h-12 px-3.5 py-3 text-[14px] text-faint">
-                        Write a reply…
-                      </span>
-                    </button>
-                  </div>
-                )}
-              </div>
+                </section>
+              )}
             </div>
           </div>
-        )}
+        </ScrollArea>
       </div>
 
       {snoozePickerOpen && (
@@ -1383,6 +1231,7 @@ export function EmailDetail() {
                 id="apology-situation"
                 value={apologySituation}
                 onChange={(e) => setApologySituation(e.target.value)}
+                maxLength={500}
                 placeholder="e.g. missed our 3pm call yesterday"
                 className="min-h-20 w-full resize-none rounded-md border border-border bg-surface px-2.5 py-2 text-[13px] outline-none focus:border-[rgba(200,146,42,0.4)]"
                 disabled={apologyLoading}
@@ -1472,6 +1321,54 @@ export function EmailDetail() {
   );
 }
 
+function IconToolBtn({
+  label,
+  children,
+  onClick,
+  href,
+  danger,
+  disabled,
+}: {
+  label: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+  href?: Route;
+  danger?: boolean;
+  disabled?: boolean;
+}) {
+  const className = cn(
+    "bg-transparent text-muted-foreground dark:bg-transparent",
+    danger &&
+      "hover:border-destructive/20 hover:bg-destructive/10 hover:text-destructive-text dark:hover:bg-destructive/10",
+  );
+  if (href) {
+    return (
+      <IconButton
+        label={label}
+        variant="outline"
+        size="icon-sm"
+        nativeButton={false}
+        render={<Link href={href} prefetch={false} target="_blank" rel="noopener" />}
+        className={className}
+      >
+        {children}
+      </IconButton>
+    );
+  }
+  return (
+    <IconButton
+      label={label}
+      variant="outline"
+      size="icon-sm"
+      onClick={onClick}
+      disabled={disabled}
+      className={className}
+    >
+      {children}
+    </IconButton>
+  );
+}
+
 function ToolBtn({
   children,
   onClick,
@@ -1542,6 +1439,7 @@ function ThreadMessageCard({
     expanded && body?.kind === "html" ? body.html : null,
     images,
   );
+  const [blockedImages, setBlockedImages] = useState(0);
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-surface">
@@ -1573,6 +1471,14 @@ function ThreadMessageCard({
             <ChevronDown className="h-3.5 w-3.5 shrink-0 text-faint" />
           )}
         </button>
+        {expanded && blockedImages > 0 && (
+          <RemoteImagesChip
+            count={blockedImages}
+            sender={message.from}
+            messageId={message.id}
+            proxied={privacy.proxyEndpoint !== null}
+          />
+        )}
         {expanded && <TrackerBadge hits={rendered?.trackers ?? []} />}
       </div>
       {expanded && (
@@ -1589,9 +1495,9 @@ function ThreadMessageCard({
                 rendered={rendered}
                 images={images}
                 proxyEndpoint={privacy.proxyEndpoint}
-                sender={message.from}
                 messageId={message.id}
                 textClassName="max-w-170 text-[13px] leading-[1.7]"
+                onBlockedImages={setBlockedImages}
               />
               {renderAttachments(thread)}
             </>

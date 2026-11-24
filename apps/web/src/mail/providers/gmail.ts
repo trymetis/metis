@@ -18,7 +18,7 @@ import {
 } from "@/types/mail";
 
 import type { MailAdapter, MailChanges } from "../adapter";
-import { type MessageHeaders, pickHeaders } from "../headers";
+import { isMixedMultipart, type MessageHeaders, pickHeaders } from "../headers";
 import { decodeMimeHeader, parseRecipientList } from "../recipients";
 
 export function gmailMail(accessToken: string): MailAdapter {
@@ -264,6 +264,7 @@ async function listPage(
           "Date",
           "Message-ID",
           "References",
+          "Content-Type",
         ],
       }),
     ),
@@ -296,6 +297,7 @@ async function listPage(
       labels: msg.labelIds ?? [],
       provider: "google",
       folder: folder ?? folderFromLabels(msg.labelIds ?? []),
+      hasAttachments: isMixedMultipart(getHeader(headers, "Content-Type")),
     };
   });
 

@@ -169,7 +169,7 @@ export function PrivacySettings({ imageProxy }: { imageProxy: boolean }) {
             icon={UserCheck}
             title="Senders whose images always load"
             details={[
-              'Added with "Always from …" on a message\'s image banner.',
+              'Added with "Always from …" on a message\'s blocked-images chip.',
               "A domain also covers its subdomains; an address covers only that sender.",
               "A sender address can be forged, so trust only ever loads images, nothing else.",
             ]}

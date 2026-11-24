@@ -41,7 +41,7 @@ A few things to know about search:
 
 - Search returns one set of results. Scrolling does not load more.
 - For mailboxes connected over IMAP, search matches plain text in your Inbox, Archive and Sent folders. Results are not ranked.
-- While a search is active, the list does not check for new mail.
+- While a search is active, the list does not check for new mail on its own. Click **Refresh** to run the search again. See [Check for new mail](/guide/mail/read-your-mail#check-for-new-mail).
 
 ## Search with filters
 
@@ -81,7 +81,7 @@ The number at the right of the tab row counts the conversations (rows) the list 
 - They ask your mail provider for every unread or starred message in the folder, not only the ones already loaded. More load as you scroll.
 - In the **Starred** folder of a mailbox connected over IMAP, they look in your Inbox, Archive and Sent together and show at most the 50 newest matches. Scrolling does not load more there, and no **Load more** button shows. So the **Unread** tab in that folder can show only a few messages, or none.
 - In the **Starred** folder of an Outlook mailbox, they look only in your Inbox. So they can show fewer messages than the **All** tab there.
-- The automatic check for new mail does not update them. They refresh when you switch to them from another tab, folder, mailbox, label or **Read later**, and when you reload the page.
+- The automatic check for new mail does not update them. Click **Refresh** to update them. They also refresh when you switch to them from another tab, folder, mailbox, label or **Read later**, and when you reload the page.
 - Opening or closing a message does not refresh them. Clicking the tab you are already on does not either.
 
 The other tabs filter only the messages the folder has loaded so far. Scroll down to load more.
@@ -107,7 +107,7 @@ Click any label in the **Labels** section of the sidebar. The list now shows eve
 - The tabs stay on screen, and clicking one moves the underline, but the list does not change. Metis Suite remembers the tab you picked and uses it when you clear the filter.
 - The note on an empty list follows the underlined tab: "Your inbox is empty" on **All**, and "Nothing in this filter" on any other tab.
 
-The automatic check for new mail does not update this list. It refreshes when you switch to the label from another label, tab, folder, mailbox or **Read later**. Clicking the label you are already on does not refresh it, and neither does opening or closing a message. In rare cases the list is empty while more remains to check. Click **Load more** to check the next batch. Grey loading placeholders show while it checks.
+The automatic check for new mail does not update this list. Click **Refresh** to update it. It also refreshes when you switch to the label from another label, tab, folder, mailbox or **Read later**. Clicking the label you are already on does not refresh it, and neither does opening or closing a message. In rare cases the list is empty while more remains to check. Click **Load more** to check the next batch. Grey loading placeholders show while it checks.
 
 To go back to the whole Inbox, click the **X** in the banner (its tooltip says **Clear label filter**).
 

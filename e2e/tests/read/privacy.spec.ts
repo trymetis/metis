@@ -14,11 +14,13 @@ async function pixelHits(): Promise<string[]> {
     .map((h) => h.path);
 }
 
-function blockedBanner(page: import("@playwright/test").Page) {
-  return page
-    .getByRole("main")
-    .getByRole("alert")
-    .filter({ hasText: /^\d+ remote images? blocked/ });
+function blockedChip(page: import("@playwright/test").Page) {
+  return page.getByRole("main").getByRole("button", { name: /^\d+ remote images? blocked$/ });
+}
+
+async function openBlockedImages(page: import("@playwright/test").Page) {
+  await blockedChip(page).click();
+  return page.getByRole("dialog").filter({ hasText: /remote images? blocked/ });
 }
 
 test.describe.configure({ mode: "default" });
@@ -29,7 +31,7 @@ test("a blocked message requests nothing remote", async ({ page, account }) => {
   await showTab(page, "All");
   await openMail(page, PRIVACY);
   await expect(
-    blockedBanner(page).getByRole("button", {
+    (await openBlockedImages(page)).getByRole("button", {
       name: "Load images",
       exact: true,
     }),
@@ -46,8 +48,12 @@ test("Load images loads only images, never trackers, fonts, styles, media or ref
   await page.goto(mailPath(account));
   await showTab(page, "All");
   await openMail(page, PRIVACY);
-  await blockedBanner(page).getByRole("button", { name: "Load images", exact: true }).click();
-  await expect(blockedBanner(page)).toHaveCount(0);
+  await (
+    await openBlockedImages(page)
+  )
+    .getByRole("button", { name: "Load images", exact: true })
+    .click();
+  await expect(blockedChip(page)).toHaveCount(0);
   await expect.poll(pixelHits).toContainEqual(expect.stringMatching(/^\/image\/img/));
   await page.waitForLoadState("networkidle");
   const hits = await pixelHits();
@@ -68,7 +74,7 @@ test("Print keeps blocked images blocked", async ({ page, account }) => {
   await page.goto(mailPath(account));
   await showTab(page, "All");
   await openMail(page, PRIVACY);
-  await expect(blockedBanner(page)).toBeVisible();
+  await expect(blockedChip(page)).toBeVisible();
   await fetch(`${HARNESS}/pixel-hits`, { method: "DELETE" });
   const tab = await openPrint(page);
   expect(await pixelHits()).toEqual([]);
@@ -82,8 +88,12 @@ test("Print after Load images loads the images and still never the trackers", as
   await page.goto(mailPath(account));
   await showTab(page, "All");
   await openMail(page, PRIVACY);
-  await blockedBanner(page).getByRole("button", { name: "Load images", exact: true }).click();
-  await expect(blockedBanner(page)).toHaveCount(0);
+  await (
+    await openBlockedImages(page)
+  )
+    .getByRole("button", { name: "Load images", exact: true })
+    .click();
+  await expect(blockedChip(page)).toHaveCount(0);
   await page.waitForLoadState("networkidle");
   await fetch(`${HARNESS}/pixel-hits`, { method: "DELETE" });
   const tab = await openPrint(page);

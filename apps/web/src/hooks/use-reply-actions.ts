@@ -51,6 +51,7 @@ export function useReplyActions(email: Email | null) {
     const references = [target.references, target.messageIdHeader].filter(Boolean).join(" ");
     return {
       from: target.mailboxSlug,
+      replyMailbox: target.mailboxSlug,
       to: replyRecipients(target, ownAddresses(target)).join(", "),
       subject: target.subject.startsWith("Re:") ? target.subject : `Re: ${target.subject}`,
       bodyHtml: replyHtml,

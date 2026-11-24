@@ -105,6 +105,7 @@ function toEmail(target: GatewayTarget, wire: WireEmail): Email {
     messageIdHeader: wire.messageIdHeader,
     references: wire.references,
     attachments: wire.attachments,
+    hasAttachments: wire.attachments ? wire.attachments.length > 0 : undefined,
   };
 }
 

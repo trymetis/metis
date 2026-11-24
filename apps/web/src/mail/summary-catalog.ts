@@ -325,20 +325,44 @@ export const summaryCardSchema = z.discriminatedUnion("type", [
 ]);
 export type SummaryCard = z.infer<typeof summaryCardSchema>;
 
-export const summaryCardsSchema = z.object({
-  cards: z.array(summaryCardSchema).describe("The cards to show, most important first"),
-});
+const tldrSchema = summaryCardProps.Summary.nullable().describe(
+  "The TL;DR of the conversation, or null when it needs none",
+);
 
-export function summaryCardsSchemaFor(types: readonly SummaryCardType[]) {
-  const wanted = new Set<SummaryCardType>(["Summary", ...types]);
-  const options = summaryCardSchema.options.filter((option) => wanted.has(option.shape.type.value));
-  if (!isNonEmpty(options)) throw new Error("A summary needs at least one card type");
-
+export function summaryOutputSchemaFor(types: readonly SummaryCardType[] | null) {
+  const detail = summaryCardSchema.options.filter(
+    (option) =>
+      option.shape.type.value !== "Summary" &&
+      (types === null || types.includes(option.shape.type.value)),
+  );
+  if (!isNonEmpty(detail)) return z.object({ tldr: tldrSchema });
   return z.object({
+    tldr: tldrSchema,
     cards: z
-      .array(z.discriminatedUnion("type", options))
-      .describe("The cards to show, most important first"),
+      .array(z.discriminatedUnion("type", detail))
+      .describe("The detail cards to show, most important first; never a Summary"),
   });
+}
+
+export interface SummaryOutput {
+  tldr: SummaryCardProps<"Summary"> | null;
+  cards?: SummaryCard[];
+}
+
+export function cardsFromOutput(output: SummaryOutput): SummaryCard[] {
+  const detail = (output.cards ?? []).filter((card) => card.type !== "Summary");
+  return output.tldr ? [{ type: "Summary", ...output.tldr }, ...detail] : detail;
+}
+
+export function outputFromCards(cards: readonly SummaryCard[]): SummaryOutput {
+  const tldr = cards.find((card) => card.type === "Summary");
+  return {
+    tldr:
+      tldr?.type === "Summary"
+        ? { tldr: tldr.tldr, keyPoints: tldr.keyPoints, actionItems: tldr.actionItems }
+        : null,
+    cards: cards.filter((card) => card.type !== "Summary"),
+  };
 }
 
 export const summaryCatalog = defineCatalog(schema, {

@@ -26,6 +26,6 @@ A contacts server is also called a CardDAV server. Your administrator sets it up
 
 ## What Metis Suite does not do
 
-- It does not import address book files, and it does not export a whole address book. To save one person as a `.vcf` file, use **Download**. On a contact's card in Contacts, it is under **More actions**. A mail summary card has it too. See [Browse your contacts](/guide/contacts/browse-your-contacts#open-a-contact).
+- It does not import address book files, and it does not export a whole address book. To save one person as a `.vcf` file, use **Download**. On a contact's card in Contacts, it is under **More actions**. A mail summary card has it too, as **Download contact card** (the download icon). See [Browse your contacts](/guide/contacts/browse-your-contacts#open-a-contact).
 - It does not show Google's "Other contacts" list.
 - Very large address books may not show every contact.

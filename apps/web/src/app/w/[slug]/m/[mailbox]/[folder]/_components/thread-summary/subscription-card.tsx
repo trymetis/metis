@@ -3,7 +3,7 @@ import { CalendarClock, Repeat, Settings2 } from "lucide-react";
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { Actions, CardLink, CardShell, Detail, Details, Title } from "./card-parts";
+import { CardLink, CardShell, Detail, Details, Title } from "./card-parts";
 import { formatMoney, formatWhen } from "./format";
 import { RemindButton } from "./remind-button";
 
@@ -35,7 +35,17 @@ export function SubscriptionCard({ props }: { props: SubscriptionProps }) {
     <CardShell
       icon={Repeat}
       label="Subscription"
-      aside={<Badge variant={event.alert ? "destructive" : "outline"}>{event.label}</Badge>}
+      aside={
+        <>
+          <Badge variant={event.alert ? "destructive" : "outline"}>{event.label}</Badge>
+          {REMINDABLE.has(props.event) && <RemindButton date={props.date} daysBefore={1} />}
+          {props.manageUrl && (
+            <CardLink href={props.manageUrl} intent="primary" icon={Settings2}>
+              Manage
+            </CardLink>
+          )}
+        </>
+      }
     >
       <div className="flex items-baseline justify-between gap-3">
         <Title>
@@ -59,22 +69,6 @@ export function SubscriptionCard({ props }: { props: SubscriptionProps }) {
             {formatWhen(props.date)}
           </Detail>
         </Details>
-      )}
-      {(props.manageUrl || REMINDABLE.has(props.event)) && (
-        <Actions>
-          {props.manageUrl && (
-            <CardLink href={props.manageUrl} intent="primary" icon={Settings2}>
-              Manage
-            </CardLink>
-          )}
-          {REMINDABLE.has(props.event) && (
-            <RemindButton
-              date={props.date}
-              daysBefore={1}
-              intent={props.manageUrl ? "secondary" : "primary"}
-            />
-          )}
-        </Actions>
       )}
     </CardShell>
   );

@@ -5,21 +5,24 @@ import { decodeHTMLStrict } from "entities";
 import { recordAiUsage } from "@/ai/usage";
 import { keysOf } from "@/lib/guards";
 import { summarizerAgent } from "@/mastra/agents/summarizer";
+import type { SummaryPreviewThread } from "@/server/schema";
 import { decideOne, decisionEnabled, decisionUsageProvider } from "@/services/decision";
 import { getLlm, structuredOutput } from "@/services/llm";
 import { enforceRateLimit } from "@/services/rate-limit";
 import { RATE_LIMITS } from "@/services/rate-limits";
 import type { ThreadSummary } from "@/types/thread-summary";
 
-import { getThreadSummary, saveThreadSummary } from "./cache";
-import { type MailScope, scopeMessage } from "./session";
+import { getThreadSummaries, getThreadSummary, saveThreadSummary } from "./cache";
+import { type MailScope, policyForMailbox, scopeMessage } from "./session";
 import { linksInText } from "./structured-data";
 import {
   buildSummarySpec,
+  cardsFromOutput,
+  outputFromCards,
   type SummaryCard,
   summaryCardSchema,
-  summaryCardsSchema,
-  summaryCardsSchemaFor,
+  type SummaryOutput,
+  summaryOutputSchemaFor,
 } from "./summary-catalog";
 import { type Conversation, type ConvMsg, loadConversation } from "./summary-conversation";
 import {
@@ -34,7 +37,7 @@ export interface SummaryResponse extends ThreadSummary {
   cached: boolean;
 }
 
-const SUMMARY_FORMAT = "cards-v3";
+const SUMMARY_FORMAT = "cards-v4";
 const REBUILD_AFTER = 5;
 const MAX_MESSAGES = 25;
 const MAX_OUTPUT_TOKENS = 8000;
@@ -209,12 +212,12 @@ async function generateCards(
 ): Promise<ThreadSummary> {
   const result = await summarizerAgent.generate(messages, {
     instructions,
-    structuredOutput: structuredOutput(types ? summaryCardsSchemaFor(types) : summaryCardsSchema),
+    structuredOutput: structuredOutput(summaryOutputSchemaFor(types)),
     modelSettings: { maxOutputTokens: MAX_OUTPUT_TOKENS },
   });
   trackSummaryUsage(session, result);
-  const { cards } = result.object;
-  return { cards: restrictLinks(cards, allowed) };
+  const output: SummaryOutput = result.object;
+  return { cards: restrictLinks(cardsFromOutput(output), allowed) };
 }
 
 function fullBuild(
@@ -248,7 +251,7 @@ function refine(
     buildPrompt(
       conversation,
       newMsgs,
-      `Current cards:\n${JSON.stringify(prev.cards)}\n\nNew message(s):`,
+      `Current cards:\n${JSON.stringify(outputFromCards(prev.cards))}\n\nNew message(s):`,
     ),
     SYSTEM_REFINE,
     allowedLinks(newMsgs, prev.cards),
@@ -354,4 +357,31 @@ export async function summarizeThread(
     cards,
     spec: cards.length > 0 ? buildSummarySpec(cards) : null,
   };
+}
+
+export async function cachedTldrs(
+  session: MailScope,
+  threads: readonly SummaryPreviewThread[],
+): Promise<Record<string, string>> {
+  const scoped = threads.flatMap((t) => {
+    try {
+      const thread = scopeMessage(session, t.threadId);
+      if (!policyForMailbox(session, thread.mailboxId).ai) return [];
+      return [{ threadId: t.threadId, thread, latestAt: Date.parse(t.latestDate) }];
+    } catch {
+      return [];
+    }
+  });
+  const rows = await getThreadSummaries(scoped.map((s) => s.thread));
+  const byKey = new Map(rows.map((r) => [`${r.mailboxId}\u0000${r.threadKey}`, r]));
+  const tldrs: Record<string, string> = {};
+  for (const { threadId, thread, latestAt } of scoped) {
+    const row = byKey.get(`${thread.mailboxId}\u0000${thread.messageId}`);
+    if (!row || !(latestAt <= row.updatedAt.getTime())) continue;
+    const { summary } = row;
+    if (summary.skipped || summary.failedAt) continue;
+    const card = summary.cards.find((c) => c.type === "Summary");
+    if (card?.type === "Summary" && card.tldr) tldrs[threadId] = card.tldr;
+  }
+  return tldrs;
 }

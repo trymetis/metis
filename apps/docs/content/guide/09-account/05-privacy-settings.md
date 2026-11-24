@@ -20,7 +20,7 @@ Each card has a question mark button. Point at it to see a short explanation of 
 
 Remote images are pictures that load from the sender's servers when you open a message. This switch is off at first.
 
-- **Off** (the default): each message asks before it loads images. On a message's image banner, you can load its images once, or always load images from that sender or that sender's domain.
+- **Off** (the default): each message asks before it loads images. On a message's blocked-images chip, you can load its images once, or always load images from that sender or that sender's domain.
 - **On**: images load as soon as you open a message.
 
 Either way, Metis Suite always removes known trackers. Fonts, stylesheets and media from the web never load.
@@ -44,7 +44,7 @@ If a cleaned link stops working, turn this switch off.
 
 ## Senders whose images always load
 
-This list shows the senders and domains whose images load without asking. You add entries from a message: on its image banner, choose **Always from …** for that sender or domain.
+This list shows the senders and domains whose images load without asking. You add entries from a message: click its blocked-images chip, then choose **Always from …** for that sender or domain.
 
 Each entry is labelled:
 
@@ -61,6 +61,6 @@ Your privacy settings and your list of trusted senders are part of your data exp
 
 ## Limit on changes
 
-You can turn **Load remote images automatically** and **Clean tracking from links** on or off up to 30 times a minute. This limit is shared with the **Always from** buttons on a message's image banner, the [Sign-in alerts](/guide/account/sign-in-alerts#turn-sign-in-alerts-off-or-on) switch and reordering your workspaces.
+You can turn **Load remote images automatically** and **Clean tracking from links** on or off up to 30 times a minute. This limit is shared with the **Always from** buttons on a message's blocked-images chip, the [Sign-in alerts](/guide/account/sign-in-alerts#turn-sign-in-alerts-off-or-on) switch and reordering your workspaces.
 
 Past the limit, the change is not saved. The switch goes back to how it was, and the workspaces go back to their old order. A message at the bottom of the screen says "Too many requests. Try again in 20 seconds.", or the time left. Wait for that time (at most 1 minute), then try again. Removing a trusted sender has no limit.

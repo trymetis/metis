@@ -2,12 +2,22 @@ import { Clock, MapPin, MonitorSmartphone, Network, ShieldAlert } from "lucide-r
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { Actions, CardLink, CardShell, Detail, Details, Title } from "./card-parts";
+import { CardLink, CardShell, Detail, Details, Title } from "./card-parts";
 import { formatWhen } from "./format";
 
 export function SecurityAlertCard({ props }: { props: SummaryCardProps<"SecurityAlert"> }) {
   return (
-    <CardShell icon={ShieldAlert} label={`${props.service} security`}>
+    <CardShell
+      icon={ShieldAlert}
+      label={`${props.service} security`}
+      aside={
+        props.reviewUrl && (
+          <CardLink href={props.reviewUrl} intent="primary" icon={ShieldAlert}>
+            Wasn't you? Review activity
+          </CardLink>
+        )
+      }
+    >
       <Title>{props.event}</Title>
       <Details columns="two">
         {props.occurredAt && (
@@ -31,13 +41,6 @@ export function SecurityAlertCard({ props }: { props: SummaryCardProps<"Security
           </Detail>
         )}
       </Details>
-      {props.reviewUrl && (
-        <Actions>
-          <CardLink href={props.reviewUrl} intent="primary" icon={ShieldAlert}>
-            Wasn't you? Review activity
-          </CardLink>
-        </Actions>
-      )}
     </CardShell>
   );
 }

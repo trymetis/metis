@@ -45,7 +45,7 @@ To see every run of the workflow, not only the last 20, open its own **Runs** pa
 
 ## See every run
 
-Click **Runs** at the top right of the **Workflows** page. The **Runs** page lists the runs in the workspace that you can see, newest first. Under the title, it says "Every workflow in this workspace". The page refreshes on its own about once a minute while you look at it, and again when you come back to its browser tab. The back arrow, **Back to workflows**, returns to the list of workflows.
+Click **Runs** at the top right of the **Workflows** page. The **Runs** page lists the runs in the workspace that you can see, newest first. Under the title, it says "Every workflow in this workspace". The page refreshes on its own about once a minute while you look at it. It also refreshes when you come back to its browser tab, if the last refresh was more than 30 seconds ago. The back arrow, **Back to workflows**, returns to the list of workflows.
 
 <img src="/images/workflows/runs.webp" alt="The Runs page with its status filters and a list of recent runs" class="dark:hidden" />
 <img src="/images/workflows/runs-dark.webp" alt="The Runs page with its status filters and a list of recent runs" class="hidden dark:block" />

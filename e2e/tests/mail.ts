@@ -87,7 +87,7 @@ export async function goToFolder(page: Page, account: Account, folder = "inbox")
 }
 
 export function messageToolbar(page: Page): Locator {
-  return page.locator('div:has(> button[title="Previous message"])');
+  return page.getByRole("toolbar", { name: "Message actions" });
 }
 
 export function messageHeading(page: Page): Locator {
@@ -125,17 +125,12 @@ export function composer(page: Page): Locator {
   });
 }
 
-export function replyFooter(page: Page): Locator {
-  return page.getByRole("main").getByRole("button", { name: /^Reply( \d+ smart repl(y|ies))?$/ });
+export async function expandSummary(page: Page): Promise<void> {
+  await page.getByRole("main").getByRole("button", { name: "Show summary cards" }).click();
 }
 
 export async function openReply(page: Page): Promise<void> {
-  const toggle = replyFooter(page);
-  await expect(async () => {
-    if ((await toggle.getAttribute("aria-expanded")) !== "true") await toggle.click();
-    await expect(toggle).toHaveAttribute("aria-expanded", "true", { timeout: 1_000 });
-  }).toPass();
-  await page.getByRole("button", { name: /Write a reply…$/ }).click();
+  await messageToolbar(page).getByRole("button", { name: "Reply", exact: true }).click();
 }
 
 export function composerBody(page: Page): Locator {

@@ -1,6 +1,6 @@
 import { expect, test, uniqueName } from "../fixtures";
 import { mailPath, workspacePath } from "../harness";
-import { mailRow, openMail, rowLabel } from "../mail";
+import { expandSummary, mailRow, openMail, rowLabel } from "../mail";
 
 interface Match {
   email: string;
@@ -115,6 +115,7 @@ export default function contactSpecs() {
       rowLabel(mailRow(page, "Introducing Layla Haddad from Saffron & Sage"), "Work"),
     ).toBeVisible();
     await openMail(page, "Introducing Layla Haddad from Saffron & Sage");
+    await expandSummary(page);
     const main = page.getByRole("main");
     await main.getByRole("button", { name: "Save contact", exact: true }).click();
     const picker = page.getByRole("dialog", { name: "Save contact" });

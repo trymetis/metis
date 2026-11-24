@@ -30,7 +30,7 @@ import {
 } from "@/types/mail";
 
 import type { MailAdapter, MailChanges } from "../adapter";
-import type { MessageHeaders } from "../headers";
+import { isMixedMultipart, type MessageHeaders } from "../headers";
 import { decodeMimeHeader } from "../recipients";
 import {
   type FolderMap,
@@ -178,6 +178,7 @@ function toEmail(
   const flags = message.flags ?? new Set<string>();
   const from = envelope?.from?.[0];
   const references = headerValue(message.headers, "references");
+  const contentType = headerValue(message.headers, "content-type");
   const messageIdHeader = envelope?.messageId ?? "";
 
   return {
@@ -196,6 +197,7 @@ function toEmail(
       })),
     messageIdHeader: messageIdHeader || undefined,
     references: references || undefined,
+    hasAttachments: isMixedMultipart(contentType),
     subject: envelope?.subject ? decodeMimeHeader(envelope.subject) : "",
     snippet: "",
     date: messageDate(message),
@@ -211,7 +213,7 @@ const LIST_QUERY: FetchQueryObject = {
   flags: true,
   envelope: true,
   internalDate: true,
-  headers: ["references"],
+  headers: ["references", "content-type"],
 };
 
 async function fetchByUids(

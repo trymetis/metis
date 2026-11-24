@@ -1,10 +1,11 @@
 "use client";
 
 import { cn } from "@metis/ui/lib/utils";
-import { Pipette } from "lucide-react";
+import { Check, Pipette } from "lucide-react";
 import { useState } from "react";
 
 import { customLabelMark } from "@/mail/label-meta";
+import { contrastRatio } from "@/theme/color";
 import {
   CUSTOM_LABEL_COLORS,
   HEX_COLOR_PATTERN,
@@ -13,6 +14,15 @@ import {
 } from "@/types/mail";
 
 const DEFAULT_CUSTOM = "#6d28d9";
+
+const DARK_CHECK_PRESETS = new Set<string>(["amber", "yellow", "gray"]);
+
+function checkClass(color: string): string {
+  if (!color.startsWith("#")) return DARK_CHECK_PRESETS.has(color) ? "text-black" : "text-white";
+  const white = contrastRatio("#ffffff", color) ?? 0;
+  const black = contrastRatio("#000000", color) ?? 0;
+  return white >= black ? "text-white" : "text-black";
+}
 
 export function LabelForm({
   initialName = "",
@@ -75,27 +85,26 @@ export function LabelForm({
             aria-checked={color === c}
             aria-label={c}
             onClick={() => setColor(c)}
-            className={cn(
-              "size-5 rounded-full ring-offset-2 ring-offset-surface transition-all",
-              color === c && "ring-2",
-            )}
-            style={{ background: customLabelMark(c), "--tw-ring-color": customLabelMark(c) }}
-          />
+            className="flex size-5 items-center justify-center rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
+            style={{ background: customLabelMark(c) }}
+          >
+            {color === c && <Check className={cn("size-3", checkClass(c))} strokeWidth={3} />}
+          </button>
         ))}
         <label
-          className={cn(
-            "relative flex size-5 cursor-pointer items-center justify-center rounded-full ring-offset-2 ring-offset-surface transition-all",
-            isCustom && "ring-2",
-          )}
+          className="relative flex size-5 cursor-pointer items-center justify-center rounded-full has-focus-visible:ring-2 has-focus-visible:ring-ring has-focus-visible:ring-offset-2 has-focus-visible:ring-offset-surface"
           style={{
             background: isCustom
               ? color
               : "conic-gradient(#ef4444, #eab308, #22c55e, #06b6d4, #3b82f6, #a855f7, #ef4444)",
-            "--tw-ring-color": isCustom ? color : "var(--border)",
           }}
           title="Custom color"
         >
-          {!isCustom && <Pipette className="size-2.5 text-white drop-shadow" />}
+          {isCustom ? (
+            <Check className={cn("size-3", checkClass(color))} strokeWidth={3} />
+          ) : (
+            <Pipette className="size-2.5 text-white drop-shadow" />
+          )}
           <input
             type="color"
             aria-label="Custom color"

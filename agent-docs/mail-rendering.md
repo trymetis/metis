@@ -71,7 +71,8 @@ See also [AGENTS.md](../AGENTS.md), [mail.md](mail.md), [mail-ai.md](mail-ai.md)
 - **Remote images are blocked by default for every user.** They load per message ("Load images" or a click on a placeholder), per sender address, per sender domain and its subdomains, or always (`mail_remote_content = "load"`).
 - **Trust only ever unlocks images**, because a From header is spoofable.
 - **Preferences and the allow list are per user.** Trusting a sender changes nothing another member sees.
-- **The image proxy hides the device, not the open.** The sender still learns that and when the message was opened; the banner and settings copy say so.
+- **The image proxy hides the device, not the open.** The sender still learns that and when the message was opened; the blocked-images chip's popover and the settings copy say so.
+- **Blocked remote images show as a chip beside the tracker chip** (`RemoteImagesChip` in `message-content.tsx`), not a banner; `MessageContent` reports its count up (`onBlockedImages`), and the popover holds **Load images** and **Always from**.
 - **The image proxy fetches through `safeRequest`** (as does the one-click unsubscribe, [mail.md](mail.md)).
   - It resolves once, rejects any answer in an RFC 6890 special-use range or an IPv4-mapped IPv6 address, connects to the validated address through a pinned undici `Agent`, and re-checks every redirect hop.
 
@@ -91,7 +92,7 @@ See also [AGENTS.md](../AGENTS.md), [mail.md](mail.md), [mail-ai.md](mail-ai.md)
   - The visitor classifies every image reference: `img src/srcset`, `<picture><source>`, `background`, SVG `image`/`feImage`/`use`, `style` and SVG `url()` attributes, and `<style>` text.
   - `data:`/`cid:`/`blob:` are kept; relative URLs, same-origin URLs and trackers are dropped; the rest become a placeholder or `none` in `block`, stay as they are in `load`, and point at `/api/mail/image?u=<base64url>` in `proxy`.
   - The output depends on the mode and the theme, so `useRenderedEmail` re-runs it when either changes. It returns the HTML, the tracker hits, the remote image count and `adaptive`.
-- **Counting.** The banner counts what the browser would fetch: one image per `srcset`, one per `<picture>`, one per distinct CSS URL. CSP violations seen in the frame after its `load` event are added on top, since they mean the pipeline missed something; the total is best effort.
+- **Counting.** The chip counts what the browser would fetch: one image per `srcset`, one per `<picture>`, one per distinct CSS URL. CSP violations seen in the frame after its `load` event are added on top, since they mean the pipeline missed something; the total is best effort.
 - **Placeholders.** A blocked `<img>` gets an inline SVG `data:` image sized from its declared width and height (`declaredSize`), with an "image off" icon when it is large enough, and keeps the original URL in `data-metis-src`.
   - `EmailFrame` turns a click on one into "load images" for that message.
   - A `<picture>` whose sources were blocked marks itself the same way, so its fallback `<img>` gets the placeholder.

@@ -2,11 +2,18 @@
 
 import { Button, buttonVariants } from "@metis/ui/components/button";
 import { Spinner } from "@metis/ui/components/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@metis/ui/components/tooltip";
 import { cn } from "@metis/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Check, Copy, ExternalLink, type LucideIcon } from "lucide-react";
-import { type ComponentProps, type ReactNode, useState } from "react";
+import { type ComponentProps, createContext, type ReactNode, useContext, useState } from "react";
 import { toast } from "sonner";
+
+const CompactActionsContext = createContext(false);
+
+export function CompactActions({ children }: { children: ReactNode }) {
+  return <CompactActionsContext.Provider value={true}>{children}</CompactActionsContext.Provider>;
+}
 
 export function CardShell({
   icon: Icon,
@@ -26,7 +33,11 @@ export function CardShell({
         <span className="text-[10px] font-medium uppercase tracking-[1.5px] text-primary">
           {label}
         </span>
-        {aside && <div className="ml-auto flex items-center">{aside}</div>}
+        {aside && (
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
+            <CompactActions>{aside}</CompactActions>
+          </div>
+        )}
       </div>
       {children}
     </div>
@@ -58,26 +69,33 @@ export function Detail({
   icon: Icon,
   label,
   wide,
+  action,
   children,
 }: {
   icon: LucideIcon;
   label: string;
   wide?: boolean;
+  action?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <div className={cn("flex min-w-0 gap-2", wide && "@md:col-span-2")}>
       <Icon aria-hidden className="mt-0.5 size-3.5 shrink-0 text-primary/80" />
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="text-[10px] font-medium uppercase tracking-[1px] text-faint">{label}</div>
-        <div className="break-words text-[12px] leading-snug text-muted-foreground">{children}</div>
+        <div className="flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1">
+          <div className="min-w-0 break-words text-[12px] leading-snug text-muted-foreground">
+            {children}
+          </div>
+          {action && (
+            <div className="flex items-center gap-1">
+              <CompactActions>{action}</CompactActions>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
-}
-
-export function Actions({ children }: { children: ReactNode }) {
-  return <div className="mt-3 flex flex-wrap items-center gap-2">{children}</div>;
 }
 
 const INTENT_VARIANTS = {
@@ -97,6 +115,7 @@ export function CardAction({
   intent = "secondary",
   icon: Icon,
   loading = false,
+  iconOnly = false,
   disabled,
   children,
   ...props
@@ -104,10 +123,39 @@ export function CardAction({
   intent?: CardActionIntent;
   icon?: LucideIcon;
   loading?: boolean;
+  iconOnly?: boolean;
 }) {
+  const compact = useContext(CompactActionsContext);
+  const iconNode = loading ? <Spinner /> : Icon && <Icon />;
+  if (iconOnly && Icon) {
+    const label = typeof children === "string" ? children : undefined;
+    return (
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <Button
+              {...props}
+              aria-label={label}
+              disabled={disabled || loading}
+              variant={INTENT_VARIANTS[intent]}
+              size={compact ? "icon-xs" : "icon-sm"}
+            />
+          }
+        >
+          {iconNode}
+        </TooltipTrigger>
+        <TooltipContent>{children}</TooltipContent>
+      </Tooltip>
+    );
+  }
   return (
-    <Button {...props} disabled={disabled || loading} variant={INTENT_VARIANTS[intent]} size="sm">
-      {loading ? <Spinner /> : Icon && <Icon />}
+    <Button
+      {...props}
+      disabled={disabled || loading}
+      variant={INTENT_VARIANTS[intent]}
+      size={compact ? "xs" : "sm"}
+    >
+      {iconNode}
       {children}
     </Button>
   );
@@ -117,11 +165,13 @@ export function CardLink({
   href,
   intent,
   icon = ExternalLink,
+  iconOnly,
   children,
 }: {
   href: string;
   intent?: CardActionIntent;
   icon?: LucideIcon;
+  iconOnly?: boolean;
   children: ReactNode;
 }) {
   const external = /^https?:/i.test(href);
@@ -129,6 +179,7 @@ export function CardLink({
     <CardAction
       intent={intent}
       icon={icon}
+      iconOnly={iconOnly}
       nativeButton={false}
       render={
         // oxlint-disable-next-line jsx-a11y/control-has-associated-label -- Base UI renders the CardAction children inside this anchor
@@ -148,15 +199,18 @@ export function CopyButton({
   text,
   label,
   intent,
+  iconOnly,
 }: {
   text: string;
   label: string;
   intent?: CardActionIntent;
+  iconOnly?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   return (
     <CardAction
       intent={intent}
+      iconOnly={iconOnly}
       icon={copied ? Check : Copy}
       onClick={() => {
         navigator.clipboard.writeText(text).then(

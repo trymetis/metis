@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 
-import { and, desc, eq, isNotNull, lt, or } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, lt, or } from "drizzle-orm";
 
 import { db } from "@/db";
 import { mailMessage, mailThreadSummary } from "@/db/schema";
@@ -259,6 +259,28 @@ export async function getThreadSummary(scopedThread: ScopedMessage): Promise<Sto
     )
     .limit(1);
   return row ?? null;
+}
+
+export async function getThreadSummaries(
+  threads: readonly ScopedMessage[],
+): Promise<{ mailboxId: string; threadKey: string; updatedAt: Date; summary: ThreadSummary }[]> {
+  if (threads.length === 0) return [];
+  const rows = await db
+    .select({
+      mailboxId: mailThreadSummary.mailboxId,
+      threadKey: mailThreadSummary.threadKey,
+      updatedAt: mailThreadSummary.updatedAt,
+      summary: mailThreadSummary.summary,
+    })
+    .from(mailThreadSummary)
+    .where(
+      and(
+        inArray(mailThreadSummary.mailboxId, [...new Set(threads.map((t) => t.mailboxId))]),
+        inArray(mailThreadSummary.threadKey, [...new Set(threads.map((t) => t.messageId))]),
+      ),
+    );
+  const wanted = new Set(threads.map((t) => `${t.mailboxId}\u0000${t.messageId}`));
+  return rows.filter((r) => wanted.has(`${r.mailboxId}\u0000${r.threadKey}`));
 }
 
 export async function saveThreadSummary(args: {

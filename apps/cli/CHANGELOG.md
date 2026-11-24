@@ -6,6 +6,8 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 ## Unreleased
 
+### Changed
+
 - `metis domain set`, `metis domain remove` and moving a server to a new address (`metis db load --app-url`, setting up from an export at another address) warn that every user's passkeys stop working at the new address and how users get back in.
 
 ## Releases
