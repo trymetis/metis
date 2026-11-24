@@ -26,6 +26,8 @@ You manage it under **Settings**, then **Security**. To get there, open your acc
 - **Security activity**
 - **Delete account**
 
+**Authenticator app**, **Passkeys**, **Ask me first with**, **Sign-in alerts** and **Security activity** each have an ⓘ next to their title. Point at it or click it to read what the card is for. You can also reach it with the Tab key and open it with Enter.
+
 For the last cards, see [Change or reset your password](/guide/account/change-or-reset-your-password), [Sign-in alerts](/guide/account/sign-in-alerts), [Security activity](/guide/account/security-activity) and [Delete your account](/guide/account/delete-your-account).
 
 <img
@@ -47,7 +49,7 @@ There are three ways to confirm it is you. Your account always has backup codes,
 - **Passkeys** are kept on your device or in your password manager. See [Add a passkey](#add-a-passkey).
 - **Backup codes** are one-time codes. You get them when you first set up two-factor authentication, whichever way you chose. They look like `abcde-12345`. Each one works only once.
 
-Metis Suite asks you to confirm it's you when you sign in. It also asks before some sensitive actions, such as changing your password, signing out your other browsers, deleting your account, or turning on AI or phishing detection. In every one of these places, you can use any way your account has: your authenticator app if you set one up, a passkey if you added one, or a backup code.
+Metis Suite asks you to confirm it's you when you sign in. It also asks before some sensitive actions, such as changing your password, signing out your other browsers, showing the QR code for another device, deleting your account, or turning on AI or phishing detection. In every one of these places, you can use any way your account has: your authenticator app if you set one up, a passkey if you added one, or a backup code.
 
 ### Switch between them
 
@@ -121,23 +123,38 @@ You do not get new backup codes, and you do not need your password. Your passkey
 You can put the same Metis Suite entry on a second phone or in a second authenticator app. This is a good way to have a spare. The **Add another device** card shows only if you set up an authenticator app.
 
 1. Go to **Settings**, then **Security**.
-2. In the **Add another device** card, type your **Account password**.
-3. Click **Show QR code**.
+2. In the **Add another device** card, click **Show QR code**.
+3. The **Show your authenticator QR code** box says "Confirm it's you, then scan the code with your other device." Confirm with a code from your authenticator app, a passkey or a backup code. See [Switch between them](#switch-between-them).
+4. Click **Show QR code** in the box. While it works, the button says "Confirming…".
+5. The **Scan with your other device** box opens. It says "Devices already set up keep working. Close this when you're done; the code is not shown again until you confirm it's you."
 
    <img
      src="/images/account/add-device-qr.webp"
-     alt="The Add another device card showing a QR code"
+     alt="The Scan with your other device box showing a QR code"
      class="dark:hidden"
    />
    <img
      src="/images/account/add-device-qr-dark.webp"
-     alt="The Add another device card showing a QR code"
+     alt="The Scan with your other device box showing a QR code"
      class="hidden dark:block"
    />
 
-4. Scan the QR code with the new device. If you cannot scan it, click **Can't scan? Show manual key** and type the key in instead.
+6. Scan the QR code with the new device. If you cannot scan it, click **Can't scan? Show manual key** and type the key in instead.
+7. Click **Done**.
 
 The devices you already set up keep working. All of them show the same codes.
+
+When you close the box (with **Done**, the Escape key or a click outside it), the QR code is gone from the page. To see it again, click **Show QR code** and confirm it's you again. If you confirmed with a backup code, that code is used up.
+
+If something goes wrong, the message shows in the **Show your authenticator QR code** box:
+
+| Message                                                               | What to do                                                                       |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| "Invalid authenticator or backup code"                                | The code was wrong. Wait for a new code in your app, or use another backup code. |
+| "Your passkey confirmation expired. Confirm with your passkey again." | Click **Confirm again**, use your passkey, then click **Show QR code** again.    |
+| "Couldn't show the QR code. Try again."                               | Click **Show QR code** again.                                                    |
+
+If you click **Show QR code** too often, you see a message such as "Too many requests. Try again in 8 seconds." See [If something goes wrong](#if-something-goes-wrong).
 
 ## Remove your authenticator app
 
@@ -222,7 +239,7 @@ When you sign in or confirm a change, Metis Suite shows one way to confirm it's 
 
 The way you set up first is your default. Adding the other kind later keeps it as it is.
 
-The **Ask me first with** card shows only when you have both an authenticator app and a passkey. It says "Shown first when you sign in or confirm a change. You can always pick another." Pick one from the **Ask me first with** list:
+The **Ask me first with** card shows only when you have both an authenticator app and a passkey. Point at or click the ⓘ next to its title to read "Shown first when you sign in or confirm a change. You can always pick another." Pick one from the **Ask me first with** list:
 
 - **Passkey**
 - **Authenticator app**
@@ -242,7 +259,7 @@ You cannot use Metis Suite without two-factor authentication. You rarely need to
 3. Click **Disable 2FA**.
 4. The **Disable two-factor auth?** box opens. It says "Your authenticator app, passkeys and backup codes will stop working, and you will need to set up 2FA again to access your mail. Confirm it's you to turn it off."
 5. Confirm it's you with a code from your authenticator app, a passkey or a backup code. See [Switch between them](#switch-between-them).
-6. Click **Disable 2FA** in the box. While it works, the button says "Saving…".
+6. Click **Disable 2FA** in the box. While it works, the button says "Confirming…".
 
 Your authenticator entries, passkeys and backup codes stop working. Your authenticator app and your passkeys are removed from your account. Metis Suite then takes you to the two-factor setup page. You cannot use the app until you set it up again, with an authenticator app or a passkey, and save your new backup codes. See [Sign in for the first time](/guide/get-started/sign-in-for-the-first-time). Then add the other kind again if you want it.
 
@@ -258,7 +275,7 @@ Your backup codes are your way back in if you lose the device with your authenti
 
 If you lost a device but still have your backup codes or another way to confirm it's you:
 
-1. Sign in with your email and password, or a magic link.
+1. Sign in with your email and password, or a sign-in link.
 2. On the two-factor page, use a way you still have. Click **Use a backup code instead** and enter one of your backup codes. Or switch to your authenticator app, or to a passkey on another device.
 3. Go to **Settings**, then **Security**.
 4. Replace what you lost, as described below.

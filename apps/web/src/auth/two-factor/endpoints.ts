@@ -436,14 +436,19 @@ export function twoFactorEndpoints(opts: ResolvedTwoFactorOptions, emit: Emit) {
 
   const revealTotp = createAuthEndpoint(
     "/two-factor/totp-uri",
-    { method: "POST", body: passwordBody, use: [sessionMiddleware] },
+    { method: "POST", body: z.object({ code: z.string() }), use: [sessionMiddleware] },
     async (ctx) => {
-      const user = ctx.context.session.user;
+      const { user, session } = ctx.context.session;
       const factors = await loadFactors(ctx, user.id);
       if (!factors.totp?.verified) {
         throw APIError.from("BAD_REQUEST", TWO_FACTOR_ERROR_CODES.TOTP_NOT_ENABLED);
       }
-      await ctx.context.password.checkPassword(user.id, ctx);
+      await requireSecondFactor(
+        ctx,
+        { userId: user.id, sessionId: session.id },
+        factors,
+        ctx.body.code,
+      );
       const secret = await openSecret(ctx.context.secretConfig, factors.totp.secret);
       return ctx.json({ totpURI: totpUri(secret, opts.issuer, user.email) });
     },

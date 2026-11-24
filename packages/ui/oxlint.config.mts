@@ -15,10 +15,5 @@ export default defineConfig({
       version: "19.3.1",
     },
   },
-  ignorePatterns: [
-    "src/components/*.tsx",
-    "!src/components/brand-marks.tsx",
-    "!src/components/metis-mark.tsx",
-    "src/components/svgs/**",
-  ],
+  ignorePatterns: ["src/components/*.tsx", "!src/components/metis-mark.tsx"],
 });

@@ -36,6 +36,9 @@ See also [AGENTS.md](../AGENTS.md), [drive.md](drive.md), [drive-providers.md](d
 
 - **Opening a file** (double-click, Enter, the drive `p` chord, the drive agent, or a `<@file:…>` chip in the workspace assistant's transcript) opens the shared side pane.
 - **Pane Download** saves the same blob through `<a download>` with no second transfer.
+- **The pane header is one row:** icon, name (size and date in its tooltip), the PDF page and zoom controls, then Download, Open in … and Close as icons.
+  - The PDF renderer reports its state and commands upward (`PdfControls` through `onControls`), so its controls live in the header instead of a second bar.
+  - The pane is a size container (`@container/preview`): below 30rem, zoom and Open in … move into the `…` menu, because the pane can be as narrow as `min-w-80`.
 - **Chips.** A chip is clickable only where its page passes `onOpen` to `AgentReferenceProvider` ([ai-agents.md](ai-agents.md)). The assistant resolves the chip's `driveId|fileId` to the workspace's drive slug and a fresh `drive.get` entry before opening the pane, so the same caps and cache freshness apply.
 - **Grid thumbnails** (`src/app/w/[slug]/d/[drive]/[[...path]]/_components/use-drive-thumbnail.ts` → `useDriveThumbnail`) read through the same Download route: an image up to 10 MB with a known `modifiedAt` is fetched once its tile nears the viewport, at most three at a time, shrunk to a 256px WebP and cached under its own key (`previewCacheKey` over the drive id and `thumbnail` plus the file id).
   - A drive whose download the browser cannot read (Google Drive) shows icons; its first failed fetch stops further tries for the session.

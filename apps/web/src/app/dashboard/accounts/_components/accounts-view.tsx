@@ -116,22 +116,21 @@ export function AccountsView() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>2FA</TableHead>
                   <TableHead className="text-right">Joined</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.recentUsers.map((row) => (
                   <TableRow key={row.id}>
-                    <TableCell className="text-foreground">{row.name}</TableCell>
-                    <TableCell className="font-mono text-[12px]">{row.email}</TableCell>
-                    <TableCell>
-                      {row.twoFactorEnabled ? (
-                        <Badge variant="secondary">Enabled</Badge>
-                      ) : (
-                        <Badge variant="destructive">Off</Badge>
+                    <TableCell className="text-foreground">
+                      {row.name}
+                      {!row.twoFactorEnabled && (
+                        <Badge variant="outline" className="ml-2 text-muted-foreground">
+                          2FA setup required
+                        </Badge>
                       )}
                     </TableCell>
+                    <TableCell className="font-mono text-[12px]">{row.email}</TableCell>
                     <TableCell className="text-right text-faint">
                       {dateTime.format(new Date(row.createdAt))}
                     </TableCell>

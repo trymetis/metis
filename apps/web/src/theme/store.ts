@@ -160,6 +160,14 @@ export async function deleteTheme(owner: ThemeOwner, themeId: string): Promise<b
   return deleted.length > 0;
 }
 
+export async function deleteThemes(owner: ThemeOwner, themeIds: string[]): Promise<number> {
+  const deleted = await db
+    .delete(theme)
+    .where(and(inArray(theme.id, themeIds), ownerFilter(owner)))
+    .returning({ id: theme.id });
+  return deleted.length;
+}
+
 export async function setWorkspaceThemeId(workspaceId: string, themeId: string): Promise<void> {
   await db.update(workspace).set({ themeId }).where(eq(workspace.id, workspaceId));
 }

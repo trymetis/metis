@@ -18,7 +18,7 @@ export function PhishingView() {
     <Sections>
       <HealthCheck
         input={{ kind: "driver", driver: "phishing" }}
-        description="Calls the backend's /health endpoint."
+        hint="Calls the backend's /health endpoint."
       />
 
       <ConfigForm
@@ -26,7 +26,7 @@ export function PhishingView() {
         onSaved={reload}
         cards={{
           phishingDetection: {
-            description: "The service that classifies a message's raw MIME.",
+            hint: "The service that classifies a message's raw MIME.",
             badge: <ToneBadge tone={enabled ? "ok" : "off"}>{enabled ? "On" : "Off"}</ToneBadge>,
             children: !enabled && (
               <Note>The badge, the agent tool and the MCP tool are hidden.</Note>

@@ -30,7 +30,7 @@ A calendar account is one login you connected, such as your Google account. Meti
 
 - **Google Calendar, Outlook Calendar and Zoho Calendar:** the type, then the email address of the account. For example, "Google Calendar · you@example.com".
 - **CalDAV:** the name your administrator gave the CalDAV server, for example "Acme calendars".
-- **The same CalDAV server connected twice:** both accounts show the same name. The button at the top of the sidebar and its **Switch calendar** menu show each account's email address, so you can tell them apart there.
+- **The same CalDAV server connected twice:** both accounts show the same name. The button at the top of the sidebar and its **Switch calendar** menu show each account's email address, so you can tell them apart there. Workflow settings that pick a calendar show the email address too.
 
 If your administrator renames a CalDAV server, your account shows the new name.
 

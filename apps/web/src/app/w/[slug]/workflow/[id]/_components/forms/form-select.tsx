@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@metis/ui/components/select";
 import { cn } from "@metis/ui/lib/utils";
+import type { ReactNode } from "react";
 
 export function FormSelect<T extends string>({
   value,
@@ -20,7 +21,7 @@ export function FormSelect<T extends string>({
 }: {
   value: T;
   onValueChange: (value: T) => void;
-  options: readonly { value: T; label: string }[];
+  options: readonly { value: T; label: string; render?: ReactNode }[];
   className?: string;
   id?: string;
   label?: string;
@@ -40,7 +41,7 @@ export function FormSelect<T extends string>({
         <SelectGroup>
           {options.map((option) => (
             <SelectItem key={option.value} value={option.value}>
-              {option.label}
+              {option.render ?? option.label}
             </SelectItem>
           ))}
         </SelectGroup>

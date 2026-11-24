@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { authClient } from "@/auth/client";
 import type { PublicPasskey } from "@/auth/two-factor/methods";
 import { addPasskey, usePasskeySupport } from "@/auth/two-factor/passkey-client";
+import { InfoHint } from "@/components/info-hint";
 import { TotpConfirmDialog } from "@/components/totp-confirm-dialog";
 import { refreshTwoFactorMethods, useTwoFactorMethods } from "@/hooks/use-two-factor-methods";
 
@@ -55,12 +56,12 @@ export function PasskeysSection() {
       <div className="flex items-center gap-2">
         <Fingerprint className="size-4 text-brand-text" />
         <h2 className="text-[13px] font-medium text-foreground">Passkeys</h2>
+        <InfoHint label="Passkeys">
+          Confirm sign-ins and sensitive changes with Touch ID, Windows Hello, your phone or a
+          security key instead of typing a code. Your backup codes keep working, and so does your
+          authenticator app if you have one.
+        </InfoHint>
       </div>
-      <p className="mt-1 text-[12px] text-faint">
-        Confirm sign-ins and sensitive changes with Touch ID, Windows Hello, your phone or a
-        security key instead of typing a code. Your backup codes keep working, and so does your
-        authenticator app if you have one.
-      </p>
 
       {list.length > 0 && (
         <ul aria-label="Passkeys" className="mt-3 flex flex-col divide-y divide-border">

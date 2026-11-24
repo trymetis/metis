@@ -30,6 +30,9 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 - **Rewrite** in the composer edits the selected text with AI: rewrite it, shorten it, or make it more formal or friendlier.
 - **Stance** in a reply writes the reply in the stance you pick, from the message and what you have typed so far, and replaces your text; the editor's undo brings it back.
 - **Discard draft** in the composer deletes the draft at once, with **Undo** in the notice that follows.
+- In Drive, a **Compact grid** view joins **List** and **Large grid**, picked from the view menu in the toolbar or with **d** then **c**.
+- Files you preview show in Drive's **Recent** list next to folders, and clicking one opens its preview again.
+- In the dashboard's **Themes**, select several instance themes and delete them at once. Select all never picks a built-in theme.
 
 ### Changed
 
@@ -67,6 +70,23 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 - In Contacts, the list fills the page as a table (name, email, phone, organization, address book) until you open a contact, and **Close contact** returns to it. **New contact** is the button beside the filter.
 - A contact shows **Edit contact** at the top, with **Invite to event**, **Download** and **Delete contact** under **More actions**.
 - Contacts, email senders, workspace members, the member preview and your account button in the left rail show two initials on a color picked from the address, so the same person has the same color everywhere.
+- Drive's grid icons and thumbnails grow with their cell instead of staying one small size.
+- A file preview's header is one row: the name (size and date when you point at it), the PDF page and zoom controls, and Download, Open and Close as icons. In a narrow preview, zoom and Open are in the **…** menu.
+- Drive's **Pinned** and **Recent** lists show each folder's or file's own icon, and **Recent** also lists folders you reach from their address or the breadcrumb.
+- **Deploy checks** is in the dashboard's System menu, with the number of warnings beside it, highlighted until you acknowledge them and shown on **System** while that list is closed, instead of a box above the menu.
+- The dashboard's **Accounts** and **Users** show "2FA setup required" on an account without two-factor authentication, instead of a 2FA column and a red badge.
+- **Exports** in the dashboard lists each export on two lines (date, release and size, then the file and where it went), and opens to show its checksum, migration, addresses and recipients, each with a copy button.
+- **Themes** in the dashboard is a table of the built-in and instance themes with their colors, type and how many workspaces use each, and **Edit** and **Delete** buttons on instance themes. **Start from** in the theme builder shows each theme's colors.
+- **Reset to environment** is in each configuration section's **…** menu, and says why when it isn't available.
+- Explanations of dashboard sections open from an ⓘ next to the section's title.
+- The maintenance page says how long maintenance has lasted and reloads by itself when the app is back, instead of "Try again in a few minutes."
+- When an MCP client you already connected asks for access again, the approval page shows its tools in a table by area (Mail, Calendar, Drive, Contacts, Workflows, Workspace, Account, Instance, System) with **Read** and **Write** columns and sensitive tools marked, instead of one long list.
+- **Email me a magic link** on the sign-in page reads **Email me a sign-in link**.
+- The audit log, **Security activity** and a workspace's **Activity** put names in quotes, such as passkeys, MCP clients, workflows, workspaces and removed resources, so they no longer run into the sentence.
+- MCP clients show the app they were added for only when it is a known one, and a client without one shows the MCP logo instead of a robot.
+- Explanations in **Settings** open from an ⓘ next to the section's title, and the ⓘ hints on **Privacy** open on click as well as on hover.
+- Compose **From**, the signatures preview, **Try on recent mail** and the workflow mailbox, calendar, drive and address book pickers show each account with its provider and server under it, as Settings does, so the same address connected twice can be told apart.
+- With nothing typed, the search dialog highlights nothing and shows how to search, with examples and every search key, so Enter no longer opens a new message.
 
 ### Fixed
 
@@ -89,6 +109,12 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 - A run's back arrow returns to the Runs page you opened it from.
 - In search, **Resume** and **Cancel** on a run are offered on the same runs as the run page (**Resume** now also on partial runs, **Cancel** on waiting runs) and show what actually happened, including when the run cannot be resumed. **Open the builder** is now **Open in the editor**.
 - In Calendar, with the AI panel open, the card of an event you drag follows the pointer from the start, as it does in Mail, Drive and Contacts.
+- Signing out in the browser clears Drive's **Recent** lists, so the next person who signs in on a shared browser no longer sees your recent folders and files.
+- Confirm-it's-you boxes say **Confirming…** while they work, instead of **Saving…** when nothing is being saved.
+
+### Security
+
+- **Add another device** asks you to confirm it's you, with your authenticator app, a passkey or a backup code, instead of your password, and shows the QR code in a window that forgets it once closed, instead of leaving it on the page.
 
 ## Releases
 

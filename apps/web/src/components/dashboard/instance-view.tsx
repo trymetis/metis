@@ -19,7 +19,7 @@ export function InstanceView() {
 
   return (
     <Sections>
-      <Section title="App" description="Where the instance is served from.">
+      <Section title="App" hint="Where the instance is served from.">
         <Rows>
           <Row label="Public URL">
             <Mono>{instance.appUrl}</Mono>
@@ -32,7 +32,7 @@ export function InstanceView() {
 
       <Section
         title="Accounts"
-        description="Who owns this dashboard, and the code that creates the owner account."
+        hint="Who owns this dashboard, and the code that creates the owner account."
       >
         <Rows>
           <Row label="Setup code">
@@ -67,7 +67,7 @@ export function InstanceView() {
         onSaved={reload}
         cards={{
           signup: {
-            description: "How accounts get created.",
+            hint: "How accounts get created.",
             badge: instance.signupDisabled ? (
               <Badge variant="outline">Invite only</Badge>
             ) : (
@@ -75,7 +75,7 @@ export function InstanceView() {
             ),
           },
           legal: {
-            description: "What new accounts agree to at sign-up.",
+            hint: "What new accounts agree to at sign-up.",
             badge: (
               <ToneBadge tone={consent ? "ok" : "off"}>
                 {consent ? `Version ${legal.version}` : "Off"}
@@ -83,12 +83,10 @@ export function InstanceView() {
             ),
           },
           relay: {
-            description:
-              "Limits for drives whose bytes pass through the server: WebDAV, FTP, SFTP and relay S3.",
+            hint: "Limits for drives whose bytes pass through the server: WebDAV, FTP, SFTP and relay S3.",
           },
           imageProxy: {
-            description:
-              "Lets users load remote images in received mail through this server, which hides their device from the sender but not that the message was opened.",
+            hint: "Lets users load remote images in received mail through this server, which hides their device from the sender but not that the message was opened.",
             badge: (
               <ToneBadge tone={instance.imageProxy ? "ok" : "off"}>
                 {instance.imageProxy ? "On" : "Off"}
@@ -96,11 +94,10 @@ export function InstanceView() {
             ),
           },
           mailCache: {
-            description: "How long this instance keeps copies of message bodies it has shown.",
+            hint: "How long this instance keeps copies of message bodies it has shown.",
           },
           proxies: {
-            description:
-              "How this instance finds a visitor's address behind a load balancer or CDN. Workflow webhook IP allow lists use the Workflow runner's own list.",
+            hint: "How this instance finds a visitor's address behind a load balancer or CDN. Workflow webhook IP allow lists use the Workflow runner's own list.",
           },
         }}
       />

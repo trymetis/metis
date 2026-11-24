@@ -36,12 +36,12 @@ export function RunnerView() {
     <Sections>
       <HealthCheck
         input={{ kind: "driver", driver: "runner" }}
-        description="Derived from the database, so it reads the same whichever driver ticks."
+        hint="Derived from the database, so it reads the same whichever driver ticks."
       />
 
       <Section
         title="Status"
-        description="From the last ticks recorded in the database."
+        hint="From the last ticks recorded in the database."
         badge={<ToneBadge tone={badge.tone}>{badge.label}</ToneBadge>}
       >
         <Rows>
@@ -77,8 +77,7 @@ export function RunnerView() {
         onSaved={reload}
         cards={{
           workflowRunner: {
-            description:
-              "The driver decides what wakes the runner. Before switching, start the processes the new driver needs: a scheduler for cron, Redis and the worker for BullMQ. The rest sets how much each tick does.",
+            hint: "The driver decides what wakes the runner. Before switching, start the processes the new driver needs: a scheduler for cron, Redis and the worker for BullMQ. The rest sets how much each tick does.",
           },
         }}
       />

@@ -22,6 +22,7 @@ import {
   normalizeThemeColor,
   THEME_COLOR_PATTERN,
   THEME_NAME_MAX,
+  THEMES_PER_OWNER_MAX,
   THEME_TOKENS,
 } from "@/theme/tokens";
 import { ANALYSIS_ACTIONS, CLASSIFICATIONS } from "@/types/analysis";
@@ -646,6 +647,12 @@ export const dashboardSaveThemeInputSchema = z.object({
 export const dashboardDeleteThemeInputSchema = z.object({
   themeId: z.string().min(1),
 });
+
+export const dashboardDeleteThemesInputSchema = z.object({
+  themeIds: z.array(z.string().min(1)).min(1).max(THEMES_PER_OWNER_MAX),
+});
+
+export const dashboardDeleteThemesOutputSchema = z.object({ deleted: z.number() });
 
 export const deleteWorkspaceOutputSchema = successSchema;
 
@@ -3007,6 +3014,8 @@ const workflowDirectoryEntrySchema = z.object({
   slug: z.string(),
   email: z.string(),
   name: z.string(),
+  provider: connectionProviderSchema,
+  server: z.string().nullable(),
   aiEnabled: z.boolean(),
 });
 

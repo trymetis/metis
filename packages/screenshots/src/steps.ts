@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
 import { z } from "zod";
 
-import { type Account, rpc } from "./app.ts";
+import { type Account, rpc, totp } from "./app.ts";
 
 export const stepSchema = z.union([
   z.strictObject({ goto: z.string() }),
@@ -12,6 +12,7 @@ export const stepSchema = z.union([
   z.strictObject({ hover: z.string() }),
   z.strictObject({ fill: z.string(), value: z.string() }),
   z.strictObject({ type: z.string(), text: z.string() }),
+  z.strictObject({ totp: z.string() }),
   z.strictObject({ press: z.string() }),
   z.strictObject({ drag: z.string(), to: z.string() }),
   z.strictObject({ waitFor: z.string() }),
@@ -88,6 +89,9 @@ export async function runStep(page: Page, step: Step, a: Account | undefined) {
   else if ("type" in step) {
     await page.locator(step.type).first().click();
     await page.keyboard.type(step.text);
+  } else if ("totp" in step) {
+    await page.locator(step.totp).first().click();
+    await page.keyboard.type(await totp());
   } else if ("press" in step) await page.keyboard.press(step.press);
   else if ("drag" in step) await drag(page, step.drag, step.to);
   else if ("waitFor" in step)

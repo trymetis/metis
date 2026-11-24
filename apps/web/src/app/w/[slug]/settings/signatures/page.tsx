@@ -20,7 +20,9 @@ import { Loader2, Pencil } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { useSession } from "@/auth/client";
+import { AccountOption } from "@/components/account-option";
 import { PageHeader } from "@/components/page-header";
+import { providerLabelFor } from "@/components/provider-meta";
 import { type MailboxOption, useWorkspaceMailboxes } from "@/hooks/use-mailbox-emails";
 import { useWorkspaceScope } from "@/hooks/use-workspace-path";
 import { orpc, rpc } from "@/lib/orpc";
@@ -75,7 +77,12 @@ function WorkspaceSection({ mailboxes, name }: { mailboxes: MailboxOption[]; nam
   const [previewSlug, setPreviewSlug] = useState<string | null>(null);
   const previewMailbox = mailboxes.find((m) => m.slug === previewSlug) ?? mailboxes[0];
   const previewVars = useVars(name, previewMailbox?.email ?? "");
-  const previewItems = mailboxes.map((m) => ({ value: m.slug, label: m.email }));
+  const previewItems = mailboxes.map((m) => ({
+    value: m.slug,
+    label: m.email,
+    providerLabel: providerLabelFor("mailbox", m.provider),
+    server: m.server,
+  }));
 
   if (query.isPending) return <Loading />;
   if (!query.data) {
@@ -113,7 +120,11 @@ function WorkspaceSection({ mailboxes, name }: { mailboxes: MailboxOption[]; nam
               <SelectContent>
                 {previewItems.map((item) => (
                   <SelectItem key={item.value} value={item.value}>
-                    {item.label}
+                    <AccountOption
+                      name={item.label}
+                      providerLabel={item.providerLabel}
+                      server={item.server}
+                    />
                   </SelectItem>
                 ))}
               </SelectContent>

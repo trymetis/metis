@@ -253,6 +253,27 @@ export default function settingsSpecs() {
     for (const code of shown) expect(before).not.toContain(code.trim());
   });
 
+  test("showing the authenticator QR code asks to confirm it's you, opens in a dialog and is gone once closed", async ({
+    page,
+  }) => {
+    await page.goto("/settings/security");
+    const section = securitySection(page, "Add another device");
+    await section.getByRole("button", { name: "Show QR code", exact: true }).click();
+    const confirm = page.getByRole("alertdialog", { name: "Show your authenticator QR code" });
+    await expect(confirm).toBeVisible();
+    await enterCode(page, await harness.totp());
+    await confirm.getByRole("button", { name: "Show QR code", exact: true }).click();
+    const shown = page.getByRole("dialog", { name: "Scan with your other device" });
+    await expect(
+      shown.getByRole("img", { name: "QR code for your authenticator app" }),
+    ).toBeVisible();
+    await shown.getByRole("button", { name: "Done", exact: true }).click();
+    await expect(shown).toBeHidden();
+    await expect(page.getByRole("img", { name: "QR code for your authenticator app" })).toHaveCount(
+      0,
+    );
+  });
+
   test("turning sign-in alerts off survives a reload and shows in security activity", async ({
     page,
     rpc,

@@ -59,6 +59,9 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [auth.md](auth
 - **Tools come in two tiers, and the tier is the default.** Non-sensitive tools are on by default; tools marked `sensitive: true` in `MCP_TOOL_MANIFEST` stay off until someone turns them on for that client (`isMcpToolEnabled`).
   - `runSystemCheck` is sensitive, because it connects to every checked service when the model calls it.
 - **The consent page and the settings page render the same `McpToolPicker`**: one collapsible section per tier, a checkbox that switches the whole tier (shown or filtered out), and a search box over label, description and group.
+- **A connected client's re-consent shows its enabled tools as an area × Read/Write table** (`_components/consent-tool-table.tsx`), from `src/mcp/consent-access.ts` → `CONSENT_ACCESS`.
+  - `CONSENT_ACCESS` is the consent page's own table, separate from the toolkit's read/write partition, and `satisfies Record<McpToolKey, …>`, so a tool added to the manifest fails the typecheck until it is placed in an area and an action.
+- **A client's line names its preset only for a known app** (`namedPresetLabel`); a custom or self-registered client shows no kind, and its icon is the MCP logo (`McpPresetIcon`).
 - **`searchContacts` sits in the Contacts group and searches saved contacts** ([contacts.md](contacts.md)); it kept its key when it left mail history, so a client's stored choice for it carries over to saved contacts.
 - **Setup and removal text says what to do with it.** Each preset's `instructions` and `removal` is an `McpGuide`: a `command` is shown as one to run in a terminal and a `config` as text to add to the named file, both with a copy button; `steps` are plain prose with any value to paste (the server URL) on its own copyable row.
 - **Re-enabling a client takes TOTP (`mcp.setEnabled`).**

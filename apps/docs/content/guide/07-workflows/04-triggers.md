@@ -7,6 +7,8 @@ A trigger decides when a workflow runs. Every workflow starts with at least one 
 
 A workflow can have more than one trigger. For example, to watch two mailboxes for new mail, add one **Mail arrives** trigger for each. **Before mail is sent** is the exception: it must be the workflow's only trigger.
 
+Settings that pick a mailbox, calendar or drive show their choices the same way step settings do. See [Steps](/guide/workflows/steps).
+
 | Group                                                                   | Triggers                                                                                                                                            |
 | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [By hand or on a timetable](#by-hand-or-on-a-timetable)                 | **Run by hand**, **On a schedule**                                                                                                                  |

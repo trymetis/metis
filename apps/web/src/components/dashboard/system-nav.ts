@@ -1,4 +1,3 @@
-import type { BrandMark } from "@metis/ui/components/brand-marks";
 import {
   Bot,
   CircleArrowUp,
@@ -15,6 +14,7 @@ import {
 } from "lucide-react";
 import type { Route } from "next";
 
+import type { BrandMark } from "@/components/brand-marks";
 import { ACCOUNT_PROVIDER_META } from "@/components/provider-meta";
 import { CONNECTION_PROVIDERS, type ConnectionProvider } from "@/connections/types";
 import { keysOf } from "@/lib/guards";

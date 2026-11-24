@@ -38,9 +38,13 @@ If the new owner's account was banned, that same start lifts the ban.
 
 Click your initials at the bottom of the left rail and choose **Dashboard**. The item appears only for the owner, admins and observers. **Dashboard** is also in the search dialog. If your account has no two-factor authentication yet, you are sent to set it up first.
 
-The sidebar lists **Overview**, **AI usage**, **Connections**, **Accounts**, **Workspaces**, **Automation**, **MCP clients**, **Themes**, **Audit log** and **System**. Click **Back** to return to your mail. At the bottom of the sidebar are the deploy check bar and the source code link.
+The sidebar lists **Overview**, **AI usage**, **Connections**, **Accounts**, **Workspaces**, **Automation**, **MCP clients**, **Themes**, **Audit log** and **System**. Click **Back** to return to your mail. At the bottom of the sidebar is the source code link.
 
 **Accounts** and **System** each have pages under them. Under **Accounts** are **Users** and **Invites**. Click the arrow next to **Accounts** or **System** to show or hide its pages. The list opens by itself while you are on one of its pages.
+
+When the last deploy found problems, a number shows next to **Deploy checks** in the **System** list. While that list is closed, the number shows next to **System** instead, so you see it from every dashboard page. See [Deploy checks](#deploy-checks).
+
+Many cards explain what they are for in an ⓘ after their title. Point to the ⓘ or click it to read the explanation. With the keyboard, move to it with the Tab key and press Enter.
 
 <img src="/images/self-hosting/dashboard-overview.webp" alt="The dashboard Overview page with counts, health cards and the sidebar" class="dark:hidden" />
 <img src="/images/self-hosting/dashboard-overview-dark.webp" alt="The dashboard Overview page with counts, health cards and the sidebar" class="hidden dark:block" />
@@ -51,14 +55,14 @@ Every page except **Users**, **Invites**, **Themes** and the **System** pages is
 
 Observers see every page and every value an admin sees, but none of the controls that change something:
 
-- Settings fields on the **System** pages are disabled, so nothing can be edited or saved. There is no **Add server** button, no remove button on server entries and no **Reset to environment** button.
+- Settings fields on the **System** pages are disabled, so nothing can be edited or saved. There is no **Add server** button, no remove button on server entries and no **…** menu on settings cards, so no **Reset to environment**.
 - The **Health** card has no **Run check** button. Before a check has run, it says "Not checked yet. The instance owner and admins can run checks."
 - On **Deploy checks**, a run that nobody acknowledged shows a **Not acknowledged** badge instead of the **Acknowledge** button.
 - On **Updates**, there are no **Upgrade** buttons. The **Undo** row shows the version an undo would return to, without a button.
 - On **History**, rows have **Compare** but no **Restore**.
 - On **Users**, there is no actions menu, so observers cannot change a role, ban, unban or remove anyone.
 - On **Invites**, there is no **Invite someone** card and no trash button to revoke an invite.
-- On **Themes**, there is no **Create theme** button and no edit or delete buttons on the cards.
+- On **Themes**, observers see the table and the line above it. There are no checkboxes, no **Create theme** or **Delete** button, and no edit or delete buttons on the rows.
 
 Observers can read the **Audit log**.
 
@@ -86,7 +90,7 @@ The tokens every AI feature used, counted per day in UTC. Pick **7 days**, **30 
 Every connected account on the instance and what it provides.
 
 - **Grants** and **Quarantined** counts. A grant is one connected account, which can provide a mailbox, a calendar, a drive and an address book.
-- **By provider:** "Grants and the mailboxes, calendars, drives and address books they carry." The table has one row for each provider, with a column for each of these.
+- **By provider:** the grants and the mailboxes, calendars, drives and address books they carry. The table has one row for each provider, with a column for each of these.
 - **Quarantined:** accounts whose provider or server is no longer configured. They come back when you configure the provider again, or restore the removed server entry from **History**.
 
 ## Accounts
@@ -96,7 +100,7 @@ Every connected account on the instance and what it provides.
 At the top are links to the two pages under **Accounts**: **Users** ("Every account, its instance role and whether it is banned.") and **Invites** ("Account invites waiting to be accepted, and sending new ones.").
 
 - **Counts:** **Accounts** on this instance, **With 2FA** (two-factor authentication turned on), **Banned** (accounts whose ban is still in force, so they cannot sign in), **Account invites** and **Workspace invites** (both pending and not expired).
-- **Newest accounts:** up to the 10 newest accounts, newest first. Each row shows the **Name**, the **Email**, whether two-factor authentication is **Enabled** or **Off** (under **2FA**), and when they **Joined**.
+- **Newest accounts:** up to the 10 newest accounts, newest first. Each row shows the **Name**, the **Email** and when they **Joined**. An account that has not set up two-factor authentication has a grey **2FA setup required** badge after its name.
 
 <img src="/images/self-hosting/dashboard-accounts.webp" alt="The Accounts page with links to Users and Invites, the account and invite counts, and the newest accounts" class="dark:hidden" />
 <img src="/images/self-hosting/dashboard-accounts-dark.webp" alt="The Accounts page with links to Users and Invites, the account and invite counts, and the newest accounts" class="hidden dark:block" />
@@ -129,7 +133,7 @@ A row must match the search and every filter. If no account matches, the card sa
 
 Accounts are listed oldest first. Each row shows:
 
-- **Name**, with a red **No 2FA** badge if the account has not set up two-factor authentication;
+- **Name**, with a grey **2FA setup required** badge if the account has not set up two-factor authentication;
 - **Email**;
 - **Role**: **Owner**, **Admin**, **Observer** or **User**;
 - **Status**: **Active** or **Banned**. A ban with an end date shows when it ends, for example **Banned until Nov 16, 2026**. When that date passes, the row shows **Active** the next time the page loads;
@@ -176,7 +180,7 @@ A ban stops someone from using your instance without deleting anything. The owne
 What a ban does:
 
 - **Signs the person out everywhere within 2 minutes.** This includes any browser tab or app they still have open.
-- **Stops every sign-in.** They cannot sign in, in the browser or in the desktop and mobile apps. A password sign-in shows "This account is banned. Ask the instance owner or an admin." on the sign-in page. They can still ask for a magic link, but opening it does not sign them in.
+- **Stops every sign-in.** They cannot sign in, in the browser or in the desktop and mobile apps. A password sign-in shows "This account is banned. Ask the instance owner or an admin." on the sign-in page. They can still ask for a sign-in link, but opening it does not sign them in.
 - **Stops their MCP clients.** Their clients' requests are refused with "This account is banned. Ask the instance owner or an admin." until the ban ends.
 - **Pauses their background work.** Scheduled mail and snoozes they set up are held, not lost, and go ahead once the ban ends. Runs of other workflows that run as them, and that come due during the ban, are blocked with "The workflow's owner is banned from this instance". Those runs stay blocked after the ban ends, until someone retries them. See [Cancel and retry runs](/guide/workflows/cancel-and-retry-runs#retry-a-run). Runs that come due after the ban run as usual.
 
@@ -220,7 +224,7 @@ To delete your own account, use **Settings**, **Security**. See [Delete your acc
 
 Role changes, bans, unbans and removed users are recorded in the [Audit log](#audit-log) as **Instance role granted**, **Instance role revoked**, **User banned**, **User unbanned** and **User removed**.
 
-A ban reads, for example, "Ana Lopez banned Bob Lee until 2026-11-16 (Spam)". The end date, as year, month and day in UTC, shows only for a ban with a duration. The reason in parentheses shows only if one was given. An unban reads "Ana Lopez unbanned Bob Lee". The banned person also sees both rows in their own [Security activity](/guide/account/security-activity).
+A ban reads, for example, "Ana Lopez banned Bob Lee until 2026-11-16 (“Spam”)". The end date, as year, month and day in UTC, shows only for a ban with a duration. The reason in parentheses shows only if one was given, in curly quotes. An unban reads "Ana Lopez unbanned Bob Lee". The banned person also sees both rows in their own [Security activity](/guide/account/security-activity).
 
 ## Invites
 
@@ -313,37 +317,53 @@ Every external MCP client registered on the instance: **Clients**, **Enabled** a
 
 A theme is the set of colors a workspace's pages use. Workspace owners and admins pick one for their workspace, in the workspace's settings. They can pick a built-in theme, one of the instance themes you add here, or a custom theme they made for their own workspace. See [Logo and theme](/guide/workspaces/appearance).
 
-The owner and admins can create, edit and delete instance themes. Observers see the page without these buttons. None of these actions asks you to confirm it's you.
+The owner and admins can create, edit and delete instance themes. Observers see the table and the line above it, without these controls. None of these actions asks you to confirm it's you.
 
-<img src="/images/self-hosting/dashboard-themes.webp" alt="The Themes page with the Create theme button, an empty Instance themes section, and the built-in themes with how many workspaces use each" class="dark:hidden" />
-<img src="/images/self-hosting/dashboard-themes-dark.webp" alt="The Themes page with the Create theme button, an empty Instance themes section, and the built-in themes with how many workspaces use each" class="hidden dark:block" />
+<img src="/images/self-hosting/dashboard-themes.webp" alt="The Themes page with the Create theme button and one table of themes, each with its colors, type and how many workspaces use it" class="dark:hidden" />
+<img src="/images/self-hosting/dashboard-themes-dark.webp" alt="The Themes page with the Create theme button and one table of themes, each with its colors, type and how many workspaces use it" class="hidden dark:block" />
 
-### Instance themes
+### The themes table
 
-This section says that workspace owners and admins can pick these themes in their workspace's settings, and that editing one changes every workspace that uses it. Workspaces see them under **From your instance**.
+A line above the table says "Workspace owners and admins pick a theme in their workspace’s settings. Editing an instance theme changes every workspace that uses it." Workspaces see your instance themes under **From your instance**.
 
-Each card shows a preview, the theme's name and how many workspaces use it: "No workspace uses it", "Used by 1 workspace" or "Used by 3 workspaces". With no instance themes yet, the section says "No instance themes yet."
+The table lists your instance themes first, then the seven built-in themes: **Amber**, **Blue**, **Violet**, **Emerald**, **Rose**, **Slate** and **Graphite**. Themes that a workspace made for itself are not listed.
 
-To create an instance theme:
+| Column      | What it shows                                                                                                                                                          |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Checkbox    | For the owner and admins, on instance themes only. Use it to [delete several themes at once](#delete-instance-themes).                                                 |
+| **Palette** | Five small squares with the theme's colors, in light or dark to match how you see the dashboard now.                                                                   |
+| **Name**    | The theme's name.                                                                                                                                                      |
+| **Type**    | **Instance** for a theme you added here, or **System** for a built-in theme.                                                                                           |
+| **Used by** | How many workspaces use the theme: **None**, **1 workspace** or, for example, **3 workspaces**.                                                                        |
+| Buttons     | For the owner and admins, on instance themes only: a pencil button to edit the theme and a trash button to delete it, for example **Edit Ocean** and **Delete Ocean**. |
+
+Built-in themes come with Metis Suite. Their rows have no checkbox and no buttons. To build on one, pick it under **Start from** when you create a theme.
+
+### Create an instance theme
 
 1. Click **Create theme**.
 2. The **Create a theme** dialog opens: "Every workspace on this instance can pick it."
-3. Type a name and set the colors. The dialog works as it does in a workspace. See [Set the colors](/guide/workspaces/appearance#set-the-colors).
+3. Type a name and set the colors. To copy the colors of an existing theme, pick it under **Start from**. The list has the built-in themes and your instance themes, each with small squares of its colors before its name. The dialog works as it does in a workspace. See [Set the colors](/guide/workspaces/appearance#set-the-colors).
 4. Click **Create theme**.
 
 The new theme is not applied to any workspace. Workspace owners and admins pick it themselves.
 
-To edit one, click the pencil button on its card, change it, and click **Save theme**. Every workspace that uses it changes at once.
-
-To delete one, click the trash button on its card, then **Delete**. If no workspace uses the theme, the dialog says "No workspace uses it." If some do, it says, for example, "Used by 2 workspaces. Those workspaces switch to Graphite."
+To edit one, click its pencil button, change it, and click **Save theme**. Every workspace that uses it changes at once.
 
 You can keep up to 50 instance themes. Each name can be up to 40 characters. An instance theme cannot have the same name as another instance theme or a built-in theme, and upper and lower case count as the same. If saving fails, the dialog says "A theme with that name already exists" or "You can keep up to 50 themes".
 
-### Built in
+### Delete instance themes
 
-"Ship with Metis Suite and update with each release. Start a new theme from one of them."
+To delete one theme, click its trash button. The dialog asks, for example, "Delete Ocean?". If no workspace uses the theme, it says "No workspace uses it." If some do, it says, for example, "Used by 2 workspaces. Those workspaces switch to Graphite." Click **Delete**, or **Cancel** to keep the theme.
 
-This section shows the seven built-in themes, **Amber**, **Blue**, **Violet**, **Emerald**, **Rose**, **Slate** and **Graphite**, each with how many workspaces use it. They have no buttons. To build on one, pick it under **Start from** when you create a theme.
+To delete several at once:
+
+1. Tick the checkbox of each theme. To pick every instance theme, tick the checkbox in the header (**Select all instance themes**). It never picks a built-in theme. It is greyed out while you have no instance themes, and shows a dash when only some are ticked.
+2. The line above the table changes to the number you picked, for example "2 selected", and a **Delete** button shows next to **Create theme**.
+3. Click **Delete**. The dialog asks, for example, "Delete 2 themes?". If no workspace uses them, it says "No workspace uses them." If some do, it says, for example, "Used by 3 workspaces in all. Those workspaces switch to Graphite."
+4. Click **Delete**, or **Cancel** to keep the themes.
+
+If someone else deleted the themes first, the dialog shows an error. For one theme it is "That theme is gone". For several it is "Those themes are gone", when none of them is left. Reload the page to see the current list. When only some are gone, the rest are deleted with no error.
 
 ## Audit log
 
@@ -364,6 +384,8 @@ Each row shows:
 The IP address is the visitor's address, found through **Trusted proxies** on the **Proxies** card of the **Instance** page. Behind Cloudflare, it is Cloudflare's address until you list Cloudflare's ranges there. Behind another CDN in front of the Caddy that `metis domain` adds, it is always the CDN's address. See [Proxies](/self-hosting/reference/dashboard-settings#proxies).
 
 The person who made the change, and a member it was done to, are shown by the name on their account today. With no name, or for a deleted account, the row shows their email address. With neither, it says "A deleted account". An undo run with `sudo metis undo` has no person behind it, so its row starts with "The server CLI". Invited people, MCP clients, mailboxes, calendars, drives, address books, connected accounts and workflows are shown as they were named when the change was made.
+
+Names in a sentence are in curly quotes, for example "added the passkey “Work laptop”" or "detached the calendar “Team” from “Design”". This covers workspaces, passkeys, MCP clients, workflows and ban reasons. A connected account, or a removed or detached mailbox, calendar, drive or address book, is in quotes too, unless its name is an email address. People, invited email addresses, tool names, roles and versions are not in quotes. The same sentences appear in **Security activity**, on a workspace's **Activity** page and in the **Audit log** MCP tool.
 
 The newest change is at the top, 50 at a time. Click **Load more** for older ones. The log cannot be edited from the app. If nothing has been recorded yet, the card says "No audit events yet."
 
@@ -418,6 +440,7 @@ Under **System** in the sidebar are these pages:
 
 - **Instance:** the app address, sign-up, the owner, legal consent, drive relay limits, the mail image proxy, how long message bodies are kept, and trusted proxies. See [Sign-up](/self-hosting/configure/sign-up), [Terms and privacy links](/self-hosting/configure/terms-and-privacy), [Drive transfers](/self-hosting/configure/drive-transfers) and [Dashboard settings](/self-hosting/reference/dashboard-settings#instance).
 - **History:** every stored version of the configuration (below).
+- **Deploy checks:** the warnings from the last deploy (below).
 - **Updates:** upgrading to a newer release and undoing the last upgrade. See [Upgrade and undo](/self-hosting/operate/upgrade-and-undo).
 - **Exports:** every export the `metis` CLI made of this instance, and where each archive went (below). Only the owner sees it.
 - **Drivers:** **LLM** (with the decision model), **Phishing detection**, **Mail**, **Cache**, **Workflow runner** and **Database**.
@@ -427,7 +450,7 @@ Every field on these pages is listed in [Dashboard settings](/self-hosting/refer
 
 ### Health checks on driver and provider pages
 
-Every driver page and every configured provider page has a **Health** card. Checks contact the real service, so the card runs them only when you click **Run check** (then **Re-check**). Only the owner and admins see these buttons. Each result shows OK, Warning, Failed or Skipped, how long it took, and when it ran. Provider failures start with "Misconfigured:" or "Unreachable:".
+Every driver page and every configured provider page has a **Health** card. The ⓘ next to its title says what the check does. Checks contact the real service, so the card runs them only when you click **Run check** (then **Re-check**). Only the owner and admins see these buttons. Each result shows OK, Warning, Failed or Skipped, how long it took, and when it ran. Provider failures start with "Misconfigured:" or "Unreachable:".
 
 Every deploy also checks your servers and the LLM. It checks the decision model too when one of the decision model's switches is on. Problems appear on the [Deploy checks](#deploy-checks) page.
 
@@ -446,25 +469,30 @@ If someone else saved a change while you were editing, saving fails with "The co
 
 ### Reset a card to the environment
 
-Every settings card you can edit has a **Reset to environment** button at its bottom right. It puts that one card back to the values the app started with. These come from the environment variables and the config file. A setting that neither of them sets gets its default.
+Every settings card you can edit has a **…** button in its header. Pointing to it shows its name, for example **Sign-up actions**. Its menu has one item, **Reset to environment**. It puts that one card back to the values the app started with. These come from the environment variables and the config file. A setting that neither of them sets gets its default.
 
-You find the button on these cards:
+You find the menu on these cards:
 
 - **Instance** page: **Sign-up**, **Legal consent**, **Drive relay**, **Mail image proxy**, **Mail cache** and **Proxies**.
 - Driver pages: **LLM**, **Decision model**, **Phishing detection**, **Mail**, **Cache** and **Workflow runner**.
 - Provider pages: the **OAuth client** card on **Google**, **Microsoft** and **Zoho**, and the server list card on each of the eight server pages.
 
-Read-only cards have no such button: **App** and **Accounts** on the **Instance** page, **Health** on driver and provider pages, **Status** on the **Workflow runner** page, and **Driver** on the **Database** page.
+Read-only cards have no such menu: **App** and **Accounts** on the **Instance** page, **Health** on driver and provider pages, **Status** on the **Workflow runner** page, and **Driver** on the **Database** page.
 
 The app reads the environment and the config file when it starts. If you edit `.env` or the config file, apply the change before you reset, as for [settings fixed at startup](/self-hosting/configure/how-configuration-works#settings-fixed-at-startup). On a server the `metis` CLI runs, run `sudo metis apply` after you edit `.env`. If you skip this, the reset uses the values from before your edit. Instead of editing `.env` and resetting, you can also run `sudo metis config set`, which applies the change and stores the card in one step. See [Change dashboard settings with the metis CLI](/self-hosting/configure/how-configuration-works#change-dashboard-settings-with-the-metis-cli).
 
 A server list is replaced as a whole. Entries you added in the dashboard are removed, and the entries set in the environment come back. If the environment sets no entries for that list, the list ends up empty.
 
-The button is disabled while the page has unsaved changes, and when the card already matches the environment. This is a different button from **Reset** on the save bar, which only discards your unsaved edits.
+The item is greyed out, with the reason under it:
+
+- "Save or discard your changes first" while the page has unsaved changes. Click **Save changes** or **Reset** on the save bar, then open the menu again.
+- "Already matches the environment" when the card already has the environment values. There is nothing to reset.
+
+It is also greyed out while another reset dialog is loading. **Reset to environment** is different from **Reset** on the save bar, which only discards your unsaved edits.
 
 To reset a card:
 
-1. Click **Reset to environment** on the card.
+1. Click the **…** button in the card's header, then **Reset to environment**.
 2. A dialog opens, titled "Reset" followed by the section's name and "to environment". On a sign-in provider page, the name is the provider's, for example "Reset Google to environment". It asks: "Replace this section's settings with the values from the environment and config file?" Below that it shows:
    - The configuration warnings for the result, if there are any.
    - If accounts would be quarantined (hidden from every workspace), a box headed "These connections would be quarantined:". It lists each provider, with the server name for a server entry, and how many connections it has.
@@ -474,10 +502,10 @@ To reset a card:
 
 The new values are checked against the real service, with the same checks as a save. Then:
 
-- **If the check passes,** you see a message with the section's name followed by "reset to environment as version N", for example "Google reset to environment as version N". The card shows the environment values, and its **Reset to environment** button turns disabled.
+- **If the check passes,** you see a message with the section's name followed by "reset to environment as version N", for example "Google reset to environment as version N". The card shows the environment values, and **Reset to environment** in its menu is greyed out with "Already matches the environment".
 - **If a check fails,** nothing is stored. A **Check failed** card says "Nothing was reset. The environment values failed this check." A reset has no **Save anyway** button. Fix the environment values and reset again.
 - **If you ticked the quarantine box,** the accounts connected through a removed server entry, or through a sign-in provider that the reset cleared, are quarantined. Accounts of a sign-in provider come back when you configure it again. Accounts of a server entry come back only when you restore the earlier version under **History**.
-- **If the values are not valid, or the reset would quarantine connections that the dialog did not list,** the dialog shows why and nothing is stored. Close it and click **Reset to environment** again to see the new list.
+- **If the values are not valid, or the reset would quarantine connections that the dialog did not list,** the dialog shows why and nothing is stored. Close it and choose **Reset to environment** from the card's **…** menu again to see the new list.
 - **If someone else saved a change after you opened the page,** you see the usual "The configuration changed since you opened it" message. Reload the page and try again.
 
 Confirmations for **Save changes**, **Save anyway**, **Restore**, **Restore anyway** and **Reset to environment** share one limit: 10 attempts every 5 minutes. Every attempt counts, whether you use an authenticator code, a backup code or a passkey. Past it, you see "Too many attempts. Try again in 4 minutes.", with the time left, up to 5 minutes. Wait that long, then try again.
@@ -499,22 +527,34 @@ You can also reach History from the **History** button on any settings page.
 
 "Every encrypted export of this instance the metis CLI made, and where it put each archive. Only the owner sees this page."
 
-Only the owner sees this page. Admins and observers do not see it in the sidebar, and its address shows them a page-not-found error. The page has no buttons. You make exports with the `metis` CLI, and copy or delete the archives yourself. Deleting an archive does not remove its row. See [Export and import](/self-hosting/operate/export-and-import).
+Only the owner sees this page. Admins and observers do not see it in the sidebar, and its address shows them a page-not-found error. The page has no buttons to make, delete or restore an export. You make exports with the `metis` CLI, and copy or delete the archives yourself. Deleting an archive does not remove its row. See [Export and import](/self-hosting/operate/export-and-import).
 
 On a Metis Cloud instance, this page does not list the exports you make in the Cloud console. The console's **Exports** tab lists them. See [Export your data](/cloud/your-instance/export-your-data).
 
-The **Exports** card says: "Newest first. The metis CLI records each export when it makes it: sudo metis db export on a server, or metis db export `--env-file` from any machine." This works on every kind of deployment: a server the `metis` CLI runs, a container platform, Vercel or another Node host. Each export is one row:
+The ⓘ next to **Exports** says: "Newest first. The metis CLI records each export when it makes it: sudo metis db export on a server, or metis db export `--env-file` from any machine." This works on every kind of deployment: a server the `metis` CLI runs, a container platform, Vercel or another Node host.
 
-| Column            | What it shows                                                                                                                                                                                                                                                                                                                             |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Created**       | When the export was made, in your browser's time zone. Below it, "From" and the instance's address at the time of the export, and "Maintenance since" and when maintenance began. An export made with `--force` shows "Not recorded".                                                                                                     |
-| **Metis version** | The release the instance ran, such as `1.4.0`, with the last database migration below it. An archive loads only on that release or a newer one.                                                                                                                                                                                           |
-| **Archive**       | The file name, such as `metis-export-20261111T100000Z.tar`. Below it, the size and "SHA-256" with the first 12 characters of the file's checksum. To check a copy, compare them with the start of what `sha256sum metis-export-20261111T100000Z.tar` prints.                                                                              |
-| **Where**         | One block for each place the archive was written: **On the server** for `sudo metis db export`, **On a computer** for `metis db export --env-file`, or **In S3**. Each shows the full path or the `s3://` address. Below a path, "Host" and the machine's name. Below an address on an S3-compatible service, "Endpoint" and its address. |
-| **Recipients**    | The fingerprint of each key the export is encrypted to. A passphrase key shows "(passphrase)".                                                                                                                                                                                                                                            |
+Each export is one row, newest first. A row has two lines:
 
-<img src="/images/self-hosting/dashboard-exports.webp" alt="The Exports page listing recorded exports and where each archive went" class="dark:hidden" />
-<img src="/images/self-hosting/dashboard-exports-dark.webp" alt="The Exports page listing recorded exports and where each archive went" class="hidden dark:block" />
+- **First line:** when the export was made, in your browser's date format and time zone, then the release the instance ran (such as `1.4.0`) and the size of the archive. An archive loads only on that release or a newer one.
+- **Second line:** the archive's file name, then where it was written: **On the server** for `sudo metis db export`, **On a computer** for `metis db export --env-file`, or **In S3**. An archive written to more than one kind of place lists each kind once, separated by commas, for example **On the server, In S3**.
+
+Click a row, or the arrow at its end, to open its details. Each line has a copy button, except **Maintenance since**:
+
+| Detail                | What it shows                                                                                                                                           |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **SHA-256**           | The full checksum of the archive. To check a copy, compare it with what `sha256sum` prints for that file.                                               |
+| **Migration**         | The last database migration the instance had when the export was made.                                                                                  |
+| **From**              | The instance's address at the time of the export.                                                                                                       |
+| **Maintenance since** | When maintenance began for the export. An export made with `--force` shows "Not recorded".                                                              |
+| A place               | One line for each place the archive was written, labelled **On the server**, **On a computer** or **In S3**, with the full path or the `s3://` address. |
+| **Host**              | Below a path, the name of the machine, when it is known.                                                                                                |
+| **Endpoint**          | Below an address on an S3-compatible service, the service's address.                                                                                    |
+| **Recipient**         | The fingerprint of each key the export is encrypted to. For a passphrase key, the line is labelled **Passphrase** instead of **Recipient**.             |
+
+When you click a copy button, it shows a tick for a moment. If your browser does not allow the copy, you see "Could not copy".
+
+<img src="/images/self-hosting/dashboard-exports.webp" alt="The Exports page listing recorded exports, with the newest one open to show its checksum, migration, addresses and recipients" class="dark:hidden" />
+<img src="/images/self-hosting/dashboard-exports-dark.webp" alt="The Exports page listing recorded exports, with the newest one open to show its checksum, migration, addresses and recipients" class="hidden dark:block" />
 
 With no exports yet, the card says "No exports yet." Below the list, a note says: "These are the places each archive was written. Metis does not check that a file is still there, and an archive kept on the server's own disk does not survive losing that disk."
 
@@ -522,6 +562,15 @@ The CLI records an export right after it finishes the archive and any upload, so
 
 ### Deploy checks
 
-Every deploy runs preflight, which records warnings here. Click the deploy check bar at the bottom of the sidebar to open this page. It reads "Last deploy: no warnings", or shows how many warnings the last deploy had. The owner and admins can acknowledge a run. Observers see a **Not acknowledged** badge instead.
+Every deploy runs preflight, which records warnings here. To open this page, click **Deploy checks** in the **System** list of the sidebar, right below **History**.
+
+When the last deploy had warnings, a badge with their number shows at the right of **Deploy checks**. While the **System** list is closed, the badge shows next to **System** instead.
+
+- **Filled in the accent color:** nobody has acknowledged the run yet. Pointing to it shows, for example, "2 deploy warnings".
+- **Grey:** someone clicked **Acknowledge** on this page. The badge stays grey until the next deploy records a new run. Pointing to it shows, for example, "2 deploy warnings, acknowledged".
+
+With no warnings, or before the first deploy, there is no badge. When you click **Acknowledge**, the badge turns grey at once.
+
+The owner, admins and observers all see the badge. The owner and admins can acknowledge a run. Observers see a **Not acknowledged** badge on this page instead.
 
 See [Troubleshooting](/self-hosting/operate/troubleshooting) for what each warning means and what to do.

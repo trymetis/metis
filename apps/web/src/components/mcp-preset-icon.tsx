@@ -1,12 +1,13 @@
-import { ClaudeAiIcon } from "@metis/ui/components/svgs/claudeAiIcon";
-import { CursorDark } from "@metis/ui/components/svgs/cursorDark";
-import { CursorLight } from "@metis/ui/components/svgs/cursorLight";
-import { Openai } from "@metis/ui/components/svgs/openai";
-import { OpenaiDark } from "@metis/ui/components/svgs/openaiDark";
-import { Vscode } from "@metis/ui/components/svgs/vscode";
 import { cn } from "@metis/ui/lib/utils";
-import { Bot } from "lucide-react";
 
+import { ClaudeAiIcon } from "@/components/ui/svgs/claudeAiIcon";
+import { CursorDark } from "@/components/ui/svgs/cursorDark";
+import { CursorLight } from "@/components/ui/svgs/cursorLight";
+import { ModelContextProtocolDark } from "@/components/ui/svgs/modelContextProtocolDark";
+import { ModelContextProtocolLight } from "@/components/ui/svgs/modelContextProtocolLight";
+import { Openai } from "@/components/ui/svgs/openai";
+import { OpenaiDark } from "@/components/ui/svgs/openaiDark";
+import { Vscode } from "@/components/ui/svgs/vscode";
 import type { McpPresetId } from "@/mcp/presets";
 
 export function McpPresetIcon({
@@ -40,6 +41,11 @@ export function McpPresetIcon({
     case "vscode":
       return <Vscode className={size} />;
     default:
-      return <Bot className={cn(size, "text-faint")} />;
+      return (
+        <>
+          <ModelContextProtocolLight className={cn(size, "dark:hidden")} />
+          <ModelContextProtocolDark className={cn(size, "hidden dark:block")} />
+        </>
+      );
   }
 }

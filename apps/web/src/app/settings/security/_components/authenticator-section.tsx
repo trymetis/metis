@@ -15,6 +15,7 @@ import { toast } from "sonner";
 
 import { authClient } from "@/auth/client";
 import { extractTotpSecret } from "@/auth/two-factor-code";
+import { InfoHint } from "@/components/info-hint";
 import { TotpConfirmDialog } from "@/components/totp-confirm-dialog";
 import { TwoFactorInput } from "@/components/two-factor-input";
 import { useTwoFactorCode } from "@/hooks/use-two-factor-code";
@@ -50,12 +51,12 @@ export function AuthenticatorSection() {
       <div className="flex items-center gap-2">
         <Smartphone className="size-4 text-brand-text" />
         <h2 className="text-[13px] font-medium text-foreground">Authenticator app</h2>
+        <InfoHint label="Authenticator app">
+          {active
+            ? "Six-digit codes from your authenticator app confirm sign-ins and sensitive changes."
+            : "Add an authenticator app, such as Google Authenticator, 1Password or Authy, as another way to confirm it's you."}
+        </InfoHint>
       </div>
-      <p className="mt-1 text-[12px] text-faint">
-        {active
-          ? "Six-digit codes from your authenticator app confirm sign-ins and sensitive changes."
-          : "Add an authenticator app, such as Google Authenticator, 1Password or Authy, as another way to confirm it's you."}
-      </p>
       <div className="mt-3 flex flex-col items-start gap-2">
         {active ? (
           <Button variant="outline" disabled={onlyMethod} onClick={() => setRemoving(true)}>

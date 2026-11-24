@@ -89,7 +89,7 @@ See also [AGENTS.md](../AGENTS.md) (scope as explicit input), [auth.md](auth.md)
 - **A row is seeded only into a query that already has an observer and no data.** `useQuery` reads the cache on its first render and subscribes only after that render commits, so a component still hydrating sees a seed only when another component already subscribed to the same key, the same race as a fast server answer.
 - **Every seeded key is invalidated and fetched again**, so its stored copy shows only until the server answers, whatever its `staleTime`.
 - **The cache belongs to one user and one app version.** `startShellCache` compares both with its owner row and empties the cache on any mismatch, which covers a session that ended without sign-out (expiry, revocation, a ban).
-- **Every web sign-out path calls `clearLocalData`**, which clears the shell cache and the drive preview cache ([drive-preview.md](drive-preview.md)).
+- **Every web sign-out path calls `clearLocalData`**, which clears the shell cache, the drive preview cache ([drive-preview.md](drive-preview.md)) and the drive Recent lists ([drive.md](drive.md)).
 
 ## How it works
 

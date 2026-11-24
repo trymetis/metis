@@ -55,7 +55,7 @@ The first time preflight runs, it stores these settings. Each one takes its valu
 
 When an update adds a new card to the dashboard, such as the decision model, the mail image proxy, **Mail cache** or **Proxies**, the next preflight stores it the same way, from the environment, the config file or the default. This happens on an instance that already runs too. **History** lists this as a **Seed** version.
 
-Once preflight has stored a setting, the environment no longer changes it, unless you change it with the `metis` CLI (see [Change dashboard settings with the metis CLI](#change-dashboard-settings-with-the-metis-cli)). If a value in the environment later differs from the stored one, the stored value is used and the dashboard shows a warning under **Deploy checks**. Change the setting in the dashboard, or remove it from the environment. You can also click **Reset to environment** on the setting's card to apply the environment values again. The app reads the environment when it starts, so after you edit `.env` or the config file, apply the change as shown [above](#settings-fixed-at-startup) before you reset. See [Reset a card to the environment](/self-hosting/operate/owner-dashboard#reset-a-card-to-the-environment).
+Once preflight has stored a setting, the environment no longer changes it, unless you change it with the `metis` CLI (see [Change dashboard settings with the metis CLI](#change-dashboard-settings-with-the-metis-cli)). If a value in the environment later differs from the stored one, the stored value is used and the dashboard shows a warning under **Deploy checks**. Change the setting in the dashboard, or remove it from the environment. You can also choose **Reset to environment** from the **…** menu in the header of the setting's card to apply the environment values again. The app reads the environment when it starts, so after you edit `.env` or the config file, apply the change as shown [above](#settings-fixed-at-startup) before you reset. See [Reset a card to the environment](/self-hosting/operate/owner-dashboard#reset-a-card-to-the-environment).
 
 ## Change dashboard settings with the metis CLI
 
@@ -207,7 +207,7 @@ mailer:
 
 `trustedProxies` takes a list, as above, or one string with the entries separated by commas.
 
-As with the environment, preflight reads the settings that the dashboard manages from the file only once, the first time it runs. After that, **Reset to environment** on a card applies the file's values to that card again, as the file was when the app last started.
+As with the environment, preflight reads the settings that the dashboard manages from the file only once, the first time it runs. After that, **Reset to environment** in a card's **…** menu applies the file's values to that card again, as the file was when the app last started.
 
 :::note
 A server the `metis` CLI runs gives the app no config file. Use `.env` there.

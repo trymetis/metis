@@ -19,6 +19,7 @@ import {
   SYSTEM_EXPORTS_NAV,
   SYSTEM_HISTORY_NAV,
   SYSTEM_INSTANCE_NAV,
+  SYSTEM_PREFLIGHT_NAV,
   SYSTEM_PROVIDERS_NAV,
   SYSTEM_ROOT,
   SYSTEM_UPDATES_NAV,
@@ -26,10 +27,17 @@ import {
 
 export type NavIcon = ComponentType<{ className?: string; strokeWidth?: number }>;
 
+export interface NavBadge {
+  count: number;
+  label: string;
+  pending: boolean;
+}
+
 export interface NavEntry {
   href?: Route;
   label: string;
   icon?: NavIcon;
+  badge?: NavBadge;
   children?: NavEntry[];
 }
 
@@ -37,7 +45,11 @@ function link({ href, label, icon }: { href: Route; label: string; icon: NavIcon
   return { href, label, icon };
 }
 
-export function dashboardNav(opts: { updatesEnabled: boolean; owner: boolean }): NavEntry[] {
+export function dashboardNav(opts: {
+  updatesEnabled: boolean;
+  owner: boolean;
+  preflight: NavBadge | null;
+}): NavEntry[] {
   return [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { href: "/dashboard/usage", label: "AI usage", icon: ChartNoAxesColumn },
@@ -55,6 +67,7 @@ export function dashboardNav(opts: { updatesEnabled: boolean; owner: boolean }):
       children: [
         link(SYSTEM_INSTANCE_NAV),
         link(SYSTEM_HISTORY_NAV),
+        { ...link(SYSTEM_PREFLIGHT_NAV), ...(opts.preflight && { badge: opts.preflight }) },
         ...(opts.updatesEnabled ? [link(SYSTEM_UPDATES_NAV)] : []),
         ...(opts.owner ? [link(SYSTEM_EXPORTS_NAV)] : []),
         { label: "Drivers", children: SYSTEM_DRIVERS_NAV.map(link) },

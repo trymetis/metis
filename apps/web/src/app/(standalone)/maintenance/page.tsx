@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { config } from "@/config";
 import { maintenanceSinceText } from "@/maintenance/since";
 
+import { MaintenanceStatus } from "./_components/maintenance-status";
+
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
@@ -23,8 +25,7 @@ export default function MaintenancePage() {
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
           Down for maintenance
         </h1>
-        <p className="mt-1.5 text-sm text-neutral-500">{maintenanceSinceText(since)}</p>
-        <p className="mt-1 text-sm text-neutral-500">Try again in a few minutes.</p>
+        <MaintenanceStatus since={since.toISOString()} sinceText={maintenanceSinceText(since)} />
       </div>
     </main>
   );

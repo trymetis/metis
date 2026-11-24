@@ -119,7 +119,10 @@ func Render(sites []Site, window *Window) (string, error) {
 
 func Page(window Window) (string, error) {
 	var out strings.Builder
-	view := struct{ Since string }{Since: window.Since.UTC().Format(sinceLayout)}
+	view := struct{ Since, SinceISO string }{
+		Since:    window.Since.UTC().Format(sinceLayout),
+		SinceISO: window.Since.UTC().Format(time.RFC3339),
+	}
 	if err := pageTemplate.Execute(&out, view); err != nil {
 		return "", fmt.Errorf("rendering the maintenance page: %w", err)
 	}

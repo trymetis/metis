@@ -7,6 +7,7 @@ import {
 } from "@/connections";
 import { addressBookName } from "@/connections/address-book-name";
 import { calendarName } from "@/connections/calendar-name";
+import type { ConnectionProvider } from "@/connections/types";
 import { driveName } from "@/drive/name";
 import type { WorkspaceRole } from "@/types/workspace";
 
@@ -22,6 +23,7 @@ export interface WorkflowScopeUser {
 export async function workflowScopeFor(appUser: WorkflowScopeUser): Promise<
   WorkspaceScope & {
     directory: { mailboxId: string; slug: string; email: string }[];
+    accounts: Record<string, { provider: ConnectionProvider; server: string | null }>;
   }
 > {
   const [boxes, calendars, drives, addressBooks] = await Promise.all([
@@ -66,5 +68,11 @@ export async function workflowScopeFor(appUser: WorkflowScopeUser): Promise<
       aiEnabled: a.policy.ai,
     })),
     directory: boxes.map((m) => ({ mailboxId: m.id, slug: m.slug, email: m.email })),
+    accounts: Object.fromEntries(
+      [...boxes, ...calendars, ...drives, ...addressBooks].map((row) => [
+        row.id,
+        { provider: row.provider, server: row.server },
+      ]),
+    ),
   };
 }

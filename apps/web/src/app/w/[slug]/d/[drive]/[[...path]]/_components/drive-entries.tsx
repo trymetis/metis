@@ -43,7 +43,9 @@ import type { DriveEntryRow } from "@/server/schema";
 import { DRIVE_ENTRY_DRAG } from "./drive-agent-panel";
 import { useDriveThumbnail } from "./use-drive-thumbnail";
 
-export type DriveView = "list" | "grid";
+export type DriveView = "list" | "compact" | "large";
+
+export const DRIVE_VIEWS: readonly DriveView[] = ["list", "compact", "large"];
 
 function formatDate(value: string | null): string {
   if (!value) return "";
@@ -156,7 +158,8 @@ const entryVariants = cva(
     variants: {
       view: {
         list: "flex items-center gap-3 border-b border-border/60 px-4 py-2 has-[[data-entry-open]:focus-visible]:ring-inset",
-        grid: "flex flex-col rounded-lg p-1.5",
+        compact: "flex flex-col rounded-lg p-1.5",
+        large: "flex flex-col rounded-lg p-1.5",
       },
     },
   },
@@ -166,24 +169,28 @@ const openButtonVariants = cva("outline-none", {
   variants: {
     view: {
       list: "flex min-w-0 flex-1 items-center gap-3 text-left",
-      grid: "flex w-full flex-col items-center gap-1.5 text-center",
+      compact: "flex w-full flex-col items-center gap-1.5 text-center",
+      large: "flex w-full flex-col items-center gap-1.5 text-center",
     },
   },
 });
 
 const iconFrameVariants = cva("flex shrink-0 items-center justify-center", {
-  variants: { view: { list: "", grid: "size-20" } },
+  variants: { view: { list: "", compact: "aspect-square w-full", large: "aspect-square w-full" } },
 });
 
 const iconVariants = cva("", {
-  variants: { view: { list: "", grid: "size-16" } },
+  variants: { view: { list: "", compact: "size-[75%]", large: "size-[75%]" } },
 });
 
 const nameVariants = cva("min-w-0 text-foreground", {
   variants: {
     view: {
       list: "flex-1 truncate text-[13px]",
-      grid: "line-clamp-2 w-full rounded px-1 text-[12px] leading-4 wrap-anywhere group-data-selected:line-clamp-none",
+      compact:
+        "line-clamp-2 w-full rounded px-1 text-[12px] leading-4 wrap-anywhere group-data-selected:line-clamp-none",
+      large:
+        "line-clamp-2 w-full rounded px-1 text-[12px] leading-4 wrap-anywhere group-data-selected:line-clamp-none",
     },
   },
 });
@@ -192,26 +199,31 @@ const metaVariants = cva("text-[11px] text-faint", {
   variants: {
     view: {
       list: "contents",
-      grid: "hidden",
+      compact: "hidden",
+      large: "hidden",
     },
   },
 });
 
 const sizeVariants = cva("shrink-0", {
   variants: {
-    view: { list: "w-24 text-right max-md:hidden", grid: "" },
+    view: { list: "w-24 text-right max-md:hidden", compact: "", large: "" },
     folder: { true: "", false: "" },
   },
   compoundVariants: [{ view: "list", folder: true, className: "opacity-0" }],
 });
 
 const metaSeparatorVariants = cva("", {
-  variants: { view: { list: "hidden", grid: "" } },
+  variants: { view: { list: "hidden", compact: "", large: "" } },
 });
 
 const dateVariants = cva("", {
   variants: {
-    view: { list: "shrink-0 text-right md:w-28", grid: "min-w-0 truncate" },
+    view: {
+      list: "shrink-0 text-right md:w-28",
+      compact: "min-w-0 truncate",
+      large: "min-w-0 truncate",
+    },
   },
 });
 
@@ -219,7 +231,18 @@ const menuButtonVariants = cva("", {
   variants: {
     view: {
       list: "",
-      grid: "absolute top-1 right-1 hidden pointer-coarse:flex",
+      compact: "absolute top-1 right-1 hidden pointer-coarse:flex",
+      large: "absolute top-1 right-1 hidden pointer-coarse:flex",
+    },
+  },
+});
+
+const entriesVariants = cva("", {
+  variants: {
+    view: {
+      list: "flex flex-col",
+      compact: "grid grid-cols-[repeat(auto-fill,minmax(5.5rem,1fr))] content-start gap-1 p-3",
+      large: "grid grid-cols-[repeat(auto-fill,minmax(10rem,1fr))] content-start gap-2 p-3",
     },
   },
 });
@@ -255,7 +278,7 @@ function EntryItem({
   const touchTap = useRef(false);
   const size = formatSize(entry);
   const modified = formatDate(entry.modifiedAt);
-  const { ref: thumbnailRef, url: thumbnailUrl } = useDriveThumbnail(entry, view === "grid");
+  const { ref: thumbnailRef, url: thumbnailUrl } = useDriveThumbnail(entry, view !== "list");
 
   return (
     <ContextMenu onOpenChange={selectOnOpen}>
@@ -395,7 +418,7 @@ export function DriveEntries({
     if (from === -1) return false;
     const vertical = event.key === "ArrowUp" || event.key === "ArrowDown";
     if (view === "list" && !vertical) return false;
-    const to = from + step(view === "grid" ? gridColumns(container) : 1);
+    const to = from + step(gridColumns(container));
     const target = ordered[to];
     const button = buttons[to];
     if (!target || !button) return false;
@@ -418,11 +441,7 @@ export function DriveEntries({
           onSelectedChange(null);
         }
       }}
-      className={cn(
-        view === "grid"
-          ? "grid grid-cols-[repeat(auto-fill,minmax(7.5rem,1fr))] content-start gap-1 p-3"
-          : "flex flex-col",
-      )}
+      className={cn(entriesVariants({ view }))}
     >
       {ordered.map((entry) => (
         <EntryItem

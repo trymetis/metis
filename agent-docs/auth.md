@@ -192,6 +192,7 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
 - **Magic link is sign-in only**; it never creates an account.
 - **Passkeys are a second factor only.** There is no passkey sign-in without a password or magic link first.
 - **An account has one authenticator app.** Another device scans the same secret (**Add another device**).
+  - `/two-factor/totp-uri` takes a second factor (`code`, `requireSecondFactor`), not the password, and the page shows the QR only in a dialog whose close drops the URI and the drawn QR from state.
 - **Passkeys need a secure context**, so an instance served over plain HTTP on anything but `localhost` cannot add or use them; the card disables **Add a passkey** when the browser has no WebAuthn.
 - **Backup codes are sealed, not hashed, mixed-case and matched exactly**, as in the stock plugin.
 - **Whether passkeys work inside the desktop and mobile app windows is unchecked**; sign-in runs in the system browser, and a passkey-only account confirms changes in those windows with a backup code if they cannot.

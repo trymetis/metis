@@ -12,7 +12,7 @@ import { PageHeader } from "@/components/page-header";
 import { rpc } from "@/lib/orpc";
 import { refreshQuery } from "@/lib/query-client";
 import { formatRelativeDate } from "@/lib/utils";
-import { MCP_PRESETS, SELF_REGISTERED_LABEL } from "@/mcp/presets";
+import { namedPresetLabel } from "@/mcp/presets";
 import type { McpAccess, McpClient } from "@/server/schema";
 
 import { AddClientDialog } from "./add-client-dialog";
@@ -71,7 +71,6 @@ export function McpSettings({
       ) : (
         <div className="mt-7 space-y-3">
           {clients.map((client) => {
-            const preset = client.preset ? MCP_PRESETS[client.preset] : null;
             return (
               <div
                 key={client.clientId}
@@ -93,8 +92,7 @@ export function McpSettings({
                       {!client.enabled && <Badge variant="secondary">Disabled</Badge>}
                     </div>
                     <p className="mt-0.5 text-[12px] text-faint">
-                      {preset?.label ?? SELF_REGISTERED_LABEL}
-                      {" · "}
+                      {namedPresetLabel(client.preset) && `${namedPresetLabel(client.preset)} · `}
                       {`added ${formatRelativeDate(client.createdAt.toISOString())}`}
                       {" · "}
                       {client.lastUsedAt

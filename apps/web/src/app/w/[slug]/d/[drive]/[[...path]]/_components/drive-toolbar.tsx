@@ -9,13 +9,26 @@ import {
   BreadcrumbSeparator,
 } from "@metis/ui/components/breadcrumb";
 import { Button } from "@metis/ui/components/button";
-import { FolderPlus, LayoutGrid, List, Upload } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@metis/ui/components/dropdown-menu";
+import { ChevronDown, FolderPlus, Grid3x3, LayoutGrid, List, Upload } from "lucide-react";
 
 import { AgentToggle } from "@/components/agent/agent-toggle";
 import { MobileAsideTrigger } from "@/components/mobile-aside";
 import { SearchInput } from "@/components/search-input";
 
-import type { DriveView } from "./drive-entries";
+import { DRIVE_VIEWS, type DriveView } from "./drive-entries";
+
+const VIEW_OPTIONS: Record<DriveView, { label: string; icon: typeof List }> = {
+  list: { label: "List", icon: List },
+  compact: { label: "Compact grid", icon: Grid3x3 },
+  large: { label: "Large grid", icon: LayoutGrid },
+};
 
 export interface Crumb {
   id: string | null;
@@ -88,14 +101,41 @@ export function DriveToolbar({
         className="w-56"
       />
 
-      <Button
-        variant="outline"
-        size="icon-sm"
-        aria-label={view === "list" ? "Switch to grid" : "Switch to list"}
-        onClick={() => onViewChange(view === "list" ? "grid" : "list")}
-      >
-        {view === "list" ? <LayoutGrid className="h-4 w-4" /> : <List className="h-4 w-4" />}
-      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label={`View: ${VIEW_OPTIONS[view].label}`}
+              title={`View: ${VIEW_OPTIONS[view].label}`}
+              className="gap-1 px-2"
+            >
+              <CurrentViewIcon view={view} />
+              <ChevronDown className="size-3" />
+            </Button>
+          }
+        />
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuRadioGroup
+            value={view}
+            onValueChange={(next) => {
+              const picked = DRIVE_VIEWS.find((option) => option === next);
+              if (picked) onViewChange(picked);
+            }}
+          >
+            {DRIVE_VIEWS.map((option) => {
+              const { label, icon: Icon } = VIEW_OPTIONS[option];
+              return (
+                <DropdownMenuRadioItem key={option} value={option}>
+                  <Icon className="size-3.5" />
+                  {label}
+                </DropdownMenuRadioItem>
+              );
+            })}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <Button variant="outline" size="sm" onClick={onNewFolder}>
         <FolderPlus className="mr-1.5 h-3.5 w-3.5" />
@@ -112,4 +152,9 @@ export function DriveToolbar({
       )}
     </div>
   );
+}
+
+function CurrentViewIcon({ view }: { view: DriveView }) {
+  const Icon = VIEW_OPTIONS[view].icon;
+  return <Icon className="h-4 w-4" />;
 }

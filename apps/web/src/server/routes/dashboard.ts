@@ -35,7 +35,12 @@ import {
   revertConfig,
   saveConfigSections,
 } from "@/dashboard/system-config";
-import { deleteInstanceTheme, listInstanceThemes, saveInstanceTheme } from "@/dashboard/themes";
+import {
+  deleteInstanceTheme,
+  deleteInstanceThemes,
+  listInstanceThemes,
+  saveInstanceTheme,
+} from "@/dashboard/themes";
 import { rollbackRelease, startUpgrade, updatesEnabled, updatesStatus } from "@/dashboard/updates";
 import { banUser, listInstanceUsers, removeUser, setUserRole, unbanUser } from "@/dashboard/users";
 import { createInvite, listAccountInvites, revokeAccountInvite } from "@/invites";
@@ -76,6 +81,8 @@ import {
   dashboardSetRoleInputSchema,
   dashboardUsersOutputSchema,
   dashboardDeleteThemeInputSchema,
+  dashboardDeleteThemesInputSchema,
+  dashboardDeleteThemesOutputSchema,
   dashboardSaveThemeInputSchema,
   dashboardThemesOutputSchema,
   saveThemeOutputSchema,
@@ -142,6 +149,15 @@ export const dashboardRouter = {
           throw new ORPCError("NOT_FOUND", { message: "That theme is gone" });
         }
         return { ok: true as const };
+      }),
+
+    deleteMany: dashboardOperator
+      .input(dashboardDeleteThemesInputSchema)
+      .output(dashboardDeleteThemesOutputSchema)
+      .handler(async ({ input }) => {
+        const deleted = await deleteInstanceThemes([...new Set(input.themeIds)]);
+        if (deleted === 0) throw new ORPCError("NOT_FOUND", { message: "Those themes are gone" });
+        return { deleted };
       }),
   },
 

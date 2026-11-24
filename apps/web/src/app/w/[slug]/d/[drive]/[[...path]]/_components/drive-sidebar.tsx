@@ -4,11 +4,12 @@ import { Button } from "@metis/ui/components/button";
 import { Progress } from "@metis/ui/components/progress";
 import { Separator } from "@metis/ui/components/separator";
 import { cn } from "@metis/ui/lib/utils";
-import { Clock, HardDrive, Pin, X } from "lucide-react";
+import { HardDrive, X } from "lucide-react";
 
+import { DriveIcon } from "@/components/drive-icon";
 import { driveName } from "@/drive/name";
 import { formatBytes } from "@/lib/utils";
-import type { DrivePin, DriveQuotaRow, WorkspaceDrive } from "@/server/schema";
+import type { DriveEntryRow, DrivePin, DriveQuotaRow, WorkspaceDrive } from "@/server/schema";
 
 import { DriveSwitcher } from "./drive-switcher";
 import type { DriveRecent } from "./use-drive-recents";
@@ -26,6 +27,7 @@ export function DriveSidebar({
   recents,
   quota,
   onOpenFolder,
+  onOpenFile,
   onUnpin,
 }: {
   drives: WorkspaceDrive[] | null;
@@ -34,6 +36,7 @@ export function DriveSidebar({
   recents: DriveRecent[];
   quota: DriveQuotaRow | null;
   onOpenFolder: (id: string, name: string) => void;
+  onOpenFile: (entry: DriveEntryRow) => void;
   onUnpin: (pinId: string) => void;
 }) {
   const used = quota?.usedBytes ?? null;
@@ -62,7 +65,7 @@ export function DriveSidebar({
                     )}
                     onClick={() => onOpenFolder(pin.folderId, pin.label)}
                   >
-                    <Pin className="h-3.5 w-3.5 shrink-0 text-faint" />
+                    <DriveIcon name={pin.label} kind="folder" className="size-4 shrink-0" />
                     <span className="flex min-w-0 flex-col items-start">
                       <span className="max-w-full truncate">{pin.label}</span>
                       {drive && (
@@ -97,9 +100,13 @@ export function DriveSidebar({
                 key={recent.id}
                 variant="ghost"
                 className="h-8 justify-start gap-2 px-2 text-[12px] font-normal"
-                onClick={() => onOpenFolder(recent.id, recent.name)}
+                onClick={() =>
+                  recent.kind === "file"
+                    ? onOpenFile(recent.entry)
+                    : onOpenFolder(recent.id, recent.name)
+                }
               >
-                <Clock className="h-3.5 w-3.5 shrink-0 text-faint" />
+                <DriveIcon name={recent.name} kind={recent.kind} className="size-4 shrink-0" />
                 <span className="truncate">{recent.name}</span>
               </Button>
             ))}

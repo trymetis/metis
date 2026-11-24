@@ -12,16 +12,15 @@ import { ChevronRight } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-import { dashboardNav, type NavEntry } from "@/components/dashboard/dashboard-nav";
+import { dashboardNav, type NavBadge, type NavEntry } from "@/components/dashboard/dashboard-nav";
 import { useDashboardRole } from "@/components/dashboard/dashboard-role";
 import { GuardedLink } from "@/components/dashboard/guarded-link";
 import { ResponsiveAside } from "@/components/mobile-aside";
 import { SourceLink } from "@/components/source-link";
 import { rpc } from "@/lib/orpc";
 import type { SourceInfo } from "@/source-info";
+import { preflightQuery } from "@/store/preflight-store";
 import { workspaceRootPath } from "@/workspace/path";
-
-import { PreflightBar } from "./preflight-bar";
 
 function navItemClass(active: boolean, nested: boolean) {
   return cn(
@@ -33,17 +32,27 @@ function navItemClass(active: boolean, nested: boolean) {
   );
 }
 
+function nestedBadge(entries: NavEntry[] | undefined): NavBadge | undefined {
+  for (const entry of entries ?? []) {
+    const badge = entry.badge ?? nestedBadge(entry.children);
+    if (badge) return badge;
+  }
+  return undefined;
+}
+
 function NavLink({
   entry,
   href,
   pathname,
   nested,
+  badge = entry.badge,
   className,
 }: {
   entry: NavEntry;
   href: NonNullable<NavEntry["href"]>;
   pathname: string;
   nested: boolean;
+  badge?: NavBadge;
   className?: string;
 }) {
   const active = pathname === href;
@@ -58,6 +67,18 @@ function NavLink({
         <Icon className={cn("shrink-0", nested ? "h-3.5 w-3.5" : "h-4 w-4")} strokeWidth={1.75} />
       )}
       <span className="truncate">{entry.label}</span>
+      {badge && (
+        <span
+          title={badge.label}
+          aria-label={badge.label}
+          className={cn(
+            "ml-auto shrink-0 rounded-full px-1.5 text-[10px] leading-4 font-medium tabular-nums",
+            badge.pending ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+          )}
+        >
+          {badge.count}
+        </span>
+      )}
     </GuardedLink>
   );
 }
@@ -90,6 +111,7 @@ function NavSection({
           href={href}
           pathname={pathname}
           nested={nested}
+          badge={open ? entry.badge : (entry.badge ?? nestedBadge(entry.children))}
           className="min-w-0 flex-1"
         />
         <CollapsibleTrigger
@@ -154,6 +176,16 @@ export function DashboardSidebar({ source }: { source: SourceInfo }) {
   const updatesEnabled =
     useQuery(rpc.dashboard.system.updatesEnabled.queryOptions()).data?.enabled ?? false;
   const owner = useDashboardRole().role === "owner";
+  const run = useQuery(preflightQuery).data?.run;
+  const warnings = run?.warnings.length ?? 0;
+  const preflight: NavBadge | null =
+    run && warnings > 0
+      ? {
+          count: warnings,
+          pending: !run.acknowledgedAt,
+          label: `${warnings} deploy warning${warnings === 1 ? "" : "s"}${run.acknowledgedAt ? ", acknowledged" : ""}`,
+        }
+      : null;
 
   return (
     <ResponsiveAside label="Dashboard">
@@ -173,13 +205,12 @@ export function DashboardSidebar({ source }: { source: SourceInfo }) {
 
           <nav className="flex flex-col gap-px">
             <NavEntries
-              entries={dashboardNav({ updatesEnabled, owner })}
+              entries={dashboardNav({ updatesEnabled, owner, preflight })}
               pathname={pathname}
               nested={false}
             />
           </nav>
         </div>
-        <PreflightBar />
         <SourceLink source={source} className="mt-3 shrink-0 px-2.5" />
       </aside>
     </ResponsiveAside>

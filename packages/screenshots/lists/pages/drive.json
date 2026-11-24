@@ -49,10 +49,13 @@
         "waitFor": "section[aria-label=\"Files\"] [title=\"welcome.txt\"]"
       },
       {
-        "click": "[aria-label=\"Switch to grid\"]"
+        "click": "[aria-label^=\"View:\"]"
       },
       {
-        "waitFor": "[aria-label=\"Switch to list\"]"
+        "click": "role=menuitemradio[name=\"Large grid\"]"
+      },
+      {
+        "waitFor": "[aria-label=\"View: Large grid\"]"
       }
     ],
     "www": [

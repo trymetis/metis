@@ -39,6 +39,14 @@ function toolNames(value: unknown): string[] {
     : [];
 }
 
+function quoted(value: string): string {
+  return value ? `\u201c${value}\u201d` : value;
+}
+
+function named(value: string): string {
+  return /^[^\s@]+@[^\s@]+$/.test(value) ? value : quoted(value);
+}
+
 function text(value: unknown): string | null {
   return typeof value === "string" && value ? value : null;
 }
@@ -51,7 +59,7 @@ export function formatAuditEvent(event: AuditEvent): string {
   const person = event.targetName || event.targetLabel || "a deleted account";
   const target = event.targetLabel ?? "";
   const kind = event.resourceKind ? AUDIT_RESOURCE_NOUNS[event.resourceKind] : "resource";
-  const workspace = event.workspaceName;
+  const workspace = event.workspaceName ? quoted(event.workspaceName) : null;
   const { detail } = event;
   const tools = toolNames(detail.tools ?? detail.sensitiveTools);
 
@@ -69,25 +77,25 @@ export function formatAuditEvent(event: AuditEvent): string {
     case "authenticator.removed":
       return `${actor} removed their authenticator app`;
     case "passkey.added":
-      return `${actor} added the passkey ${target}`;
+      return `${actor} added the passkey ${quoted(target)}`;
     case "passkey.removed":
-      return `${actor} removed the passkey ${target}`;
+      return `${actor} removed the passkey ${quoted(target)}`;
     case "sign_in_alerts.disabled":
       return `${actor} turned off sign-in alerts`;
     case "mcp_client.created":
-      return `${actor} added the MCP client ${target}`;
+      return `${actor} added the MCP client ${quoted(target)}`;
     case "mcp_client.approved":
-      return `${actor} approved the MCP client ${target}${tools.length > 0 ? ` with sensitive tools ${list(tools)}` : ""}`;
+      return `${actor} approved the MCP client ${quoted(target)}${tools.length > 0 ? ` with sensitive tools ${list(tools)}` : ""}`;
     case "mcp_client.enabled":
-      return `${actor} re-enabled the MCP client ${target}`;
+      return `${actor} re-enabled the MCP client ${quoted(target)}`;
     case "mcp_client.sensitive_tools_enabled":
-      return `${actor} turned on sensitive tools for ${target}${tools.length > 0 ? `: ${list(tools)}` : ""}`;
+      return `${actor} turned on sensitive tools for ${quoted(target)}${tools.length > 0 ? `: ${list(tools)}` : ""}`;
     case "connection.deleted":
-      return `${actor} disconnected ${target}`;
+      return `${actor} disconnected ${named(target)}`;
     case "resource.deleted":
-      return `${actor} removed the ${kind} ${target}${detail.grantRevoked === true ? " and revoked its access at the provider" : ""}`;
+      return `${actor} removed the ${kind} ${named(target)}${detail.grantRevoked === true ? " and revoked its access at the provider" : ""}`;
     case "resource.detached":
-      return `${actor} detached the ${kind} ${target}${workspace ? ` from ${workspace}` : ""}`;
+      return `${actor} detached the ${kind} ${named(target)}${workspace ? ` from ${workspace}` : ""}`;
     case "member.role_changed": {
       const from = text(detail.from);
       const to = text(detail.to);
@@ -100,7 +108,7 @@ export function formatAuditEvent(event: AuditEvent): string {
     case "workspace.ownership_transferred":
       return `${actor} transferred ownership of ${workspace ?? "the workspace"} to ${person}`;
     case "workspace.deleted":
-      return `${actor} deleted the workspace ${workspace ?? target}`;
+      return `${actor} deleted the workspace ${workspace ?? quoted(target)}`;
     case "workspace.mail_footer_changed":
       return `${actor} ${detail.enabled === true ? "changed the mail footer" : "turned off the mail footer"}${workspace ? ` in ${workspace}` : ""}`;
     case "workspace_invite.created": {
@@ -135,7 +143,7 @@ export function formatAuditEvent(event: AuditEvent): string {
     case "user.banned": {
       const until = text(detail.expiresAt);
       const reason = text(detail.reason);
-      return `${actor} banned ${person}${until ? ` until ${until.slice(0, 10)}` : ""}${reason ? ` (${reason})` : ""}`;
+      return `${actor} banned ${person}${until ? ` until ${until.slice(0, 10)}` : ""}${reason ? ` (${quoted(reason)})` : ""}`;
     }
     case "user.unbanned":
       return `${actor} unbanned ${person}`;
@@ -144,15 +152,15 @@ export function formatAuditEvent(event: AuditEvent): string {
     case "instance.upgrade_undone":
       return `${actor} undid the last upgrade (${target})`;
     case "workflow.created":
-      return `${actor} created the workflow ${target}${workflowNote(detail)}`;
+      return `${actor} created the workflow ${quoted(target)}${workflowNote(detail)}`;
     case "workflow.edited":
-      return `${actor} edited the workflow ${target}${workflowNote(detail)}`;
+      return `${actor} edited the workflow ${quoted(target)}${workflowNote(detail)}`;
     case "workflow.enabled":
-      return `${actor} turned on the workflow ${target}${workflowNote(detail)}`;
+      return `${actor} turned on the workflow ${quoted(target)}${workflowNote(detail)}`;
     case "workflow.disabled":
-      return `${actor} turned off the workflow ${target}${workflowNote(detail)}`;
+      return `${actor} turned off the workflow ${quoted(target)}${workflowNote(detail)}`;
     case "workflow.deleted":
-      return `${actor} deleted the workflow ${target}${workflowNote(detail)}`;
+      return `${actor} deleted the workflow ${quoted(target)}${workflowNote(detail)}`;
   }
 }
 

@@ -1,22 +1,22 @@
-import { type BrandMark, ResendMail } from "@metis/ui/components/brand-marks";
-import { AnthropicBlack } from "@metis/ui/components/svgs/anthropicBlack";
-import { AnthropicWhite } from "@metis/ui/components/svgs/anthropicWhite";
-import { AwsDark } from "@metis/ui/components/svgs/awsDark";
-import { AwsLight } from "@metis/ui/components/svgs/awsLight";
-import { Cloudflare } from "@metis/ui/components/svgs/cloudflare";
-import { OllamaDark } from "@metis/ui/components/svgs/ollamaDark";
-import { OllamaLight } from "@metis/ui/components/svgs/ollamaLight";
-import { Openai } from "@metis/ui/components/svgs/openai";
-import { OpenaiDark } from "@metis/ui/components/svgs/openaiDark";
-import { OpenrouterDark } from "@metis/ui/components/svgs/openrouterDark";
-import { OpenrouterLight } from "@metis/ui/components/svgs/openrouterLight";
-import { Redis } from "@metis/ui/components/svgs/redis";
-import { Sqlite } from "@metis/ui/components/svgs/sqlite";
-import { TursoDark } from "@metis/ui/components/svgs/tursoDark";
-import { TursoLight } from "@metis/ui/components/svgs/tursoLight";
-import { Upstash } from "@metis/ui/components/svgs/upstash";
 import { cn } from "@metis/ui/lib/utils";
 
+import { type BrandMark, ResendMail } from "@/components/brand-marks";
+import { AnthropicBlack } from "@/components/ui/svgs/anthropicBlack";
+import { AnthropicWhite } from "@/components/ui/svgs/anthropicWhite";
+import { AwsDark } from "@/components/ui/svgs/awsDark";
+import { AwsLight } from "@/components/ui/svgs/awsLight";
+import { Cloudflare } from "@/components/ui/svgs/cloudflare";
+import { OllamaDark } from "@/components/ui/svgs/ollamaDark";
+import { OllamaLight } from "@/components/ui/svgs/ollamaLight";
+import { Openai } from "@/components/ui/svgs/openai";
+import { OpenaiDark } from "@/components/ui/svgs/openaiDark";
+import { OpenrouterDark } from "@/components/ui/svgs/openrouterDark";
+import { OpenrouterLight } from "@/components/ui/svgs/openrouterLight";
+import { Redis } from "@/components/ui/svgs/redis";
+import { Sqlite } from "@/components/ui/svgs/sqlite";
+import { TursoDark } from "@/components/ui/svgs/tursoDark";
+import { TursoLight } from "@/components/ui/svgs/tursoLight";
+import { Upstash } from "@/components/ui/svgs/upstash";
 import type { SystemVendor } from "@/server/schema";
 
 function themed(Light: BrandMark, Dark: BrandMark): BrandMark {

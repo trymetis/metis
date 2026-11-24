@@ -3,7 +3,6 @@
 import { Button } from "@metis/ui/components/button";
 import { skipToken, useQuery } from "@tanstack/react-query";
 import {
-  Bot,
   Building2,
   Check,
   Globe,
@@ -24,10 +23,11 @@ import { TwoFactorInput } from "@/components/two-factor-input";
 import { useTwoFactorCode } from "@/hooks/use-two-factor-code";
 import { orpc, rpc } from "@/lib/orpc";
 import { recordOf } from "@/lib/records";
-import { MCP_PRESETS } from "@/mcp/presets";
+import { namedPresetLabel } from "@/mcp/presets";
 import { isMcpToolEnabled, MCP_TOOL_KEYS, type McpToolKey, mcpToolsFor } from "@/mcp/tools";
 import type { McpAccess, PublicMcpClient } from "@/server/schema";
 
+import { ConsentToolTable } from "./consent-tool-table";
 import { WorkspaceSelect } from "./workspace-select";
 
 type ScopeCopy = { icon: LucideIcon; title: string; detail: string };
@@ -185,7 +185,9 @@ export function ConsentInner() {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-surface px-4">
         <div className="w-full max-w-sm rounded-xl border border-border bg-card px-6 py-6 text-center">
-          <Bot className="mx-auto size-6 text-faint" />
+          <span className="mx-auto block size-6">
+            <McpPresetIcon preset={null} />
+          </span>
           <h1 className="mt-3 text-[22px] font-medium tracking-tight text-foreground">
             This app can&rsquo;t connect here
           </h1>
@@ -210,7 +212,7 @@ export function ConsentInner() {
   }
 
   const connected = client.status === "connected" ? client : null;
-  const preset = connected?.preset ? MCP_PRESETS[connected.preset] : undefined;
+  const kind = namedPresetLabel(connected?.preset ?? null);
   const name = client.label;
 
   return (
@@ -221,7 +223,9 @@ export function ConsentInner() {
             {connected ? (
               <McpPresetIcon preset={connected.preset} />
             ) : (
-              <Bot className="size-5 text-faint" />
+              <span className="block size-5">
+                <McpPresetIcon preset={null} />
+              </span>
             )}
           </span>
           <h1 className="mt-4 text-[20px] font-medium leading-tight tracking-tight text-foreground">
@@ -231,7 +235,7 @@ export function ConsentInner() {
             wants access to your mail, calendars, drives and contacts
           </p>
 
-          {preset && <p className="mt-3 text-[12px] text-faint">{preset.label}</p>}
+          {kind && <p className="mt-3 text-[12px] text-faint">{kind}</p>}
 
           {client.status === "new" && (
             <div className="mt-5 space-y-3 border-t border-border pt-4">
@@ -301,14 +305,10 @@ export function ConsentInner() {
                   <div className="min-w-0">
                     <p className="text-[13px] leading-tight text-foreground">
                       {connected.tools.length === 0
-                        ? "Nothing — no tools are enabled for it"
+                        ? "Nothing. No tools are enabled for it"
                         : `Use ${connected.tools.length} ${connected.tools.length === 1 ? "tool" : "tools"} you enabled`}
                     </p>
-                    {connected.tools.length > 0 && (
-                      <p className="mt-0.5 text-[12px] text-faint">
-                        {connected.tools.map((t) => t.label).join(" · ")}
-                      </p>
-                    )}
+                    {connected.tools.length > 0 && <ConsentToolTable tools={connected.tools} />}
                   </div>
                 </li>
               )}

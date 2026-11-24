@@ -92,7 +92,7 @@ A key made from a passphrase with `metis keygen --from-passphrase` works too. Yo
 
 Your instance goes into maintenance for a few minutes while the console copies it into the archive:
 
-- People who open the instance see the **Down for maintenance** page, with the time maintenance began (for example "Since 10:00 UTC on 11 November 2026") and "Try again in a few minutes."
+- People who open the instance see the **Down for maintenance** page, with how long maintenance has lasted and when it began. The page reloads by itself when the instance is back.
 - Apps and scripts that call the instance get the status `503`. Webhooks that arrive get `503` too, so whether they arrive later depends on the sender trying again.
 - Background work, such as workflows, waits until maintenance ends.
 - The health checks answer as usual. See [Maintenance mode](/self-hosting/operate/health-checks#maintenance-mode).

@@ -21,7 +21,7 @@ export function LlmView() {
     <Sections>
       <HealthCheck
         input={{ kind: "driver", driver: "llm" }}
-        description="Lists the provider's models with the configured key, and confirms every configured model is offered. With a decision model configured, does the same against its provider."
+        hint="Lists the provider's models with the configured key, and confirms every configured model is offered. With a decision model configured, does the same against its provider."
       />
 
       <ConfigForm
@@ -29,8 +29,7 @@ export function LlmView() {
         onSaved={reload}
         cards={{
           llm: {
-            description:
-              "Which API the agents, smart replies, labels and summaries call, and the model each feature is routed to.",
+            hint: "Which API the agents, smart replies, labels and summaries call, and the model each feature is routed to.",
             badge: <ToneBadge tone={enabled ? "ok" : "off"}>{enabled ? "On" : "Off"}</ToneBadge>,
             children: (
               <>
@@ -47,8 +46,7 @@ export function LlmView() {
             ),
           },
           decision: {
-            description:
-              "Answers typed questions with probabilities instead of text. Each feature has its own switch.",
+            hint: "Answers typed questions with probabilities instead of text. Each feature has its own switch.",
             badge: (
               <ToneBadge tone={decisionEnabled ? (anySwitchOn ? "ok" : "neutral") : "off"}>
                 {decisionEnabled ? (anySwitchOn ? "On" : "Configured") : "Off"}

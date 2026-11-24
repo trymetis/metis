@@ -63,7 +63,7 @@
     "signedOut": true,
     "steps": [
       {
-        "waitFor": "button:has-text('Email me a magic link')"
+        "waitFor": "button:has-text('Email me a sign-in link')"
       }
     ],
     "www": [
@@ -324,7 +324,7 @@
         "value": "ana@demo.trymetis.email"
       },
       {
-        "click": "role=button[name=\"Email me a magic link\"]"
+        "click": "role=button[name=\"Email me a sign-in link\"]"
       },
       {
         "waitFor": "text=Check your email"
@@ -351,16 +351,18 @@
         "waitFor": "main h2:text-is('Add another device')"
       },
       {
-        "fill": "section:has(h2:text-is('Add another device')) input[placeholder='Account password']",
-        "value": "ana-account-password-0001"
+        "click": "section:has(h2:text-is('Add another device')) button:has-text('Show QR code')"
       },
       {
-        "click": "section:has(h2:text-is('Add another device')) button:has-text('Show QR code')"
+        "totp": "role=alertdialog >> input[autocomplete=\"one-time-code\"]"
+      },
+      {
+        "click": "role=alertdialog >> role=button[name=\"Show QR code\"]"
       },
       {
         "waitFor": "role=img[name=\"QR code for your authenticator app\"]"
       }
     ],
-    "element": "section:has(h2:text-is('Add another device'))"
+    "element": "role=dialog[name=\"Scan with your other device\"]"
   }
 ]

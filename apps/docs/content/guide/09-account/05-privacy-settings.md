@@ -14,7 +14,7 @@ These choices belong to you alone. They apply in every mailbox and every workspa
 <img src="/images/account/privacy.webp" alt="The Privacy settings page with switches for remote images and link cleaning" class="dark:hidden" />
 <img src="/images/account/privacy-dark.webp" alt="The Privacy settings page with switches for remote images and link cleaning" class="hidden dark:block" />
 
-Each card has a question mark button. Point at it to see a short explanation of that setting.
+Each card has an ⓘ next to its title. Point at it or click it to see a short explanation of that setting. You can also reach it with the Tab key and open it with Enter.
 
 ## Load remote images automatically
 
@@ -30,7 +30,7 @@ How images reach you depends on how your instance is set up:
 - **Loaded for you**: the server loads images on your behalf, so senders never see your network address, device or cookies. They can still learn that the message was opened, and when.
 - **Loaded directly**: images load straight from the sender's servers, which then see your network address and browser.
 
-Point at the question mark on this card to see which one your instance does.
+Point at or click the ⓘ on this card to see which one your instance does.
 
 ## Clean tracking from links
 

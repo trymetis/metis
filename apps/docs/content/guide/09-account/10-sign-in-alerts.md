@@ -14,7 +14,7 @@ You get one alert for each sign-in. This includes sign-ins from a device you hav
 The alert is sent when the sign-in is complete:
 
 - If Metis Suite asks you to confirm it's you, the alert is sent after it accepts your code or passkey.
-- If you ticked **Trust this device for 30 days** and Metis Suite skips the code, the alert is sent right after your password or magic link.
+- If you ticked **Trust this device for 30 days** and Metis Suite skips the code, the alert is sent right after your password or sign-in link.
 - Signing in to the [desktop app](/guide/apps/desktop-app) or the [mobile app](/guide/apps/mobile-app) sends its own alert.
 
 You get no alert when you enter a code or use a passkey while you are already signed in. For example, setting up two-factor authentication, adding a passkey or an authenticator app, or confirming a password change sends no alert.
@@ -39,10 +39,10 @@ The email has the subject "New sign-in to your Metis Suite account". It says "So
 | **Backup code**                                     | The last step was a backup code.                                                                                                              |
 | **Passkey**                                         | The last step was a passkey.                                                                                                                  |
 | **Password**                                        | The sign-in used a password and no code was asked for. This happens when two-factor authentication is not set up yet, or on a trusted device. |
-| **Email sign-in link**                              | The sign-in used a magic link and no code was asked for, for example on a trusted device.                                                     |
+| **Email sign-in link**                              | The sign-in used a sign-in link and no code was asked for, for example on a trusted device.                                                   |
 | **Desktop or mobile app, from a signed-in browser** | The desktop app or the mobile app was signed in from a browser that was already signed in.                                                    |
 
-When a sign-in asks you to confirm it's you, the alert names how you confirmed (an authenticator code, a backup code or a passkey), not the password or magic link that came before it.
+When a sign-in asks you to confirm it's you, the alert names how you confirmed (an authenticator code, a backup code or a passkey), not the password or sign-in link that came before it.
 
 The email has a **Review your sessions** button. It opens your **Account** settings page, where you can see every browser that is signed in. If the button does not work, the email also has the link as text that you can paste into your browser.
 
@@ -63,7 +63,7 @@ Act quickly:
 <img src="/images/account/sign-in-alerts.webp" alt="The Sign-in alerts card with its switch turned on" class="dark:hidden" />
 <img src="/images/account/sign-in-alerts-dark.webp" alt="The Sign-in alerts card with its switch turned on" class="hidden dark:block" />
 
-The card shows your email address and says that alerts go there "each time someone signs in to this account, with the device, IP address and time, so a sign-in you didn’t make doesn’t go unnoticed." The switch is on the right side of the card.
+Point at or click the ⓘ next to the card's title to see your email address and read that alerts go there "each time someone signs in to this account, with the device, IP address and time, so a sign-in you didn’t make doesn’t go unnoticed." The switch is on the right side of the card.
 
 Your choice is saved right away. There is no **Save** button, and you do not need a code. If the change cannot be saved, the switch goes back to how it was. A message tells you what went wrong, or says "Could not save". This switch shares a limit of 30 changes a minute with your other settings. See [Privacy settings](/guide/account/privacy-settings#limit-on-changes).
 

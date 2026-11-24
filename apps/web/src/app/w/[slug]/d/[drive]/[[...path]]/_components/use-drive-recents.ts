@@ -2,18 +2,24 @@
 
 import { useCallback, useMemo } from "react";
 
-import { useStoredItem, writeStoredItem } from "@/hooks/use-stored-item";
+import { driveRecentsKey } from "@/drive/recents";
+import { readStoredItem, useStoredItem, writeStoredItem } from "@/hooks/use-stored-item";
 import { isRecord } from "@/lib/guards";
+import { type DriveEntryRow, driveEntrySchema } from "@/server/schema";
 
-export interface DriveRecent {
-  id: string;
-  name: string;
-}
+export type DriveRecent =
+  | { kind: "folder"; id: string; name: string }
+  | { kind: "file"; id: string; name: string; entry: DriveEntryRow };
 
 const LIMIT = 8;
 
-function storageKey(workspaceSlug: string, driveSlug: string): string {
-  return `metis:drive-recents:${workspaceSlug}:${driveSlug}`;
+function parseItem(item: unknown): DriveRecent | null {
+  if (!isRecord(item) || typeof item.id !== "string" || typeof item.name !== "string") return null;
+  if (item.kind === "file") {
+    const entry = driveEntrySchema.safeParse(item.entry);
+    return entry.success ? { kind: "file", id: item.id, name: item.name, entry: entry.data } : null;
+  }
+  return { kind: "folder", id: item.id, name: item.name };
 }
 
 function parse(raw: string | null): DriveRecent[] {
@@ -21,26 +27,25 @@ function parse(raw: string | null): DriveRecent[] {
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (item): item is DriveRecent =>
-        isRecord(item) && typeof item.id === "string" && typeof item.name === "string",
-    );
+    return parsed.flatMap((item) => parseItem(item) ?? []);
   } catch {
     return [];
   }
 }
 
 export function useDriveRecents(workspaceSlug: string, driveSlug: string) {
-  const key = storageKey(workspaceSlug, driveSlug);
+  const key = driveRecentsKey(workspaceSlug, driveSlug);
   const raw = useStoredItem(key);
   const recents = useMemo(() => parse(raw), [raw]);
 
   const remember = useCallback(
-    (entry: DriveRecent) => {
-      const next = [entry, ...recents.filter((item) => item.id !== entry.id)].slice(0, LIMIT);
+    (recent: DriveRecent) => {
+      const current = parse(readStoredItem(key));
+      if (current[0]?.id === recent.id && current[0].name === recent.name) return;
+      const next = [recent, ...current.filter((item) => item.id !== recent.id)].slice(0, LIMIT);
       writeStoredItem(key, JSON.stringify(next));
     },
-    [key, recents],
+    [key],
   );
 
   return { recents, remember };

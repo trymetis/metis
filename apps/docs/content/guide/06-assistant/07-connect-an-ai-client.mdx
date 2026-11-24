@@ -27,7 +27,7 @@ If you do not see **MCP clients** in your settings, AI is not set up on your Met
   <Step title="Add a client">
     Click **Add client**. In the **Add an MCP client** dialog:
 
-    - **Client**: pick your AI app. The choices are **Claude Code**, **Claude Desktop / claude.ai**, **Codex CLI**, **Cursor (desktop)**, **Cursor (web / cloud agents)**, **VS Code / Copilot** and **Other client**. A hint under the list tells you what that app needs.
+    - **Client**: pick your AI app. The choices are **Claude Code**, **Claude Desktop / claude.ai**, **Codex CLI**, **Cursor (desktop)**, **Cursor (web / cloud agents)**, **VS Code / Copilot** and **Other client** (shown with the Model Context Protocol logo). A hint under the list tells you what that app needs.
     - **Name**: a name to help you recognize this client later, for example "Claude Code on my laptop". It starts as the app's name. Use up to 60 characters.
     - **Sign-in port** (Claude Code only): the port Claude Code listens on during sign-in. The default is 8791. You pass the same port to Claude Code in the next step.
     - **Sign-in return URL** (Other client only): the exact address your app returns to after sign-in. Check your app's documentation for it.
@@ -117,12 +117,24 @@ If you do not see **MCP clients** in your settings, AI is not set up on your Met
   </Step>
 
   <Step title="Approve the sign-in">
-    When your app first connects, it opens a Metis Suite page in your browser. Sign in to Metis Suite if it asks you to. The page shows your app's name and the words "wants access to your mail, calendars, drives and contacts".
+    When your app first connects, it opens a Metis Suite page in your browser. Sign in to Metis Suite if it asks you to. The page shows your app's icon, the name you gave the client and the words "wants access to your mail, calendars, drives and contacts". For a known app, which app it is (for example **Claude Code**) shows under these words. For **Other client** and for an app that identified itself, the icon is the Model Context Protocol logo.
 
     Read the two lists on the page:
 
     - **What it will never get**: your password or any way to sign in as you, workspaces you hide from it and any workspace with AI turned off, mailboxes, calendars, drives and address books that have AI turned off, and permission to change your AI settings or this app's own access.
     - **It will be able to**: which workspaces it can reach, which tools it can use, see your name and email address, and stay connected so you do not need to approve it each time.
+
+    For a client that is already on your **MCP clients** list, the tools line says how many tools you enabled, for example "Use 42 tools you enabled". Every client you added yourself is on the list, even the first time you approve it. So is an app that identified itself and that you approved before. If you enabled no tools, the line says "Nothing. No tools are enabled for it".
+
+    Under the tools line, a table shows which tools the client gets:
+
+    - **Rows** are areas, in this order: **Mail**, **Calendar**, **Drive**, **Contacts**, **Workflows**, **Workspace**, **Account**, **Instance** and **System**. An area gets a row only if you enabled at least one of its tools. Under the area's name is the number of its tools you enabled. **Instance** and **System** show only if you are the instance owner, an instance admin or an instance observer.
+    - **Read** lists the tools that look things up. **Write** lists the tools that change or do something. Each tool shows as a small tag with its name, from A to Z. **Write** tags stand out a little more than **Read** tags. A cell with no tools says "None".
+    - Sensitive tools have a small dot before their name. The line under the table explains the dot: "Sensitive: sends, deletes, changes events and files, runs workflows or manages members".
+
+    **Write** and sensitive are not the same thing. For example, marking as read, starring, archiving, setting labels and creating or updating drafts are under **Write**, but they are not sensitive.
+
+    The areas are not the same as the groups in [What an MCP client can do](/guide/assistant/what-an-mcp-client-can-do). For example, labels, drafts, snooze and schedule, triage and signatures are under **Mail**. Finding a member's mail, events and files, the workspace admin tools and themes are under **Workspace**. **Run health check** is under **System**, in **Write**.
 
     Under **Confirm it’s you**, confirm in one of these ways:
 
@@ -158,9 +170,9 @@ Some AI apps can connect without being added first. They identify themselves by 
 
 - "This app identified itself. Check these match the app you are connecting:", followed by the app's web address and where it returns to after sign-in. Check that these belong to the app you meant to connect.
 - **Workspaces**: the workspaces it will reach. Click the X on a workspace to leave it out, or type in the box after the workspaces to add one back. Workspaces with AI off show "AI off" and cannot be picked. Workspaces you join later are included too.
-- **Tools**: the tools it may use, set up the same way as on a client's page.
+- **Tools**: the tools it may use, set up the same way as on a client's page. This picker replaces the table of enabled tools, because the app has no tools yet.
 
-Approve it the same way: confirm it's you, then click **Approve**. Afterwards it appears in your list as "Self-identified client".
+Approve it the same way: confirm it's you, then click **Approve**. Afterwards it appears in your list with the Model Context Protocol logo. See [The client list](/guide/assistant/manage-mcp-clients#the-client-list).
 
 ## If the sign-in page shows a problem
 

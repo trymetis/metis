@@ -27,6 +27,23 @@ test("the rail opens search, the query is highlighted and a mail result opens th
   await expect(messageHeading(page)).toHaveText("Rebrand kickoff");
 });
 
+test("an empty search highlights nothing, shows the search help, and Enter opens nothing", async ({
+  page,
+  account,
+}) => {
+  await page.goto(mailPath(account));
+  const dialog = await openSearch(page);
+  const preview = dialog.getByRole("complementary", { name: "Preview" });
+  await expect(preview.getByRole("heading", { name: "Search everything" })).toBeVisible();
+  await expect(preview).toContainText("after:");
+  await expect(dialog.getByRole("option", { selected: true })).toHaveCount(0);
+  await page.keyboard.press("Enter");
+  await expect(dialog).toBeVisible();
+  await expect(page.getByRole("dialog", { name: /compose|new message/i })).toHaveCount(0);
+  await page.keyboard.press("ArrowDown");
+  await expect(dialog.getByRole("option", { selected: true })).toHaveCount(1);
+});
+
 test("Ctrl+K opens search and the retired in: key is marked with a hint", async ({
   page,
   account,

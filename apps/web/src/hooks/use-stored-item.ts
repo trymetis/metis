@@ -13,7 +13,7 @@ function subscribe(onChange: () => void) {
   };
 }
 
-function readItem(key: string): string | null {
+export function readStoredItem(key: string): string | null {
   try {
     return window.localStorage.getItem(key);
   } catch {
@@ -24,7 +24,7 @@ function readItem(key: string): string | null {
 export function useStoredItem(key: string): string | null {
   return useSyncExternalStore(
     subscribe,
-    () => readItem(key),
+    () => readStoredItem(key),
     () => null,
   );
 }

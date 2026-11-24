@@ -100,7 +100,7 @@ The dialog for creating or editing a theme has these parts. The same dialog is u
 <img src="/images/workspaces/theme-builder-dark.webp" alt="The Create a theme dialog with the name Teal, the accent color #0d9488, a strong background tint, and light and dark previews" class="hidden dark:block" />
 
 - **Name**: the theme's name, for example "Teal".
-- **Start from**: a list that starts on "Pick a theme to copy". Pick a theme to copy its colors.
+- **Start from**: a list that starts on "Pick a theme to copy". Each theme in the list shows five small squares of its colors before its name, in light or dark as you see the app now. Pick a theme to copy its colors.
 - **Accent color**: click the color box to pick the main color. Its hex value, such as #0d9488, shows beside it.
 - **Background tint**: how much of the accent color tints the backgrounds. Pick **None**, **Light** or **Strong**.
 

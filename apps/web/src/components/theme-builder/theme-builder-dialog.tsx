@@ -10,6 +10,13 @@ import {
   DialogTitle,
 } from "@metis/ui/components/dialog";
 import { Input } from "@metis/ui/components/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@metis/ui/components/select";
 import { cn } from "@metis/ui/lib/utils";
 import { ChevronDown, Loader2, TriangleAlert } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -29,7 +36,7 @@ import {
   type ThemeToken,
 } from "@/theme/tokens";
 
-import { ThemePreview } from "./theme-preview";
+import { ThemePreview, ThemeSwatches } from "./theme-preview";
 
 const TOKEN_LABELS: Record<ThemeToken, string> = {
   "bg-base": "Page background",
@@ -139,6 +146,7 @@ function ThemeBuilder({
 }) {
   const [name, setName] = useState(initial.name);
   const [palette, setPalette] = useState<ThemePalette>(initial.palette);
+  const [startedFrom, setStartedFrom] = useState<string | null>(null);
   const [accent, setAccent] = useState(() => accentOf(initial.palette));
   const [tint, setTint] = useState<ThemeTint>("light");
   const [advanced, setAdvanced] = useState(false);
@@ -209,23 +217,30 @@ function ThemeBuilder({
           />
         </label>
         {startFrom.length > 0 && (
-          <label className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5">
             {sectionLabel("Start from")}
-            <select
-              defaultValue=""
-              onChange={(e) => startWith(e.target.value)}
-              className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-[13px] text-foreground"
+            <Select
+              value={startedFrom}
+              items={startFrom.map((t) => ({ value: t.id, label: t.name }))}
+              onValueChange={(id) => {
+                if (typeof id !== "string") return;
+                setStartedFrom(id);
+                startWith(id);
+              }}
             >
-              <option value="" disabled>
-                Pick a theme to copy
-              </option>
-              {startFrom.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </label>
+              <SelectTrigger aria-label="Start from" className="w-full text-[13px]">
+                <SelectValue placeholder="Pick a theme to copy" />
+              </SelectTrigger>
+              <SelectContent>
+                {startFrom.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    <ThemeSwatches palette={t.palette} />
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         )}
       </div>
 

@@ -151,4 +151,6 @@ export const MCP_PRESETS: Record<McpPresetId, McpPreset> = {
 
 export const MCP_PRESET_LIST = MCP_PRESET_IDS.map((id) => MCP_PRESETS[id]);
 
-export const SELF_REGISTERED_LABEL = "Self-identified client";
+export function namedPresetLabel(preset: McpPresetId | null): string | null {
+  return preset && preset !== "custom" ? MCP_PRESETS[preset].label : null;
+}

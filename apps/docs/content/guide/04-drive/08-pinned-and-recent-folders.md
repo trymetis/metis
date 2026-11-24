@@ -1,13 +1,15 @@
 ---
-title: Pinned and recent folders
-description: Pin folders to the drive sidebar and reopen recent folders in one click.
+title: Pinned folders and recent items
+description: Pin folders to the drive sidebar, and reopen the folders and files you opened lately in one click.
 ---
 
-The drive sidebar keeps two short lists of folders so you can get back to them quickly: **Pinned** and **Recent**.
+The drive sidebar keeps two short lists so you can get back to your work quickly: **Pinned** for the folders you choose, and **Recent** for the folders and files you opened lately.
+
+Each row in both lists shows the item's own icon, the same icon as in the file list.
 
 ## Pin a folder
 
-1. Right-click a folder, or click its **...** button (in grid view, the button shows only on touch screens).
+1. Right-click a folder, or click its **...** button (in the grid views, the button shows only on touch screens).
 2. Choose **Pin to sidebar**.
 
 <img src="/images/drive/folder-menu.webp" alt="The actions menu for a folder, with Pin to sidebar, Rename and Delete" class="dark:hidden" />
@@ -31,11 +33,41 @@ In [All drives](/guide/drive/all-drives), the **Pinned** list shows your pins fr
 
 Removing a pin does not change the folder itself. If the pin cannot be removed, you see "Could not remove that pin".
 
-## Recent folders
+## Recent folders and files
 
-**Recent** lists the last 8 folders you opened from the file list in this drive, newest first. Click one to open it again.
+**Recent** lists the last 8 folders and files you opened in this drive, newest first. Folders and files are mixed in one list.
 
 <img src="/images/drive/recent-folders.webp" alt="The drive sidebar with the Recent section" class="dark:hidden" />
 <img src="/images/drive/recent-folders-dark.webp" alt="The drive sidebar with the Recent section" class="hidden dark:block" />
 
-Recent folders are kept only in this browser. They do not follow you to another browser or device.
+### What gets added
+
+- **A folder** is added each time you are inside it, however you got there. For example, when you open it:
+  - from the file list;
+  - from a breadcrumb;
+  - from **Pinned** or **Recent**;
+  - from its web address;
+  - by going back or forward;
+  - with **Open folder** in [workspace search](/guide/search/results-and-actions).
+- **A drive** is added in [All drives](/guide/drive/all-drives) when you open it there. It shows under the drive's name. On a drive's own page, the top of the drive is never added.
+- **A file** is added when its [preview](/guide/drive/preview-files) opens in Drive. For example, when you:
+  - double-click it, or select it and press <kbd>Enter</kbd>;
+  - tap it on a touch screen;
+  - press <kbd>d</kbd> then <kbd>p</kbd>;
+  - open it from [Drive AI](/guide/drive/drive-ai);
+  - choose **Preview** in workspace search;
+  - click it in **Recent**.
+- A file you preview from a chat with the Workspace Assistant is not added.
+
+When you open an item that is already in the list, it moves to the top. An item is never listed twice.
+
+### Open a recent item
+
+- **Click a folder** to open it.
+- **Click a file** to open its preview beside the folder you are in. You stay in that folder.
+
+### Where the list is kept
+
+Each drive has its own **Recent** list in each workspace. If you open the same drive in another workspace, it has a separate list there. This is unlike pins, which follow the drive into every workspace. [All drives](/guide/drive/all-drives) has its own separate list too.
+
+The list is kept only in this browser. It does not follow you to another browser or device. Signing out clears it, so the next person who signs in on this browser does not see it. In the mobile app, **Clear cache**, **Sign out**, **Change server…** and **Reset the app** all clear it (see [Clear the cache](/guide/apps/mobile-app#clear-the-cache)).

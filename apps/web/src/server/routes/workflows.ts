@@ -2,6 +2,7 @@ import "server-only";
 import { ORPCError } from "@orpc/server";
 
 import { appActor } from "@/audit";
+import type { ConnectionProvider } from "@/connections/types";
 import { mailSessionFor } from "@/mail/session";
 import { RateLimitedError, rateLimit } from "@/services/rate-limit";
 import { RATE_LIMITS } from "@/services/rate-limits";
@@ -90,6 +91,15 @@ function notFound(): ORPCError<"NOT_FOUND", unknown> {
   return new ORPCError("NOT_FOUND", { message: "Not found" });
 }
 
+function accountOf(
+  accounts: Record<string, { provider: ConnectionProvider; server: string | null }>,
+  id: string,
+): { provider: ConnectionProvider; server: string | null } {
+  const account = accounts[id];
+  if (!account) throw new Error(`no account for directory entry ${id}`);
+  return account;
+}
+
 export const workflowsRouter = {
   list: workspaceSession(workspaceScopeSchema)
     .output(listWorkflowsOutputSchema)
@@ -108,6 +118,7 @@ export const workflowsRouter = {
         directory: {
           mailboxes: scope.directory.map((m) => ({
             id: m.mailboxId,
+            ...accountOf(scope.accounts, m.mailboxId),
             slug: m.slug,
             email: m.email,
             name: m.email,
@@ -116,6 +127,7 @@ export const workflowsRouter = {
           })),
           calendars: scope.calendars.map((c) => ({
             id: c.accountId,
+            ...accountOf(scope.accounts, c.accountId),
             slug: c.slug,
             email: c.email,
             name: c.name,
@@ -123,6 +135,7 @@ export const workflowsRouter = {
           })),
           drives: scope.drives.map((d) => ({
             id: d.driveId,
+            ...accountOf(scope.accounts, d.driveId),
             slug: d.slug,
             email: d.email,
             name: d.name,
@@ -130,6 +143,7 @@ export const workflowsRouter = {
           })),
           addressBooks: scope.addressBooks.map((a) => ({
             id: a.addressBookId,
+            ...accountOf(scope.accounts, a.addressBookId),
             slug: a.slug,
             email: a.email,
             name: a.name,

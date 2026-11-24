@@ -103,13 +103,7 @@ function overall(check: DashboardSystemCheck): SystemCheckStatus {
   return "ok";
 }
 
-export function HealthCheck({
-  input,
-  description,
-}: {
-  input: DashboardSystemCheckInput;
-  description: string;
-}) {
+export function HealthCheck({ input, hint }: { input: DashboardSystemCheckInput; hint: string }) {
   const [check, setCheck] = useState<DashboardSystemCheck | null>(null);
   const [running, setRunning] = useState(false);
   const { canOperate } = useDashboardRole();
@@ -130,7 +124,7 @@ export function HealthCheck({
   return (
     <Section
       title="Health"
-      description={description}
+      hint={hint}
       badge={
         <div className="flex shrink-0 items-center gap-2">
           {summary && <ToneBadge tone={summary.tone}>{summary.label}</ToneBadge>}

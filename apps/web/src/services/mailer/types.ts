@@ -1,7 +1,7 @@
 export type MailSenderKind = "resend" | "smtp" | "console" | "noop" | "log";
 
 export const NOOP_DISABLED_FLOWS = [
-  "magic link",
+  "sign-in links",
   "email verification",
   "password reset",
   "invites",

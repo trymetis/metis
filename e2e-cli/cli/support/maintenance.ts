@@ -31,6 +31,8 @@ export async function pagesShowMaintenance(app: string): Promise<void> {
     const html = await res.text();
     expect(html).toContain("Down for maintenance");
     expect(html).toMatch(/Since \d{2}:\d{2} UTC on \d{1,2} [A-Z][a-z]+ \d{4}/);
+    expect(html).toContain("This page reloads by itself when the app is back.");
+    expect(html).not.toContain("Try again in a few minutes");
   }
 }
 

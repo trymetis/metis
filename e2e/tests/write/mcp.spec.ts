@@ -368,6 +368,13 @@ export default function mcpSpecs() {
         await expect(
           page.getByRole("main").getByRole("button", { name: "Approve", exact: true }),
         ).toBeVisible();
+        const tools = page.getByRole("main").getByRole("table");
+        await expect(tools.getByRole("columnheader", { name: "Read", exact: true })).toBeVisible();
+        await expect(tools.getByRole("columnheader", { name: "Write", exact: true })).toBeVisible();
+        const mail = tools
+          .getByRole("row")
+          .filter({ has: page.getByRole("rowheader", { name: /^Mail/ }) });
+        await expect(mail).toContainText("Search mail");
       } finally {
         await again.callback.close();
       }

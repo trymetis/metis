@@ -36,15 +36,15 @@ The search shortcut works on every page of a workspace, including its settings. 
 
 Inside the search window:
 
-| Keys                                              | Action                                                                                                                                                                                |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Up** and **Down** arrows                        | Move through the results, or through the actions when the list of actions is open. The list wraps around at the ends.                                                                 |
-| **Enter**                                         | Pick the highlighted suggestion, show more results on **Load more**, or run the first action of the highlighted result. When the list of actions is open, run the highlighted action. |
-| **Tab**                                           | Pick the highlighted suggestion, or the first one. With no suggestions, open the list of actions for the highlighted result.                                                          |
-| **Right arrow**                                   | Open the list of actions, when the cursor is at the end of the search box                                                                                                             |
-| **Ctrl** + **Enter** (**⌘** + **Enter** on a Mac) | Open the list of actions for the highlighted result                                                                                                                                   |
-| **Esc**                                           | Go back from the list of actions to the results. Otherwise, close search.                                                                                                             |
-| **Home** and **End**                              | Move the cursor to the start or the end of the search box                                                                                                                             |
+| Keys                                              | Action                                                                                                                                                                                                                                                   |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Up** and **Down** arrows                        | Move through the results, or through the actions when the list of actions is open. The list wraps around at the ends. With an empty search box, nothing is highlighted at first: **Down** goes to the first row and **Up** to the last.                  |
+| **Enter**                                         | Pick the highlighted suggestion, show more results on **Load more**, or run the first action of the highlighted result. When the list of actions is open, run the highlighted action. With an empty search box and nothing highlighted, it does nothing. |
+| **Tab**                                           | Pick the highlighted suggestion, or the first one. With no suggestions, open the list of actions for the highlighted result.                                                                                                                             |
+| **Right arrow**                                   | Open the list of actions, when the cursor is at the end of the search box                                                                                                                                                                                |
+| **Ctrl** + **Enter** (**⌘** + **Enter** on a Mac) | Open the list of actions for the highlighted result                                                                                                                                                                                                      |
+| **Esc**                                           | Go back from the list of actions to the results. Otherwise, close search.                                                                                                                                                                                |
+| **Home** and **End**                              | Move the cursor to the start or the end of the search box                                                                                                                                                                                                |
 
 ## Mail
 
@@ -108,8 +108,9 @@ Press **d**, then:
 | **d** then **n** | New folder                           |
 | **d** then **u** | Upload files                         |
 | **d** then **s** | Jump to the search box               |
-| **d** then **l** | List view                            |
-| **d** then **g** | Grid view                            |
+| **d** then **l** | **List** view                        |
+| **d** then **c** | **Compact grid** view                |
+| **d** then **g** | **Large grid** view                  |
 | **d** then **r** | Go to the top of the drive           |
 | **d** then **h** | Go to All drives                     |
 | **d** then **p** | Preview the selected file            |
@@ -117,11 +118,11 @@ Press **d**, then:
 
 Without a prefix:
 
-| Keys                    | Action                                                                  |
-| ----------------------- | ----------------------------------------------------------------------- |
-| **j** or **n**          | Go forward to the next folder in your history                           |
-| **k** or **p**          | Go back to the previous folder in your history                          |
-| **↑** **↓** **←** **→** | Move the selection: **↑** and **↓** in list view, all four in grid view |
+| Keys                    | Action                                                                      |
+| ----------------------- | --------------------------------------------------------------------------- |
+| **j** or **n**          | Go forward to the next folder in your history                               |
+| **k** or **p**          | Go back to the previous folder in your history                              |
+| **↑** **↓** **←** **→** | Move the selection: **↑** and **↓** in **List**, all four in the grid views |
 
 In drive, **j** and **k** move through the folders you have visited, like a browser's back and forward buttons. They do not move a selection. Your history is kept when you switch between drives.
 

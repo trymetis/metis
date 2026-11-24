@@ -4,6 +4,8 @@ import { Button } from "@metis/ui/components/button";
 import { Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { AccountOption } from "@/components/account-option";
+import { providerLabelFor } from "@/components/provider-meta";
 import { useWorkspaceScope } from "@/hooks/use-workspace-path";
 import { orpc } from "@/lib/orpc";
 import type { PreviewDecisionOutput } from "@/server/schema";
@@ -125,7 +127,17 @@ function DecisionPreview({ node }: { node: GraphNode }) {
             className="flex-1"
             value={mailboxId}
             onValueChange={setMailboxId}
-            options={usable.map((m) => ({ value: m.id, label: m.email }))}
+            options={usable.map((m) => ({
+              value: m.id,
+              label: m.email,
+              render: (
+                <AccountOption
+                  name={m.email}
+                  providerLabel={providerLabelFor("mailbox", m.provider)}
+                  server={m.server}
+                />
+              ),
+            }))}
           />
           <Button size="sm" onClick={run} disabled={loading || !mailboxId}>
             {loading && <Loader2 className="animate-spin" />}

@@ -91,12 +91,16 @@ func TestPageSaysWhenMaintenanceBegan(t *testing.T) {
 		"<!doctype html>",
 		"<title>Down for maintenance</title>",
 		"<h1>Down for maintenance</h1>",
-		"<p>Since 09:00 UTC on 11 November 2026</p>",
-		"<p>Try again in a few minutes.</p>",
+		"Since 09:00 UTC on 11 November 2026.</p>",
+		"This page reloads by itself when the app is back.",
+		`Date.parse("2026-11-11T09:00:00Z")`,
 	} {
 		if !strings.Contains(page, want) {
 			t.Fatalf("the page lacks %q:\n%s", want, page)
 		}
+	}
+	if strings.Contains(page, "Try again in a few minutes") {
+		t.Fatalf("the page still promises a time:\n%s", page)
 	}
 	if strings.Contains(page, "{{") {
 		t.Fatalf("the page still holds template text:\n%s", page)
@@ -125,7 +129,7 @@ func TestWriteKeepsTheCaddyfileInItsOwnFolder(t *testing.T) {
 	if err := WriteMaintenance(dir, st, since); err != nil {
 		t.Fatal(err)
 	}
-	if page, err := os.ReadFile(PagePath(dir)); err != nil || !strings.Contains(string(page), "<p>Since 10:00 UTC on 11 November 2026</p>") || PagePath(dir) != filepath.Join(dir, "caddy", "maintenance.html") {
+	if page, err := os.ReadFile(PagePath(dir)); err != nil || !strings.Contains(string(page), "Since 10:00 UTC on 11 November 2026.</p>") || PagePath(dir) != filepath.Join(dir, "caddy", "maintenance.html") {
 		t.Fatalf("the maintenance page %q %v", page, err)
 	}
 	if !Frozen(dir) {

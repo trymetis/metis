@@ -11,6 +11,17 @@ Steps that send or create something are marked **Sends or creates** below. On th
 
 Fields that take email addresses accept several, separated by commas, for example `ada@example.com, team@example.com`.
 
+Settings that pick a mailbox, calendar, drive or address book, such as **Mailbox** or **Calendar**, list the ones in the workspace. Each choice shows a name on top:
+
+- **A mailbox:** its email address.
+- **A calendar:** the [account's name](/guide/calendar/views-and-navigation#how-calendar-accounts-are-named).
+- **A drive:** the [drive's name](/guide/drive/browse-your-files#how-drives-are-named).
+- **An address book:** the [account's name](/guide/contacts/browse-your-contacts#how-accounts-are-named).
+
+Under the name, a smaller line shows the provider, such as Gmail, CalDAV or S3 storage. It also shows the server's name when there is one. For a calendar, drive or address book, it adds the account's email address. For a drive on a storage server (S3 storage, WebDAV, FTP or SFTP), this is the **Email address** entered when it was added. The line leaves out anything the name already says. For example, "Google Calendar · you@example.com" has no second line, and a calendar account named "Acme calendars" shows "CalDAV · you@example.com" under its name.
+
+This line lets you tell apart the same address connected twice, for example as Gmail and as IMAP, and two accounts on the same server. **Any mailbox**, **Any calendar** and **Any drive** show only their name, with no second line. So does "Not in this workspace", which marks a choice that is no longer in the workspace.
+
 ## Mail
 
 | Step                             | Description on screen                                                                   | Settings                                                                                                                              |
@@ -90,7 +101,7 @@ On a drive with a [folder restriction](/guide/drive/folder-restrictions), **Sear
 | **Update a contact**                    | "Changes the fields you fill in; empty fields are left as they are." | **Contact**, **Name**, **Email**, **Phone**, **Organization**, **Job title**, **Notes**                                        |
 | **Delete a contact**                    | "Deletes a contact from its address book."                           | **Contact**                                                                                                                    |
 
-**List contacts**, **Search contacts**, **Get a contact** and **Create a contact** need an address book. **Update a contact** and **Delete a contact** take only a **Contact**. The **Address book** list shows the workspace's address books by name. The step's card shows the address book's name, or "Pick an address book" when none is picked yet, or "An address book you can't see". **Search contacts** also shows what it searches for, and **Create a contact** shows the name.
+**List contacts**, **Search contacts**, **Get a contact** and **Create a contact** need an address book. **Update a contact** and **Delete a contact** take only a **Contact**. The step's card shows the address book's name, or "Pick an address book" when none is picked yet, or "An address book you can't see". **Search contacts** also shows what it searches for, and **Create a contact** shows the name.
 
 - **Create a contact** needs a name, an email or an organization. Otherwise the run fails with "A contact needs a name, an email or an organization". With **Book id** empty, it saves to the main address book the workspace shows. If the workspace shows none it can write to, the run fails with "This address book shows no writable book in this workspace".
 - **Update a contact** changes only the fields you fill in. A filled-in **Email** becomes the contact's main email address, and the other addresses are kept. A filled-in **Phone** goes first, and the other numbers are kept.

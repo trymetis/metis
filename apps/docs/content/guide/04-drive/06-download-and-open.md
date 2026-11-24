@@ -7,13 +7,13 @@ You can download any file to your computer. For Google Drive and OneDrive, you c
 
 ## Download a file
 
-1. Right-click the file, or click its **...** button (in grid view, the button shows only on touch screens).
+1. Right-click the file, or click its **...** button (in the grid views, the button shows only on touch screens).
 2. Choose **Download**.
 
 <img src="/images/drive/file-menu.webp" alt="The actions menu for a file, with Download, Rename and Delete" class="dark:hidden" />
 <img src="/images/drive/file-menu-dark.webp" alt="The actions menu for a file, with Download, Rename and Delete" class="hidden dark:block" />
 
-You can also click **Download** at the top of the [preview pane](/guide/drive/preview-files).
+You can also click **Download** (the download icon) at the top of the [preview pane](/guide/drive/preview-files#the-top-of-the-pane).
 
 Only files can be downloaded. Folders have no **Download** action.
 
@@ -24,7 +24,7 @@ Only files can be downloaded. Folders have no **Download** action.
 
 ## Open at the provider
 
-For Google Drive and OneDrive, the actions menu also has **Open at provider**. It opens the file or folder on the provider's website in a new tab. The preview pane has the same choice as **Open in Google Drive** or **Open in OneDrive**.
+For Google Drive and OneDrive, the actions menu also has **Open at provider**. It opens the file or folder on the provider's website in a new tab. The top of the preview pane has the same choice as an icon, **Open in Google Drive** or **Open in OneDrive**. When the pane is narrow, it is in the **...** menu (**More preview actions**) instead. See [When the pane is narrow](/guide/drive/preview-files#when-the-pane-is-narrow).
 
 Other drive types do not have this action.
 

@@ -93,6 +93,8 @@ See also [AGENTS.md](../AGENTS.md), [servers.md](servers.md), [database.md](data
 - **While it is set, the app writes nothing: a request that accepts `text/html` gets the maintenance page, and any other request gets 503 with `{"error":"maintenance","since":"…"}`.**
   - `/api/livez` and `/api/readyz` behave as always, so a platform health check never restarts or removes a frozen app ([deployment.md](deployment.md)); the built assets and the app icons load as always, so the page renders.
   - Every maintenance answer carries `Retry-After: 300`, `Metis-Maintenance` (the time, in ISO 8601 UTC) and `Metis-Version`, so a script tells maintenance from failure and learns the running release; the JSON also carries `Cache-Control: no-store`.
+- **The page counts how long maintenance has lasted and reloads itself when it ends.** Every 30 s it fetches its own address with `Accept: application/json` and reloads once the answer no longer carries `Metis-Maintenance`, or carries a different time (maintenance began again); a failed fetch (the app restarting) keeps it waiting.
+  - The page Caddy serves for a CLI-managed domain does the same in inline script (`apps/cli/internal/caddy/maintenance.html`), because the app is stopped while it shows.
 - **The page answers 200, not 503.** `maintenanceResponse(true, url)` rewrites to `/maintenance`, and Next serves a rewritten page with the page's own status (`resolve-routes.js` keeps only the proxy's headers), so callers that need the status send any `Accept` but `text/html`.
 - **`src/proxy.ts` answers first, before any session work**, on every path its matcher covers ([auth.md](auth.md)).
 - **`/rpc` and `/api/drive/relay/*` check maintenance in their own route handlers, through the same `maintenanceResponse`.**

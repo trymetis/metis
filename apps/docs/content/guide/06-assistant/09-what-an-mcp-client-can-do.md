@@ -5,6 +5,8 @@ description: The tools an MCP client can use, which ones are sensitive, and the 
 
 An MCP client can use the same kinds of tools as the Workspace Assistant, plus a few for your workspaces and your account. You choose which tools each client may use on its page under **Settings**, **MCP clients**. See [Manage MCP clients](/guide/assistant/manage-mcp-clients).
 
+The sign-in page where you approve a client shows its enabled tools in a table of areas, with **Read** and **Write** columns. Those areas are not the same as the groups on this page. See [Connect an AI client with MCP](/guide/assistant/connect-an-ai-client).
+
 ## Rules every client follows
 
 - **It acts as you.** A client can only reach what you can reach yourself.

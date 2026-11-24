@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 
 import { ScrollTable } from "@/components/dashboard/scroll-table";
 import { useSystemData } from "@/components/dashboard/system-client";
+import { Section } from "@/components/dashboard/system-ui";
 import { ACCOUNT_PROVIDER_META } from "@/components/provider-meta";
 import { CONNECTION_PROVIDERS } from "@/connections/types";
 import { isOneOf } from "@/lib/guards";
@@ -21,24 +22,6 @@ const dateTime = new Intl.DateTimeFormat("en-US", {
   hour: "numeric",
   minute: "2-digit",
 });
-
-function Section({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded-xl border border-border bg-surface p-4">
-      <h2 className="text-[13px] font-medium text-foreground">{title}</h2>
-      {description && <p className="mt-0.5 text-[11px] text-faint">{description}</p>}
-      <div className="mt-3">{children}</div>
-    </section>
-  );
-}
 
 function Empty({ label }: { label: string }) {
   return <p className="py-6 text-center text-[13px] text-faint">{label}</p>;
@@ -108,7 +91,7 @@ export function ConnectionsView() {
 
       <Section
         title="By provider"
-        description="Grants and the mailboxes, calendars, drives and address books they carry."
+        hint="Grants and the mailboxes, calendars, drives and address books they carry."
       >
         {data === null ? (
           <Pending />
@@ -156,7 +139,7 @@ export function ConnectionsView() {
 
       <Section
         title="Quarantined"
-        description="Grants whose provider is no longer configured. They come back when the config does."
+        hint="Grants whose provider is no longer configured. They come back when the config does."
       >
         {data === null ? (
           <Pending />

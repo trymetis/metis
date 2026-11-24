@@ -3,7 +3,7 @@ title: AI and privacy settings
 description: Decide whether AI features and phishing detection are allowed anywhere in a workspace.
 ---
 
-The **AI & privacy** section of a workspace's **General** settings page sets what the whole workspace allows. A mailbox, calendar, drive or address book can always be more restrictive than the workspace, never less.
+The **AI & privacy** section of a workspace's **General** settings page sets what the whole workspace allows. A mailbox, calendar, drive or address book can always be more restrictive than the workspace, never less. Point at or click the ⓘ next to **AI & privacy** to read this on the page.
 
 <img src="/images/workspaces/ai-and-privacy.webp" alt="The AI and privacy section of a workspace's General settings" class="dark:hidden" />
 <img src="/images/workspaces/ai-and-privacy-dark.webp" alt="The AI and privacy section of a workspace's General settings" class="hidden dark:block" />

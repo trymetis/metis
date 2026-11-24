@@ -30,7 +30,7 @@
         "waitFor": "role=heading[level=1][name=\"Themes\"]"
       },
       {
-        "waitFor": "main >> role=heading[level=2][name=\"Built in\"]"
+        "waitFor": "main >> role=cell[name=\"Graphite\"]"
       }
     ]
   },
@@ -503,6 +503,12 @@
       },
       {
         "waitFor": "main >> text=In S3"
+      },
+      {
+        "click": "main >> role=list[name=\"Exports\"] >> role=button[expanded=false] >> nth=0"
+      },
+      {
+        "waitFor": "main >> text=SHA-256"
       }
     ],
     "element": "main"

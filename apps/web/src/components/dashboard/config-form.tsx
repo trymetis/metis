@@ -1,9 +1,15 @@
 "use client";
 
 import { Button } from "@metis/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@metis/ui/components/dropdown-menu";
 import { cn } from "@metis/ui/lib/utils";
 import { queryOptions, useQuery } from "@tanstack/react-query";
-import { History, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { History, MoreHorizontal, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { toast } from "sonner";
@@ -52,7 +58,7 @@ interface SectionDraft {
 
 export interface ConfigCard {
   title?: string;
-  description?: string;
+  hint?: string;
   badge?: React.ReactNode;
   children?: React.ReactNode;
   renderEntryBadge?: (values: Values | null) => React.ReactNode;
@@ -415,8 +421,28 @@ export function ConfigForm({
           <Section
             key={draft.section}
             title={card.title ?? draft.label}
-            description={card.description}
-            badge={card.badge}
+            hint={card.hint}
+            badge={
+              card.badge || canOperate ? (
+                <div className="flex shrink-0 items-center gap-2">
+                  {card.badge}
+                  {canOperate && (
+                    <SectionMenu
+                      label={card.title ?? draft.label}
+                      blocked={
+                        dirty
+                          ? "Save or discard your changes first"
+                          : draft.matchesEnvironment
+                            ? "Already matches the environment"
+                            : null
+                      }
+                      busy={opening !== null}
+                      onReset={() => openReset(draft)}
+                    />
+                  )}
+                </div>
+              ) : undefined
+            }
           >
             {draft.list ? (
               <div className="flex flex-col gap-2">
@@ -524,20 +550,6 @@ export function ConfigForm({
               </fieldset>
             )}
             {card.children}
-            {canOperate && (
-              <div className="mt-3 flex justify-end">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={dirty || draft.matchesEnvironment || opening !== null}
-                  onClick={() => openReset(draft)}
-                >
-                  <RotateCcw strokeWidth={1.75} />
-                  Reset to environment
-                </Button>
-              </div>
-            )}
           </Section>
         );
       })}
@@ -581,5 +593,44 @@ export function ConfigForm({
         onConfirm={confirmReset}
       />
     </>
+  );
+}
+
+function SectionMenu({
+  label,
+  blocked,
+  busy,
+  onReset,
+}: {
+  label: string;
+  blocked: string | null;
+  busy: boolean;
+  onReset: () => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={`${label} actions`}
+            title={`${label} actions`}
+            className="text-muted-foreground"
+          >
+            <MoreHorizontal strokeWidth={1.75} />
+          </Button>
+        }
+      />
+      <DropdownMenuContent align="end" className="w-60">
+        <DropdownMenuItem disabled={blocked !== null || busy} onClick={onReset}>
+          <RotateCcw strokeWidth={1.75} />
+          <span className="flex flex-col">
+            Reset to environment
+            {blocked && <span className="text-[11px] text-faint">{blocked}</span>}
+          </span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

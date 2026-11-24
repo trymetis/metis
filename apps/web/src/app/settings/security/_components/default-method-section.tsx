@@ -13,6 +13,7 @@ import { toast } from "sonner";
 
 import { authClient } from "@/auth/client";
 import { isTwoFactorMethod, type TwoFactorMethod } from "@/auth/two-factor/methods";
+import { InfoHint } from "@/components/info-hint";
 import { refreshTwoFactorMethods, useTwoFactorMethods } from "@/hooks/use-two-factor-methods";
 
 const METHOD_ITEMS: { value: TwoFactorMethod; label: string }[] = [
@@ -45,10 +46,10 @@ export function DefaultMethodSection() {
         <div className="flex items-center gap-2">
           <ListOrdered className="size-4 text-brand-text" />
           <h2 className="text-[13px] font-medium text-foreground">Ask me first with</h2>
+          <InfoHint label="Ask me first with">
+            Shown first when you sign in or confirm a change. You can always pick another.
+          </InfoHint>
         </div>
-        <p className="mt-1 text-[12px] text-faint">
-          Shown first when you sign in or confirm a change. You can always pick another.
-        </p>
       </div>
       <Select
         value={methods.preferred}

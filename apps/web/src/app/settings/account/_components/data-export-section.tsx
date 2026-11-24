@@ -4,6 +4,7 @@ import { Button } from "@metis/ui/components/button";
 import { Download } from "lucide-react";
 import { useState } from "react";
 
+import { InfoHint } from "@/components/info-hint";
 import { orpc } from "@/lib/orpc";
 
 export function DataExportSection() {
@@ -39,11 +40,11 @@ export function DataExportSection() {
       <div className="flex items-center gap-2">
         <Download className="size-4 text-muted-foreground" />
         <h2 className="text-[13px] font-medium text-foreground">Export your data</h2>
+        <InfoHint label="Export your data">
+          Downloads a JSON file with your preferences, workspaces, labels, workflows, Workspace
+          Assistant chats and security activity.
+        </InfoHint>
       </div>
-      <p className="mt-1 text-[12px] text-faint">
-        Downloads a JSON file with your preferences, workspaces, labels, workflows, Workspace
-        Assistant chats and security activity.
-      </p>
       <p className="mt-2 text-[12px] text-faint">
         This is not a mailbox archive. Your mail, calendar events, files and contacts stay with the
         provider you connected, so export those from the provider.

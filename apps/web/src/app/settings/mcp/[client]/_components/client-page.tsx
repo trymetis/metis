@@ -13,7 +13,7 @@ import { McpPresetIcon } from "@/components/mcp-preset-icon";
 import { rpc } from "@/lib/orpc";
 import { refreshQuery } from "@/lib/query-client";
 import { formatRelativeDate } from "@/lib/utils";
-import { MCP_PRESETS, SELF_REGISTERED_LABEL } from "@/mcp/presets";
+import { namedPresetLabel } from "@/mcp/presets";
 import type { McpAccess, McpClient } from "@/server/schema";
 
 import { ClientGrants } from "./client-grants";
@@ -50,7 +50,6 @@ export function ClientPage({
     );
   }
   const [error, setError] = useState<string | null>(null);
-  const preset = client.preset ? MCP_PRESETS[client.preset] : null;
 
   async function refresh() {
     const result = await refreshQuery(getClient.queryKey({ input }));
@@ -79,8 +78,7 @@ export function ClientPage({
             {!client.enabled && <Badge variant="secondary">Disabled</Badge>}
           </div>
           <p className="mt-0.5 text-[12px] text-faint">
-            {preset?.label ?? SELF_REGISTERED_LABEL}
-            {" · "}
+            {namedPresetLabel(client.preset) && `${namedPresetLabel(client.preset)} · `}
             {`added ${formatRelativeDate(client.createdAt.toISOString())}`}
             {" · "}
             {client.lastUsedAt

@@ -1,9 +1,9 @@
 ---
 title: Sign in
-description: Sign in with your password or a magic link, confirm with your authenticator app, a passkey or a backup code, create an account when your instance allows it, and sign out.
+description: Sign in with your password or a sign-in link, confirm with your authenticator app, a passkey or a backup code, create an account when your instance allows it, and sign out.
 ---
 
-Every sign-in to Metis Suite has two parts. First you prove who you are with your password or a magic link. Then you confirm it's you with a code from your authenticator app, a passkey or a backup code, depending on what your account has. This page covers both, plus creating an account and signing out.
+Every sign-in to Metis Suite has two parts. First you prove who you are with your password or a sign-in link. Then you confirm it's you with a code from your authenticator app, a passkey or a backup code, depending on what your account has. This page covers both, plus creating an account and signing out.
 
 New here? Start with [Sign in for the first time](/guide/get-started/sign-in-for-the-first-time) instead.
 
@@ -32,7 +32,7 @@ When you sign in, Metis Suite also emails you a sign-in alert, unless you turned
 
 ## Confirm it's you
 
-After your password or magic link, the page **Two-factor authentication** opens. It opens on your default way to confirm. That is the one you set up first (an authenticator app or a passkey), unless you chose another under **Ask me first with**. See [Choose which way you are asked first](/guide/account/two-factor-authentication#choose-which-way-you-are-asked-first). The line under the title tells you what to do.
+After your password or sign-in link, the page **Two-factor authentication** opens. It opens on your default way to confirm. That is the one you set up first (an authenticator app or a passkey), unless you chose another under **Ask me first with**. See [Choose which way you are asked first](/guide/account/two-factor-authentication#choose-which-way-you-are-asked-first). The line under the title tells you what to do.
 
 Links under the code boxes, the backup code field or the **Use your passkey** button switch to the other ways your account has. You see **Use your authenticator instead** only if you set up an authenticator app, and **Use a passkey instead** only if you added a passkey and your browser supports passkeys. **Use a backup code instead** is always there.
 
@@ -81,7 +81,7 @@ There is no **Verify** button. Metis Suite signs you in as soon as your passkey 
 
 If you close the passkey prompt or wait too long, you see "The passkey request was cancelled or timed out." Click **Use your passkey** to try again. If you see "Passkey verification failed", try again, or use another way to confirm.
 
-**Use a passkey instead** shows only if your account has a passkey and your browser supports passkeys. If you have passkeys but no authenticator app, and your browser cannot use passkeys, the page shows only the backup code field. A passkey does not replace your password or magic link. You always sign in with one of them first. To add a passkey, see [Add a passkey](/guide/account/two-factor-authentication#add-a-passkey).
+**Use a passkey instead** shows only if your account has a passkey and your browser supports passkeys. If you have passkeys but no authenticator app, and your browser cannot use passkeys, the page shows only the backup code field. A passkey does not replace your password or sign-in link. You always sign in with one of them first. To add a passkey, see [Add a passkey](/guide/account/two-factor-authentication#add-a-passkey).
 
 ### If something goes wrong
 
@@ -90,7 +90,7 @@ If you close the passkey prompt or wait too long, you see "The passkey request w
 | "Invalid code"                                                                                        | The authenticator code was wrong. Wait for a new code in your app and try again.                                |
 | "Invalid backup code"                                                                                 | The backup code was wrong. Check it, or use another one.                                                        |
 | "Passkey verification failed"                                                                         | Click **Use your passkey** again, or use another way to confirm.                                                |
-| "Too many attempts. Sign in again to get a new challenge."                                            | Click **Cancel and sign out**, then sign in again with your password or a magic link.                           |
+| "Too many attempts. Sign in again to get a new challenge."                                            | Click **Cancel and sign out**, then sign in again with your password or a sign-in link.                         |
 | "Too many failed verification attempts. Your account is temporarily locked. Try again in 15 minutes." | You entered 10 wrong codes. Your account is locked for 15 minutes. Wait for the time shown, then sign in again. |
 | "Too many requests. Try again in 30 seconds."                                                         | You clicked **Verify** more than 10 times in a minute. Wait for the time shown, then try again.                 |
 
@@ -98,29 +98,29 @@ If you close the passkey prompt or wait too long, you see "The passkey request w
 
 To stop without signing in, click **Cancel and sign out**. You go back to the sign-in page.
 
-## Sign in with a magic link
+## Use a sign-in link
 
-A magic link lets you sign in from your email instead of typing your password.
+A sign-in link lets you sign in from your email instead of typing your password.
 
 1. On the sign-in page, type your **Email address**.
-2. Click **Email me a magic link**.
+2. Click **Email me a sign-in link**.
 3. The page shows **Check your email** and tells you where the link was sent. The link is valid for 15 minutes.
 
    <img
      src="/images/account/magic-link-sent.webp"
-     alt="The Check your email message after asking for a magic link"
+     alt="The Check your email message after asking for a sign-in link"
      class="dark:hidden"
    />
    <img
      src="/images/account/magic-link-sent-dark.webp"
-     alt="The Check your email message after asking for a magic link"
+     alt="The Check your email message after asking for a sign-in link"
      class="hidden dark:block"
    />
 
 4. Open the email with the subject "Sign in to Metis Suite" and click the link.
 5. Confirm it's you.
 
-Each magic link works only once. A magic link signs in to an account that already exists. It never creates a new account. For your privacy, the page looks the same whether or not an account exists for the address you typed.
+Each sign-in link works only once. A sign-in link signs in to an account that already exists. It never creates a new account. For your privacy, the page looks the same whether or not an account exists for the address you typed.
 
 Typed the wrong address? Click **Use a different email**.
 
@@ -151,7 +151,7 @@ Each sign-in action has a limit. When you reach it, the page shows a red line un
 | Action                                               | Limit       | Longest wait |
 | ---------------------------------------------------- | ----------- | ------------ |
 | **Sign in**                                          | 10 a minute | 1 minute     |
-| **Email me a magic link**                            | 5 an hour   | 1 hour       |
+| **Email me a sign-in link**                          | 5 an hour   | 1 hour       |
 | **Create account**                                   | 5 an hour   | 1 hour       |
 | **Resend verification email**                        | 5 an hour   | 1 hour       |
 | **Verify** on the **Two-factor authentication** page | 10 a minute | 1 minute     |
@@ -160,7 +160,7 @@ For how the wait is shown, see [Usage limits](/guide/reference/usage-limits#what
 
 ## If your account is banned
 
-The instance owner or an instance admin can ban an account. While your account is banned, you cannot sign in. Within 2 minutes of the ban, you are signed out everywhere. When you sign in with your password, you see "This account is banned. Ask the instance owner or an admin." You can still ask for a magic link, but opening it does not sign you in.
+The instance owner or an instance admin can ban an account. While your account is banned, you cannot sign in. Within 2 minutes of the ban, you are signed out everywhere. When you sign in with your password, you see "This account is banned. Ask the instance owner or an admin." You can still ask for a sign-in link, but opening it does not sign you in.
 
 Some bans end by themselves after a set time. Otherwise, ask your instance owner or an instance admin to lift the ban. Nothing is deleted during the ban. Your workspaces, connected accounts and data stay as they were. Scheduled mail and snoozes you set up are held, and go ahead once the ban ends. Runs of your other workflows that come due during the ban are blocked, and stay blocked after it ends, until someone retries them. See [Cancel and retry runs](/guide/workflows/cancel-and-retry-runs#retry-a-run).
 

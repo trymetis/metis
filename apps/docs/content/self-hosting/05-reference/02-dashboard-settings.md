@@ -5,7 +5,7 @@ description: Every setting on the System pages of the owner dashboard, with the 
 
 These settings live under **Dashboard**, **System**. Saving any of them asks you to confirm it's you and checks the change against the real service first. On a server list, only new entries and entries whose connection settings changed are checked. See [What a save checks](/self-hosting/configure/how-configuration-works#what-a-save-checks). Secret fields show only **Set** or **Not set**. Leave a secret empty to keep the stored value.
 
-The **Set by** column names the environment variable that gives each field its starting value. Fields marked (startup only) come only from that variable, and change only with an edit to `.env` and a restart. **Reset to environment** on a card returns its fields to the values from their **Set by** variables or the config file, as they were when the app last started, or to their defaults. See [Reset a card to the environment](/self-hosting/operate/owner-dashboard#reset-a-card-to-the-environment).
+The **Set by** column names the environment variable that gives each field its starting value. Fields marked (startup only) come only from that variable, and change only with an edit to `.env` and a restart. **Reset to environment**, in the **…** menu in each card's header, returns its fields to the values from their **Set by** variables or the config file, as they were when the app last started, or to their defaults. See [Reset a card to the environment](/self-hosting/operate/owner-dashboard#reset-a-card-to-the-environment).
 
 ## Instance
 
@@ -24,7 +24,7 @@ When **Proxy remote images** is on, people can load remote images in received ma
 
 ### Mail cache
 
-The **Mail cache** card says: "How long this instance keeps copies of message bodies it has shown."
+The ⓘ next to the **Mail cache** title says: "How long this instance keeps copies of message bodies it has shown."
 
 When someone opens a message, your instance stores a copy of its body (the text and content of the message). The next time anyone opens that message, it opens faster, because it comes from this copy. The instance also stores the bodies it reads to write a thread summary. A body larger than about 4 MB is not stored.
 
@@ -48,7 +48,7 @@ The card has one field, **Keep message bodies (days)**: "Days a message's body s
 
 ### Proxies
 
-The **Proxies** card says: "How this instance finds a visitor's address behind a load balancer or CDN. Workflow webhook IP allow lists use the Workflow runner's own list."
+The ⓘ next to the **Proxies** title says: "How this instance finds a visitor's address behind a load balancer or CDN. Workflow webhook IP allow lists use the Workflow runner's own list."
 
 A proxy is a server that passes requests on to your instance, such as a load balancer, a CDN or the Caddy that `metis domain` adds. Most proxies add the address of the computer that connected to them to the end of the `X-Forwarded-For` header. Each address in that header is called a hop. The Caddy that `metis domain` adds replaces any `X-Forwarded-For` it receives, so behind it the header holds one hop: the computer that connected to Caddy.
 
@@ -73,7 +73,7 @@ The card has one optional field, **Trusted proxies**: "IP addresses or CIDR rang
 The address it finds is used for:
 
 - the limits on sign-up and on creating the owner account;
-- the limits on sign-in, two-factor codes, magic links, password resets and verification emails;
+- the limits on sign-in, two-factor codes, sign-in links, password resets and verification emails;
 - the IP address in the [audit log](/self-hosting/operate/owner-dashboard#audit-log);
 - the address shown in [sign-in alerts](/guide/account/sign-in-alerts) and on the [signed-in devices](/guide/account/signed-in-devices) list.
 

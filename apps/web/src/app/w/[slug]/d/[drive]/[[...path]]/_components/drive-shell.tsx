@@ -37,7 +37,7 @@ import type { DriveEntryRow, DrivePin, DriveQuotaRow, WorkspaceDrive } from "@/s
 import { ALL_DRIVES_SLUG, drivePath } from "@/workspace/path";
 
 import { DriveAgentPanel } from "./drive-agent-panel";
-import { DriveEntries, type DriveView } from "./drive-entries";
+import { DRIVE_VIEWS, DriveEntries, type DriveView } from "./drive-entries";
 import { DriveNameDialog } from "./drive-name-dialog";
 import { DriveSidebar } from "./drive-sidebar";
 import { type Crumb, DriveToolbar } from "./drive-toolbar";
@@ -72,7 +72,7 @@ export function DriveShell({ trail }: { trail: string[] }) {
   const quota: DriveQuotaRow | null =
     quotasQuery.data?.quotas.find((q) => q.driveSlug === scope.driveSlug) ?? null;
   const storedView = useStoredItem(VIEW_KEY);
-  const view: DriveView = storedView === "grid" ? "grid" : "list";
+  const view: DriveView = DRIVE_VIEWS.find((option) => option === storedView) ?? "list";
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
   const [names, setNames] = useState<Record<string, string>>({});
@@ -142,16 +142,26 @@ export function DriveShell({ trail }: { trail: string[] }) {
   >(null);
   const [folderParent, setFolderParent] = useState<string | null>(null);
 
+  const showPreview = useCallback(
+    (entry: DriveEntryRow) => {
+      setSelectedId(entry.id);
+      setPreviewEntry(entry);
+      remember({ kind: "file", id: entry.id, name: entry.name, entry });
+    },
+    [remember],
+  );
+
   useEffect(() => {
     if (!scope.driveSlug) return;
     const show = (entry: DriveEntryRow) => {
       setSelectedId(entry.id);
       setPreviewEntry(entry);
+      remember({ kind: "file", id: entry.id, name: entry.name, entry });
     };
     const pending = takeDrivePreview(scope.driveSlug);
     if (pending) show(pending);
     return listenDrivePreviews(scope.driveSlug, show);
-  }, [scope.driveSlug]);
+  }, [scope.driveSlug, remember]);
 
   const changeView = useCallback((next: DriveView) => {
     writeStoredItem(VIEW_KEY, next);
@@ -176,13 +186,16 @@ export function DriveShell({ trail }: { trail: string[] }) {
   const unnamed = trail.filter((id) => !names[id]);
   const fetchedNames = useQueries({
     queries: unnamed.map((id) => rpc.drive.get.queryOptions({ input: { ...scope, fileId: id } })),
-    combine: (results) =>
-      Object.fromEntries(
-        results.flatMap((result, index) => {
-          const name = result.data?.name ?? (result.isError ? "Folder" : undefined);
-          return name === undefined ? [] : [[unnamed[index], name]];
-        }),
-      ),
+    combine: (results) => {
+      const found: Record<string, string | null> = {};
+      results.forEach((result, index) => {
+        const id = unnamed[index];
+        if (id === undefined) return;
+        if (result.data) found[id] = result.data.name;
+        else if (result.isError) found[id] = null;
+      });
+      return found;
+    },
   });
 
   const crumbs: Crumb[] = useMemo(
@@ -195,7 +208,10 @@ export function DriveShell({ trail }: { trail: string[] }) {
             ? driveName(activeDrive, listedDrives ?? [])
             : "Drive",
       },
-      ...trail.map((id) => ({ id, name: names[id] ?? fetchedNames[id] ?? "…" })),
+      ...trail.map((id) => {
+        const fetched = fetchedNames[id];
+        return { id, name: names[id] ?? (fetched === null ? "Folder" : (fetched ?? "…")) };
+      }),
     ],
     [trail, names, fetchedNames, isAll, activeDrive, listedDrives],
   );
@@ -203,12 +219,16 @@ export function DriveShell({ trail }: { trail: string[] }) {
   const openFolder = useCallback(
     (id: string, name: string) => {
       setNames((current) => ({ ...current, [id]: name }));
-      remember({ id, name });
       setQuery("");
       router.push(drivePath(workspaceSlug, scope.driveSlug, [...trail, id]));
     },
-    [router, workspaceSlug, scope.driveSlug, trail, remember],
+    [router, workspaceSlug, scope.driveSlug, trail],
   );
+
+  const folderName = parentId ? (names[parentId] ?? fetchedNames[parentId]) : null;
+  useEffect(() => {
+    if (parentId && folderName) remember({ kind: "folder", id: parentId, name: folderName });
+  }, [parentId, folderName, remember]);
 
   const openEntry = useCallback(
     (entry: DriveEntryRow) => {
@@ -216,10 +236,9 @@ export function DriveShell({ trail }: { trail: string[] }) {
         openFolder(entry.id, entry.name);
         return;
       }
-      setSelectedId(entry.id);
-      setPreviewEntry(entry);
+      showPreview(entry);
     },
-    [openFolder],
+    [openFolder, showPreview],
   );
 
   const previewSelected = useCallback(() => {
@@ -318,6 +337,7 @@ export function DriveShell({ trail }: { trail: string[] }) {
               setQuery("");
               router.push(drivePath(workspaceSlug, scope.driveSlug, [id]));
             }}
+            onOpenFile={showPreview}
             onUnpin={(pinId) => {
               orpc.drive
                 .unpin({ ...scope, pinId })

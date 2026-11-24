@@ -31,7 +31,7 @@ export function ProviderView({ provider }: { provider: ConnectionProvider }) {
   const card: ConfigCard = data.oauth
     ? {
         title: "OAuth client",
-        description: "The provider app users consent to.",
+        hint: "The provider app users consent to.",
         badge: <ConnectionBadges connections={data.connections} />,
         children: (
           <div className="border-t border-border">
@@ -45,7 +45,7 @@ export function ProviderView({ provider }: { provider: ConnectionProvider }) {
         ),
       }
     : {
-        description: "The servers users can connect to. Users bring only their own login.",
+        hint: "The servers users can connect to. Users bring only their own login.",
         badge: <ConnectionBadges connections={data.connections} />,
         renderEntryBadge: (values) => {
           const entry = data.entries.find((item) => item.name === values?.name);
@@ -58,7 +58,7 @@ export function ProviderView({ provider }: { provider: ConnectionProvider }) {
       {data.configured ? (
         <HealthCheck
           input={{ kind: "provider", provider }}
-          description={
+          hint={
             data.oauth
               ? "Sends a deliberately invalid code to the token endpoint: a wrong client id or secret is rejected differently."
               : "Runs the same probes as preflight against every entry, without logging in as any user."
@@ -79,7 +79,7 @@ export function ProviderView({ provider }: { provider: ConnectionProvider }) {
       {quarantinedOnly && (
         <Section
           title="Quarantined connections"
-          description="Grants made while this provider was configured."
+          hint="Grants made while this provider was configured."
           badge={<ConnectionBadges connections={data.connections} />}
         >
           <p className="text-[13px] text-muted-foreground">

@@ -43,6 +43,7 @@ export default defineConfig({
   ],
   ignorePatterns: [
     "src/components/ai-elements/**",
+    "src/components/ui/svgs/**",
     "src/db/auth-schema.ts",
     "src/drive/icons.ts",
     "src/mail/render/clearurls.ts",

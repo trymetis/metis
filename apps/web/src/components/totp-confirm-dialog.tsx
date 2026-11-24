@@ -78,7 +78,7 @@ export function TotpConfirmDialog({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={busy}>Cancel</AlertDialogCancel>
           <AlertDialogAction disabled={busy || !code.complete || confirmDisabled} onClick={submit}>
-            {busy ? "Saving…" : confirmLabel}
+            {busy ? "Confirming…" : confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

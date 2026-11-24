@@ -152,16 +152,22 @@ export default function dashboardSpecs() {
     const card = main(page)
       .locator("section")
       .filter({ has: page.getByRole("spinbutton", { name: "Max transfer size (MB)" }) });
-    const resetButton = card.getByRole("button", { name: "Reset to environment" });
+    const resetItem = async () => {
+      await card.getByRole("button", { name: "Drive relay actions" }).click();
+      return page.getByRole("menuitem", { name: /^Reset to environment/ });
+    };
 
     await relayMax(page).fill(String(max + 3));
-    await expect(resetButton).toBeDisabled();
+    const blocked = await resetItem();
+    await expect(blocked).toBeDisabled();
+    await expect(blocked).toContainText("Save or discard your changes first");
+    await page.keyboard.press("Escape");
     await saveBar(page).getByRole("button", { name: "Save changes" }).click();
     await confirmTotp(page, "Save changes", "Save");
     await expect(saveBar(page)).toHaveCount(0);
     const saved = await currentVersion(page);
 
-    await resetButton.click();
+    await (await resetItem()).click();
     const dialog = page.getByRole("alertdialog", { name: "Reset Drive relay to environment" });
     await expect(dialog).toBeVisible();
     const change = dialog.getByText("Max transfer size (MB)", { exact: true }).locator("..");
@@ -176,7 +182,10 @@ export default function dashboardSpecs() {
       }),
     ).toBeVisible();
     await expect(relayMax(page)).toHaveValue(String(environment));
-    await expect(resetButton).toBeDisabled();
+    const matching = await resetItem();
+    await expect(matching).toBeDisabled();
+    await expect(matching).toContainText("Already matches the environment");
+    await page.keyboard.press("Escape");
 
     await sidebar(page).getByRole("link", { name: "History", exact: true }).click();
     const current = main(page)
@@ -238,13 +247,13 @@ export default function dashboardSpecs() {
     account,
   }) => {
     await page.goto("/dashboard/accounts");
-    await expect(
-      main(page)
-        .getByRole("row")
-        .filter({
-          has: page.getByRole("cell", { name: account.email, exact: true }),
-        }),
-    ).toContainText("Enabled");
+    const accountRow = main(page)
+      .getByRole("row")
+      .filter({
+        has: page.getByRole("cell", { name: account.email, exact: true }),
+      });
+    await expect(accountRow).toBeVisible();
+    await expect(accountRow).not.toContainText("2FA setup required");
 
     await page.goto("/dashboard/workspaces");
     const workspace = main(page)
@@ -278,14 +287,13 @@ export default function dashboardSpecs() {
     account,
   }, testInfo) => {
     const name = uniqueName(testInfo);
-    const card = (themeName: string) =>
+    const row = (themeName: string) =>
       main(page)
-        .locator("div")
-        .filter({ has: page.getByText(themeName, { exact: true }) })
-        .last();
+        .getByRole("row")
+        .filter({ has: page.getByRole("cell", { name: themeName, exact: true }) });
     await page.goto("/dashboard/themes");
-    await expect(main(page).getByRole("heading", { level: 2, name: "Built in" })).toBeVisible();
-    await expect(card("Graphite")).toBeVisible();
+    await expect(row("Graphite")).toContainText("System");
+    await expect(row("Graphite").getByRole("checkbox")).toHaveCount(0);
     try {
       await main(page).getByRole("button", { name: "Create theme", exact: true }).click();
       const dialog = page.getByRole("dialog", { name: "Create a theme" });
@@ -295,7 +303,8 @@ export default function dashboardSpecs() {
       await dialog.getByRole("button", { name: "Create theme", exact: true }).click();
       expect((await created).ok()).toBe(true);
       await expect(dialog).toBeHidden();
-      await expect(card(name)).toContainText("No workspace uses it");
+      await expect(row(name)).toContainText("Instance");
+      await expect(row(name)).toContainText("None");
 
       await page.goto(workspacePath(account, "/settings/general"));
       const offered = main(page).getByRole("button", { name, exact: true });
@@ -308,7 +317,7 @@ export default function dashboardSpecs() {
       await expect(offered).toHaveAttribute("aria-pressed", "true");
 
       await page.goto("/dashboard/themes");
-      await expect(card(name)).toContainText("Used by 1 workspace");
+      await expect(row(name)).toContainText("1 workspace");
       await main(page)
         .getByRole("button", { name: `Delete ${name}`, exact: true })
         .click();
@@ -334,6 +343,50 @@ export default function dashboardSpecs() {
           workspaceSlug: account.workspaceSlug,
           themeId: blue.id,
         });
+      }
+    }
+  });
+
+  test("select all on the Themes page picks only instance themes and deletes them together", async ({
+    page,
+    rpc,
+  }, testInfo) => {
+    const { themes } = await rpc<{ themes: { name: string; palette: unknown }[] }>(
+      "dashboard.themes.list",
+    );
+    const palette = themes.find((t) => t.name === "Rose")?.palette;
+    const names = [uniqueName(testInfo), `${uniqueName(testInfo)} b`];
+    const made: { id: string }[] = [];
+    try {
+      for (const name of names) {
+        const { theme } = await rpc<{ theme: { id: string } }>("dashboard.themes.save", {
+          name,
+          palette,
+        });
+        made.push(theme);
+      }
+      await page.goto("/dashboard/themes");
+      const row = (themeName: string) =>
+        main(page)
+          .getByRole("row")
+          .filter({ has: page.getByRole("cell", { name: themeName, exact: true }) });
+      await expect(row(names[0] ?? "")).toBeVisible();
+
+      await main(page).getByRole("checkbox", { name: "Select all instance themes" }).click();
+      for (const name of names) {
+        await expect(row(name).getByRole("checkbox", { name: `Select ${name}` })).toBeChecked();
+      }
+      await expect(row("Graphite").getByRole("checkbox")).toHaveCount(0);
+
+      await main(page).getByRole("button", { name: "Delete", exact: true }).click();
+      const confirm = page.getByRole("alertdialog", { name: /^Delete \d+ themes\?$/ });
+      await confirm.getByRole("button", { name: "Delete", exact: true }).click();
+      await expect(confirm).toBeHidden();
+      for (const name of names) await expect(row(name)).toHaveCount(0);
+      await expect(row("Graphite")).toBeVisible();
+    } finally {
+      for (const theme of made) {
+        await rpc("dashboard.themes.delete", { themeId: theme.id }).catch(() => undefined);
       }
     }
   });
@@ -371,7 +424,7 @@ export default function dashboardSpecs() {
         .getByRole("row")
         .filter({ has: page.getByRole("cell", { name: user.email, exact: true }) });
       await expect(row).toContainText("Active");
-      await expect(row).toContainText("No 2FA");
+      await expect(row).toContainText("2FA setup required");
 
       await row.getByRole("button", { name: `Actions for ${user.email}` }).click();
       await page.getByRole("menuitem", { name: "Ban…" }).click();

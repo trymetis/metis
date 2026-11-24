@@ -1,9 +1,9 @@
 ---
 title: Browse your files
-description: Open a drive, switch between drives, use list and grid views, move through folders, and select and open items.
+description: Open a drive, switch between drives, choose the List, Compact grid or Large grid view, move through folders, and select and open items.
 ---
 
-This page shows you how to find your way around a drive: the drive switcher, the two views, folders and breadcrumbs, and the sidebar.
+This page shows you how to find your way around a drive: the drive switcher, the three views, folders and breadcrumbs, and the sidebar.
 
 ## Open a drive
 
@@ -11,8 +11,8 @@ Open the Drive section of your workspace. Metis opens the first drive in the wor
 
 If the workspace has no drive yet, you see **No drive in this workspace** and a **Go to drive settings** button. See [Add a drive](/guide/drive/add-a-drive) to connect one.
 
-<img src="/images/drive/explorer-list.webp" alt="A drive open in list view, with the sidebar on the left and the files on the right" class="dark:hidden" />
-<img src="/images/drive/explorer-list-dark.webp" alt="A drive open in list view, with the sidebar on the left and the files on the right" class="hidden dark:block" />
+<img src="/images/drive/explorer-list.webp" alt="A drive open in the List view, with the sidebar on the left and the files on the right" class="dark:hidden" />
+<img src="/images/drive/explorer-list-dark.webp" alt="A drive open in the List view, with the sidebar on the left and the files on the right" class="hidden dark:block" />
 
 ## How drives are named
 
@@ -44,21 +44,33 @@ The switcher at the top of the sidebar shows the drive you are in: its type and 
 <img src="/images/drive/switcher.webp" alt="The Switch drive menu listing All drives, each drive, and Add drive" class="dark:hidden" />
 <img src="/images/drive/switcher-dark.webp" alt="The Switch drive menu listing All drives, each drive, and Add drive" class="hidden dark:block" />
 
-## Choose list or grid view
+## Choose a view
 
-The toolbar has a button that switches between two views:
+Drive has three views:
 
 - **List** shows one row per item, with its name, size and the date it last changed. Folders show no size.
-- **Grid** shows the items as icons that share the width of each row. Each item has a large icon, or a small picture of the image for image files, with its name under it. A long name is cut after two lines. It shows in full when the item is selected. You can also point at an item to see its full name. Grid view does not show sizes or dates.
+- **Compact grid** shows the items as small icons, so many fit in each row.
+- **Large grid** shows the items as big icons, so fewer fit in each row.
 
-In both views, folders come first, then files. This is the same for every type of drive, and in **All drives**.
+In both grid views, the icons share the width of each row. Each item has its icon, with its name under it. A long name is cut after two lines. It shows in full when the item is selected. You can also point at an item to see its full name. The grid views do not show sizes or dates.
 
-In grid view, an image file shows a small picture of itself instead of an icon when the file is 10 MB or smaller and the drive reports when it last changed. The pictures load as you scroll near them. Your browser has to read the file straight from the drive, as it does for a [file preview](/guide/drive/preview-files#which-drives-support-preview). When it cannot, the icon stays. This is why images on Google Drive always show an icon. Metis keeps these pictures in your browser and clears them when you sign out, like [file previews](/guide/drive/preview-files#safety-and-storage).
+In every view, folders come first, then files. This is the same for every type of drive, and in **All drives**.
 
-Click **Switch to grid** or **Switch to list** to change the view. Metis remembers your choice in this browser, for every drive.
+To change the view:
 
-<img src="/images/drive/explorer-grid.webp" alt="The same drive in grid view, with a large icon and the name of each folder and file" class="dark:hidden" />
-<img src="/images/drive/explorer-grid-dark.webp" alt="The same drive in grid view, with a large icon and the name of each folder and file" class="hidden dark:block" />
+1. In the toolbar, click the view button. It is between the search box and **New folder**. It shows the icon of the view you are in and a small arrow. Point at it to see the name of your view, for example "View: List".
+2. Choose **List**, **Compact grid** or **Large grid**. The view you are in has a mark next to it.
+
+Each view also has a keyboard shortcut. See [Keyboard shortcuts](/guide/drive/keyboard-shortcuts).
+
+Metis remembers your choice in this browser, for every drive. Until you choose, you see **List**.
+
+<img src="/images/drive/explorer-grid.webp" alt="The same drive in the Large grid view, with a big icon and the name of each folder and file" class="dark:hidden" />
+<img src="/images/drive/explorer-grid-dark.webp" alt="The same drive in the Large grid view, with a big icon and the name of each folder and file" class="hidden dark:block" />
+
+### Pictures of images
+
+In both grid views, an image file shows a picture of itself instead of an icon when the file is 10 MB or smaller and the drive reports when it last changed. The picture takes the icon's place and grows with the item, keeping its shape. The pictures load as you scroll near them. Your browser has to read the file straight from the drive, as it does for a [file preview](/guide/drive/preview-files#which-drives-support-preview). When it cannot, the icon stays. This is why images on Google Drive always show an icon. Metis keeps these pictures in your browser and clears them when you sign out, like [file previews](/guide/drive/preview-files#safety-and-storage).
 
 ## Move through folders
 
@@ -73,9 +85,9 @@ You can also go back and forward through the folders you visited with the keyboa
 - **Select:** click an item once.
 - **Open:** double-click it, or press <kbd>Enter</kbd> when it is selected. A folder opens. A file opens in the [preview pane](/guide/drive/preview-files).
 - **On a touch screen:** one tap opens the item.
-- **Move the selection:** press the arrow keys to select the next item from the one that has focus. In list view, use <kbd>↑</kbd> and <kbd>↓</kbd>. In grid view, all four arrow keys work.
+- **Move the selection:** press the arrow keys to select the next item from the one that has focus. In **List**, use <kbd>↑</kbd> and <kbd>↓</kbd>. In both grid views, all four arrow keys work.
 - **Clear the selection:** press <kbd>Esc</kbd>.
-- **See the actions:** right-click an item. In list view, you can also click the **...** button on the item. In grid view, the **...** button shows only on touch screens. Both open the same menu, with actions such as **Download**, **Rename** and **Delete**.
+- **See the actions:** right-click an item. In **List**, you can also click the **...** button on the item. In the grid views, the **...** button shows only on touch screens. Both open the same menu, with actions such as **Download**, **Rename** and **Delete**.
 
 ## Long folders
 
@@ -87,8 +99,8 @@ If a folder has nothing in it, you see "This folder is empty". If the drive cann
 
 Below the switcher, the sidebar can show three more things:
 
-- **Pinned:** folders you pinned. See [Pinned and recent folders](/guide/drive/pinned-and-recent-folders).
-- **Recent:** folders you opened lately in this drive.
+- **Pinned:** folders you pinned. See [Pinned folders and recent items](/guide/drive/pinned-and-recent-folders).
+- **Recent:** folders and files you opened lately in this drive. See [Recent folders and files](/guide/drive/pinned-and-recent-folders#recent-folders-and-files).
 - Storage: at the bottom, how much space the drive uses, such as "2.1 GB of 15 GB" with a bar, or "2.1 GB used". Some drive types do not report this, and the line says "Storage unavailable". See [Drive types](/guide/drive/drive-types).
 
 On a phone, the sidebar is hidden. Tap **Open sidebar** to show it.

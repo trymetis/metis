@@ -44,6 +44,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { AccountOption } from "@/components/account-option";
 import {
   type DrivePick,
   DrivePickerDialog,
@@ -53,6 +54,7 @@ import { EmailFrame } from "@/components/email-frame";
 import { IconButton } from "@/components/icon-button";
 import { PickTimeDialog } from "@/components/pick-time-dialog";
 import { usePlatformPolicy } from "@/components/platform-policy-context";
+import { providerLabelFor } from "@/components/provider-meta";
 import { useContactSuggestions } from "@/hooks/use-contact-suggestions";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useMailPrivacy, useRenderedEmail } from "@/hooks/use-mail-privacy";
@@ -280,6 +282,8 @@ function ComposeForm({ session, defaultFrom }: { session: ComposeSession; defaul
         value: m.slug,
         label: m.email,
         mark: mailboxMarkColor(m.email),
+        providerLabel: providerLabelFor("mailbox", m.provider),
+        server: m.server,
       })),
     [mailboxes],
   );
@@ -542,12 +546,12 @@ function ComposeForm({ session, defaultFrom }: { session: ComposeSession; defaul
                 <SelectContent>
                   {fromItems.map((item) => (
                     <SelectItem key={item.value} value={item.value}>
-                      <span
-                        aria-hidden
-                        className="mr-2 inline-block size-2 shrink-0 rounded-full align-middle"
-                        style={{ background: item.mark }}
+                      <AccountOption
+                        name={item.label}
+                        providerLabel={item.providerLabel}
+                        server={item.server}
+                        mark={item.mark}
                       />
-                      {item.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

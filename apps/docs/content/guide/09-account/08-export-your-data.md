@@ -13,7 +13,7 @@ It is also not a mailbox archive. Your mail, calendar events, files and contacts
 
 1. Open your account menu (the round button with your initials at the bottom of the left rail).
 2. Click **Account**. The **Account** page opens.
-3. Scroll down to the **Export your data** card, below **Where you're signed in**.
+3. Scroll down to the **Export your data** card, below **Where you're signed in**. Point at or click the ⓘ next to the card's title to see what the file holds.
 
    <img src="/images/account/data-export.webp" alt="The Export your data card with its Download export button" class="dark:hidden" />
    <img src="/images/account/data-export-dark.webp" alt="The Export your data card with its Download export button" class="hidden dark:block" />

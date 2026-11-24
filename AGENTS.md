@@ -26,7 +26,7 @@
   - These configs import the root's by relative path, the one exception to §4's import rule.
   - Type-aware linting is the `--type-aware` flag in the scripts, because `options.typeAware` is rejected in a nested config.
   - The rule set, its exemptions and the suppression format are in [lint.md](agent-docs/lint.md).
-- **Never hand-edit generated output** (`shadcn add` primitives, `packages/ui/src/components/svgs/`, `packages/updater-proto/src/gen/`, `apps/cli/gen/`, `src/db/auth-schema.ts` beyond its `$type` pass, the drive icons, the privacy rules, the www models and HDRI), not even to satisfy lint. Report what the generator did and ask.
+- **Never hand-edit generated output** (`shadcn add` primitives, `apps/web/src/components/ui/svgs/`, `packages/updater-proto/src/gen/`, `apps/cli/gen/`, `src/db/auth-schema.ts` beyond its `$type` pass, the drive icons, the privacy rules, the www models and HDRI), not even to satisfy lint. Report what the generator did and ask.
 - **A schema change ships a hand-written, data-preserving migration in `apps/web/migrations/` and passes `bun run db:check`** ([database.md](agent-docs/database.md)).
 - **Migrations reach a database only through preflight or `bun run db:migrate`, which the project owner runs**, never an agent.
 - **A user-visible change adds a line under `## Unreleased` in its release track's changelog; a release is cut with `bun run release`, never by hand.**

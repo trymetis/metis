@@ -1,7 +1,5 @@
 "use client";
 
-import { Button } from "@metis/ui/components/button";
-import { ChevronLeft, ChevronRight, Loader2, ZoomIn, ZoomOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import {
   GlobalWorkerOptions,
@@ -13,6 +11,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 
 import { DrivePreviewLoading } from "./drive-preview-loading";
+import type { PdfControls } from "./pdf-controls";
 
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 4;
@@ -43,7 +42,15 @@ function darkPageColors(): { background: string; foreground: string } | null {
   return background && foreground ? { background, foreground } : null;
 }
 
-export function DrivePreviewPdf({ blob, onFail }: { blob: Blob; onFail: () => void }) {
+export function DrivePreviewPdf({
+  blob,
+  onFail,
+  onControls,
+}: {
+  blob: Blob;
+  onFail: () => void;
+  onControls: (controls: PdfControls | null) => void;
+}) {
   const { resolvedTheme } = useTheme();
   const dark = resolvedTheme === "dark";
   const [doc, setDoc] = useState<PDFDocumentProxy | null>(null);
@@ -152,64 +159,32 @@ export function DrivePreviewPdf({ blob, onFail }: { blob: Blob; onFail: () => vo
 
   const pageCount = doc?.numPages ?? 0;
   const scale = zoom ?? fitScale;
+  const ready = doc !== null;
+  const fitted = zoom === null;
+
+  useEffect(() => {
+    onControls({
+      ready,
+      page: pageNumber,
+      pageCount,
+      rendering,
+      zoomLabel: fitted ? "Fit" : `${Math.round(scale * 100)}%`,
+      canPrev: ready && pageNumber > 1,
+      canNext: ready && pageNumber < pageCount,
+      canZoomIn: ready && scale < MAX_SCALE,
+      canZoomOut: ready && scale > MIN_SCALE,
+      prev: () => setPageNumber((n) => Math.max(1, n - 1)),
+      next: () => setPageNumber((n) => Math.min(pageCount, n + 1)),
+      zoomIn: () => setZoom(clampScale(scale * ZOOM_STEP)),
+      zoomOut: () => setZoom(clampScale(scale / ZOOM_STEP)),
+      fit: () => setZoom(null),
+    });
+  }, [onControls, ready, pageNumber, pageCount, rendering, fitted, scale]);
+
+  useEffect(() => () => onControls(null), [onControls]);
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-1.5">
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Previous page"
-            disabled={!doc || pageNumber <= 1}
-            onClick={() => setPageNumber((n) => Math.max(1, n - 1))}
-          >
-            <ChevronLeft className="size-4" />
-          </Button>
-          <span className="min-w-16 text-center text-[11px] text-muted-foreground tabular-nums">
-            {doc ? `${pageNumber} / ${pageCount}` : "—"}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Next page"
-            disabled={!doc || pageNumber >= pageCount}
-            onClick={() => setPageNumber((n) => Math.min(pageCount, n + 1))}
-          >
-            <ChevronRight className="size-4" />
-          </Button>
-          {rendering && doc && <Loader2 className="ml-1 size-3.5 animate-spin text-faint" />}
-        </div>
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Zoom out"
-            disabled={!doc || scale <= MIN_SCALE}
-            onClick={() => setZoom(clampScale(scale / ZOOM_STEP))}
-          >
-            <ZoomOut className="size-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={!doc}
-            onClick={() => setZoom(null)}
-            className="min-w-14 text-[11px] tabular-nums"
-          >
-            {zoom === null ? "Fit" : `${Math.round(scale * 100)}%`}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Zoom in"
-            disabled={!doc || scale >= MAX_SCALE}
-            onClick={() => setZoom(clampScale(scale * ZOOM_STEP))}
-          >
-            <ZoomIn className="size-4" />
-          </Button>
-        </div>
-      </div>
       <div ref={frame} className="min-h-0 flex-1 overflow-auto bg-panel [scrollbar-gutter:stable]">
         {!doc && <DrivePreviewLoading />}
         <div className={doc ? "flex min-w-fit justify-center p-6" : "hidden"}>

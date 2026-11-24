@@ -18,12 +18,12 @@ export function DatabaseView() {
     <Sections>
       <HealthCheck
         input={{ kind: "driver", driver: "database" }}
-        description="Runs select 1 on both databases."
+        hint="Runs select 1 on both databases."
       />
 
       <Section
         title="Driver"
-        description="Fixed at deploy: the app needs it to reach anything else."
+        hint="Fixed at deploy: the app needs it to reach anything else."
         badge={
           <ToneBadge tone={local ? "warning" : "neutral"}>
             {local ? "Dev only" : database.driver}

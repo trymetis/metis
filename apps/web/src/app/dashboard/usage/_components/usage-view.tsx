@@ -17,6 +17,7 @@ import { useState } from "react";
 import { AI_USAGE_FEATURE_LABELS } from "@/ai/usage-features";
 import { ScrollTable } from "@/components/dashboard/scroll-table";
 import { useSystemData } from "@/components/dashboard/system-client";
+import { Section } from "@/components/dashboard/system-ui";
 import { PageHeader } from "@/components/page-header";
 import { rpc } from "@/lib/orpc";
 import type { DashboardUsage, DashboardUsageRange } from "@/server/schema";
@@ -37,24 +38,6 @@ const dateTime = new Intl.DateTimeFormat("en-US", {
   hour: "numeric",
   minute: "2-digit",
 });
-
-function Section({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded-xl border border-border bg-surface p-4">
-      <h2 className="text-[13px] font-medium text-foreground">{title}</h2>
-      {description && <p className="mt-0.5 text-[11px] text-faint">{description}</p>}
-      <div className="mt-3">{children}</div>
-    </section>
-  );
-}
 
 function Empty({ label }: { label: string }) {
   return <p className="py-6 text-center text-[13px] text-faint">{label}</p>;

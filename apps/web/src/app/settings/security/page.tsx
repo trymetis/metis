@@ -43,9 +43,7 @@ export default function SecuritySettingsPage() {
   const [regenError, setRegenError] = useState<string | null>(null);
   const [newCodes, setNewCodes] = useState<string[]>([]);
 
-  const [qrSecret, setQrSecret] = useState("");
-  const [qrBusy, setQrBusy] = useState(false);
-  const [qrError, setQrError] = useState<string | null>(null);
+  const [qrConfirming, setQrConfirming] = useState(false);
   const [totpUri, setTotpUri] = useState<string | null>(null);
   const [qr, setQr] = useState<{ uri: string; url: string } | null>(null);
   const qrDataUrl = totpUri && qr?.uri === totpUri ? qr.url : null;
@@ -94,25 +92,17 @@ export default function SecuritySettingsPage() {
     }
   }
 
-  async function revealQr(e: React.SubmitEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setQrBusy(true);
-    setQrError(null);
-    try {
-      const res = await authClient.twoFactor.totpUri({ password: qrSecret });
-      if (res.error) {
-        setQrError(res.error.message ?? "Couldn't start authenticator setup. Try again.");
-        return;
-      }
-      setTotpUri(res.data?.totpURI ?? null);
-      setQrSecret("");
-    } catch (err) {
-      setQrError(
-        err instanceof Error ? err.message : "Couldn't start authenticator setup. Try again.",
-      );
-    } finally {
-      setQrBusy(false);
+  function closeQr() {
+    setTotpUri(null);
+    setQr(null);
+  }
+
+  async function revealQr(code: string) {
+    const res = await authClient.twoFactor.totpUri({ code });
+    if (res.error || !res.data?.totpURI) {
+      throw new Error(res.error?.message || "Couldn't show the QR code. Try again.");
     }
+    setTotpUri(res.data.totpURI);
   }
 
   function openPwDialog(e: React.SubmitEvent<HTMLFormElement>) {
@@ -241,45 +231,57 @@ export default function SecuritySettingsPage() {
                 Shows the QR code for your existing secret so you can scan it with a second
                 authenticator. Devices already set up keep working.
               </p>
-              <form
-                className="mt-3 flex flex-col items-start gap-2 sm:flex-row"
-                onSubmit={revealQr}
+              <Button variant="outline" className="mt-3" onClick={() => setQrConfirming(true)}>
+                Show QR code
+              </Button>
+              <TotpConfirmDialog
+                open={qrConfirming}
+                title="Show your authenticator QR code"
+                body="Confirm it's you, then scan the code with your other device."
+                confirmLabel="Show QR code"
+                onOpenChange={setQrConfirming}
+                onConfirm={revealQr}
+              />
+              <Dialog
+                open={qrDataUrl !== null}
+                onOpenChange={(open) => {
+                  if (!open) closeQr();
+                }}
               >
-                <Input
-                  type="password"
-                  placeholder="Account password"
-                  autoComplete="current-password"
-                  value={qrSecret}
-                  onChange={(e) => setQrSecret(e.target.value)}
-                  disabled={qrBusy}
-                  className="sm:max-w-60 text-[13px]"
-                />
-                <Button type="submit" variant="outline" disabled={qrBusy || qrSecret.length === 0}>
-                  Show QR code
-                </Button>
-              </form>
-              {qrError && <p className="mt-2 text-[12px] text-destructive-text">{qrError}</p>}
-              {qrDataUrl && (
-                <div className="mt-4 flex flex-col items-start gap-2">
-                  <div className="rounded-lg border border-border bg-background p-3">
-                    {/* oxlint-disable-next-line nextjs/no-img-element --data URL QR code */}
-                    <img
-                      src={qrDataUrl}
-                      alt="QR code for your authenticator app"
-                      width={200}
-                      height={200}
-                    />
+                <DialogContent className="max-w-sm">
+                  <DialogHeader>
+                    <DialogTitle>Scan with your other device</DialogTitle>
+                    <DialogDescription>
+                      Devices already set up keep working. Close this when you&rsquo;re done; the
+                      code is not shown again until you confirm it&rsquo;s you.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="rounded-lg border border-border bg-white p-3">
+                      {qrDataUrl && (
+                        // oxlint-disable-next-line nextjs/no-img-element --data URL QR code
+                        <img
+                          src={qrDataUrl}
+                          alt="QR code for your authenticator app"
+                          width={200}
+                          height={200}
+                        />
+                      )}
+                    </div>
+                    {manualSecret && (
+                      <details className="self-stretch text-xs text-faint">
+                        <summary className="cursor-pointer">Can't scan? Show manual key</summary>
+                        <code className="mt-2 block break-all rounded bg-panel p-2 text-muted-foreground">
+                          {manualSecret}
+                        </code>
+                      </details>
+                    )}
+                    <Button className="w-full" onClick={() => closeQr()}>
+                      Done
+                    </Button>
                   </div>
-                  {manualSecret && (
-                    <details className="text-xs text-faint">
-                      <summary className="cursor-pointer">Can't scan? Show manual key</summary>
-                      <code className="mt-2 block break-all rounded bg-panel p-2 text-muted-foreground">
-                        {manualSecret}
-                      </code>
-                    </details>
-                  )}
-                </div>
-              )}
+                </DialogContent>
+              </Dialog>
             </section>
           )}
 

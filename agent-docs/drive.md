@@ -119,7 +119,13 @@ See also [AGENTS.md](../AGENTS.md), [drive-providers.md](drive-providers.md), [d
 - **Wherever drives are listed side by side, each shows its drive name**, because one account often has several drives: the drive pickers (`drive-picker-dialog.tsx`), the `@` picker (`src/ai/reference-directory.ts`, whose labels reach the model in the reference legend), search hits and `drive:` suggestions, and the workflow resource pickers and step cards (the workflow directory's `name`).
 - **"Link a file from Drive" is offered only for drives with provider share links** (`SHARE_LINK_PROVIDERS`: Google Drive and OneDrive). Self-hosted drives return `webUrl: null`, so compose hides the button when no such drive is linked and the picker lists only those drives.
 - **Entries list folders first for every provider** (`DriveEntries` → `foldersFirst`), keeping the provider's order within folders and within files.
-- **The grid view is an icon view:** borderless cells that share the row's width, a large icon or an image thumbnail ([drive-preview.md](drive-preview.md)), and the name under it, shown in full when selected. Arrow keys move the selection, and the entry menu is the right-click menu; the `…` button shows only on touch screens.
+- **The grid views are icon views:** borderless cells that share the row's width, an icon or image thumbnail filling a square frame ([drive-preview.md](drive-preview.md)), and the name under it, shown in full when selected. Arrow keys move the selection, and the entry menu is the right-click menu; the `…` button shows only on touch screens.
+  - The view menu offers the three `DRIVE_VIEWS` (`list`, `compact`, `large`), stored per browser under `metis:drive-view`; every style in `drive-entries.tsx` is a variant keyed by all three, and the icon scales with the cell.
+  - Arrow keys read the column count from the computed grid (`gridColumns`), so they follow any width.
+- **Recent is per browser and drive** (`use-drive-recents.ts`, `localStorage`): the folder being shown is recorded once its name is known, however it was reached, and a file when its preview opens.
+  - A recent file keeps its whole entry, so clicking it reopens the preview over the current folder without a fetch.
+  - The key names the workspace and drive but not the user, so every web sign-out clears all lists (`src/drive/recents.ts` → `clearDriveRecents`, called by `clearLocalData`); otherwise the next account on a shared browser would see them.
+  - Pinned and Recent rows show the entry's own `DriveIcon`, not a section icon.
 - **File type icons are generated, never hand-written.** `icons:drive` keeps a curated allowlist from `catppuccin/vscode-icons` and throws if an allowlisted icon vanished upstream; attribution is in the repository-root `NOTICE`.
 
 ## How it works

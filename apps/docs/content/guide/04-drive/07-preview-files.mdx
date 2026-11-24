@@ -13,22 +13,44 @@ Do any of these:
 - Select a file and press <kbd>Enter</kbd>.
 - Select a file and press <kbd>d</kbd> then <kbd>p</kbd>.
 - On a touch screen, tap the file.
+- Click a file under **Recent** in the sidebar (see [Recent folders and files](/guide/drive/pinned-and-recent-folders#recent-folders-and-files)).
 - Click a file that the assistant shows you in a chat (see [Assistant](/guide/assistant)).
-
-The top of the pane shows the file's icon, name, size and date, a **Download** button, and for Google Drive and OneDrive files an **Open in Google Drive** or **Open in OneDrive** button. Click **Close preview** (the X) to close it.
 
 While the file loads, the pane shows how much has arrived.
 
+## The top of the pane
+
+The top of the pane is one row. From left to right, it shows:
+
+- the file's icon and name;
+- for a PDF file, the [page and zoom controls](#pdf-files);
+- **Download** (a download icon);
+- for Google Drive and OneDrive files, **Open in Google Drive** or **Open in OneDrive** (an icon);
+- **Close preview** (the X), which closes the pane.
+
+Point at a button to see its name. Point at the file name to see the full name, the size and the date, for example "2.1 MB · 4 Oct 2026". On a touch screen, the size and date do not show.
+
+The pane looks the same when you open a file from a chat with the assistant.
+
 <img
   src="/images/drive/preview-pdf.webp"
-  alt="A PDF open in the preview pane, with page and zoom controls"
+  alt="A PDF open in the preview pane, with the page and zoom controls at the top"
   class="dark:hidden"
 />
 <img
   src="/images/drive/preview-pdf-dark.webp"
-  alt="A PDF open in the preview pane, with page and zoom controls"
+  alt="A PDF open in the preview pane, with the page and zoom controls at the top"
   class="hidden dark:block"
 />
+
+### When the pane is narrow
+
+On a phone or in a small window, some buttons move into a **...** button (**More preview actions**). The **...** button shows only for a Google Drive or OneDrive file, or for a PDF file once the file has arrived. Its menu has:
+
+- **Zoom in**, **Zoom out** and **Fit to width**, for a PDF file.
+- **Open in Google Drive** or **Open in OneDrive**, for those files. For a PDF file, a line separates it from the zoom items.
+
+The page controls, **Download** and **Close preview** stay in the row.
 
 ## What each file type shows
 
@@ -90,9 +112,13 @@ doc, docx, xls, xlsx, ppt, pptx, odt, ods, odp, rtf, gz, tgz, tar, bz2, tbz2, xz
 
 ### PDF files
 
-- **Previous page** and **Next page** move through the pages. The page number shows as, for example, "2 / 3".
+The page and zoom controls are at the top of the pane, after the file name. They show once the file has arrived. Until the PDF is open, the page number shows "…".
+
+- **Previous page** and **Next page** move through the pages. Between them, the page number shows as, for example, "2 / 3".
+- While a page is being drawn, a small spinning circle shows next to **Next page**.
 - **Zoom out** and **Zoom in** change the size, from 25% to 400%.
-- The zoom button shows **Fit** when the page fits the pane. After you zoom, it shows the zoom level. Click it to fit the page again.
+- The zoom button, between them, shows **Fit** when the page fits the width of the pane. After you zoom, it shows the zoom level as a percent. Click it (**Fit to width**) to fit the page again.
+- When the pane is narrow, the zoom controls are in the **...** menu. See [When the pane is narrow](#when-the-pane-is-narrow).
 - In the dark theme, the pages are shown in dark colors too.
 
 ### Text files
@@ -134,4 +160,4 @@ You can preview or download up to 120 files a minute. Past that, the pane shows 
 Scripts inside a file, for example in an SVG, HTML, Markdown or PDF file, never run in the preview.
 :::
 
-Metis keeps files you have previewed in your browser, so they open faster next time. It also keeps the small pictures of images that grid view shows. They are cleared when you sign out.
+Metis keeps files you have previewed in your browser, so they open faster next time. It also keeps the pictures of images that the grid views show. They are cleared when you sign out.

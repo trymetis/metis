@@ -18,7 +18,7 @@ export function CacheView() {
     <Sections>
       <HealthCheck
         input={{ kind: "driver", driver: "cache" }}
-        description="Writes, reads back and deletes a throwaway key."
+        hint="Writes, reads back and deletes a throwaway key."
       />
 
       <ConfigForm
@@ -26,8 +26,7 @@ export function CacheView() {
         onSaved={reload}
         cards={{
           cache: {
-            description:
-              "Fixed at deploy: Better Auth's storage and every rate-limit counter are bound to it when the process starts.",
+            hint: "Fixed at deploy: Better Auth's storage and every rate-limit counter are bound to it when the process starts.",
             badge: (
               <ToneBadge tone={memory ? "neutral" : "ok"}>
                 {memory ? "In process" : "Shared"}

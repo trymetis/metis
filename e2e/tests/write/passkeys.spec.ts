@@ -148,9 +148,9 @@ export default function passkeySpecs() {
         await page.reload();
         const events = page.getByRole("list", { name: "Audit events" }).getByRole("listitem");
         for (const sentence of [
-          `added the passkey ${PASSKEY_NAME}`,
+          `added the passkey \u201c${PASSKEY_NAME}\u201d`,
           "added an authenticator app",
-          `removed the passkey ${PASSKEY_NAME}`,
+          `removed the passkey \u201c${PASSKEY_NAME}\u201d`,
         ]) {
           await expect(events.filter({ hasText: sentence }).first()).toBeVisible();
         }

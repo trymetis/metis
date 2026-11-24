@@ -120,7 +120,7 @@ function DiffSection({
   return (
     <Section
       title="Compare"
-      description="What changed between two versions. Secrets show only whether they changed."
+      hint="What changed between two versions. Secrets show only whether they changed."
       badge={
         <span className="flex shrink-0 items-center gap-2">
           <VersionSelect label="From" versions={versions} value={from} onChange={onFrom} />
@@ -260,7 +260,7 @@ export function HistoryView() {
 
       <Section
         title="Versions"
-        description="Every stored version, newest first. Restoring copies a version forward; it never rewrites history."
+        hint="Every stored version, newest first. Restoring copies a version forward; it never rewrites history."
       >
         <ScrollTable className="text-[13px]">
           <TableHeader>

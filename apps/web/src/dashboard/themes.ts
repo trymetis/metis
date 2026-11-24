@@ -1,5 +1,12 @@
 import "server-only";
-import { deleteTheme, listThemes, saveTheme, themeUsage, type StoredTheme } from "@/theme/store";
+import {
+  deleteTheme,
+  deleteThemes,
+  listThemes,
+  saveTheme,
+  themeUsage,
+  type StoredTheme,
+} from "@/theme/store";
 import type { ThemePalette } from "@/theme/tokens";
 
 export async function listInstanceThemes(): Promise<(StoredTheme & { usedBy: number })[]> {
@@ -17,4 +24,8 @@ export async function saveInstanceTheme(input: {
 
 export async function deleteInstanceTheme(themeId: string): Promise<boolean> {
   return deleteTheme({ kind: "instance" }, themeId);
+}
+
+export async function deleteInstanceThemes(themeIds: string[]): Promise<number> {
+  return deleteThemes({ kind: "instance" }, themeIds);
 }

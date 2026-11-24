@@ -5,7 +5,7 @@ import { Check, Pencil, Trash2 } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { themeStyle } from "@/theme/css";
-import type { ThemeMode, ThemePalette, ThemeTokens } from "@/theme/tokens";
+import type { ThemeMode, ThemePalette, ThemeToken, ThemeTokens } from "@/theme/tokens";
 
 export function useThemeMode(): ThemeMode {
   const { resolvedTheme } = useTheme();
@@ -136,5 +136,28 @@ export function ThemeCard({
         </div>
       )}
     </div>
+  );
+}
+
+const SWATCH_TOKENS: ThemeToken[] = [
+  "bg-base",
+  "bg-surface",
+  "text-primary",
+  "brand",
+  "brand-soft",
+];
+
+export function ThemeSwatches({ palette }: { palette: ThemePalette }) {
+  const tokens = palette[useThemeMode()];
+  return (
+    <span className="flex shrink-0 items-center gap-1" aria-hidden>
+      {SWATCH_TOKENS.map((token) => (
+        <span
+          key={token}
+          className="size-3.5 rounded-[3px] ring-1 ring-border"
+          style={{ background: tokens[token] }}
+        />
+      ))}
+    </span>
   );
 }

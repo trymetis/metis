@@ -51,9 +51,12 @@ import { SearchPreview } from "./preview";
 import { useSearchPrompts } from "./prompts";
 import { qualifier } from "./queries";
 import { describe, ResultRow } from "./result-row";
+import { SearchHelp } from "./search-help";
 import { SearchInput, type SearchInputHandle, type SearchKey } from "./search-input";
 import { buildSuggestions, REMOTE_SUGGEST_KEYS } from "./suggestions";
 import { useSearch } from "./use-search";
+
+const NOTHING_HIGHLIGHTED = "search:nothing-highlighted";
 
 const RECENT_LIMIT = 8;
 const SUGGEST_DEBOUNCE_MS = 200;
@@ -236,6 +239,7 @@ export function SearchDialog() {
     if (!opening) return;
     setRecent(readRecent(workspaceSlug));
     setPage(null);
+    setActive("");
     if (!seeded) {
       const prefill = prefillFor(path);
       setQuery(prefill);
@@ -377,7 +381,9 @@ export function SearchDialog() {
 
   const active = flat.some((item) => item.key === chosenActive)
     ? chosenActive
-    : (flat[0]?.key ?? "");
+    : trimmed
+      ? (flat[0]?.key ?? "")
+      : "";
 
   const selected = useMemo(
     () => (page ? page : (flat.find((item) => item.key === active) ?? null)),
@@ -529,7 +535,12 @@ export function SearchDialog() {
       }
       if (flat.length === 0) return;
       const index = flat.findIndex((item) => item.key === active);
-      const next = flat[(index + delta + flat.length) % flat.length];
+      const next =
+        index === -1
+          ? delta > 0
+            ? flat[0]
+            : flat.at(-1)
+          : flat[(index + delta + flat.length) % flat.length];
       if (next) setActive(next.key);
     },
     [page, actions, actionActive, flat, active],
@@ -552,7 +563,7 @@ export function SearchDialog() {
           }
           const item = flat.find((i) => i.key === active);
           if (item) choose(item);
-          else results.runNow();
+          else if (trimmed) results.runNow();
           return true;
         }
         case "mod-enter":
@@ -580,6 +591,7 @@ export function SearchDialog() {
       active,
       choose,
       results,
+      trimmed,
       openActions,
       accept,
     ],
@@ -679,8 +691,11 @@ export function SearchDialog() {
         shouldFilter={false}
         vimBindings={false}
         loop
-        value={page ? actionActive : active}
-        onValueChange={(value) => (page ? setActionActive(value) : setActive(value))}
+        value={page ? actionActive : active || NOTHING_HIGHLIGHTED}
+        onValueChange={(value) => {
+          if (page) setActionActive(value);
+          else if (value !== NOTHING_HIGHLIGHTED) setActive(value);
+        }}
         className="flex h-full min-h-0 flex-col rounded-none! bg-popover p-0"
       >
         <div className="flex items-center gap-2 border-b border-border px-4">
@@ -869,15 +884,19 @@ export function SearchDialog() {
           </CommandList>
           {!mobile && (
             <aside aria-label="Preview" className="min-w-0 flex-1 overflow-y-auto px-6 py-5">
-              <SearchPreview workspaceSlug={workspaceSlug} item={selected} onNavigate={close} />
+              {!trimmed && !selected ? (
+                <SearchHelp />
+              ) : (
+                <SearchPreview workspaceSlug={workspaceSlug} item={selected} onNavigate={close} />
+              )}
             </aside>
           )}
         </div>
 
         <div className="flex items-center gap-3 border-t border-border px-4 py-1.5 text-[11px] text-faint max-md:hidden">
           <span>↑↓ to move</span>
-          <span>Enter to open</span>
-          <span>Tab or → for actions</span>
+          {(page || active) && <span>Enter to open</span>}
+          {(page || active) && <span>Tab or → for actions</span>}
           <span>Esc to close</span>
         </div>
         <input

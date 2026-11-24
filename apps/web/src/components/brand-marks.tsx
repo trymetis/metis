@@ -9,10 +9,10 @@ import {
   Inbox,
 } from "lucide-react";
 
-import { AwsDark } from "./svgs/awsDark";
-import { AwsLight } from "./svgs/awsLight";
-import { ResendIconBlack } from "./svgs/resendIconBlack";
-import { ResendIconWhite } from "./svgs/resendIconWhite";
+import { AwsDark } from "./ui/svgs/awsDark";
+import { AwsLight } from "./ui/svgs/awsLight";
+import { ResendIconBlack } from "./ui/svgs/resendIconBlack";
+import { ResendIconWhite } from "./ui/svgs/resendIconWhite";
 
 export type BrandMark = (props: { className?: string }) => React.ReactElement;
 
@@ -73,9 +73,11 @@ export const SftpServer: BrandMark = ({ className }) => (
 );
 
 export const OutlookCalendar: BrandMark = ({ className }) => (
+  // oxlint-disable-next-line nextjs/no-img-element --a small icon-sized brand mark from public/brand
   <img alt="" aria-hidden className={className} src="/brand/outlook-calendar.png" />
 );
 
 export const ZohoCalendar: BrandMark = ({ className }) => (
+  // oxlint-disable-next-line nextjs/no-img-element --a small icon-sized brand mark from public/brand
   <img alt="" aria-hidden className={className} src="/brand/zoho-calendar.png" />
 );

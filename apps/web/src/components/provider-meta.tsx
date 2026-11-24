@@ -12,14 +12,13 @@ import {
   WebdavServer,
   ZohoCalendar,
   ZohoMail,
-} from "@metis/ui/components/brand-marks";
-import { Cloudflare } from "@metis/ui/components/svgs/cloudflare";
-import { Drive } from "@metis/ui/components/svgs/drive";
-import { Gmail } from "@metis/ui/components/svgs/gmail";
-import { GoogleCalendar } from "@metis/ui/components/svgs/googleCalendar";
-import { MicrosoftOutlook } from "@metis/ui/components/svgs/microsoft-outlook";
-import { MicrosoftOnedrive } from "@metis/ui/components/svgs/microsoftOnedrive";
-
+} from "@/components/brand-marks";
+import { Cloudflare } from "@/components/ui/svgs/cloudflare";
+import { Drive } from "@/components/ui/svgs/drive";
+import { Gmail } from "@/components/ui/svgs/gmail";
+import { GoogleCalendar } from "@/components/ui/svgs/googleCalendar";
+import { MicrosoftOutlook } from "@/components/ui/svgs/microsoft-outlook";
+import { MicrosoftOnedrive } from "@/components/ui/svgs/microsoftOnedrive";
 import { ADDRESS_BOOK_PROVIDER_LABELS } from "@/connections/address-book-name";
 import { CALENDAR_PROVIDER_LABELS } from "@/connections/calendar-name";
 import {
@@ -93,6 +92,14 @@ export function resourceProviderMeta<R extends ConnectionResource>(
   provider: ProvidersFor<R>,
 ): ProviderMeta {
   return RESOURCE_PROVIDER_META[resource][provider];
+}
+
+export function providerLabelFor(
+  resource: ConnectionResource,
+  provider: ConnectionProvider,
+): string {
+  const metas: Partial<Record<ConnectionProvider, ProviderMeta>> = RESOURCE_PROVIDER_META[resource];
+  return metas[provider]?.label ?? provider;
 }
 
 export function providerLine(label: string, server: string | null): string {

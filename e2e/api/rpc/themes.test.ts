@@ -173,3 +173,33 @@ test("an instance theme is offered to every workspace and cannot reuse a built-i
     await rpc("dashboard.themes.delete", { themeId: theme.id }).catch(() => undefined);
   }
 });
+
+test("several instance themes delete at once, and built-in themes never do", async () => {
+  const { rpc } = await ana();
+  const { themes } = await rpc<{ themes: Theme[] }>("dashboard.themes.list");
+  const palette = paletteOf(themes, "Rose");
+  const system = themes.filter((t) => t.source === "system").map((t) => t.id);
+
+  const onlyBuiltIn = await rejection(rpc("dashboard.themes.deleteMany", { themeIds: system }));
+  expect(onlyBuiltIn.code).toBe("NOT_FOUND");
+
+  const made = await Promise.all(
+    [uniqueName(), uniqueName()].map((name) =>
+      rpc<{ theme: Theme }>("dashboard.themes.save", { name, palette }).then((r) => r.theme),
+    ),
+  );
+  try {
+    const { deleted } = await rpc<{ deleted: number }>("dashboard.themes.deleteMany", {
+      themeIds: [...made.map((t) => t.id), ...system],
+    });
+    expect(deleted).toBe(2);
+    const after = await rpc<{ themes: Theme[] }>("dashboard.themes.list");
+    const ids = after.themes.map((t) => t.id);
+    for (const theme of made) expect(ids).not.toContain(theme.id);
+    for (const id of system) expect(ids).toContain(id);
+  } finally {
+    for (const theme of made) {
+      await rpc("dashboard.themes.delete", { themeId: theme.id }).catch(() => undefined);
+    }
+  }
+});

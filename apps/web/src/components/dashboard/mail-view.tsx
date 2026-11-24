@@ -20,7 +20,7 @@ export function MailView() {
     <Sections>
       <HealthCheck
         input={{ kind: "driver", driver: "mail" }}
-        description="Logs in to the SMTP server, or checks the Resend API key. Sends nothing."
+        hint="Logs in to the SMTP server, or checks the Resend API key. Sends nothing."
       />
 
       <ConfigForm
@@ -28,8 +28,7 @@ export function MailView() {
         onSaved={reload}
         cards={{
           mailer: {
-            description:
-              "Sign-in links, sign-in alerts, verification, password resets and invites, and the From address on each.",
+            hint: "Sign-in links, sign-in alerts, verification, password resets and invites, and the From address on each.",
             badge:
               driver === "noop" ? (
                 <ToneBadge tone="danger">Not delivered</ToneBadge>

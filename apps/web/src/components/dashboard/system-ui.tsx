@@ -1,6 +1,7 @@
 import { Badge } from "@metis/ui/components/badge";
 import { cn } from "@metis/ui/lib/utils";
 
+import { InfoHint } from "@/components/info-hint";
 import { PageHeader } from "@/components/page-header";
 import type { DashboardSecret, SystemTone } from "@/server/schema";
 
@@ -29,11 +30,13 @@ export function SystemPageHeader({
 export function Section({
   title,
   description,
+  hint,
   badge,
   children,
 }: {
   title: string;
   description?: string;
+  hint?: string;
   badge?: React.ReactNode;
   children: React.ReactNode;
 }) {
@@ -41,7 +44,10 @@ export function Section({
     <section className="rounded-xl border border-border bg-surface p-4">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="text-[13px] font-medium text-foreground">{title}</h2>
+          <h2 className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
+            {title}
+            {hint && <InfoHint label={title}>{hint}</InfoHint>}
+          </h2>
           {description && <p className="mt-0.5 text-[11px] text-faint">{description}</p>}
         </div>
         {badge}

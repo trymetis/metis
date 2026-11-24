@@ -27,7 +27,7 @@ test("a magic-link request for an unknown address answers exactly like one for a
     const main = page.getByRole("main");
     await main.getByRole("textbox", { name: "Email address" }).fill(email);
     const response = page.waitForResponse(/\/api\/auth\/sign-in\/magic-link/);
-    await main.getByRole("button", { name: "Email me a magic link", exact: true }).click();
+    await main.getByRole("button", { name: "Email me a sign-in link", exact: true }).click();
     const res = await response;
     await expect(main.getByRole("heading", { level: 2, name: "Check your email" })).toBeVisible();
     return {

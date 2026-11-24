@@ -39,8 +39,48 @@
   <body>
     <main>
       <h1>Down for maintenance</h1>
-      <p>Since {{.Since}}</p>
-      <p>Try again in a few minutes.</p>
+      <p><span id="down" hidden></span>Since {{.Since}}.</p>
+      <p>
+        This page reloads by itself when the app is back. Contact your administrator if this takes
+        longer than expected.
+      </p>
     </main>
+    <script>
+      (function () {
+        var since = Date.parse({{.SinceISO}});
+        var down = document.getElementById("down");
+        function show() {
+          var minutes = Math.floor((Date.now() - since) / 60000);
+          var days = Math.floor(minutes / 1440);
+          var hours = Math.floor((minutes % 1440) / 60);
+          var rest = minutes % 60;
+          var text =
+            minutes < 1
+              ? "less than a minute"
+              : days > 0
+                ? days + " d" + (hours > 0 ? " " + hours + " h" : "")
+                : hours > 0
+                  ? hours + " h" + (rest > 0 ? " " + rest + " min" : "")
+                  : rest + " min";
+          down.textContent = "Down for " + text + ". ";
+          down.hidden = false;
+        }
+        show();
+        setInterval(show, 30000);
+        setInterval(function () {
+          fetch(location.href, {
+            headers: { Accept: "application/json" },
+            cache: "no-store",
+            redirect: "manual",
+          }).then(
+            function (response) {
+              var current = response.headers.get("Metis-Maintenance");
+              if (current === null || Date.parse(current) !== since) location.reload();
+            },
+            function () {},
+          );
+        }, 30000);
+      })();
+    </script>
   </body>
 </html>

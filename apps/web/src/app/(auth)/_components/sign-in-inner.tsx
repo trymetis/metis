@@ -424,7 +424,7 @@ export function SignInInner({
                     onClick={handleMagicLink}
                     className="h-auto p-0 text-neutral-500 underline-offset-4 hover:underline"
                   >
-                    Email me a magic link
+                    Email me a sign-in link
                   </Button>
                 </div>
               )}

@@ -1,20 +1,13 @@
 "use client";
 
 import { Button } from "@metis/ui/components/button";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@metis/ui/components/hover-card";
 import { Switch } from "@metis/ui/components/switch";
 import { useQuery } from "@tanstack/react-query";
-import {
-  CircleQuestionMark,
-  Image as ImageIcon,
-  Link2Off,
-  type LucideIcon,
-  UserCheck,
-  X,
-} from "lucide-react";
+import { Image as ImageIcon, Link2Off, type LucideIcon, UserCheck, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { InfoHint } from "@/components/info-hint";
 import { PageHeader } from "@/components/page-header";
 import { updateCachedPreferences, useUserPreferences } from "@/hooks/use-preferences";
 import { orpc } from "@/lib/orpc";
@@ -34,27 +27,13 @@ function CardTitle({
     <div className="flex items-center gap-2">
       <Icon className="size-4 shrink-0 text-brand-text" />
       <h2 className="text-[13px] font-medium text-foreground">{title}</h2>
-      <HoverCard>
-        <HoverCardTrigger
-          render={
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              aria-label={`About ${title.toLowerCase()}`}
-              className="rounded-full text-faint hover:text-muted-foreground"
-            />
-          }
-        >
-          <CircleQuestionMark />
-        </HoverCardTrigger>
-        <HoverCardContent align="start" className="w-80 space-y-2">
+      <InfoHint label={title}>
+        <span className="flex flex-col gap-2">
           {details.map((line) => (
-            <p key={line} className="text-[12px] text-muted-foreground">
-              {line}
-            </p>
+            <span key={line}>{line}</span>
           ))}
-        </HoverCardContent>
-      </HoverCard>
+        </span>
+      </InfoHint>
     </div>
   );
 }

@@ -347,8 +347,8 @@ export function UsersView() {
                       <TableCell className="text-foreground">
                         {user.name}
                         {!user.twoFactorEnabled && (
-                          <Badge variant="destructive" className="ml-2">
-                            No 2FA
+                          <Badge variant="outline" className="ml-2 text-muted-foreground">
+                            2FA setup required
                           </Badge>
                         )}
                       </TableCell>

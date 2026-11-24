@@ -18,12 +18,12 @@ Until you type, the search box shows a few example searches as a hint.
 
 <img
   src="/images/search/dialog.webp"
-  alt="The search window with an empty search box and the list of commands"
+  alt="The search window with an empty search box, the list of commands on the left and search help on the right"
   class="dark:hidden"
 />
 <img
   src="/images/search/dialog-dark.webp"
-  alt="The search window with an empty search box and the list of commands"
+  alt="The search window with an empty search box, the list of commands on the left and search help on the right"
   class="hidden dark:block"
 />
 
@@ -38,13 +38,33 @@ If you open search from **All inboxes**, from all calendars, from **All drives**
 
 ## Before you type
 
-With an empty box, search shows up to three groups:
+With an empty box, the list on the left shows up to three groups:
 
 - **Saved searches**: the searches you saved in this workspace, each with its name and the search under it.
 - **Recent searches**: the searches you used lately in this browser.
 - **Commands**: things you can do right away, such as **Compose mail**, **New event** or **Go to members**.
 
+When search opens with an empty box, no row is highlighted, so pressing **Enter** does nothing and search stays open. Press **Down** to highlight the first row, or **Up** to highlight the last one. Pointing at a row also highlights it. Then press **Enter** to run it.
+
 Click a saved or recent search, or move to it and press **Enter**, to put it in the box and run it. See [Saved and recent searches](/guide/search/saved-and-recent-searches).
+
+On a computer, while the box is empty, the preview pane on the right shows help until you move to a row. Its heading is "Search everything", and it says: "Type words to match, add key:value to narrow, and join terms with AND, OR and NOT. Quotes match an exact phrase. Arrow down to reach commands and recent searches."
+
+Under **Examples**, the help shows five searches you can copy:
+
+| Search               | What it finds                  |
+| -------------------- | ------------------------------ |
+| `from:ana after:7d`  | Mail from Ana in the last week |
+| `type:file report`   | Files with "report" in them    |
+| `"quarterly plan"`   | The exact phrase               |
+| `invoice OR receipt` | Either word                    |
+| `NOT type:mail`      | Everything except mail         |
+
+Under **Keys**, it lists every key you can use in a search, such as `from:` or `type:`, each with a short description. For the values each key takes, see [Search syntax](/guide/reference/search-syntax).
+
+Once you move to a row, the pane shows that row instead of the help.
+
+A line of hints runs along the bottom of the window. "↑↓ to move" and "Esc to close" always show. "Enter to open" and "Tab or → for actions" show only while a row is highlighted.
 
 ## Run a search
 
@@ -60,9 +80,10 @@ Click a saved or recent search, or move to it and press **Enter**, to put it in 
     through them.
   </Step>
   <Step title="Check the preview">
-    The **Preview** pane on the right shows the details of the result you are on. The first result
-    is highlighted for you. For mail, the preview shows the sender, the recipients, the date and the
-    message text. When there is nothing in the list, it says "Pick a result to see it here."
+    The preview pane on the right shows the details of the result you are on. Once you type, the
+    first result is highlighted for you. For mail, the preview shows the sender, the recipients, the
+    date and the message text. When your search leaves nothing in the list, it says "Pick a result
+    to see it here."
   </Step>
 </Steps>
 
@@ -122,4 +143,4 @@ Press **Esc**, or click the **X** (**Close search**) at the right of the box. If
 
 ## Search on a phone
 
-On a phone, search opens as a sheet that fills the screen from the bottom. There is no preview pane and no line of keyboard hints. Tap a row to run its first action, or tap its **...** button to see all its actions.
+On a phone, search opens as a sheet that fills the screen from the bottom. There is no preview pane, so no help before you type, and no line of keyboard hints. Nothing is highlighted before you type. Tap a row to run its first action, or tap its **...** button to see all its actions.

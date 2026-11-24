@@ -5,6 +5,7 @@ import { BellRing } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { InfoHint } from "@/components/info-hint";
 import { updateCachedPreferences, useUserPreferences } from "@/hooks/use-preferences";
 import { orpc } from "@/lib/orpc";
 
@@ -41,11 +42,11 @@ export function SignInAlertsSection({ email }: { email: string }) {
         <div className="flex items-center gap-2">
           <BellRing className="size-4 text-brand-text" />
           <h2 className="text-[13px] font-medium text-foreground">Sign-in alerts</h2>
+          <InfoHint label="Sign-in alerts">
+            Emails {email} each time someone signs in to this account, with the device, IP address
+            and time, so a sign-in you didn&rsquo;t make doesn&rsquo;t go unnoticed.
+          </InfoHint>
         </div>
-        <p className="mt-1 text-[12px] text-faint">
-          Emails {email} each time someone signs in to this account, with the device, IP address and
-          time, so a sign-in you didn&rsquo;t make doesn&rsquo;t go unnoticed.
-        </p>
       </div>
       <Switch
         aria-label="Email me when someone signs in"

@@ -10,7 +10,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@metis/ui/components/alert-dialog";
-import type { BrandMark } from "@metis/ui/components/brand-marks";
 import { Button } from "@metis/ui/components/button";
 import {
   Tooltip,
@@ -25,6 +24,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import { AccountIdentity } from "@/components/account-identity";
+import type { BrandMark } from "@/components/brand-marks";
 import { PageHeader } from "@/components/page-header";
 import { ACCOUNT_PROVIDER_META, resourceProviderMeta } from "@/components/provider-meta";
 import {

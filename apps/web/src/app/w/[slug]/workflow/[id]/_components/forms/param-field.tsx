@@ -6,6 +6,9 @@ import { Switch } from "@metis/ui/components/switch";
 import { format } from "date-fns";
 import { useId, useState } from "react";
 
+import { AccountOption } from "@/components/account-option";
+import { providerLabelFor } from "@/components/provider-meta";
+import type { ConnectionProvider, ConnectionResource } from "@/connections/types";
 import { MAIL_FOLDERS } from "@/types/mail";
 import { type Binding, expr, inferType, literal, type Scope, template } from "@/workflow/expr";
 import {
@@ -97,19 +100,38 @@ function ResourceSelect({
   bound,
   onChange,
   entries,
+  resource,
   anyLabel,
 }: {
   id: string;
   spec: ParamSpec;
   bound: Binding | undefined;
   onChange: Change;
-  entries: readonly { id: string; name: string }[];
+  entries: readonly {
+    id: string;
+    name: string;
+    email: string;
+    provider: ConnectionProvider;
+    server: string | null;
+  }[];
+  resource: ConnectionResource;
   anyLabel: string;
 }) {
   const value = literalString(bound);
   const options = [
     ...(spec.required ? [] : [{ value: ANY, label: anyLabel }]),
-    ...entries.map((entry) => ({ value: entry.id, label: entry.name })),
+    ...entries.map((entry) => ({
+      value: entry.id,
+      label: entry.name,
+      render: (
+        <AccountOption
+          name={entry.name}
+          email={entry.email}
+          providerLabel={providerLabelFor(resource, entry.provider)}
+          server={entry.server}
+        />
+      ),
+    })),
     ...(value && !entries.some((entry) => entry.id === value)
       ? [{ value, label: "Not in this workspace" }]
       : []),
@@ -223,6 +245,7 @@ function ValueEditor({
           bound={bound}
           onChange={onChange}
           entries={directory.mailboxes}
+          resource="mailbox"
           anyLabel="Any mailbox"
         />
       );
@@ -234,6 +257,7 @@ function ValueEditor({
           bound={bound}
           onChange={onChange}
           entries={directory.calendars}
+          resource="calendar"
           anyLabel="Any calendar"
         />
       );
@@ -245,6 +269,7 @@ function ValueEditor({
           bound={bound}
           onChange={onChange}
           entries={directory.drives}
+          resource="drive"
           anyLabel="Any drive"
         />
       );
@@ -256,6 +281,7 @@ function ValueEditor({
           bound={bound}
           onChange={onChange}
           entries={directory.addressBooks}
+          resource="addressbook"
           anyLabel="Any address book"
         />
       );

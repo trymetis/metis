@@ -281,7 +281,7 @@ export function UpdatesView() {
     <Sections>
       <Section
         title="Running release"
-        description="The release every service of this instance runs."
+        hint="The release every service of this instance runs."
         badge={
           data.currentVersion && data.currentVersion === latest ? (
             <ToneBadge tone="ok">Up to date</ToneBadge>
@@ -336,7 +336,7 @@ export function UpdatesView() {
 
       <Section
         title="Releases"
-        description={
+        hint={
           data.snapshots
             ? "Upgrading pulls the release, stops the app, snapshots the database, runs preflight, which migrates the database, then switches the app and waits until it is ready. If a step fails, the updater restores the snapshot and switches back on its own."
             : "Upgrading pulls the release, runs preflight, which migrates the database, then switches the app and waits until it is ready. If a step fails, the updater switches back on its own."
