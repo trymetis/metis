@@ -7,6 +7,8 @@ import { SIGNATURE_ATTR } from "@/mail/signature-markup";
 
 export const SIGNATURE_NODE = "mailSignature";
 
+export const SIGNATURE_META = "metisSignature";
+
 export interface InsertedSignature {
   id: string;
   html: string;
@@ -87,7 +89,7 @@ export function setSignature(editor: Editor, signature: InsertedSignature | null
   } else {
     return;
   }
-  editor.view.dispatch(tr);
+  editor.view.dispatch(tr.setMeta(SIGNATURE_META, true));
 }
 
 export function typedText(editor: Editor): string {

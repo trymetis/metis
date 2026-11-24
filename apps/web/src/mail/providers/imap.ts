@@ -750,7 +750,11 @@ async function restoreMessage(credentials: ImapCredentials, id: string): Promise
   return moveMessage(credentials, id, "inbox");
 }
 
-async function buildMime(payload: DraftPayload, from: string): Promise<Buffer> {
+async function buildMime(
+  payload: DraftPayload,
+  from: string,
+  { keepBcc = false }: { keepBcc?: boolean } = {},
+): Promise<Buffer> {
   const composer = new MailComposer({
     from,
     to: payload.to,
@@ -767,7 +771,9 @@ async function buildMime(payload: DraftPayload, from: string): Promise<Buffer> {
       content: Buffer.from(attachment.contentBase64, "base64"),
     })),
   });
-  return composer.compile().build();
+  const mime = composer.compile();
+  mime.keepBcc = keepBcc;
+  return mime.build();
 }
 
 async function appendAndResolve(
@@ -842,7 +848,7 @@ async function createDraft(
   payload: DraftPayload,
   from: string,
 ): Promise<{ id: string }> {
-  const raw = await buildMime(payload, from);
+  const raw = await buildMime(payload, from, { keepBcc: true });
   return withImap(credentials, async (ctx) => {
     const drafts = ctx.path("drafts");
     const id = await appendAndResolve(ctx, drafts, raw, ["\\Draft"]);

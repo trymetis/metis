@@ -122,7 +122,7 @@
         "click": "role=complementary[name=\"Folders\"] >> role=button[name=/^Compose$/]"
       },
       {
-        "waitFor": "[aria-modal=\"true\"]:has([aria-label=\"Close compose\"])"
+        "waitFor": "[role=\"dialog\"]:has([aria-label=\"Close compose\"])"
       },
       {
         "fill": "role=combobox[name=\"To recipients\"]",
@@ -142,17 +142,17 @@
         "value": "Packaging mockups"
       },
       {
-        "fill": "[aria-modal=\"true\"]:has([aria-label=\"Close compose\"]) [contenteditable=\"true\"]",
+        "fill": "[role=\"dialog\"]:has([aria-label=\"Close compose\"]) [contenteditable=\"true\"]",
         "value": "Hi Kenji, here are the packaging mockups we talked about."
       },
       {
-        "click": "[aria-modal=\"true\"]:has([aria-label=\"Close compose\"]) >> role=button[name=/^Cc$/]"
+        "click": "[role=\"dialog\"]:has([aria-label=\"Close compose\"]) >> role=button[name=/^Cc$/]"
       },
       {
         "waitFor": "role=combobox[name=\"Cc recipients\"]"
       }
     ],
-    "element": "[aria-modal=\"true\"]:has([aria-label=\"Close compose\"])"
+    "element": "[role=\"dialog\"]:has([aria-label=\"Close compose\"])"
   },
   {
     "name": "mail/reply-footer",
@@ -172,7 +172,7 @@
         "click": "role=button[name=\"Reply 3 smart replies\"]"
       },
       {
-        "waitFor": "role=textbox[name=\"Reply text\"]"
+        "waitFor": "role=button[name=/Write a reply…$/]"
       },
       {
         "wait": 600
@@ -188,7 +188,7 @@
         "click": "role=complementary[name=\"Folders\"] >> role=button[name=/^Compose$/]"
       },
       {
-        "waitFor": "[aria-modal=\"true\"]:has([aria-label=\"Close compose\"])"
+        "waitFor": "[role=\"dialog\"]:has([aria-label=\"Close compose\"])"
       },
       {
         "fill": "role=combobox[name=\"To recipients\"]",
@@ -208,11 +208,11 @@
         "value": "Packaging mockups"
       },
       {
-        "fill": "[aria-modal=\"true\"]:has([aria-label=\"Close compose\"]) [contenteditable=\"true\"]",
+        "fill": "[role=\"dialog\"]:has([aria-label=\"Close compose\"]) [contenteditable=\"true\"]",
         "value": "Hi Kenji, here are the packaging mockups we talked about."
       },
       {
-        "click": "[aria-modal=\"true\"]:has([aria-label=\"Close compose\"]) >> role=button[name=\"Schedule send\"]"
+        "click": "[role=\"dialog\"]:has([aria-label=\"Close compose\"]) >> role=button[name=\"Schedule send\"]"
       },
       {
         "waitFor": "role=menu[name=\"Schedule send\"]"
@@ -614,15 +614,15 @@
         "click": "role=complementary[name=\"Folders\"] >> role=button[name=/^Compose$/]"
       },
       {
-        "waitFor": "[aria-modal=\"true\"]:has([aria-label=\"Close compose\"]) [data-metis-signature]"
+        "waitFor": "[role=\"dialog\"]:has([aria-label=\"Close compose\"]) [data-metis-signature]"
       },
       {
-        "click": "[aria-modal=\"true\"]:has([aria-label=\"Close compose\"]) >> role=button[name=\"Signature\"]"
+        "click": "[role=\"dialog\"]:has([aria-label=\"Close compose\"]) >> role=button[name=\"Signature\"]"
       },
       {
         "waitFor": "role=menuitem[name=\"No signature\"]"
       }
     ],
-    "element": ["[aria-modal=\"true\"]:has([aria-label=\"Close compose\"])", "role=menu"]
+    "element": ["[role=\"dialog\"]:has([aria-label=\"Close compose\"])", "role=menu"]
   }
 ]

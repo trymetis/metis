@@ -6,6 +6,20 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 ## Unreleased
 
+- The composer is a large window that fills most of the screen, for new messages, drafts, replies and forwards alike, and slides up as a sheet on phones. A long message scrolls inside it and keeps the line you are typing in view. A click outside no longer closes it: use the close button or Escape.
+- Drafts save shortly after you pause typing, and a reply you never touched is not saved as a draft. Edit draft opens the whole saved draft, with its Bcc, attachments and, for a reply, its place in the conversation, as far as the mail provider stores them.
+- The reply box under a message opens the composer with the reply ready, so a reply is written in one editor.
+- HTML messages use the full width of the reading pane, and a message wider than the pane shrinks to fit instead of cutting off its right side.
+- The **m** then **r** shortcut replies to the open message, the same as **Write a reply…**, instead of opening a blank message. It does nothing on a draft.
+- In **All inboxes**, a reply or forward starts on the mailbox the message arrived in, instead of your first mailbox.
+- In **All inboxes**, **Edit draft** starts on the draft's own mailbox and keeps saving to the same draft, and the draft is removed once you send it.
+- **From** can't be changed once a draft has been saved, so saves never go to a mailbox that doesn't hold the draft.
+- On Gmail, a draft opened with **Edit draft** saves again and is removed once you send it, instead of failing to save.
+- On Zoho Mail, saving or sending a draft no longer leaves copies of it in **Trash**.
+- Mail shortcuts do nothing while the composer is open, so a key pressed while writing can no longer move to another message, archive it or delete it.
+- **Undo** after sending brings back the whole message: Cc, Bcc, attachments, the mailbox it was sent from and, for a reply, its place in the conversation.
+- Replies sent from Outlook mailboxes land in the conversation they answer instead of going out as new messages, and a reply saved as a draft is stored in Outlook as a reply.
+
 ## Releases
 
 - [0.4.1](../../releases/app-v0.4.1.md) - 2026-11-17

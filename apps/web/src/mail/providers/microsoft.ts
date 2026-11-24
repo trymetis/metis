@@ -188,11 +188,15 @@ async function listMessages(
 async function getMessage(accessToken: string, id: string): Promise<Partial<Email>> {
   const msg: Message = await getGraphClient(accessToken)
     .api(`/me/messages/${id}`)
-    .select("id,body,bodyPreview")
+    .select("id,body,bodyPreview,bccRecipients")
     .get();
 
+  const bcc = (msg.bccRecipients ?? [])
+    .map((r) => r.emailAddress?.address)
+    .filter((address): address is string => !!address);
   return {
     id: msg.id ?? id,
+    ...(bcc.length > 0 && { bcc }),
     bodyHtml: msg.body?.contentType === "html" ? (msg.body.content ?? undefined) : undefined,
     bodyText: msg.body?.contentType === "text" ? (msg.body.content ?? undefined) : undefined,
   };
@@ -202,13 +206,17 @@ function toRecipientList(addresses: string[] | undefined) {
   return (addresses ?? []).map((address) => ({ emailAddress: { address } }));
 }
 
-function msMessageBody(payload: DraftPayload) {
-  const attachments = (payload.attachments ?? []).map((a) => ({
+function msFileAttachments(payload: DraftPayload) {
+  return (payload.attachments ?? []).map((a) => ({
     "@odata.type": "#microsoft.graph.fileAttachment",
     name: a.filename,
     contentType: a.mimeType,
     contentBytes: a.contentBase64,
   }));
+}
+
+function msMessageBody(payload: DraftPayload) {
+  const attachments = msFileAttachments(payload);
 
   return {
     subject: payload.subject,
@@ -220,10 +228,50 @@ function msMessageBody(payload: DraftPayload) {
   };
 }
 
+async function createReplyDraft(
+  client: Client,
+  replyToMessageId: string,
+  payload: DraftPayload,
+): Promise<string | null> {
+  let draft: Message;
+  try {
+    draft = await client.api(`/me/messages/${replyToMessageId}/createReply`).post({});
+  } catch (err) {
+    if (errorStatus(err) === 404) return null;
+    throw err;
+  }
+  if (!draft.id) throw new Error("Microsoft Graph returned no draft id");
+  const draftId = draft.id;
+  try {
+    await client.api(`/me/messages/${draftId}`).patch({
+      subject: payload.subject,
+      body: { contentType: "HTML", content: payload.bodyHtml },
+      toRecipients: toRecipientList(payload.to),
+      ccRecipients: toRecipientList(payload.cc),
+      bccRecipients: toRecipientList(payload.bcc),
+    });
+    await Promise.all(
+      msFileAttachments(payload).map((attachment) =>
+        client.api(`/me/messages/${draftId}/attachments`).post(attachment),
+      ),
+    );
+  } catch (err) {
+    await client
+      .api(`/me/messages/${draftId}`)
+      .delete()
+      .catch(() => {});
+    throw err;
+  }
+  return draftId;
+}
+
 async function createDraft(accessToken: string, payload: DraftPayload): Promise<{ id: string }> {
-  const data: Message = await getGraphClient(accessToken)
-    .api("/me/messages")
-    .post(msMessageBody(payload));
+  const client = getGraphClient(accessToken);
+  if (payload.replyToMessageId) {
+    const id = await createReplyDraft(client, payload.replyToMessageId, payload);
+    if (id) return { id };
+  }
+  const data: Message = await client.api("/me/messages").post(msMessageBody(payload));
 
   if (!data.id) throw new Error("Microsoft Graph returned no draft id");
   return { id: data.id };
@@ -254,9 +302,15 @@ async function sendMessage(
   accessToken: string,
   payload: DraftPayload,
 ): Promise<{ id: string | null }> {
-  await getGraphClient(accessToken)
-    .api("/me/sendMail")
-    .post({ message: msMessageBody(payload) });
+  const client = getGraphClient(accessToken);
+  if (payload.replyToMessageId) {
+    const draftId = await createReplyDraft(client, payload.replyToMessageId, payload);
+    if (draftId) {
+      await client.api(`/me/messages/${draftId}/send`).post(null);
+      return { id: null };
+    }
+  }
+  await client.api("/me/sendMail").post({ message: msMessageBody(payload) });
   return { id: null };
 }
 

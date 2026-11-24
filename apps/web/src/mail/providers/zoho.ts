@@ -425,12 +425,18 @@ async function updateDraft(
   draftId: string,
   payload: DraftPayload,
 ): Promise<{ id: string }> {
-  await modifyMessages(session, [draftId], "trashMessages").catch(() => {});
+  await deleteDraft(session, draftId).catch(() => {});
   return createDraft(session, payload);
 }
 
 async function deleteDraft(session: ZohoSession, draftId: string): Promise<void> {
-  await modifyMessages(session, [draftId], "trashMessages");
+  const acc = await loadAccount(session);
+  const { folderId, messageId } = decodeMessageId(draftId);
+  await zohoFetch(
+    session,
+    `/accounts/${acc.accountId}/folders/${folderId}/messages/${messageId}?expunge=true`,
+    { method: "DELETE" },
+  );
 }
 
 async function sendMessage(

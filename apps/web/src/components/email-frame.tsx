@@ -11,6 +11,12 @@ import type { RemoteImages } from "@/mail/render/types";
 const SANDBOX = "allow-same-origin allow-popups allow-popups-to-escape-sandbox";
 const MIN_HEIGHT = 24;
 const LOADING_HEIGHT = 72;
+const MIN_FIT_SCALE = 0.75;
+
+interface Fit {
+  scale: number;
+  width: number;
+}
 
 export interface EmailFrameProps {
   html: string;
@@ -99,6 +105,7 @@ export function EmailFrame({
   const onLoadImagesRef = useRef(onLoadImages);
   const [textColor, setTextColor] = useState<string | null>(null);
   const [height, setHeight] = useState(MIN_HEIGHT);
+  const [fit, setFit] = useState<Fit | null>(null);
   const [measured, setMeasured] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
 
@@ -149,6 +156,15 @@ export function EmailFrame({
 
     const blocked = new Set<string>();
     let lastHeight = -1;
+    let lastFit: Fit | null = null;
+
+    const fitWidth = () => {
+      const avail = wrapperRef.current?.clientWidth ?? 0;
+      const natural = doc.documentElement.scrollWidth;
+      if (avail <= 0 || natural <= avail + 1) return null;
+      const scale = Math.max(MIN_FIT_SCALE, avail / natural);
+      return { scale, width: Math.ceil(avail / scale) };
+    };
 
     const measure = () => {
       const body = doc.body;
@@ -167,6 +183,11 @@ export function EmailFrame({
             scrollbar,
         ),
       );
+      const nextFit = fitWidth();
+      if (nextFit?.scale !== lastFit?.scale || nextFit?.width !== lastFit?.width) {
+        lastFit = nextFit;
+        setFit(nextFit);
+      }
       if (next === lastHeight) return;
       lastHeight = next;
       setHeight(next);
@@ -183,6 +204,7 @@ export function EmailFrame({
     inner.observe(doc.body);
     const outer = new ResizeObserver(measure);
     outer.observe(frame);
+    if (wrapperRef.current) outer.observe(wrapperRef.current);
     doc.fonts?.ready.then(measure, () => {});
 
     const onResourceLoad = () => measure();
@@ -250,7 +272,13 @@ export function EmailFrame({
     <div
       ref={wrapperRef}
       className={cn("relative overflow-hidden rounded-lg text-muted-foreground", className)}
-      style={measured ? undefined : { minHeight: LOADING_HEIGHT }}
+      style={
+        !measured
+          ? { minHeight: LOADING_HEIGHT }
+          : fit
+            ? { height: Math.ceil(height * fit.scale) }
+            : undefined
+      }
     >
       {srcDoc !== null && (
         <iframe
@@ -264,6 +292,11 @@ export function EmailFrame({
           style={{
             height,
             colorScheme: frameColorScheme({ adaptive, theme }),
+            ...(fit && {
+              width: fit.width,
+              transform: `scale(${fit.scale})`,
+              transformOrigin: "0 0",
+            }),
           }}
         />
       )}

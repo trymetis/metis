@@ -45,7 +45,7 @@ import { useMailboxScope, useWorkspacePath } from "@/hooks/use-workspace-path";
 import { orpc, rpc } from "@/lib/orpc";
 import { customLabelMark, LABEL_OPTIONS } from "@/mail/label-meta";
 import type { ScheduledSendItem } from "@/server/schema";
-import { useMailStore } from "@/store/mail-store";
+import { useComposeStore } from "@/store/compose-store";
 import type { LabelColor, MailFolder } from "@/types/mail";
 import { mailPath, workspaceRootPath } from "@/workspace/path";
 
@@ -88,7 +88,7 @@ export function Sidebar() {
       ? mailPath(workspaceSlug, mailboxSlug, leaf, search)
       : workspaceRootPath();
 
-  const { setComposeOpen } = useMailStore();
+  const openCompose = useComposeStore((s) => s.open);
   const customLabels = useCustomLabels();
   const scheduledCount =
     useQuery(
@@ -139,7 +139,7 @@ export function Sidebar() {
       <MailboxSwitcher />
 
       <Button
-        onClick={() => setComposeOpen(true)}
+        onClick={() => openCompose("new")}
         className="mx-3 mb-5 h-10 rounded-[10px] tracking-[0.2px]"
       >
         <Plus strokeWidth={2.2} />

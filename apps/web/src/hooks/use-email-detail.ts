@@ -41,7 +41,7 @@ const NO_ATTACHMENTS: Attachment[] = [];
 const NO_MESSAGES: ThreadMessage[] = [];
 const NO_REPLIES: SmartReply[] = [];
 
-function bodyFrom(data: { bodyHtml?: string; bodyText?: string }): MessageBody {
+export function bodyFrom(data: { bodyHtml?: string; bodyText?: string }): MessageBody {
   if (data.bodyHtml) return { kind: "html", html: data.bodyHtml };
   if (data.bodyText) return { kind: "text", text: data.bodyText };
   return { kind: "empty" };

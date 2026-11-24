@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 
 import { PEOPLE, SUBJECTS } from "@metis/e2e/lib/cast";
 import type { Page } from "@playwright/test";
+import { z } from "zod";
 
 import { expect, test } from "../fixtures";
 import { mailPath, workspacePath } from "../harness";
@@ -74,6 +75,29 @@ test("opening a message shows its summary card and three smart replies", async (
     main.getByRole("button", { name: "Reply 3 smart replies", exact: true }),
   ).toBeVisible();
   await expect(main.getByRole("button", { name: "Accept both" })).toBeVisible();
+});
+
+test("an HTML message fills the reading pane and never scrolls sideways", async ({
+  page,
+  account,
+}) => {
+  const subject = "This week at the shop";
+  await page.goto(mailPath(account));
+  await showTab(page, "All");
+  await openMail(page, subject);
+  const frame = page.getByRole("main").locator(`iframe[title="Email: ${subject}"]`);
+  await expect(frame).toBeVisible();
+  await expect.poll(async () => (await frame.boundingBox())?.width ?? 0).toBeGreaterThan(680);
+  const content = await (await frame.elementHandle())?.contentFrame();
+  if (!content) throw new Error("the message frame has no document");
+  const overflow = z
+    .number()
+    .parse(
+      await content.evaluate(
+        "document.documentElement.scrollWidth - document.documentElement.clientWidth",
+      ),
+    );
+  expect(overflow).toBeLessThanOrEqual(1);
 });
 
 async function openFromToolbar(page: Page, name: string): Promise<Page> {

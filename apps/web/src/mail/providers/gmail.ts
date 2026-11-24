@@ -372,7 +372,15 @@ async function getMessage(accessToken: string, id: string): Promise<Partial<Emai
 
   if (msg.payload) extractParts(msg.payload);
 
-  return { bodyHtml, bodyText, id };
+  const headers = msg.payload?.headers ?? [];
+  const bcc = parseRecipientList(getHeader(headers, "Bcc")).map((r) => r.email);
+  return {
+    bodyHtml,
+    bodyText,
+    id,
+    ...(bcc.length > 0 && { bcc }),
+    references: getHeader(headers, "References") || undefined,
+  };
 }
 
 function buildGmailMime(payload: DraftPayload): string {
@@ -440,6 +448,35 @@ async function createDraft(accessToken: string, payload: DraftPayload): Promise<
   return { id: res.data.id };
 }
 
+type GmailClient = ReturnType<typeof getGmailClient>;
+
+async function findDraftId(
+  gmail: GmailClient,
+  messageId: string,
+  pageToken?: string,
+): Promise<string | null> {
+  const res = await gmail.users.drafts.list({ userId: "me", maxResults: 500, pageToken });
+  const match = res.data.drafts?.find((d) => d.message?.id === messageId);
+  if (match?.id) return match.id;
+  return res.data.nextPageToken ? findDraftId(gmail, messageId, res.data.nextPageToken) : null;
+}
+
+async function withDraftId<T>(
+  gmail: GmailClient,
+  id: string,
+  run: (draftId: string) => Promise<T>,
+): Promise<T> {
+  try {
+    return await run(id);
+  } catch (err) {
+    const status = errorStatus(err);
+    if (status !== 400 && status !== 404) throw err;
+    const draftId = await findDraftId(gmail, id);
+    if (!draftId || draftId === id) throw err;
+    return run(draftId);
+  }
+}
+
 async function updateDraft(
   accessToken: string,
   draftId: string,
@@ -447,17 +484,17 @@ async function updateDraft(
 ): Promise<{ id: string }> {
   const gmail = getGmailClient(accessToken);
   const raw = mimeToBase64Url(buildGmailMime(payload));
-  await gmail.users.drafts.update({
-    userId: "me",
-    id: draftId,
-    requestBody: { message: { raw } },
+  return withDraftId(gmail, draftId, async (id) => {
+    await gmail.users.drafts.update({ userId: "me", id, requestBody: { message: { raw } } });
+    return { id };
   });
-  return { id: draftId };
 }
 
 async function deleteDraft(accessToken: string, draftId: string): Promise<void> {
   const gmail = getGmailClient(accessToken);
-  await gmail.users.drafts.delete({ userId: "me", id: draftId });
+  await withDraftId(gmail, draftId, async (id) => {
+    await gmail.users.drafts.delete({ userId: "me", id });
+  });
 }
 
 async function sendMessage(

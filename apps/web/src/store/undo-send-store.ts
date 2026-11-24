@@ -4,33 +4,19 @@ import { dismissUndoSendToast, showUndoSendToast } from "@/components/undo-send-
 import { orpc, rpc } from "@/lib/orpc";
 import { refreshQueries } from "@/lib/query-client";
 import type { MailboxScope } from "@/server/schema";
-import type { UndoSendStatus } from "@/types/mail";
+import type { DraftPayload, UndoSendStatus } from "@/types/mail";
 
-import { useMailStore } from "./mail-store";
+import { type ComposeReopen, useComposeStore } from "./compose-store";
 
 export const UNDO_SEND_HOLD_MS = 5000;
 const ADDED_BCC_SHOW_MS = 10000;
-
-interface DraftAttachment {
-  filename: string;
-  mimeType: string;
-  contentBase64: string;
-}
-
-interface DraftPayload {
-  to: string[];
-  cc?: string[];
-  bcc?: string[];
-  subject: string;
-  bodyHtml: string;
-  attachments?: DraftAttachment[];
-}
 
 interface Pending {
   id: string;
   payload: DraftPayload;
   scope: MailboxScope;
   fromMailboxSlug?: string;
+  reopen?: ComposeReopen;
   status: UndoSendStatus;
   error?: string;
   scheduledFor?: Date;
@@ -39,7 +25,12 @@ interface Pending {
 
 interface UndoSendState {
   pending: Pending | null;
-  startSend: (payload: DraftPayload, scope: MailboxScope, fromMailboxSlug?: string) => void;
+  startSend: (
+    payload: DraftPayload,
+    scope: MailboxScope,
+    fromMailboxSlug?: string,
+    reopen?: ComposeReopen,
+  ) => void;
   notifyScheduled: (
     payload: DraftPayload,
     scope: MailboxScope,
@@ -53,6 +44,11 @@ interface UndoSendState {
 
 let holdTimer: ReturnType<typeof setTimeout> | null = null;
 let clearTimer: ReturnType<typeof setTimeout> | null = null;
+
+function base64Size(data: string): number {
+  const padding = data.endsWith("==") ? 2 : data.endsWith("=") ? 1 : 0;
+  return Math.max(0, Math.floor((data.length * 3) / 4) - padding);
+}
 
 function clearTimers() {
   if (holdTimer) clearTimeout(holdTimer);
@@ -88,7 +84,7 @@ export const useUndoSendStore = create<UndoSendState>((set, get) => {
   return {
     pending: null,
 
-    startSend: (payload, scope, fromMailboxSlug) => {
+    startSend: (payload, scope, fromMailboxSlug, reopen) => {
       clearTimers();
       const id = crypto.randomUUID();
       render({
@@ -96,6 +92,7 @@ export const useUndoSendStore = create<UndoSendState>((set, get) => {
         payload,
         scope,
         fromMailboxSlug,
+        reopen,
         status: "pending",
       });
       holdTimer = setTimeout(() => {
@@ -117,12 +114,30 @@ export const useUndoSendStore = create<UndoSendState>((set, get) => {
       clearTimers();
       render({ ...current, status: "cancelled" });
 
-      useMailStore.getState().setComposeInitial({
-        to: current.payload.to.join(", "),
-        subject: current.payload.subject,
-        bodyHtml: current.payload.bodyHtml,
-      });
-      useMailStore.getState().setComposeOpen(true);
+      const { payload, reopen } = current;
+      useComposeStore.getState().open(
+        reopen?.kind ?? "new",
+        {
+          from: current.fromMailboxSlug,
+          to: payload.to.join(", "),
+          cc: payload.cc?.join(", "),
+          bcc: payload.bcc?.join(", "),
+          subject: payload.subject,
+          bodyHtml: payload.bodyHtml,
+          inReplyTo: payload.inReplyTo,
+          references: payload.references,
+          replyToMessageId: payload.replyToMessageId,
+          attachments: payload.attachments?.map((a) => ({
+            id: crypto.randomUUID(),
+            filename: a.filename,
+            mimeType: a.mimeType,
+            size: base64Size(a.contentBase64),
+            contentBase64: a.contentBase64,
+          })),
+          keepSignature: true,
+        },
+        reopen?.replyingTo ?? undefined,
+      );
 
       clearAfter(current.id, 4000);
     },

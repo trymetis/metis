@@ -15,8 +15,10 @@ import {
   folders,
   goToFolder,
   mailRow,
+  messageHeading,
   messageToolbar,
   openMail,
+  openReply,
   pickDrive,
   scheduledRow,
   searchAndOpen,
@@ -349,6 +351,166 @@ export default function mailSpecs() {
     expect(sends).toEqual([]);
     await closeComposer(page);
     await discardDrafts(rpc, account, subject);
+  });
+
+  test("closing a reply that was never touched leaves no draft", async ({ page, rpc, account }) => {
+    const subject = `Re: ${TARGET}`;
+    await openTarget(page, account);
+    await openReply(page);
+    await expect(page.getByRole("dialog", { name: "Reply" })).toBeVisible();
+    await closeComposer(page);
+    await page.waitForTimeout(3_000);
+    expect(await findIn(rpc, account, "drafts", subject)).toBeUndefined();
+  });
+
+  test("m then r opens a reply to the open message", async ({ page, rpc, account }) => {
+    const subject = `Re: ${TARGET}`;
+    await openTarget(page, account);
+    await page.getByRole("heading", { level: 2, name: TARGET }).click();
+    await page.keyboard.press("m");
+    await page.keyboard.press("r");
+    const box = page.getByRole("dialog", { name: "Reply" });
+    await expect(box).toBeVisible();
+    await expect(box.getByRole("textbox", { name: "Subject line…" })).toHaveValue(subject);
+    await expect(box.getByRole("button", { name: "Show quoted text" })).toBeVisible();
+    await closeComposer(page);
+    await discardDrafts(rpc, account, subject);
+  });
+
+  test("m then r does nothing on a message in Drafts", async ({ page, rpc, account }, testInfo) => {
+    const subject = uniqueName(testInfo);
+    await rpc("mail.drafts.save", {
+      ...scope(account),
+      payload: { to: [OUTSIDE], subject, bodyHtml: "<p>Saved by the e2e suite.</p>" },
+    });
+    await setMailboxAi(rpc, account, false);
+    try {
+      await goToFolder(page, account, "drafts");
+      await openMail(page, subject);
+      await page.getByRole("heading", { level: 2, name: subject }).click();
+      await page.keyboard.press("m");
+      await page.keyboard.press("r");
+      await page.waitForTimeout(1_000);
+      await expect(composer(page)).toHaveCount(0);
+    } finally {
+      await discardDrafts(rpc, account, subject);
+      await setMailboxAi(rpc, account, true);
+    }
+  });
+
+  test("mail shortcuts do nothing while the composer is open", async ({ page, rpc, account }) => {
+    await openTarget(page, account);
+    await openReply(page);
+    await composer(page).getByRole("button", { name: "Cc", exact: true }).click();
+    await page.keyboard.press("j");
+    await page.keyboard.press("m");
+    await page.keyboard.press("e");
+    await page.waitForTimeout(1_500);
+    await closeComposer(page);
+    await expect(messageHeading(page)).toHaveText(TARGET);
+    expect(await findIn(rpc, account, "inbox", TARGET)).toBeDefined();
+    await discardDrafts(rpc, account, `Re: ${TARGET}`);
+  });
+
+  test("undo after sending a reply reopens the whole reply", async ({
+    page,
+    rpc,
+    account,
+  }, testInfo) => {
+    const subject = `Re: ${TARGET}`;
+    const filename = `${uniqueName(testInfo)}.txt`;
+    await openTarget(page, account);
+    await openReply(page);
+    const box = composer(page);
+    await box.getByRole("button", { name: "Bcc", exact: true }).click();
+    await box.getByRole("combobox", { name: "Bcc recipients" }).fill(OUTSIDE);
+    await page.keyboard.press("Enter");
+    await box.locator('input[type="file"]').setInputFiles({
+      name: filename,
+      mimeType: "text/plain",
+      buffer: Buffer.from("Attached by the e2e suite."),
+    });
+    await expect(box.getByText(filename, { exact: true })).toBeVisible();
+    const sends = recordSends(page);
+    await box.getByRole("button", { name: "Send", exact: true }).click();
+    await undoSend(page);
+
+    const reopened = page.getByRole("dialog", { name: "Reply" });
+    await expect(reopened).toBeVisible();
+    await expect(reopened.getByRole("textbox", { name: "Subject line…" })).toHaveValue(subject);
+    await expect(reopened.getByRole("toolbar").getByText(OUTSIDE, { exact: true })).toBeVisible();
+    await expect(reopened.getByText(filename, { exact: true })).toBeVisible();
+    await page.waitForTimeout(6_000);
+    expect(sends).toEqual([]);
+    await closeComposer(page);
+    await discardDrafts(rpc, account, subject);
+  });
+
+  test("a reply saved as a draft reopens with Edit draft keeping its reply link, Bcc and attachment", async ({
+    page,
+    rpc,
+    account,
+  }, testInfo) => {
+    const subject = `Re: ${TARGET}`;
+    const text = uniqueName(testInfo);
+    const filename = `${text}.txt`;
+    await openTarget(page, account);
+    await openReply(page);
+    const box = composer(page);
+    await box.getByRole("button", { name: "Bcc", exact: true }).click();
+    await box.getByRole("combobox", { name: "Bcc recipients" }).fill(OUTSIDE);
+    await page.keyboard.press("Enter");
+    await box.locator('input[type="file"]').setInputFiles({
+      name: filename,
+      mimeType: "text/plain",
+      buffer: Buffer.from("Attached by the e2e suite."),
+    });
+    await expect(box.getByText(filename, { exact: true })).toBeVisible();
+    await composerBody(page).locator("p").first().click();
+    await page.keyboard.type(text);
+    await expect(box.getByText("Draft saved")).toBeVisible({ timeout: 30_000 });
+    await closeComposer(page);
+
+    await setMailboxAi(rpc, account, false);
+    try {
+      await goToFolder(page, account, "drafts");
+      await openMail(page, subject);
+      await messageToolbar(page).getByRole("button", { name: "Edit draft", exact: true }).click();
+      const reopened = page.getByRole("dialog", { name: "Reply" });
+      await expect(composerBody(page)).toContainText(text, { timeout: 30_000 });
+      await expect(composerBody(page)).toContainText("wrote:");
+      await expect(reopened.getByRole("toolbar").getByText(OUTSIDE, { exact: true })).toBeVisible();
+      await expect(reopened.getByText(filename, { exact: true })).toBeVisible();
+
+      await composerBody(page).locator("p").first().click();
+      await page.keyboard.press("End");
+      await page.keyboard.type(" edited");
+      await expect
+        .poll(async () => {
+          const draft = await findIn(rpc, account, "drafts", subject);
+          if (!draft) return null;
+          const message = await rpc<{ bodyHtml?: string; references?: string; bcc?: string[] }>(
+            "mail.messages.get",
+            { ...scope(account), id: draft.id, folder: "drafts" },
+          );
+          const { attachments } = await rpc<{ attachments: { filename: string }[] }>(
+            "mail.attachments.list",
+            { ...scope(account), id: draft.id },
+          );
+          return {
+            edited: message.bodyHtml?.includes(`${text} edited`) ?? false,
+            threaded: !!message.references,
+            bcc: message.bcc ?? [],
+            files: attachments.map((a) => a.filename),
+          };
+        }, SLOW_POLL)
+        .toEqual({ edited: true, threaded: true, bcc: [OUTSIDE], files: [filename] });
+
+      await closeComposer(page);
+    } finally {
+      await discardDrafts(rpc, account, subject);
+      await setMailboxAi(rpc, account, true);
+    }
   });
 
   test("Enter adds a typed contact's full address as a chip", async ({

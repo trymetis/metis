@@ -23,7 +23,6 @@ import { ScrollArea } from "@metis/ui/components/scroll-area";
 import { cn } from "@metis/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { cva } from "class-variance-authority";
-import { escapeText } from "entities";
 import {
   BookUser,
   AlertTriangle,
@@ -52,7 +51,6 @@ import {
   Printer,
   Reply,
   ReplyAll,
-  Send,
   ShieldAlert,
   ShieldCheck,
   ShieldX,
@@ -75,7 +73,6 @@ import { base64ToBlob, uploadToDrive } from "@/drive/upload-client";
 import { useCurrentEmails } from "@/hooks/use-current-emails";
 import { useCustomLabels } from "@/hooks/use-custom-labels";
 import {
-  bodyAsHtml,
   type MessageBody,
   type ThreadBody,
   type ThreadMessage,
@@ -89,7 +86,7 @@ import {
   useUnsubscribeInfo,
 } from "@/hooks/use-email-detail";
 import { type MailPrivacy, useMailPrivacy, useRenderedEmail } from "@/hooks/use-mail-privacy";
-import { useMailboxEmails } from "@/hooks/use-mailbox-emails";
+import { useReplyActions } from "@/hooks/use-reply-actions";
 import { useMailboxScope } from "@/hooks/use-workspace-path";
 import { inOrder } from "@/lib/in-order";
 import { orpc, rpc } from "@/lib/orpc";
@@ -104,7 +101,7 @@ import {
   useMutedThreadIds,
   useReadLaterIds,
 } from "@/mail/mail-cache";
-import { cleanUrl as cleanTrackedUrl, renderEmailHtml } from "@/mail/render/pipeline";
+import { cleanUrl as cleanTrackedUrl } from "@/mail/render/pipeline";
 import type { RemoteImages } from "@/mail/render/types";
 import type {
   AnalysisResultOutput,
@@ -112,7 +109,8 @@ import type {
   ContactMatch,
   ThreadSummaryOutput,
 } from "@/server/schema";
-import { type ComposeInitial, useMailStore } from "@/store/mail-store";
+import { useComposeStore } from "@/store/compose-store";
+import { useMailStore } from "@/store/mail-store";
 import type { Attachment } from "@/types/mail";
 import { ALL_DRIVES_SLUG, mailPath } from "@/workspace/path";
 
@@ -216,9 +214,10 @@ export function EmailDetail() {
     setSelectedEmail,
     updateEmail,
     removeEmail,
-    setComposeOpen,
     visibleEmailIds,
   } = useMailStore();
+  const openDraft = useComposeStore((s) => s.openDraft);
+  const { reply, replyAll, forward } = useReplyActions(selectedEmail);
   const emails = useCurrentEmails();
   const { labels } = useMailLabels(scope);
   const customLabels = useCustomLabels();
@@ -284,7 +283,7 @@ export function EmailDetail() {
   const senderMatch = selectedEmail
     ? contactMatches.get(selectedEmail.from.toLowerCase())
     : undefined;
-  const { body, bodyHtml } = useEmailBody(selectedEmail);
+  const { body } = useEmailBody(selectedEmail);
   const privacy = useMailPrivacy();
   const images: RemoteImages = selectedEmail
     ? privacy.imagesFor(selectedEmail.from, selectedEmail.id)
@@ -339,8 +338,6 @@ export function EmailDetail() {
   const [apologyLoading, setApologyLoading] = useState(false);
   const [apologyError, setApologyError] = useState<string | null>(null);
   const [stanceLoading, setStanceLoading] = useState<string | null>(null);
-  const mailboxEmails = useMailboxEmails();
-  const [quickReplyText, setQuickReplyText] = useState("");
   const [bodyCapped, setBodyCapped] = useState(false);
   const [bodyOverflows, setBodyOverflows] = useState(false);
   const bodyRef = useRef<HTMLDivElement | null>(null);
@@ -367,7 +364,6 @@ export function EmailDetail() {
     setApologyError(null);
     setStanceLoading(null);
     setUnsubBusy(false);
-    setQuickReplyText("");
     setRecipientsExpanded(false);
     setReplyRailOpen(false);
     setReachedEnd(false);
@@ -501,15 +497,7 @@ export function EmailDetail() {
   function handleEditDraft() {
     if (!selectedEmail) return;
 
-    useMailStore.getState().setComposeInitial({
-      to: selectedEmail.to.join(", "),
-      cc: selectedEmail.cc?.join(", ") || "",
-      bcc: "",
-      subject: selectedEmail.subject ?? "",
-      bodyHtml: bodyHtml ?? "",
-      draftId: selectedEmail.id,
-    });
-    setComposeOpen(true);
+    openDraft(scope, selectedEmail);
   }
 
   function handleShowEmail() {
@@ -583,11 +571,7 @@ export function EmailDetail() {
       });
       setApologyOpen(false);
       setApologySituation("");
-      const init = replyComposeInitial(res.bodyHtml);
-      if (init) {
-        useMailStore.getState().setComposeInitial(init);
-        setComposeOpen(true);
-      }
+      reply(res.bodyHtml);
     } catch (err) {
       setApologyError(err instanceof Error ? err.message : "Failed to draft apology");
     } finally {
@@ -606,11 +590,7 @@ export function EmailDetail() {
         messageId: selectedEmail.id,
         stance,
       });
-      const init = replyComposeInitial(res.bodyHtml);
-      if (init) {
-        useMailStore.getState().setComposeInitial(init);
-        setComposeOpen(true);
-      }
+      reply(res.bodyHtml);
     } catch {
     } finally {
       setStanceLoading(null);
@@ -626,120 +606,6 @@ export function EmailDetail() {
       id: selectedEmail.id,
       starred: next,
     });
-  }
-
-  function ownAddresses(): Set<string> {
-    const own = new Set(Object.values(mailboxEmails).map((e) => e.toLowerCase()));
-    if (selectedEmail?.mailboxEmail) {
-      own.add(selectedEmail.mailboxEmail.toLowerCase());
-    }
-    return own;
-  }
-
-  function replyRecipients(own: Set<string>): string[] {
-    if (!selectedEmail) return [];
-    if (own.has(selectedEmail.from.toLowerCase())) {
-      const original = selectedEmail.toRecipients?.map((r) => r.email) ?? selectedEmail.to;
-      if (original.length > 0) return original;
-    }
-    const replyTo = selectedEmail.replyTo?.map((r) => r.email) ?? [];
-    return replyTo.length > 0 ? replyTo : [selectedEmail.from];
-  }
-
-  function quoteHtml(): string {
-    if (body?.kind !== "html") return bodyAsHtml(body);
-    return (
-      privacy.render(body.html, "quote")?.html ??
-      renderEmailHtml(body.html, {
-        purpose: "quote",
-        trackers: null,
-        links: null,
-      }).html
-    );
-  }
-
-  function replyComposeInitial(replyHtml?: string): ComposeInitial | null {
-    if (!selectedEmail) return null;
-    const senderName = selectedEmail.fromName || selectedEmail.from;
-    const who =
-      senderName && senderName !== selectedEmail.from
-        ? `${senderName} <${selectedEmail.from}>`
-        : selectedEmail.from;
-    const when = new Date(selectedEmail.date).toLocaleString();
-    const quotedHtml = `<p>On ${escapeText(when)}, ${escapeText(who)} wrote:</p><blockquote style="border-left:2px solid #cccccc;margin:0;padding-left:1ex">${quoteHtml()}</blockquote>`;
-    const references = [selectedEmail.references, selectedEmail.messageIdHeader]
-      .filter(Boolean)
-      .join(" ");
-    return {
-      to: replyRecipients(ownAddresses()).join(", "),
-      subject: selectedEmail.subject.startsWith("Re:")
-        ? selectedEmail.subject
-        : `Re: ${selectedEmail.subject}`,
-      bodyHtml: replyHtml,
-      quotedHtml,
-      quoteImages: images,
-      inReplyTo: selectedEmail.messageIdHeader,
-      references: references || undefined,
-      replyToMessageId: selectedEmail.id,
-    };
-  }
-
-  function handleReply(replyHtml?: string) {
-    const init = replyComposeInitial(replyHtml);
-    if (!init) return;
-    setComposeOpen(true);
-    useMailStore.getState().setComposeInitial(init);
-  }
-
-  function handleReplyAll() {
-    if (!selectedEmail) return;
-    const init = replyComposeInitial();
-    if (!init) return;
-    const own = ownAddresses();
-    const toList = [
-      ...replyRecipients(own),
-      ...(selectedEmail.toRecipients?.map((r) => r.email) ?? selectedEmail.to),
-    ].filter((e, i, arr) => e && !own.has(e.toLowerCase()) && arr.indexOf(e) === i);
-    const ccList = (
-      selectedEmail.ccRecipients?.map((r) => r.email) ??
-      selectedEmail.cc ??
-      []
-    ).filter(
-      (e, i, arr) => e && !own.has(e.toLowerCase()) && !toList.includes(e) && arr.indexOf(e) === i,
-    );
-    setComposeOpen(true);
-    useMailStore.getState().setComposeInitial({
-      ...init,
-      to: toList.join(", ") || init.to,
-      cc: ccList.join(", ") || undefined,
-    });
-  }
-
-  function handleForward() {
-    if (!selectedEmail) return;
-    const senderName = selectedEmail.fromName || selectedEmail.from;
-    const lines = [
-      "---------- Forwarded message ----------",
-      `From: ${senderName} <${selectedEmail.from}>`,
-      `Date: ${new Date(selectedEmail.date).toLocaleString()}`,
-      `Subject: ${selectedEmail.subject}`,
-      `To: ${selectedEmail.to.join(", ")}`,
-    ];
-    const quotedHtml = `<p>${lines.map((l) => escapeText(l)).join("<br>")}</p>${quoteHtml()}`;
-    setComposeOpen(true);
-    useMailStore.getState().setComposeInitial({
-      subject: selectedEmail.subject.startsWith("Fwd:")
-        ? selectedEmail.subject
-        : `Fwd: ${selectedEmail.subject}`,
-      quotedHtml,
-      quoteImages: images,
-    });
-  }
-
-  function handleQuickReplySend() {
-    const text = quickReplyText.trim();
-    handleReply(text ? `<p>${escapeText(text).replace(/\n/g, "</p><p>")}</p>` : undefined);
-    setQuickReplyText("");
   }
 
   async function handleUnsubscribe() {
@@ -862,12 +728,12 @@ export function EmailDetail() {
         ) : (
           <>
             {selectedEmail.to.length + (selectedEmail.cc?.length ?? 0) > 1 && (
-              <ToolBtn onClick={handleReplyAll}>
+              <ToolBtn onClick={replyAll}>
                 <ReplyAll className="size-3.25" strokeWidth={2} />
                 Reply all
               </ToolBtn>
             )}
-            <ToolBtn onClick={handleForward}>
+            <ToolBtn onClick={forward}>
               <Forward className="size-3.25" strokeWidth={2} />
               Forward
             </ToolBtn>
@@ -1194,7 +1060,7 @@ export function EmailDetail() {
             />
 
             {threadMessages.length > 1 && (
-              <div className="mb-6 space-y-2 max-w-170">
+              <div className="mb-6 space-y-2">
                 {threadMessages
                   .filter((m) => m.id !== selectedEmail.id)
                   .map((m) => (
@@ -1230,7 +1096,7 @@ export function EmailDetail() {
 
             <div>
               {isFetchingBody ? (
-                <div className="max-w-170 space-y-3">
+                <div className="space-y-3">
                   {SKELETON_WIDTHS.map((width) => (
                     <div
                       key={width}
@@ -1251,7 +1117,6 @@ export function EmailDetail() {
                         sender={selectedEmail.from}
                         messageId={selectedEmail.id}
                         title={`Email: ${selectedEmail.subject || "(no subject)"}`}
-                        frameClassName="max-w-170"
                         textClassName="max-w-170 text-[15px] leading-[1.8]"
                       />
                     </div>
@@ -1417,9 +1282,7 @@ export function EmailDetail() {
                           <button
                             key={r.label}
                             type="button"
-                            onClick={() =>
-                              handleReply(`<p>${r.body.replace(/\n/g, "</p><p>")}</p>`)
-                            }
+                            onClick={() => reply(`<p>${r.body.replace(/\n/g, "</p><p>")}</p>`)}
                             className="group flex max-w-md items-start gap-2 rounded-lg border px-3 py-2 text-left transition-all bg-surface border-border hover:bg-brand-soft hover:border-primary/40"
                           >
                             <div className="min-w-0 flex-1">
@@ -1440,9 +1303,7 @@ export function EmailDetail() {
                             key={r.label}
                             variant="outline"
                             size="xs"
-                            onClick={() =>
-                              handleReply(`<p>${r.body.replace(/\n/g, "</p><p>")}</p>`)
-                            }
+                            onClick={() => reply(`<p>${r.body.replace(/\n/g, "</p><p>")}</p>`)}
                             title={r.body}
                             className="rounded-full bg-surface text-[11px] uppercase tracking-wide text-primary hover:bg-brand-soft hover:border-primary/40"
                           >
@@ -1456,27 +1317,18 @@ export function EmailDetail() {
 
                 {selectedEmail.folder !== "drafts" && (
                   <div className="border-t px-4 py-4 md:px-7 md:py-5 bg-panel border-border-soft">
-                    <div className="overflow-hidden rounded-[10px] border transition-colors focus-within:border-[rgba(200,146,42,0.35)] bg-surface border-border">
-                      <div className="border-b px-3.5 pb-2 pt-2.5 text-[12px] border-border-soft text-faint">
+                    <button
+                      type="button"
+                      onClick={() => reply()}
+                      className="block w-full overflow-hidden rounded-[10px] border text-left transition-colors bg-surface border-border hover:border-primary/40"
+                    >
+                      <span className="block border-b px-3.5 pb-2 pt-2.5 text-[12px] border-border-soft text-faint">
                         Reply to {fromName}
-                      </div>
-                      <textarea
-                        placeholder="Write a reply…"
-                        value={quickReplyText}
-                        onChange={(e) => setQuickReplyText(e.target.value)}
-                        className="min-h-18 w-full resize-none bg-transparent px-3.5 py-3 text-[14px] leading-relaxed outline-none text-foreground"
-                        aria-label="Reply text"
-                      />
-                      <div className="flex items-center justify-between border-t px-3 py-2 border-border-soft">
-                        <span className="text-[11px] text-faint">
-                          Continues in the composer with the original quoted
-                        </span>
-                        <Button size="sm" onClick={handleQuickReplySend}>
-                          <Send className="size-3.25" />
-                          Continue
-                        </Button>
-                      </div>
-                    </div>
+                      </span>
+                      <span className="block min-h-12 px-3.5 py-3 text-[14px] text-faint">
+                        Write a reply…
+                      </span>
+                    </button>
                   </div>
                 )}
               </div>
@@ -1730,7 +1582,7 @@ function ThreadMessageCard({
                 proxyEndpoint={privacy.proxyEndpoint}
                 sender={message.from}
                 messageId={message.id}
-                textClassName="text-[13px] leading-[1.7]"
+                textClassName="max-w-170 text-[13px] leading-[1.7]"
               />
               {renderAttachments(thread)}
             </>

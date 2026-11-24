@@ -39,6 +39,7 @@ Some things to know:
 - **Trash.** When you open a message in Trash, a banner tells you when messages there are deleted for good, as in the table above.
 - **Gmail categories.** Messages in Gmail's Promotions, Updates, Social and Forums categories get the Metis Suite labels Promotional, Updates, Social and Newsletter.
 - **Search on IMAP mailboxes** is a plain text match across Inbox, Archive and Sent, with no ranking.
+- **Replies on Outlook.** A reply stays in the conversation when you send it from the mailbox the original message is in. A reply draft you reopen with **Edit draft** is sent as a new message. See [Replies from Outlook mailboxes](/guide/mail/compose-and-send#replies-from-outlook-mailboxes).
 - **Drafts on Zoho Mail.** Each time a draft is saved, Zoho replaces it with a new draft.
 - **Linking a drive file** into a message works with Google Drive and OneDrive files only.
 

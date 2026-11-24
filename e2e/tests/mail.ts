@@ -120,9 +120,22 @@ export async function showTab(page: Page, tab: string): Promise<void> {
 }
 
 export function composer(page: Page): Locator {
-  return page.locator('[aria-modal="true"]').filter({
+  return page.getByRole("dialog").filter({
     has: page.getByRole("button", { name: "Close compose" }),
   });
+}
+
+export function replyFooter(page: Page): Locator {
+  return page.getByRole("main").getByRole("button", { name: /^Reply( \d+ smart repl(y|ies))?$/ });
+}
+
+export async function openReply(page: Page): Promise<void> {
+  const toggle = replyFooter(page);
+  await expect(async () => {
+    if ((await toggle.getAttribute("aria-expanded")) !== "true") await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "true", { timeout: 1_000 });
+  }).toPass();
+  await page.getByRole("button", { name: /Write a reply…$/ }).click();
 }
 
 export function composerBody(page: Page): Locator {

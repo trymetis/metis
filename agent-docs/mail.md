@@ -20,6 +20,7 @@ See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mai
 | Custom labels, contacts, raw source                 | `src/mail/custom-labels.ts` · `src/mail/contacts.ts` → `suggestContacts` · `src/mail/raw.ts` → `readRawMessage`                                                                                                                                                                                                                          |
 | Signatures and the footer                           | `src/mail/signatures.ts` → `composeSignatures`, `saveSignature`, `setMailFooter`, `finishOutgoing` · `src/mail/signature-markup.ts` · table `mailSignature` · procedures `src/server/routes/mail/signatures.ts`, `workspace-signatures.ts`                                                                                               |
 | Signature UI                                        | composer node `src/app/w/[slug]/m/[mailbox]/_components/signature-block.ts` · settings `src/app/w/[slug]/settings/signatures/` · sanitizer `src/lib/sanitize-html.ts` → `sanitizeSignatureHtml`                                                                                                                                          |
+| Composer and drafts                                 | `src/app/w/[slug]/m/[mailbox]/_components/compose-dialog.tsx` → `ComposeDialog` · `src/store/compose-store.ts` → `useComposeStore` (`open`, `openDraft`, `close`, `finish`), `composePayload`                                                                                                                                            |
 | Undo send                                           | `src/store/undo-send-store.ts` → store action `startSend` · `src/components/undo-send-toast.tsx`                                                                                                                                                                                                                                         |
 | Body rendering, labels                              | `src/mail/render/` ([mail-rendering.md](mail-rendering.md)) · `src/mail/labels.ts` ([mail-ai.md](mail-ai.md))                                                                                                                                                                                                                            |
 | Workspace search over mail                          | `MailAdapter.searchAst` in every provider · `src/mail/search.ts` → `searchMail` ([search.md](search.md))                                                                                                                                                                                                                                 |
@@ -125,6 +126,35 @@ See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mai
   - The settings previews fill them too: a mailbox's lists with the signed-in user's name and that mailbox's address, the workspace signatures and the footer with the mailbox picked in **Preview as**.
 - **Changing the footer writes `workspace.mail_footer_changed`** in `setMailFooter` ([audit.md](audit.md)).
 
+### The composer and drafts
+
+- **There is one composer, `ComposeDialog`, mounted once by `MailShell`; every way to write a message opens it** (`useComposeStore` → `open`, `openDraft`).
+  - New message, Edit draft, reply, reply all, forward, smart replies, the AI drafts, the search actions and Undo all feed the same dialog, on every mail page.
+  - It is a large `Dialog` on desktop and a bottom `Sheet` on phones. It closes with its close button or Escape, never with a click outside, so a misclick cannot drop a long message.
+  - Callers pass the kind (`new`, `reply`, `forward`) and, for a reply, the sender's name for the title; nothing infers the kind from the fields.
+  - Reply, reply all and forward are built once, in `src/hooks/use-reply-actions.ts` → `useReplyActions`, which both the message toolbar and the `m r` chord use, so the chord opens the same reply as **Write a reply…**.
+  - On a draft the `m r` chord does nothing, as the Reply bar is hidden there.
+  - A reply or forward starts its sender on the message's own mailbox (`mailboxSlug`, which only `all` lists set), so a reply from `all` never goes out from another mailbox and keeps its `replyToMessageId` through `forSender`.
+  - Mail shortcuts do nothing while a compose session is open (`useKeyboardShortcuts` checks the store at key time): focus can rest on a composer button, and a bare `j` or `m e` must never act on the message behind the dialog.
+- **Undo reopens exactly the payload that was about to go out** (`undo-send-store` → `cancel`): recipients, Bcc, attachments, the sending mailbox, the threading headers, and the compose kind and title carried as `ComposeReopen`.
+  - The quote is already merged into the body, so it reopens as text.
+  - The signature is marked settled (`keepSignature`), so the composer never adds one the sender had removed.
+- **The draft lives in the store, not the component** (`ComposeSession`): recipients, subject, body, quote, attachments, threading headers, draft id and save status.
+  - The editor writes its HTML into the session on every transaction, and the form renders the session; nothing is copied back out of the component.
+  - `ComposeDialog` binds the live mailbox scope and default sender (`bind`), so the store saves, closes and deletes drafts without the component.
+- **Edit draft loads the whole draft before the form shows** (`openDraft` → `loadDraft`): body, Bcc, References and the attachments' content, so a save never rewrites the draft with less than it had.
+  - In-Reply-To is the last Message-ID in References, because that is how the composer builds a reply; a draft with References opens titled Reply.
+  - The composer shows what the provider stores and works around nothing: IMAP keeps Bcc in a draft because `createDraft` builds its MIME with `keepBcc` (the sent copy never carries it), Gmail returns the stored Bcc and References from `getMessage`, Graph the stored Bcc.
+- **Drafts save debounced and one at a time** (`schedule` and `flush` in `compose-store.ts`; the debounce window and the maximum wait are its constants).
+  - A change during a save waits for that save and then saves the latest content, so two saves never race into two drafts.
+  - Only a user change schedules a save. Seeding the editor dispatches no transaction and an automatic signature is tagged `SIGNATURE_META`, so an untouched reply never becomes a draft.
+  - Closing, or opening another compose, saves a pending change first. Send stops saving and deletes the draft once an in-flight save has landed; a scheduled send stops saving and leaves the draft.
+- **In `all`, a draft id is composite and stays composite** (`src/server/routes/mail/drafts.ts`): save and delete resolve it to the draft's own mailbox, and a save returns the new id composite again, so the lists and the next save match.
+  - Edit draft starts the sender on the draft's mailbox.
+- **A saved draft's sender is fixed: the composer locks From once the session has a draft id**, because a draft id names a message in one mailbox and no provider can update it through another; the save route rejects a composite id from another mailbox.
+- **IMAP replaces a re-saved draft with a new id and deletes the old message**, so each save that returns a new id removes the old one from the lists and the selection (`removeEmail`) and refreshes the Drafts head; a list never offers a draft that no longer exists.
+- **The message area is the dialog's only scroll container, inside a dialog of fixed height.** ProseMirror scrolls the caret into view in its nearest scrolling ancestor (with `scrollThreshold` and `scrollMargin` on the editor); a composer that grows with its content has nothing to scroll and types below the screen.
+
 ### Other rules
 
 - **Unsubscribe results are mailbox-scoped**: the sender dropped the address, not the person.
@@ -144,6 +174,13 @@ See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mai
   - `listMessages` / `search` fan out to every mailbox, merge-sort by date and pack the per-mailbox page tokens into one base64url cursor; a failing mailbox lands in `mailboxErrors` and the rest still render.
   - Every per-message method resolves the composite id `<mailboxId>:<providerId>` and delegates to that mailbox's adapter.
 - **Drafts live at the provider** (`createDraft` / `updateDraft` / `deleteDraft`). Zoho has no in-place patch, so its update creates the new draft and deletes the old one.
+  - IMAP also replaces a draft on each save: `updateDraft` appends the new copy and expunges the old one.
+  - Zoho deletes a draft for good (`DELETE … ?expunge=true`), never through Trash, so replaced and sent drafts leave no copies.
+  - Gmail lists drafts by their message id, but `drafts.update` and `drafts.delete` take the draft's own id; `withDraftId` in `gmail.ts` retries a rejected id through `drafts.list` to find the draft that holds that message.
+- **A reply names its original by `replyToMessageId`, and both send and draft save pass it through `forSender`**, which maps a composite id to the provider id and drops it when the sending mailbox is not the original's.
+  - Gmail and IMAP thread by the `In-Reply-To` and `References` headers they write; Zoho posts the reply against the original.
+  - Graph cannot take those headers (custom headers must start with `x-`), so `microsoft.ts` builds a reply with `createReply` on the original, patches subject, body and recipients, adds the attachments, and a send then sends that draft. `sendMail` and a plain `/me/messages` draft are unlinked messages.
+  - When the original is gone (404 from `createReply`), Outlook falls back to an unlinked message rather than failing the send.
 - **Undo send** is a hold of `UNDO_SEND_HOLD_MS` in `undo-send-store`; send later and snooze are built-in workflows ([workflow-graph.md](workflow-graph.md)).
 - **A Zoho message id carries its folder**: base64url of `[folderId, messageId]` (`encodeMessageId` in `zoho.ts`), because Zoho's per-message calls (content, attachment info, attachment content) all need the folder in the path.
   - Ids are built from the `folderId` Zoho reports on each listed message, so a message in a user-made folder resolves exactly; bulk `updatemessage` calls send only the decoded `messageId`.
@@ -161,6 +198,12 @@ See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mai
 
 ## Deliberate limits
 
+- **An edited Zoho reply draft sends as a new message.** Zoho threads by the original's id (`replyToMessageId`), which a stored draft does not carry, and the app keeps no draft-to-message table.
+- **A reopened draft holds only what the provider stored.**
+  - Zoho drafts carry no attachments (`createDraft` sends none) and `getMessage` returns no Bcc.
+  - Graph's `updateDraft` patches recipients and body but not attachments, so an Outlook draft keeps the attachments of its first save.
+  - Outlook and Zoho reply drafts reopen titled Draft, since neither returns References.
+  - A reopened Outlook reply draft sends as a new message: the send builds a fresh message from the payload, and Graph returns nothing that names the original.
 - **The footer reaches only mail sent through Metis.** Mail sent from the provider's own app, including a Metis-created draft sent there, goes out without it.
 - **Signature images are hosted `https` links.** Embedded (`cid:`) images would need inline attachments in `DraftPayload` and every adapter.
 - **A reopened Outlook draft's signature is ordinary text** when Graph stripped the marker, so the composer picker appends the chosen signature instead of replacing it.

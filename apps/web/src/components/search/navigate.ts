@@ -4,7 +4,7 @@ import { stashCalendarHandoff } from "@/calendar/pending-open";
 import { stashDrivePreview } from "@/drive/pending-open";
 import { stashPendingOpen } from "@/mail/pending-open";
 import type { EventSearchHitDto, FileSearchHitDto, MailSearchHitDto } from "@/server/schema";
-import { type ComposeInitial, useMailStore } from "@/store/mail-store";
+import { type ComposeInitial, type ComposeKind, useComposeStore } from "@/store/compose-store";
 import {
   ALL_CALENDARS_SLUG,
   ALL_MAILBOXES_SLUG,
@@ -50,10 +50,9 @@ export function composeMail(
   workspaceSlug: string,
   initial: ComposeInitial,
   mailboxSlug?: string,
+  kind: ComposeKind = "new",
 ) {
-  const store = useMailStore.getState();
-  store.setComposeInitial(initial);
-  store.setComposeOpen(true);
+  useComposeStore.getState().open(kind, initial);
   router.push(
     mailboxSlug ? mailPath(workspaceSlug, mailboxSlug, "inbox") : mailRootPath(workspaceSlug),
   );

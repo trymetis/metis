@@ -37,6 +37,9 @@ See also [AGENTS.md](../AGENTS.md), [mail.md](mail.md), [mail-ai.md](mail-ai.md)
 - **Every HTML body renders in `EmailFrame`, a `srcdoc` iframe; mail HTML never enters the app's DOM.**
   - The single message, each expanded thread message, the compose quote preview and the print page all build their document with `buildFrameDocument`.
   - Plain-text bodies render in-page as React text.
+- **An HTML body takes the full width of its container; only plain text is capped (`max-w-170`) to a readable line length.**
+  - Mail HTML sets its own width, so a cap only clips wider layouts behind a sideways scrollbar at the bottom of a tall frame.
+  - When the document is still wider than the container, `EmailFrame` lays the frame out at the document's width and scales it down to fit (`fitWidth`, never below `MIN_FIT_SCALE`); past that floor the frame scrolls sideways. The wrapper takes the scaled height, because a transform does not change layout.
 - **The iframe is the isolation boundary, the CSP the network boundary, DOMPurify the content filter; none is trusted alone.** A sanitizer miss must end as a CSP-blocked request.
 - **`sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"`, never `allow-scripts`, `allow-forms` or `allow-top-navigation`.**
   - Same-origin exists only so the parent can measure the frame, read its CSP violations, forward keys and handle clicks; with scripts it would be an escape.

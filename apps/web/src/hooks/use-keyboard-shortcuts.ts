@@ -4,11 +4,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 
 import { orpc } from "@/lib/orpc";
+import { useComposeStore } from "@/store/compose-store";
 import { useMailStore } from "@/store/mail-store";
 import { mailboxScope, mailPath } from "@/workspace/path";
 
 import { type ChordBindings, isTypingTarget, useChord } from "./use-chord";
 import { useCurrentEmails } from "./use-current-emails";
+import { useReplyActions } from "./use-reply-actions";
 import { useMailboxScope } from "./use-workspace-path";
 
 export const MAIL_CHORD_PREFIX = "m";
@@ -23,15 +25,10 @@ export function useKeyboardShortcuts() {
   const pathname = usePathname();
   const scope = useMailboxScope();
   const emails = useCurrentEmails();
-  const {
-    selectedEmail,
-    setSelectedEmail,
-    setComposeOpen,
-    setAgentOpen,
-    agentOpen,
-    updateEmail,
-    removeEmail,
-  } = useMailStore();
+  const { selectedEmail, setSelectedEmail, setAgentOpen, agentOpen, updateEmail, removeEmail } =
+    useMailStore();
+  const openCompose = useComposeStore((s) => s.open);
+  const { reply } = useReplyActions(selectedEmail);
 
   const bindings = useMemo<ChordBindings>(() => {
     const folderScope = mailboxScope(pathname);
@@ -39,7 +36,7 @@ export function useKeyboardShortcuts() {
       if (!folderScope) return;
       router.push(mailPath(folderScope.workspaceSlug, folderScope.mailboxSlug, leaf));
     };
-    return {
+    const all: ChordBindings = {
       i: { label: "Inbox", run: () => go("inbox") },
       s: { label: "Sent", run: () => go("sent") },
       d: { label: "Drafts", run: () => go("drafts") },
@@ -47,11 +44,11 @@ export function useKeyboardShortcuts() {
       t: { label: "Trash", run: () => go("trash") },
       v: { label: "Archive", run: () => go("archive") },
       p: { label: "Spam", run: () => go("spam") },
-      c: { label: "Compose", run: () => setComposeOpen(true) },
+      c: { label: "Compose", run: () => openCompose("new") },
       r: {
         label: "Reply",
         run: () => {
-          if (selectedEmail) setComposeOpen(true);
+          if (selectedEmail?.folder !== "drafts") reply();
         },
       },
       x: {
@@ -110,13 +107,25 @@ export function useKeyboardShortcuts() {
       },
       a: { label: "Agent", run: () => setAgentOpen(!agentOpen) },
     };
+    return Object.fromEntries(
+      Object.entries(all).map(([key, binding]) => [
+        key,
+        {
+          ...binding,
+          run: () => {
+            if (!useComposeStore.getState().session) binding.run();
+          },
+        },
+      ]),
+    );
   }, [
     pathname,
     router,
     scope,
     selectedEmail,
     agentOpen,
-    setComposeOpen,
+    openCompose,
+    reply,
     setAgentOpen,
     updateEmail,
     removeEmail,
@@ -127,6 +136,7 @@ export function useKeyboardShortcuts() {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (isTypingTarget(e.target)) return;
+      if (useComposeStore.getState().session) return;
       if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
       if (emails.length === 0) return;
 

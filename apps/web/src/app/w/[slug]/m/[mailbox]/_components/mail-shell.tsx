@@ -26,6 +26,7 @@ import {
   useKeyboardShortcuts,
 } from "@/hooks/use-keyboard-shortcuts";
 import { useSavedLayout } from "@/hooks/use-saved-layout";
+import { useComposeStore } from "@/store/compose-store";
 import { useMailStore } from "@/store/mail-store";
 import type { Email } from "@/types/mail";
 
@@ -39,7 +40,8 @@ interface MailShellProps {
 
 export function MailShell({ children }: MailShellProps) {
   const { armed, bindings, helpOpen, setHelpOpen } = useKeyboardShortcuts();
-  const { agentOpen, composeOpen } = useMailStore();
+  const { agentOpen } = useMailStore();
+  const composeOpen = useComposeStore((s) => s.session !== null);
   const { groupRef, onLayoutChanged } = useSavedLayout(
     "metis-suite-shell-layout",
     agentOpen ? ["folders", "main", "agent"] : ["folders", "main"],

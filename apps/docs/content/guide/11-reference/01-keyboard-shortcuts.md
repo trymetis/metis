@@ -9,7 +9,7 @@ Mail, calendar, drive and the workflow editor each have their own shortcuts. Mos
 
 - **Press the prefix, then the key.** Press **m** in mail, **c** in calendar, **d** in drive or **w** in the workflow editor, then press the second key within about 1.5 seconds. For example, **m** then **i** opens the inbox. While the prefix is active, a hint shows the keys you can press.
 - **A wrong second key does nothing.** If you press the prefix and then a key with no shortcut, nothing happens.
-- **Mail, calendar, drive and workflow shortcuts pause while you type.** They do nothing while you are typing in a field, such as a search box or the message editor. Switching workspaces with **Alt** and a number still works.
+- **Mail, calendar, drive and workflow shortcuts pause while you type.** They do nothing while you are typing in a field, such as a search box or the composer. Mail shortcuts (every **m** shortcut and **j**, **n**, **k** and **p**) also do nothing while the composer is open, even when the cursor is not in a field. **Esc** still closes the composer. Switching workspaces with **Alt** and a number still works.
 - **Press ? for help.** In mail, calendar, drive and the workflow editor, **?** shows or hides the **Keyboard shortcuts** dialog for that section. Press **Esc** or click **Close** to close it.
 - **Press Ctrl + K to search.** Workspace search also finds commands such as **Compose mail** and settings pages, so you can run them by typing their name. See [Search](#search).
 - **Contacts has no shortcuts of its own.** To get there from the keyboard, open search and run **Go to contacts**.
@@ -31,7 +31,7 @@ Switching workspaces works on any page and with any keyboard layout. It does not
 | ----------------------------------------- | --------------------- |
 | **Ctrl** + **K** (**⌘** + **K** on a Mac) | Open workspace search |
 
-The search shortcut works on every page of a workspace, including its settings. It does nothing while you are typing in a field or in the message editor, and it does not work on your account settings or the instance dashboard. See [Search your workspace](/guide/search/search-your-workspace).
+The search shortcut works on every page of a workspace, including its settings. It does nothing while you are typing in a field or in the composer, and it does not work on your account settings or the instance dashboard. See [Search your workspace](/guide/search/search-your-workspace).
 
 Inside the search window:
 
@@ -59,7 +59,7 @@ Press **m**, then:
 | **m** then **v** | Go to Archive                                                                                                                                                                                            |
 | **m** then **p** | Go to Spam                                                                                                                                                                                               |
 | **m** then **c** | Compose a new message                                                                                                                                                                                    |
-| **m** then **r** | When a message is open, opens a new blank message. It does not fill in a reply. To reply, use the **Reply** bar at the bottom of the reading pane.                                                       |
+| **m** then **r** | Reply to the open message, except in Drafts                                                                                                                                                              |
 | **m** then **x** | Star or unstar the open message                                                                                                                                                                          |
 | **m** then **u** | Mark the open message read or unread                                                                                                                                                                     |
 | **m** then **e** | Archive the open message                                                                                                                                                                                 |
@@ -73,7 +73,7 @@ Without a prefix:
 | -------------- | ------------------------------------------------------- |
 | **j** or **n** | Open the next message in the list, and mark it read     |
 | **k** or **p** | Open the previous message in the list, and mark it read |
-| **Esc**        | Close the message editor, or the help dialog            |
+| **Esc**        | Close the composer, or the help dialog                  |
 
 ## Calendar
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@metis/ui/components/button";
+import { Dialog, DialogContent, DialogTitle } from "@metis/ui/components/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@metis/ui/components/select";
+import { Sheet, SheetContent } from "@metis/ui/components/sheet";
 import { cn } from "@metis/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tiptap/extension-link";
@@ -42,7 +44,7 @@ import {
   UnderlineIcon,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
   type DrivePick,
@@ -52,6 +54,7 @@ import {
 import { EmailFrame } from "@/components/email-frame";
 import { PickTimeDialog } from "@/components/pick-time-dialog";
 import { useContactSuggestions } from "@/hooks/use-contact-suggestions";
+import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useMailPrivacy, useRenderedEmail } from "@/hooks/use-mail-privacy";
 import { useWorkspaceMailboxes } from "@/hooks/use-mailbox-emails";
 import { useMailboxScope } from "@/hooks/use-workspace-path";
@@ -59,25 +62,55 @@ import { orpc, rpc } from "@/lib/orpc";
 import { refreshQueries } from "@/lib/query-client";
 import { formatBytes } from "@/lib/utils";
 import { mailboxMarkColor } from "@/mail/mailbox-color";
-import type { RemoteImages } from "@/mail/render/types";
-import { useMailStore } from "@/store/mail-store";
+import {
+  type ComposeAttachment,
+  type ComposeKind,
+  type ComposeSession,
+  composePayload,
+  type DraftStatus,
+  useComposeStore,
+} from "@/store/compose-store";
 import { useUndoSendStore } from "@/store/undo-send-store";
 import type { MailSignatureKind, MailSignatureScope } from "@/types/mail";
 import { ALL_DRIVES_SLUG } from "@/workspace/path";
 
 import { RecipientField } from "./recipient-field";
-import { hasSignature, setSignature, SignatureBlock, typedText } from "./signature-block";
+import {
+  hasSignature,
+  SIGNATURE_META,
+  setSignature,
+  SignatureBlock,
+  typedText,
+} from "./signature-block";
 
-interface AttachedFile {
-  id: string;
-  filename: string;
-  mimeType: string;
-  size: number;
-  contentBase64: string;
-}
+const COMPOSE_TITLES: Record<ComposeKind, string> = {
+  new: "New message",
+  reply: "Reply",
+  forward: "Forward",
+  draft: "Draft",
+};
 
 const MAX_ATTACHMENT_BYTES = 25 * 1024 * 1024;
 const MAX_TOTAL_BYTES = 25 * 1024 * 1024;
+const CARET_CLEARANCE_PX = 48;
+
+const EXTENSIONS = [
+  StarterKit,
+  Underline,
+  TextAlign.configure({ types: ["heading", "paragraph"] }),
+  Link.extend({ inclusive: () => false }).configure({ openOnClick: false }),
+  Placeholder.configure({ placeholder: "Write your message…" }),
+  SignatureBlock,
+];
+
+const EDITOR_PROPS = {
+  attributes: {
+    class:
+      "min-h-[180px] flex-1 px-0 py-2 text-[14px] leading-relaxed focus:outline-none [&_[data-metis-signature]]:mt-3 [&_[data-metis-signature]]:rounded-sm [&_[data-metis-signature]]:text-muted-foreground [&_.ProseMirror-selectednode[data-metis-signature]]:outline-2 [&_.ProseMirror-selectednode[data-metis-signature]]:outline-ring/50",
+  },
+  scrollThreshold: CARET_CLEARANCE_PX,
+  scrollMargin: CARET_CLEARANCE_PX,
+};
 
 async function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -96,14 +129,6 @@ async function fileToBase64(file: File): Promise<string> {
   });
 }
 
-function splitRecipients(raw: string | undefined): string[] {
-  if (!raw) return [];
-  return raw
-    .split(/[,;]+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-}
-
 function presetTime(label: string): Date {
   const d = new Date();
   if (label === "in1h") d.setHours(d.getHours() + 1);
@@ -119,12 +144,123 @@ function presetTime(label: string): Date {
   return d;
 }
 
+function composeTitle(session: ComposeSession): string {
+  if (session.kind === "reply" && session.replyingTo) return `Reply to ${session.replyingTo}`;
+  if (session.kind === "draft" && session.references) return "Reply";
+  return COMPOSE_TITLES[session.kind];
+}
+
+function initialFocus(): HTMLElement | boolean {
+  const root = document.querySelector("[data-compose]");
+  const kind = useComposeStore.getState().session?.kind;
+  const target =
+    kind === "new"
+      ? root?.querySelector<HTMLElement>('[aria-label="To recipients"]')
+      : root?.querySelector<HTMLElement>('[contenteditable="true"]');
+  return target ?? false;
+}
+
 export function ComposeDialog() {
   const scope = useMailboxScope();
   const mailboxes = useWorkspaceMailboxes();
-  const [chosenFrom, setFromMailboxSlug] = useState("");
-  const { composeOpen, setComposeOpen, composeInitial, setComposeInitial } = useMailStore();
+  const isMobile = useIsMobile();
+  const session = useComposeStore((s) => s.session);
+  const bind = useComposeStore((s) => s.bind);
+  const close = useComposeStore((s) => s.close);
+  const defaultFrom = mailboxes.some((m) => m.slug === scope.mailboxSlug)
+    ? scope.mailboxSlug
+    : (mailboxes[0]?.slug ?? "");
+
+  useEffect(() => {
+    bind({ scope, defaultFrom });
+  }, [bind, scope, defaultFrom]);
+
+  const open = session !== null;
+  const onOpenChange = (next: boolean) => {
+    if (!next) close();
+  };
+  const content = !session ? null : session.loading || session.loadFailed ? (
+    <DraftLoading failed={session.loadFailed} />
+  ) : (
+    <ComposeForm key={session.id} session={session} defaultFrom={defaultFrom} />
+  );
+
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange} disablePointerDismissal>
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          initialFocus={initialFocus}
+          data-compose=""
+          className="h-[95dvh] gap-0 overflow-hidden rounded-t-[14px] border-border bg-surface p-0 text-foreground"
+        >
+          {content}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange} disablePointerDismissal>
+      <DialogContent
+        showCloseButton={false}
+        initialFocus={initialFocus}
+        data-compose=""
+        className="inset-0 m-auto flex h-[min(92dvh,1000px)] w-[min(1100px,calc(100vw-3rem))] max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-[14px] bg-surface p-0 text-foreground shadow-[0_30px_90px_rgba(0,0,0,0.65)] sm:max-w-none"
+      >
+        {content}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ComposeHeader({ title, status }: { title: string; status?: DraftStatus }) {
+  const close = useComposeStore((s) => s.close);
+  return (
+    <div className="flex shrink-0 items-center justify-between border-b px-5 py-3 bg-panel border-border-soft">
+      <span className="flex min-w-0 items-center gap-3">
+        <DialogTitle className="truncate text-[17px] font-medium leading-normal tracking-tight text-foreground">
+          {title}
+        </DialogTitle>
+        {status && <DraftStatusIndicator status={status} />}
+      </span>
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        onClick={close}
+        aria-label="Close compose"
+        className="text-faint"
+      >
+        <X />
+      </Button>
+    </div>
+  );
+}
+
+function DraftLoading({ failed }: { failed: boolean }) {
+  return (
+    <>
+      <ComposeHeader title="Draft" />
+      <p className={cn("px-5 py-4 text-[13px]", failed ? "text-destructive-text" : "text-faint")}>
+        {failed ? "Could not load this draft." : "Loading draft…"}
+      </p>
+    </>
+  );
+}
+
+function ComposeForm({ session, defaultFrom }: { session: ComposeSession; defaultFrom: string }) {
+  const scope = useMailboxScope();
+  const mailboxes = useWorkspaceMailboxes();
+  const update = useComposeStore((s) => s.update);
+  const setBody = useComposeStore((s) => s.setBody);
+  const addAttachments = useComposeStore((s) => s.addAttachments);
+  const removeAttachment = useComposeStore((s) => s.removeAttachment);
+  const touch = useComposeStore((s) => s.touch);
+  const markSignature = useComposeStore((s) => s.markSignature);
+  const finish = useComposeStore((s) => s.finish);
   const startSend = useUndoSendStore((s) => s.startSend);
+  const notifyScheduled = useUndoSendStore((s) => s.notifyScheduled);
 
   const fromItems = useMemo(
     () =>
@@ -136,30 +272,15 @@ export function ComposeDialog() {
     [mailboxes],
   );
 
-  const fromMailboxSlug =
-    chosenFrom ||
-    (mailboxes.some((m) => m.slug === scope.mailboxSlug)
-      ? scope.mailboxSlug
-      : (mailboxes[0]?.slug ?? ""));
-  const [to, setTo] = useState<string[]>([]);
-  const [cc, setCc] = useState<string[]>([]);
-  const [bcc, setBcc] = useState<string[]>([]);
-  const [subject, setSubject] = useState("");
-  const [quotedHtml, setQuotedHtml] = useState<string | null>(null);
-  const [quoteImages, setQuoteImages] = useState<RemoteImages>("block");
+  const { to, cc, bcc, subject, quotedHtml, quoteImages, attachments } = session;
+  const fromMailboxSlug = session.from ?? defaultFrom;
   const [showQuoted, setShowQuoted] = useState(false);
   const privacy = useMailPrivacy();
   const quotePreview = useRenderedEmail(privacy, showQuoted ? quotedHtml : null, quoteImages);
-  const threadingRef = useRef<{
-    inReplyTo?: string;
-    references?: string;
-    replyToMessageId?: string;
-  }>({});
-  const contacts = useContactSuggestions(composeOpen);
-  const [showCc, setShowCc] = useState(false);
-  const [showBcc, setShowBcc] = useState(false);
+  const contacts = useContactSuggestions(true);
+  const [showCc, setShowCc] = useState(cc.length > 0);
+  const [showBcc, setShowBcc] = useState(bcc.length > 0);
   const [error, setError] = useState<string | null>(null);
-  const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [customScheduleOpen, setCustomScheduleOpen] = useState(false);
   const [pendingScheduleTime, setPendingScheduleTime] = useState<Date | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -168,28 +289,50 @@ export function ComposeDialog() {
     useQuery(
       rpc.workspaceDrives.list.queryOptions({ input: { workspaceSlug: scope.workspaceSlug } }),
     ).data?.drives.some((d) => SHARE_LINK_PROVIDERS.includes(d.provider)) ?? false;
-  const titleId = useId();
-  const [draftStatus, setDraftStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const draftIdRef = useRef<string | null>(null);
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [openSeen, setOpenSeen] = useState(false);
-  const [openCount, setOpenCount] = useState(0);
-  const [signatureKind, setSignatureKind] = useState<MailSignatureKind | null>("new");
-  const signatureSessionRef = useRef(0);
-  const signatureFromRef = useRef<string | null>(null);
-  const signatureAutoRef = useRef(false);
+  const signatureKind: MailSignatureKind | null =
+    session.kind === "draft" ? null : session.kind === "new" ? "new" : "reply";
   const signatures = useQuery({
     ...rpc.mail.signatures.forCompose.queryOptions({
       input: { ...scope, fromMailboxSlug: fromMailboxSlug || undefined },
     }),
-    enabled: composeOpen && !!fromMailboxSlug,
+    enabled: !!fromMailboxSlug,
     staleTime: 60_000,
   }).data;
+
+  const editor = useEditor({
+    extensions: EXTENSIONS,
+    content: session.bodyHtml,
+    autofocus: session.kind === "new" ? false : "start",
+    editorProps: EDITOR_PROPS,
+    onUpdate: ({ editor: current, transaction }) =>
+      setBody(
+        current.getHTML(),
+        typedText(current) !== "",
+        transaction.getMeta(SIGNATURE_META) !== true,
+      ),
+    immediatelyRender: false,
+  });
+
+  const appliedSignature = session.signature;
+  useEffect(() => {
+    if (!editor || !signatures) return;
+    const preferredId = signatureKind === "reply" ? signatures.defaultReply : signatures.defaultNew;
+    const preferred = signatures.signatures.find((s) => s.id === preferredId) ?? null;
+    if (!appliedSignature) {
+      const auto = signatureKind !== null && !hasSignature(editor);
+      if (auto && preferred) setSignature(editor, preferred);
+      markSignature({ from: fromMailboxSlug, auto });
+      return;
+    }
+    if (appliedSignature.from === fromMailboxSlug) return;
+    markSignature({ from: fromMailboxSlug, auto: appliedSignature.auto });
+    if (hasSignature(editor) || appliedSignature.auto) setSignature(editor, preferred);
+  }, [editor, signatures, signatureKind, fromMailboxSlug, appliedSignature, markSignature]);
 
   async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
     const accepted: File[] = [];
-    let runningTotal = attachedFiles.reduce((a, f) => a + f.size, 0);
+    let runningTotal = attachments.reduce((a, f) => a + f.size, 0);
 
     for (const file of Array.from(files)) {
       if (file.size > MAX_ATTACHMENT_BYTES) {
@@ -203,7 +346,7 @@ export function ComposeDialog() {
       runningTotal += file.size;
       accepted.push(file);
     }
-    const next: AttachedFile[] = await Promise.all(
+    const next: ComposeAttachment[] = await Promise.all(
       accepted.map(async (file) => ({
         id: crypto.randomUUID(),
         filename: file.name,
@@ -213,12 +356,8 @@ export function ComposeDialog() {
       })),
     );
 
-    if (next.length > 0) setAttachedFiles((prev) => [...prev, ...next]);
+    if (next.length > 0) addAttachments(next);
     if (fileInputRef.current) fileInputRef.current.value = "";
-  }
-
-  function removeFile(id: string) {
-    setAttachedFiles((prev) => prev.filter((f) => f.id !== id));
   }
 
   async function linkDriveFile(pick: DrivePick) {
@@ -245,200 +384,18 @@ export function ComposeDialog() {
     }
   }
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit,
-      Underline,
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Link.extend({ inclusive: () => false }).configure({ openOnClick: false }),
-      Placeholder.configure({ placeholder: "Write your message…" }),
-      SignatureBlock,
-    ],
-    editorProps: {
-      attributes: {
-        class:
-          "min-h-[180px] px-0 py-2 text-[14px] leading-relaxed focus:outline-none [&_[data-metis-signature]]:mt-3 [&_[data-metis-signature]]:rounded-sm [&_[data-metis-signature]]:text-muted-foreground [&_.ProseMirror-selectednode[data-metis-signature]]:outline-2 [&_.ProseMirror-selectednode[data-metis-signature]]:outline-ring/50",
-      },
-    },
-    immediatelyRender: false,
-  });
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.target instanceof Element && e.target.closest('[data-slot="popover-content"]')) return;
-      if (e.key === "Escape" && composeOpen) setComposeOpen(false);
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [composeOpen, setComposeOpen]);
-
-  if (composeOpen !== openSeen) {
-    setOpenSeen(composeOpen);
-    if (composeOpen) {
-      setOpenCount((n) => n + 1);
-      setSignatureKind(
-        composeInitial?.draftId
-          ? null
-          : composeInitial?.replyToMessageId || composeInitial?.quotedHtml
-            ? "reply"
-            : "new",
-      );
-    }
-  }
-
-  const [seededInitial, setSeededInitial] = useState<typeof composeInitial>(null);
-  if (composeOpen && composeInitial && composeInitial !== seededInitial) {
-    setSeededInitial(composeInitial);
-    if (composeInitial.draftId) setSignatureKind(null);
-    else if (composeInitial.replyToMessageId || composeInitial.quotedHtml) {
-      setSignatureKind("reply");
-    }
-    if (composeInitial.to) setTo(splitRecipients(composeInitial.to));
-    if (composeInitial.cc) {
-      setCc(splitRecipients(composeInitial.cc));
-      setShowCc(true);
-    }
-    if (composeInitial.bcc) {
-      setBcc(splitRecipients(composeInitial.bcc));
-      setShowBcc(true);
-    }
-    if (composeInitial.subject) setSubject(composeInitial.subject);
-    if (composeInitial.quotedHtml) {
-      setQuotedHtml(composeInitial.quotedHtml);
-      setQuoteImages(composeInitial.quoteImages ?? "block");
-      setShowQuoted(false);
-    }
-    if (composeInitial.draftId) setDraftStatus("saved");
-  }
-
-  useEffect(() => {
-    if (composeOpen && composeInitial) {
-      if (composeInitial.bodyHtml) editor?.commands.setContent(composeInitial.bodyHtml);
-      threadingRef.current = {
-        inReplyTo: composeInitial.inReplyTo,
-        references: composeInitial.references,
-        replyToMessageId: composeInitial.replyToMessageId,
-      };
-      if (composeInitial.draftId) draftIdRef.current = composeInitial.draftId;
-      setComposeInitial(null);
-    }
-  }, [composeOpen, composeInitial, setComposeInitial, editor]);
-
-  useEffect(() => {
-    if (!composeOpen || !editor || !signatures || composeInitial) return;
-    const id = signatureKind === "reply" ? signatures.defaultReply : signatures.defaultNew;
-    const preferred = signatures.signatures.find((s) => s.id === id) ?? null;
-    if (signatureSessionRef.current !== openCount) {
-      signatureSessionRef.current = openCount;
-      signatureFromRef.current = fromMailboxSlug;
-      signatureAutoRef.current = signatureKind !== null && !hasSignature(editor);
-      if (signatureAutoRef.current && preferred) setSignature(editor, preferred);
-      return;
-    }
-    if (signatureFromRef.current === fromMailboxSlug) return;
-    signatureFromRef.current = fromMailboxSlug;
-    if (hasSignature(editor) || signatureAutoRef.current) setSignature(editor, preferred);
-  }, [composeOpen, editor, signatures, composeInitial, openCount, signatureKind, fromMailboxSlug]);
-
-  const buildPayload = useCallback(() => {
-    const editorHtml = editor?.getHTML() ?? "";
-    const bodyHtml = quotedHtml ? `${editorHtml}<br>${quotedHtml}` : editorHtml;
-    return {
-      to,
-      cc,
-      bcc,
-      subject,
-      ...(threadingRef.current.inReplyTo && {
-        inReplyTo: threadingRef.current.inReplyTo,
-      }),
-      ...(threadingRef.current.references && {
-        references: threadingRef.current.references,
-      }),
-      ...(threadingRef.current.replyToMessageId && {
-        replyToMessageId: threadingRef.current.replyToMessageId,
-      }),
-      bodyHtml,
-      attachments: attachedFiles.map(({ filename, mimeType, contentBase64 }) => ({
-        filename,
-        mimeType,
-        contentBase64,
-      })),
-    };
-  }, [editor, to, cc, bcc, subject, attachedFiles, quotedHtml]);
-
-  const saveDraftNow = useCallback(async () => {
-    const subjTrim = subject.trim();
-    const bodyTrim = editor ? typedText(editor) : "";
-    if (to.length === 0 && !subjTrim && !bodyTrim) {
-      setDraftStatus("idle");
-      return;
-    }
-    setDraftStatus("saving");
-    try {
-      const data = await orpc.mail.drafts.save({
-        ...scope,
-        fromMailboxSlug,
-        draftId: draftIdRef.current ?? undefined,
-        payload: buildPayload(),
-      });
-      if (data.id) {
-        draftIdRef.current = data.id;
-      }
-      setDraftStatus("saved");
-    } catch {
-      setDraftStatus("error");
-    }
-  }, [editor, subject, to, buildPayload, scope, fromMailboxSlug]);
-
-  useEffect(() => {
-    if (!composeOpen) return;
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => {
-      void saveDraftNow();
-    }, 1500);
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    };
-  }, [composeOpen, saveDraftNow]);
-
-  function resetForm() {
-    setComposeOpen(false);
-    setTo([]);
-    setCc([]);
-    setBcc([]);
-    setSubject("");
-    setQuotedHtml(null);
-    setShowQuoted(false);
-    threadingRef.current = {};
-    setAttachedFiles([]);
-    setPendingScheduleTime(null);
-    setDraftStatus("idle");
-    draftIdRef.current = null;
-    signatureFromRef.current = null;
-    signatureAutoRef.current = false;
-    if (saveTimerRef.current) {
-      clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = null;
-    }
-    editor?.commands.clearContent();
-  }
-
   function handleSend() {
     if (to.length === 0 || !subject.trim()) {
       setError("To and Subject are required.");
       return;
     }
     setError(null);
-
-    const id = draftIdRef.current;
-    if (id) {
-      orpc.mail.drafts.delete({ ...scope, fromMailboxSlug, draftId: id }).catch(() => {});
-    }
-    startSend(buildPayload(), scope, fromMailboxSlug);
-    resetForm();
+    startSend(composePayload(session), scope, fromMailboxSlug, {
+      kind: session.kind,
+      replyingTo: session.replyingTo,
+    });
+    finish("delete");
   }
-
-  const notifyScheduled = useUndoSendStore((s) => s.notifyScheduled);
 
   async function handleScheduledSend(date: Date) {
     if (to.length === 0 || !subject.trim()) {
@@ -446,7 +403,7 @@ export function ComposeDialog() {
       return;
     }
     setError(null);
-    const payload = buildPayload();
+    const payload = composePayload(session);
     try {
       const { addedBcc } = await orpc.mail.scheduledSend.create({
         ...scope,
@@ -456,54 +413,36 @@ export function ComposeDialog() {
       });
       void refreshQueries(rpc.mail.scheduledSend.list.key());
       notifyScheduled(payload, scope, date, addedBcc);
-      resetForm();
+      finish("keep");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to schedule send");
     }
   }
 
-  if (!composeOpen) return null;
-
   return (
-    <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center p-6 max-md:p-0">
-      <div
-        role="presentation"
-        className="pointer-events-auto absolute inset-0 bg-black/55 backdrop-blur-sm"
-        onClick={() => setComposeOpen(false)}
-      />
-      <div
-        role="dialog"
-        aria-modal
-        aria-labelledby={titleId}
-        className="pointer-events-auto relative w-full max-w-160 overflow-hidden rounded-[14px] border shadow-[0_30px_90px_rgba(0,0,0,0.65)] bg-surface border-border animate-[obsidian-slide-up_0.2s_ease] max-md:flex max-md:h-dvh max-md:max-w-none max-md:flex-col max-md:overflow-y-auto max-md:rounded-none max-md:border-0 max-md:[&>*]:shrink-0"
-      >
-        <div className="flex items-center justify-between border-b px-5 py-4 bg-panel border-border-soft">
-          <span className="flex items-center gap-3 text-[20px] font-medium tracking-tight text-foreground">
-            <span id={titleId}>New Message</span>
-            <DraftStatusIndicator status={draftStatus} />
-          </span>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            onClick={() => setComposeOpen(false)}
-            aria-label="Close compose"
-            className="text-faint"
-          >
-            <X />
-          </Button>
-        </div>
+    <>
+      <ComposeHeader title={composeTitle(session)} status={session.status} />
 
+      <div className="shrink-0">
         {mailboxes.length > 0 && (
           <Field label="From">
             {mailboxes.length > 1 ? (
               <Select
                 items={fromItems}
                 value={fromMailboxSlug}
+                disabled={session.draftId !== null}
                 onValueChange={(next) => {
-                  if (next) setFromMailboxSlug(next);
+                  if (next) update({ from: next });
                 }}
               >
-                <SelectTrigger className="my-1.5 h-8! border-0 bg-transparent px-0 text-[13px] shadow-none">
+                <SelectTrigger
+                  title={
+                    session.draftId !== null
+                      ? "From can't change once the draft is saved"
+                      : undefined
+                  }
+                  className="my-1.5 h-8! border-0 bg-transparent px-0 text-[13px] shadow-none"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -531,7 +470,7 @@ export function ComposeDialog() {
         <Field label="To">
           <RecipientField
             values={to}
-            onValuesChange={setTo}
+            onValuesChange={(next) => update({ to: next })}
             contacts={contacts}
             placeholder="recipient@email.com"
             ariaLabel="To recipients"
@@ -564,7 +503,7 @@ export function ComposeDialog() {
           <Field label="Cc">
             <RecipientField
               values={cc}
-              onValuesChange={setCc}
+              onValuesChange={(next) => update({ cc: next })}
               contacts={contacts}
               placeholder="cc@email.com"
               ariaLabel="Cc recipients"
@@ -576,7 +515,7 @@ export function ComposeDialog() {
           <Field label="Bcc">
             <RecipientField
               values={bcc}
-              onValuesChange={setBcc}
+              onValuesChange={(next) => update({ bcc: next })}
               contacts={contacts}
               placeholder="bcc@email.com"
               ariaLabel="Bcc recipients"
@@ -588,240 +527,240 @@ export function ComposeDialog() {
           <input
             type="text"
             value={subject}
-            onChange={(e) => setSubject(e.target.value)}
+            onChange={(e) => update({ subject: e.target.value })}
             placeholder="Subject line…"
             className="flex-1 bg-transparent py-3 text-[14px] outline-none text-foreground"
           />
         </Field>
+      </div>
 
-        <div className="px-5 py-4 min-h-60 max-md:flex-1">
-          <EditorContent editor={editor} />
-          {quotedHtml && (
-            <div className="mt-2">
-              <div className="flex items-center gap-1.5">
-                <Button
-                  variant="outline"
-                  size="xs"
-                  onClick={() => setShowQuoted((s) => !s)}
-                  aria-expanded={showQuoted}
-                  className="rounded-full bg-surface text-[11px] text-muted-foreground dark:bg-surface"
-                >
-                  <ChevronDown
-                    className={cn("size-3 transition-transform", showQuoted && "rotate-180")}
-                  />
-                  {showQuoted ? "Hide quoted text" : "Show quoted text"}
-                </Button>
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-4">
+        <EditorContent editor={editor} className="flex flex-1 flex-col" />
+        {quotedHtml && (
+          <div className="mt-2">
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={() => setShowQuoted((s) => !s)}
+                aria-expanded={showQuoted}
+                className="rounded-full bg-surface text-[11px] text-muted-foreground dark:bg-surface"
+              >
+                <ChevronDown
+                  className={cn("size-3 transition-transform", showQuoted && "rotate-180")}
+                />
+                {showQuoted ? "Hide quoted text" : "Show quoted text"}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => {
+                  setShowQuoted(false);
+                  update({ quotedHtml: null });
+                }}
+                title="Remove quoted text"
+                aria-label="Remove quoted text"
+                className="rounded-full text-faint hover:text-muted-foreground"
+              >
+                <X />
+              </Button>
+            </div>
+            {showQuoted && quotePreview && (
+              <div className="mt-2 max-h-64 overflow-y-auto rounded-md border p-3 border-border-soft bg-surface">
+                <EmailFrame
+                  html={quotePreview.html}
+                  images={quoteImages}
+                  proxyEndpoint={privacy.proxyEndpoint}
+                  adaptive={quotePreview.adaptive}
+                  title="Quoted message"
+                />
+              </div>
+            )}
+          </div>
+        )}
+        {attachments.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2 border-t pt-3 border-border-soft">
+            {attachments.map((file) => (
+              <div
+                key={file.id}
+                className="flex items-center gap-2 rounded-md border px-2.5 py-1.5 bg-panel border-border"
+              >
+                <Paperclip className="h-3 w-3 text-primary" />
+                <div className="flex flex-col">
+                  <span className="max-w-50 truncate text-[12px] text-foreground">
+                    {file.filename}
+                  </span>
+                  <span className="text-[10px] text-faint">{formatBytes(file.size)}</span>
+                </div>
                 <Button
                   variant="ghost"
                   size="icon-xs"
-                  onClick={() => {
-                    setQuotedHtml(null);
-                    setShowQuoted(false);
-                  }}
-                  title="Remove quoted text"
-                  aria-label="Remove quoted text"
-                  className="rounded-full text-faint hover:text-muted-foreground"
+                  onClick={() => removeAttachment(file.id)}
+                  className="ml-1 text-faint"
+                  aria-label={`Remove ${file.filename}`}
                 >
                   <X />
                 </Button>
               </div>
-              {showQuoted && quotePreview && (
-                <div className="mt-2 max-h-64 overflow-y-auto rounded-md border p-3 border-border-soft bg-surface">
-                  <EmailFrame
-                    html={quotePreview.html}
-                    images={quoteImages}
-                    proxyEndpoint={privacy.proxyEndpoint}
-                    adaptive={quotePreview.adaptive}
-                    title="Quoted message"
-                  />
-                </div>
-              )}
-            </div>
-          )}
-          {attachedFiles.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2 border-t pt-3 border-border-soft">
-              {attachedFiles.map((file) => (
-                <div
-                  key={file.id}
-                  className="flex items-center gap-2 rounded-md border px-2.5 py-1.5 bg-panel border-border"
-                >
-                  <Paperclip className="h-3 w-3 text-primary" />
-                  <div className="flex flex-col">
-                    <span className="max-w-50 truncate text-[12px] text-foreground">
-                      {file.filename}
-                    </span>
-                    <span className="text-[10px] text-faint">{formatBytes(file.size)}</span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => removeFile(file.id)}
-                    className="ml-1 text-faint"
-                    aria-label={`Remove ${file.filename}`}
-                  >
-                    <X />
-                  </Button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {error && (
-          <div className="border-t px-4 py-2 text-[12px] bg-destructive/8 border-destructive/20 text-destructive-text">
-            {error}
+            ))}
           </div>
         )}
+      </div>
 
-        <div className="flex items-center justify-between border-t px-4 py-3 border-border-soft max-md:sticky max-md:bottom-0 max-md:gap-2 max-md:bg-surface">
-          <div className="flex gap-0.5 max-md:min-w-0 max-md:overflow-x-auto">
-            <FmtBtn
-              title="Bold"
-              active={editor?.isActive("bold")}
-              onClick={() => editor?.chain().focus().toggleBold().run()}
-            >
-              <Bold className="h-3 w-3" strokeWidth={2.5} />
+      {error && (
+        <div className="border-t px-4 py-2 text-[12px] bg-destructive/8 border-destructive/20 text-destructive-text">
+          {error}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between border-t px-4 py-3 border-border-soft shrink-0 max-md:gap-2">
+        <div className="flex gap-0.5 max-md:min-w-0 max-md:overflow-x-auto">
+          <FmtBtn
+            title="Bold"
+            active={editor?.isActive("bold")}
+            onClick={() => editor?.chain().focus().toggleBold().run()}
+          >
+            <Bold className="h-3 w-3" strokeWidth={2.5} />
+          </FmtBtn>
+          <FmtBtn
+            title="Italic"
+            active={editor?.isActive("italic")}
+            onClick={() => editor?.chain().focus().toggleItalic().run()}
+          >
+            <Italic className="h-3 w-3" strokeWidth={2.5} />
+          </FmtBtn>
+          <FmtBtn
+            title="Underline"
+            active={editor?.isActive("underline")}
+            onClick={() => editor?.chain().focus().toggleUnderline().run()}
+          >
+            <UnderlineIcon className="h-3 w-3" strokeWidth={2.5} />
+          </FmtBtn>
+          <FmtBtn
+            title="Bullet list"
+            active={editor?.isActive("bulletList")}
+            onClick={() => editor?.chain().focus().toggleBulletList().run()}
+          >
+            <List className="h-3 w-3" />
+          </FmtBtn>
+          <FmtBtn
+            title="Numbered list"
+            active={editor?.isActive("orderedList")}
+            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+          >
+            <ListOrdered className="h-3 w-3" />
+          </FmtBtn>
+          <LinkButton editor={editor} />
+          <FmtBtn title="Attach files" onClick={() => fileInputRef.current?.click()}>
+            <Paperclip className="h-3 w-3" />
+          </FmtBtn>
+          {canLinkFromDrive && (
+            <FmtBtn title="Link a file from Drive" onClick={() => setDrivePickerOpen(true)}>
+              <HardDrive className="h-3 w-3" />
             </FmtBtn>
-            <FmtBtn
-              title="Italic"
-              active={editor?.isActive("italic")}
-              onClick={() => editor?.chain().focus().toggleItalic().run()}
-            >
-              <Italic className="h-3 w-3" strokeWidth={2.5} />
-            </FmtBtn>
-            <FmtBtn
-              title="Underline"
-              active={editor?.isActive("underline")}
-              onClick={() => editor?.chain().focus().toggleUnderline().run()}
-            >
-              <UnderlineIcon className="h-3 w-3" strokeWidth={2.5} />
-            </FmtBtn>
-            <FmtBtn
-              title="Bullet list"
-              active={editor?.isActive("bulletList")}
-              onClick={() => editor?.chain().focus().toggleBulletList().run()}
-            >
-              <List className="h-3 w-3" />
-            </FmtBtn>
-            <FmtBtn
-              title="Numbered list"
-              active={editor?.isActive("orderedList")}
-              onClick={() => editor?.chain().focus().toggleOrderedList().run()}
-            >
-              <ListOrdered className="h-3 w-3" />
-            </FmtBtn>
-            <LinkButton editor={editor} />
-            <FmtBtn title="Attach files" onClick={() => fileInputRef.current?.click()}>
-              <Paperclip className="h-3 w-3" />
-            </FmtBtn>
-            {canLinkFromDrive && (
-              <FmtBtn title="Link a file from Drive" onClick={() => setDrivePickerOpen(true)}>
-                <HardDrive className="h-3 w-3" />
-              </FmtBtn>
-            )}
-            {signatures && signatures.signatures.length > 0 && (
-              <SignaturePicker
-                signatures={signatures.signatures}
-                onPick={(picked) => {
-                  if (!editor) return;
-                  signatureFromRef.current = fromMailboxSlug;
-                  signatureAutoRef.current = picked !== null;
-                  setSignature(editor, picked);
-                }}
-              />
-            )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              className="hidden"
-              onChange={(e) => handleFiles(e.target.files)}
+          )}
+          {signatures && signatures.signatures.length > 0 && (
+            <SignaturePicker
+              signatures={signatures.signatures}
+              onPick={(picked) => {
+                if (!editor) return;
+                markSignature({ from: fromMailboxSlug, auto: picked !== null });
+                setSignature(editor, picked);
+                touch();
+              }}
             />
-          </div>
-          <div className="flex items-center gap-2">
-            {pendingScheduleTime && (
-              <Button
-                variant="outline"
-                size="xs"
-                onClick={() => setPendingScheduleTime(null)}
-                className="text-[11px] text-faint"
-                title="Clear schedule — send immediately"
-              >
-                <X />
-                Cancel schedule
-              </Button>
-            )}
-            <div className="flex overflow-hidden rounded-md bg-primary">
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  if (pendingScheduleTime) void handleScheduledSend(pendingScheduleTime);
-                  else handleSend();
-                }}
-                className="h-9 rounded-none px-5 text-[13px] text-primary-foreground hover:bg-black/5"
-              >
-                {pendingScheduleTime ? (
-                  <>
-                    <Clock className="h-3.5 w-3.5" />
-                    Send{" "}
-                    {pendingScheduleTime.toLocaleString(undefined, {
-                      weekday: "short",
-                      hour: "numeric",
-                      minute: "2-digit",
-                    })}
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-3.5 w-3.5" />
-                    Send
-                  </>
-                )}
-              </Button>
-              <div className="w-px bg-black/15" />
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  render={
-                    <Button
-                      variant="ghost"
-                      aria-label="Schedule send"
-                      className="h-9 rounded-none px-2 text-primary-foreground hover:bg-black/5"
-                    >
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </Button>
-                  }
-                />
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="px-2 py-1.5 text-[10px] uppercase tracking-[1.5px] text-faint">
-                    Schedule send
-                  </div>
-                  <DropdownMenuItem onClick={() => setPendingScheduleTime(presetTime("in1h"))}>
-                    <Clock className="mr-2 h-3.5 w-3.5" />
-                    In 1 hour
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setPendingScheduleTime(presetTime("tonight"))}>
-                    <Clock className="mr-2 h-3.5 w-3.5" />
-                    Tonight (8 PM)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setPendingScheduleTime(presetTime("tomorrowMorning"))}
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={(e) => handleFiles(e.target.files)}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          {pendingScheduleTime && (
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={() => setPendingScheduleTime(null)}
+              className="text-[11px] text-faint"
+              title="Clear schedule — send immediately"
+            >
+              <X />
+              Cancel schedule
+            </Button>
+          )}
+          <div className="flex overflow-hidden rounded-md bg-primary">
+            <Button
+              variant="ghost"
+              onClick={() => {
+                if (pendingScheduleTime) void handleScheduledSend(pendingScheduleTime);
+                else handleSend();
+              }}
+              className="h-9 rounded-none px-5 text-[13px] text-primary-foreground hover:bg-black/5"
+            >
+              {pendingScheduleTime ? (
+                <>
+                  <Clock className="h-3.5 w-3.5" />
+                  Send{" "}
+                  {pendingScheduleTime.toLocaleString(undefined, {
+                    weekday: "short",
+                    hour: "numeric",
+                    minute: "2-digit",
+                  })}
+                </>
+              ) : (
+                <>
+                  <Send className="h-3.5 w-3.5" />
+                  Send
+                </>
+              )}
+            </Button>
+            <div className="w-px bg-black/15" />
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    aria-label="Schedule send"
+                    className="h-9 rounded-none px-2 text-primary-foreground hover:bg-black/5"
                   >
-                    <Clock className="mr-2 h-3.5 w-3.5" />
-                    Tomorrow 9 AM
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setPendingScheduleTime(presetTime("mondayMorning"))}
-                  >
-                    <Clock className="mr-2 h-3.5 w-3.5" />
-                    Monday 9 AM
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setCustomScheduleOpen(true)}>
-                    <Calendar className="mr-2 h-3.5 w-3.5" />
-                    Pick date & time…
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5 text-[10px] uppercase tracking-[1.5px] text-faint">
+                  Schedule send
+                </div>
+                <DropdownMenuItem onClick={() => setPendingScheduleTime(presetTime("in1h"))}>
+                  <Clock className="mr-2 h-3.5 w-3.5" />
+                  In 1 hour
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPendingScheduleTime(presetTime("tonight"))}>
+                  <Clock className="mr-2 h-3.5 w-3.5" />
+                  Tonight (8 PM)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setPendingScheduleTime(presetTime("tomorrowMorning"))}
+                >
+                  <Clock className="mr-2 h-3.5 w-3.5" />
+                  Tomorrow 9 AM
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setPendingScheduleTime(presetTime("mondayMorning"))}
+                >
+                  <Clock className="mr-2 h-3.5 w-3.5" />
+                  Monday 9 AM
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setCustomScheduleOpen(true)}>
+                  <Calendar className="mr-2 h-3.5 w-3.5" />
+                  Pick date & time…
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
@@ -850,7 +789,7 @@ export function ComposeDialog() {
         providers={SHARE_LINK_PROVIDERS}
         onPick={linkDriveFile}
       />
-    </div>
+    </>
   );
 }
 
@@ -1028,7 +967,7 @@ function LinkButton({ editor }: { editor: Editor | null }) {
   );
 }
 
-function DraftStatusIndicator({ status }: { status: "idle" | "saving" | "saved" | "error" }) {
+function DraftStatusIndicator({ status }: { status: DraftStatus }) {
   if (status === "idle") return null;
   const label =
     status === "saving"

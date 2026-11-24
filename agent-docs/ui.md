@@ -47,7 +47,7 @@ See also [AGENTS.md](../AGENTS.md), [shortcuts.md](shortcuts.md), [desktop.md](d
   - The generated `Input` and `Textarea` default to `text-base md:text-sm`, so every call site sets its own size (`text-[13px]` for forms, `text-sm` for chat composers).
 - **Page titles use `PageHeader`** (`src/components/page-header.tsx`): the title with its action on one row and the description full width below, wrapping the action under the title only when the row runs out of room. Every settings, workspace-settings and dashboard page uses it; profile headers (an MCP client) keep their own layout.
 - **The generated `CommandItem` always renders a trailing check icon**, invisible until the item is checked, and it keeps its width; search result rows hide it on phones (`src/components/search/result-row.tsx`).
-- **Overlays are dialogs.** Anything that covers the page has `role="dialog"`, `aria-modal` and an accessible name: through the shadcn `Dialog`, or set explicitly on a bespoke shell such as the compose window.
+- **Overlays are dialogs.** Anything that covers the page has `role="dialog"`, `aria-modal` and an accessible name: through the shadcn `Dialog`, or set explicitly on a bespoke shell.
 
 ### Brand and theme
 

@@ -258,6 +258,7 @@ function mailActions(ctx: ActionContext, hit: MailSearchHitDto): SearchAction[] 
           replyToMessageId: id,
         },
         mailboxSlug,
+        "reply",
       ),
     ),
   ];
