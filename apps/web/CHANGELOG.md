@@ -6,6 +6,8 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 ## Unreleased
 
+- Display IMAP message bodies using their declared charset, including GB2312.
+
 ## Releases
 
 - [0.4.1](../../releases/app-v0.4.1.md) - 2026-11-17

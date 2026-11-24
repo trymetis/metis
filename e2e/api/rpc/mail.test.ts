@@ -129,6 +129,15 @@ describe.skipIf(!env.edge)("malformed and oversized mail", () => {
     LONG,
   );
 
+  test("the declared GB2312 charset is honored in both body formats", async () => {
+    const { bodyText, bodyHtml } = await rpc<{ bodyText?: string; bodyHtml?: string }>(
+      "mail.messages.get",
+      { ...scope, id: named("enc-gb2312").id, folder: "inbox" },
+    );
+    expect(bodyText).toContain("你好");
+    expect(bodyHtml).toContain("<p>你好</p>");
+  });
+
   test("reference loops and self-references resolve to their own messages", async () => {
     for (const subject of ["loop A", "loop B", "thread-self-reference"]) {
       const e = named(subject);

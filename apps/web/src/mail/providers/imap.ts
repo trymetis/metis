@@ -1,6 +1,11 @@
 import "server-only";
 import { snippetOf } from "@metis/gateway-contract/text";
-import type { FetchMessageObject, FetchQueryObject, MessageStructureObject } from "imapflow";
+import type {
+  DownloadManyPart,
+  FetchMessageObject,
+  FetchQueryObject,
+  MessageStructureObject,
+} from "imapflow";
 import { createTransport } from "nodemailer";
 import MailComposer from "nodemailer/lib/mail-composer";
 import PostalMime from "postal-mime";
@@ -461,9 +466,14 @@ async function searchAst(
   };
 }
 
+interface TextPart {
+  part: string;
+  charset?: string;
+}
+
 interface PartIndex {
-  html?: string;
-  text?: string;
+  html?: TextPart;
+  text?: TextPart;
   attachments: Attachment[];
 }
 
@@ -488,8 +498,21 @@ function collectParts(node: MessageStructureObject | undefined, found: PartIndex
     return;
   }
 
-  if (type === "text/html" && !found.html) found.html = node.part ?? "1";
-  else if (type === "text/plain" && !found.text) found.text = node.part ?? "1";
+  const part = { part: node.part ?? "1", charset: node.parameters?.charset };
+  if (type === "text/html" && !found.html) found.html = part;
+  else if (type === "text/plain" && !found.text) found.text = part;
+}
+
+function decodeBodyPart(download: DownloadManyPart | undefined, part: TextPart): string {
+  const content = download?.content;
+  if (!content) return "";
+  // downloadMany decodes the transfer encoding and returns the original charset bytes.
+  try {
+    return new TextDecoder(download.meta.charset || part.charset || "utf-8").decode(content);
+  } catch (error) {
+    if (!(error instanceof RangeError)) throw error;
+    return content.toString("utf8");
+  }
 }
 
 async function getMessage(credentials: ImapCredentials, id: string): Promise<Partial<Email>> {
@@ -528,13 +551,13 @@ async function getMessage(credentials: ImapCredentials, id: string): Promise<Par
     const found: PartIndex = { attachments: [] };
     collectParts(message.bodyStructure, found);
 
-    const wanted = [found.html, found.text].filter((part): part is string => !!part);
+    const wanted = [found.html?.part, found.text?.part].filter((part): part is string => !!part);
     const parts = wanted.length
       ? await ctx.client.downloadMany(String(ref.uid), wanted, { uid: true })
       : {};
 
-    const html = found.html ? (parts[found.html]?.content?.toString("utf8") ?? "") : "";
-    const text = found.text ? (parts[found.text]?.content?.toString("utf8") ?? "") : "";
+    const html = found.html ? decodeBodyPart(parts[found.html.part], found.html) : "";
+    const text = found.text ? decodeBodyPart(parts[found.text.part], found.text) : "";
 
     return {
       ...base,

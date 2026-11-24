@@ -341,6 +341,35 @@ export const MAIL_CASES: MailCase[] = [
       ),
   },
   {
+    name: "enc-gb2312",
+    build: () => {
+      const boundary = "edge-gb2312";
+      // GB2312 bytes for "你好".
+      const greeting = Buffer.from("c4e3bac3", "hex");
+      return entity(
+        withHeaders(std("enc-gb2312", 31), [
+          ["Content-Type", `multipart/alternative; boundary="${boundary}"`],
+        ]),
+        multipartBody(boundary, [
+          {
+            headers: [
+              ["Content-Type", "text/plain; charset=gb2312"],
+              ["Content-Transfer-Encoding", "base64"],
+            ],
+            body: base64Lines(greeting),
+          },
+          {
+            headers: [
+              ["Content-Type", "text/html; charset=gb2312"],
+              ["Content-Transfer-Encoding", "quoted-printable"],
+            ],
+            body: "<p>=C4=E3=BA=C3</p>",
+          },
+        ]),
+      );
+    },
+  },
+  {
     name: "enc-latin1-label-utf8-bytes",
     build: () =>
       entity(
