@@ -6,7 +6,7 @@ import { deleteAccount, sharedWorkspacesBlockMessage } from "@/account/delete";
 import { buildDataExport } from "@/account/export";
 import { appActor, recordAuditEvent } from "@/audit";
 import { isOwnerEmail } from "@/auth/owner";
-import { getAuth, verify2FA } from "@/auth/server";
+import { getAuth, invalidSecondFactorMessage, verify2FA } from "@/auth/server";
 import { db } from "@/db";
 import { mailRemoteAllow, session, userPrefs } from "@/db/schema";
 import { rateLimit } from "@/services/rate-limit";
@@ -320,7 +320,7 @@ export const userRouter = {
       });
       if (!verified) {
         throw new ORPCError("UNAUTHORIZED", {
-          message: "Invalid authenticator or backup code",
+          message: invalidSecondFactorMessage(input.code),
         });
       }
 

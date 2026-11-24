@@ -47,6 +47,7 @@ export function TotpConfirmDialog({
       code.reset();
       onOpenChange(false);
     } catch (err) {
+      code.clearSpentCode();
       setError(err instanceof Error ? err.message : "Could not save");
     } finally {
       setBusy(false);

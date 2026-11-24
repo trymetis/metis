@@ -30,7 +30,7 @@ To send this email through your own mail service, set up SMTP or Resend:
 1. Open your instance and click your initials at the bottom of the left rail. Choose **Dashboard**.
 2. Open **System**, then **Mail** under **Drivers**. On a new Cloud instance, **Driver** shows `console`. This driver sends the mail to the console's [**Mail**](https://console.trymetis.email/instances/~/mail) tab. The card's badge reads **Delivering**, because the mail is delivered to that tab.
 3. Set **Driver** to `resend` or `smtp`, and fill in the fields.
-4. Click **Save changes** and enter your authenticator code.
+4. Click **Save changes** and [confirm it's you](/guide/account/two-factor-authentication#switch-between-them), then click **Save**.
 5. Send an invitation to an address you can read, to check that it arrives.
 
 [Outgoing email](/self-hosting/configure/outgoing-email) explains the drivers, every field and how to set up Resend. On a Cloud instance, these parts of that page do not apply:

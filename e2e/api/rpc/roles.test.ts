@@ -198,9 +198,7 @@ test("an account invite is emailed without handing back its link, creates the ac
   const uncoded = await rejection(
     withTotp(() => rpc("dashboard.invites.create", { email, instanceRole: "observer" })),
   );
-  expect(uncoded.message).toBe(
-    "Enter your authenticator code to invite someone with an instance role",
-  );
+  expect(uncoded.message).toBe("Confirm it's you to invite someone with an instance role");
   let sent: { invite: { id: string; email: string }; link: string | null } | undefined;
   const { token } = await emailedInvite(rpc, email, async () => {
     sent = await withTotp((code) =>

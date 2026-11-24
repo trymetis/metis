@@ -107,7 +107,7 @@ This page is read-only for everyone. To change roles, ban or remove accounts, us
 
 "Every account on this instance, its instance role and whether it is banned."
 
-The owner, admins and observers all see this page. Only the owner and admins see the actions menu on its rows. Every action in that menu asks for your authenticator code. If you do not have your authenticator, click **Use a backup code instead** in the dialog and type one of your backup codes.
+The owner, admins and observers all see this page. Only the owner and admins see the actions menu on its rows. Every action in that menu asks you to confirm it's you. Type a code from your authenticator app, or click **Use a backup code instead** in the dialog and type one of your backup codes, or click **Use a passkey instead** if you added a passkey. If **Ask me first with** is set to **Passkey**, or you have no authenticator app, the dialog opens on **Use your passkey** in a browser that supports passkeys. See [Switch between them](/guide/account/two-factor-authentication#switch-between-them).
 
 The page has one card, also called **Accounts**. It says "Instance roles reach the dashboard only, never anyone's mail, calendars, drives or contacts. The owner is set by METIS_OWNER_EMAIL." This is a different card from the **Accounts** card on the **Instance** page.
 
@@ -154,24 +154,24 @@ The menu holds **Change role**, **Ban…** (or **Unban** for a banned account) a
 
 1. Open the row's actions menu and point to **Change role**. The current role has a tick.
 2. Pick **Admin**, **Observer** or **User**. Admins do not see **Admin**.
-3. The **Change instance role** dialog says, for example, "Make bob@example.com an instance observer. Enter your authenticator code to confirm." For **User**, it says "Make bob@example.com a plain user, so they no longer reach the dashboard. Enter your authenticator code to confirm."
-4. Enter the code and click **Change role**.
+3. The **Change instance role** dialog says, for example, "Make bob@example.com an instance observer. Confirm it's you to continue." For **User**, it says "Make bob@example.com a plain user, so they no longer reach the dashboard. Confirm it's you to continue."
+4. Confirm it's you and click **Change role**.
 
-<img src="/images/self-hosting/dashboard-users-role.webp" alt="The Change instance role dialog asking for an authenticator code to make an account an instance observer" class="dark:hidden" />
-<img src="/images/self-hosting/dashboard-users-role-dark.webp" alt="The Change instance role dialog asking for an authenticator code to make an account an instance observer" class="hidden dark:block" />
+<img src="/images/self-hosting/dashboard-users-role.webp" alt="The Change instance role dialog asking you to confirm it's you to make an account an instance observer" class="dark:hidden" />
+<img src="/images/self-hosting/dashboard-users-role-dark.webp" alt="The Change instance role dialog asking you to confirm it's you to make an account an instance observer" class="hidden dark:block" />
 
 ### Ban an account
 
 A ban stops someone from using your instance without deleting anything. The owner can ban admins, observers and users. An admin can ban observers and users. Nobody can ban the owner or themselves.
 
 1. Open the row's actions menu and click **Ban…**.
-2. The **Ban user** dialog says: "Sign bob@example.com out everywhere within 2 minutes and stop them signing in, their MCP clients and the workflows that run as them. What they linked to workspaces stays linked. Enter your authenticator code to confirm."
+2. The **Ban user** dialog says: "Sign bob@example.com out everywhere within 2 minutes and stop them signing in, their MCP clients and the workflows that run as them. What they linked to workspaces stays linked. Confirm it's you to continue."
 3. Pick a **Duration**: **1 day**, **7 days**, **30 days** or **Until unbanned** (the default). The time counts from the moment you ban.
 4. If you like, type a **Reason (optional)**, up to 500 characters. The reason is shown in the audit log.
-5. Enter the code and click **Ban user**. You see "Banned bob@example.com. They're signed out everywhere within 2 minutes."
+5. Confirm it's you and click **Ban user**. You see "Banned bob@example.com. They're signed out everywhere within 2 minutes."
 
-<img src="/images/self-hosting/dashboard-users-ban.webp" alt="The Ban user dialog with the Duration list set to Until unbanned, an optional reason and the authenticator code" class="dark:hidden" />
-<img src="/images/self-hosting/dashboard-users-ban-dark.webp" alt="The Ban user dialog with the Duration list set to Until unbanned, an optional reason and the authenticator code" class="hidden dark:block" />
+<img src="/images/self-hosting/dashboard-users-ban.webp" alt="The Ban user dialog with the Duration list set to Until unbanned, an optional reason and the field to confirm it's you" class="dark:hidden" />
+<img src="/images/self-hosting/dashboard-users-ban-dark.webp" alt="The Ban user dialog with the Duration list set to Until unbanned, an optional reason and the field to confirm it's you" class="hidden dark:block" />
 
 What a ban does:
 
@@ -187,8 +187,8 @@ A ban with a duration ends by itself, and there is nothing to unban. The person 
 ### Unban an account
 
 1. Open the row's actions menu and click **Unban**.
-2. The **Unban user** dialog says: "Let bob@example.com sign in again. Their MCP clients and workflows work again too. Enter your authenticator code to confirm."
-3. Enter the code and click **Unban user**. You see "Unbanned bob@example.com".
+2. The **Unban user** dialog says: "Let bob@example.com sign in again. Their MCP clients and workflows work again too. Confirm it's you to continue."
+3. Confirm it's you and click **Unban user**. You see "Unbanned bob@example.com".
 
 The same people who can ban an account can unban it.
 
@@ -196,7 +196,7 @@ The same people who can ban an account can unban it.
 
 1. Open the row's actions menu and click **Remove…**.
 2. The **Remove user** dialog says: "Delete bob@example.com's account, their workspaces that have no other members, and their connected accounts. Workspaces they share with others must be transferred first. This can't be undone."
-3. Enter the code and click **Remove user**. You see "Removed bob@example.com".
+3. Confirm it's you and click **Remove user**. You see "Removed bob@example.com".
 
 Removing a user is refused while they own a workspace that has other members. The message says how many such workspaces they own, for example "This person owns 1 workspace with other members. They transfer ownership in Settings → Workspaces first."
 
@@ -204,16 +204,17 @@ To delete your own account, use **Settings**, **Security**. See [Delete your acc
 
 ### If an action is refused
 
-| Message                                                                                     | What it means                                                                                                                                              |
-| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| "Invalid authenticator or backup code"                                                      | The code was wrong or too old. Wait for a new code and try again.                                                                                          |
-| "Too many attempts. Please slow down."                                                      | Role changes, bans, unbans, removals and invites that make someone an admin or observer share one limit: 10 attempts every 5 minutes. Wait a few minutes.  |
-| "This user isn't banned"                                                                    | The ban already ended, or someone else unbanned the account. Reload the page.                                                                              |
-| "The owner's role comes from METIS_OWNER_EMAIL"                                             | The owner's role cannot be changed in the dashboard. To hand the instance over, see [Hand the instance to a new owner](#hand-the-instance-to-a-new-owner). |
-| "The instance owner can't be banned" or "The instance owner can't be removed"               | Nobody can ban or remove the owner.                                                                                                                        |
-| "You can't ban yourself" or "Delete your own account from Settings → Security instead"      | You cannot ban or remove your own account here.                                                                                                            |
-| "Only the instance owner can grant or change an admin role"                                 | Only the owner can make someone an admin, or change an admin's role.                                                                                       |
-| "Only the instance owner can ban an admin" or "Only the instance owner can remove an admin" | Only the owner can ban or remove an admin.                                                                                                                 |
+| Message                                                                                     | What it means                                                                                                                                                            |
+| ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| "Invalid authenticator or backup code"                                                      | The code was wrong or too old. Wait for a new code and try again.                                                                                                        |
+| "Your passkey confirmation expired. Confirm with your passkey again."                       | Too much time passed after you confirmed with your passkey. Click **Confirm again** under **Passkey confirmed**, use your passkey, then click the dialog's button again. |
+| "Too many attempts. Please slow down."                                                      | Role changes, bans, unbans, removals and invites that make someone an admin or observer share one limit: 10 attempts every 5 minutes. Wait a few minutes.                |
+| "This user isn't banned"                                                                    | The ban already ended, or someone else unbanned the account. Reload the page.                                                                                            |
+| "The owner's role comes from METIS_OWNER_EMAIL"                                             | The owner's role cannot be changed in the dashboard. To hand the instance over, see [Hand the instance to a new owner](#hand-the-instance-to-a-new-owner).               |
+| "The instance owner can't be banned" or "The instance owner can't be removed"               | Nobody can ban or remove the owner.                                                                                                                                      |
+| "You can't ban yourself" or "Delete your own account from Settings → Security instead"      | You cannot ban or remove your own account here.                                                                                                                          |
+| "Only the instance owner can grant or change an admin role"                                 | Only the owner can make someone an admin, or change an admin's role.                                                                                                     |
+| "Only the instance owner can ban an admin" or "Only the instance owner can remove an admin" | Only the owner can ban or remove an admin.                                                                                                                               |
 
 ### Where these changes are recorded
 
@@ -237,7 +238,7 @@ The **Invite someone** card says "Emails a link to create an account. The accoun
 1. Type the person's email address, for example `carol@example.com`.
 2. Pick an instance role: **No role** (the default), **Observer** or **Admin**. Only the owner sees **Admin**.
 3. Click **Invite**.
-4. If you picked **No role**, the invite is sent straight away. If you picked **Observer** or **Admin**, the **Send invite** dialog opens and says, for example, "Enter your authenticator code to invite carol@example.com as an instance observer." Enter the code and click **Send invite**.
+4. If you picked **No role**, the invite is sent straight away. If you picked **Observer** or **Admin**, the **Send invite** dialog opens and says, for example, "Confirm it's you to invite carol@example.com as an instance observer." Confirm it's you and click **Send invite**.
 
 You see "Invite sent to carol@example.com". The person gets an email with a **Create your account** button. When they create their account, they get the role you picked. With **No role**, the new account is a user, like every new account. See [How invites work](/guide/account/invite-people).
 
@@ -265,7 +266,7 @@ Above the list are a search box and two filters. Each filter shows its current c
 
 Invites are listed newest first. Each row shows the **Email**, the instance **Role** the invite gives (**Admin**, **Observer** or **No role**), who it was **Invited by** ("Deleted account" if that account is gone), and when it **Expires**, or an **Expired** badge. If no invite matches, the card says "No invites match."
 
-To cancel an invite, click its trash button (**Revoke the invite for carol@example.com**). It needs no authenticator code and asks for no confirmation. The link in the email stops working. You see the trash button only on invites you could have sent yourself, so an admin sees none on an invite that would make someone an admin.
+To cancel an invite, click its trash button (**Revoke the invite for carol@example.com**). It asks for no confirmation of any kind. The link in the email stops working. You see the trash button only on invites you could have sent yourself, so an admin sees none on an invite that would make someone an admin.
 
 ## Read accounts with an MCP client
 
@@ -312,7 +313,7 @@ Every external MCP client registered on the instance: **Clients**, **Enabled** a
 
 A theme is the set of colors a workspace's pages use. Workspace owners and admins pick one for their workspace, in the workspace's settings. They can pick a built-in theme, one of the instance themes you add here, or a custom theme they made for their own workspace. See [Logo and theme](/guide/workspaces/appearance).
 
-The owner and admins can create, edit and delete instance themes. Observers see the page without these buttons. None of these actions asks for an authenticator code.
+The owner and admins can create, edit and delete instance themes. Observers see the page without these buttons. None of these actions asks you to confirm it's you.
 
 <img src="/images/self-hosting/dashboard-themes.webp" alt="The Themes page with the Create theme button, an empty Instance themes section, and the built-in themes with how many workspaces use each" class="dark:hidden" />
 <img src="/images/self-hosting/dashboard-themes-dark.webp" alt="The Themes page with the Create theme button, an empty Instance themes section, and the built-in themes with how many workspaces use each" class="hidden dark:block" />
@@ -353,7 +354,7 @@ The owner, admins and observers can all read the audit log.
 <img src="/images/self-hosting/dashboard-audit.webp" alt="The Audit log page with the All events card, the search box, the event type list set to All events, and the latest events" class="dark:hidden" />
 <img src="/images/self-hosting/dashboard-audit-dark.webp" alt="The Audit log page with the All events card, the search box, the event type list set to All events, and the latest events" class="hidden dark:block" />
 
-The **All events** card lists changes such as turned-off two-factor authentication, turned-off sign-in alerts, approved MCP clients, disconnected accounts, removed or detached mailboxes, calendars, drives and address books, role changes, removed members, ownership transfers, invites sent, accepted, declined or revoked, invite links shown, instance roles granted or revoked, banned and unbanned users, removed users, deleted workspaces and accounts, undone upgrades, and workflows that were created, edited, turned on, turned off or deleted. The full list of what is recorded is in [Security activity](/guide/account/security-activity#what-is-recorded). Each change is recorded after it succeeds. Reading mail, events, files or contacts is never recorded.
+The **All events** card lists changes such as turned-off two-factor authentication, added and removed authenticator apps and passkeys, turned-off sign-in alerts, approved MCP clients, disconnected accounts, removed or detached mailboxes, calendars, drives and address books, role changes, removed members, ownership transfers, invites sent, accepted, declined or revoked, invite links shown, instance roles granted or revoked, banned and unbanned users, removed users, deleted workspaces and accounts, undone upgrades, and workflows that were created, edited, turned on, turned off or deleted. The full list of what is recorded is in [Security activity](/guide/account/security-activity#what-is-recorded). Each change is recorded after it succeeds. Reading mail, events, files or contacts is never recorded.
 
 Each row shows:
 
@@ -373,7 +374,7 @@ Above the list are a search box ("Search events") and a list of event types, whi
 - **Search:** looks through the whole log, not only the rows already on screen. The list updates shortly after you stop typing. Search finds your text in:
   - the event type, such as **Workspace invite revoked**. Event type names show only in the event type list, not on rows;
   - the fixed words of the sentence, without the names, email addresses, workspaces, roles, tools or versions in it. For example, "revoked the invite", "turned off" and "deleted their account" find rows, but "role from member" does not. Such a search finds every change of that type;
-  - what the change was about, such as an invited person's or member's email address, a client's name, the email address of a mailbox, calendar, drive or address book, a workflow's name, or the versions of an undone upgrade;
+  - what the change was about, such as an invited person's or member's email address, a client's name, a passkey's name, the email address of a mailbox, calendar, drive or address book, a workflow's name, or the versions of an undone upgrade;
   - the email address of the person who made the change, not their name;
   - the workspace's name;
   - the IP address.
@@ -434,7 +435,7 @@ A provider with no settings shows **Not configured**: "Users cannot connect acco
 
 ### Saving changes
 
-The owner and admins can edit settings. Editing a field shows a bar with the number of unsaved changes, **Reset** and **Save changes**. Saving asks for your authenticator code, then checks the changed settings against the real service before anything is stored. On a server list page, only new entries and entries whose connection settings changed are contacted. If a check fails, you can fix the fields or click **Save anyway**. See [How configuration works](/self-hosting/configure/how-configuration-works#saving-a-change-in-the-dashboard).
+The owner and admins can edit settings. Editing a field shows a bar with the number of unsaved changes, **Reset** and **Save changes**. Saving asks you to confirm it's you, then checks the changed settings against the real service before anything is stored. On a server list page, only new entries and entries whose connection settings changed are contacted. If a check fails, you can fix the fields or click **Save anyway**. See [How configuration works](/self-hosting/configure/how-configuration-works#saving-a-change-in-the-dashboard).
 
 <img src="/images/self-hosting/dashboard-save-bar.webp" alt="The Instance page with one unsaved change and the save bar" class="dark:hidden" />
 <img src="/images/self-hosting/dashboard-save-bar-dark.webp" alt="The Instance page with one unsaved change and the save bar" class="hidden dark:block" />
@@ -469,7 +470,7 @@ To reset a card:
    - If accounts would be quarantined (hidden from every workspace), a box headed "These connections would be quarantined:". It lists each provider, with the server name for a server entry, and how many connections it has.
    - Every field that would change, as the old value, an arrow and the new value. An empty value shows as a dash. Rows of a server list start with the entry's name. A secret that would change shows a **Changed** badge, never its value.
 3. If the quarantine box is shown, tick **Reset anyway and quarantine these connections**. **Reset** stays disabled until you do.
-4. Enter a code from your authenticator app and click **Reset**. To stop, click **Cancel**.
+4. [Confirm it's you](/guide/account/two-factor-authentication#switch-between-them) and click **Reset**. To stop, click **Cancel**.
 
 The new values are checked against the real service, with the same checks as a save. Then:
 
@@ -479,15 +480,15 @@ The new values are checked against the real service, with the same checks as a s
 - **If the values are not valid, or the reset would quarantine connections that the dialog did not list,** the dialog shows why and nothing is stored. Close it and click **Reset to environment** again to see the new list.
 - **If someone else saved a change after you opened the page,** you see the usual "The configuration changed since you opened it" message. Reload the page and try again.
 
-Authenticator codes for **Save changes**, **Save anyway**, **Restore**, **Restore anyway** and **Reset to environment** share one limit: 10 attempts every 5 minutes. Past it, you see "Too many attempts. Please slow down."
+Confirmations for **Save changes**, **Save anyway**, **Restore**, **Restore anyway** and **Reset to environment** share one limit: 10 attempts every 5 minutes. Every attempt counts, whether you use an authenticator code, a backup code or a passkey. Past it, you see "Too many attempts. Please slow down."
 
 ### History
 
 Every saved change and every reset is a version. The **History** page lists them, newest first: the version (the current one is marked **Current**), its kind (**Seed** for settings preflight stored, **Edit**, **Restore**, **Reset** for a reset to the environment, or **Server** for settings that `metis config set` or another `metis` command stored), the settings that changed, who changed them (or "Preflight"), and when.
 
 - **Compare:** pick two versions in **From** and **To** to see what changed, as old and new values. Secrets show only whether they changed.
-- **Restore:** click **Restore** on a row and enter your authenticator code. Every setting that differs is checked against the real service, then stored as a new version. On a server list, only entries that are new or whose connection settings differ are contacted, as for a save. Restoring never rewrites history. When it succeeds, you see "Version N restored as version M".
-- **Restore anyway:** if a check fails, you see **Restore refused** and nothing changes. The card has a **Restore anyway** button. Click it, and a dialog titled **Restore version N anyway** says: "The check above failed. Restoring anyway stores this version as it is, so whatever failed the check may not work until it is fixed." Enter your authenticator code and click **Restore anyway**. The new version shows in the list as an ordinary **Restore**.
+- **Restore:** click **Restore** on a row and [confirm it's you](/guide/account/two-factor-authentication#switch-between-them). Every setting that differs is checked against the real service, then stored as a new version. On a server list, only entries that are new or whose connection settings differ are contacted, as for a save. Restoring never rewrites history. When it succeeds, you see "Version N restored as version M".
+- **Restore anyway:** if a check fails, you see **Restore refused** and nothing changes. The card has a **Restore anyway** button. Click it, and a dialog titled **Restore version N anyway** says: "The check above failed. Restoring anyway stores this version as it is, so whatever failed the check may not work until it is fixed." Confirm it's you and click **Restore anyway**. The new version shows in the list as an ordinary **Restore**.
 
 <img src="/images/self-hosting/dashboard-history.webp" alt="The History page with the list of stored versions" class="dark:hidden" />
 <img src="/images/self-hosting/dashboard-history-dark.webp" alt="The History page with the list of stored versions" class="hidden dark:block" />

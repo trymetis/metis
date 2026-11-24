@@ -557,7 +557,7 @@ export function ConfigForm({
       <TotpConfirmDialog
         open={confirming}
         title="Save changes"
-        body="Enter your authenticator code to change the instance configuration."
+        body="Confirm it's you to change the instance configuration."
         confirmLabel="Save"
         onOpenChange={setConfirming}
         onConfirm={(code) => save(code)}

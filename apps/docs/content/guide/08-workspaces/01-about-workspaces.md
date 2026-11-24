@@ -38,11 +38,18 @@ Every member also has a role: **owner**, **admin** or **member**. The role does 
 
 For the full list of what each role can do, see [Roles and permissions](/guide/reference/roles-and-permissions).
 
-## The authenticator code
+## Confirm it's you
 
-Some changes ask for a code from your authenticator app before they take effect, for example turning AI on for a mailbox or deleting a workspace. Type the 6-digit code from your authenticator app into the six boxes. If you do not have your authenticator, click **Use a backup code instead** and enter one of your backup codes.
+Some changes ask you to confirm it's you before they take effect, for example turning AI on for a mailbox or deleting a workspace. The box opens on your default way to confirm. You can confirm in any of the ways your account has:
+
+- **Authenticator code:** if you set up an authenticator app, type the 6-digit code from it into the six boxes. If it is not your default, click **Use your authenticator instead** first.
+- **Passkey:** if you added one, click **Use a passkey instead** (or start right there, if a passkey is your default or you have no authenticator app). Click **Use your passkey** and confirm it the way your device asks. When the box shows **Passkey confirmed**, click its button to finish.
+- **Backup code:** click **Use a backup code instead** and enter one of your backup codes.
+
+To add a passkey or an authenticator app, or to choose your default, see [Two-factor authentication](/guide/account/two-factor-authentication#codes-passkeys-and-backup-codes).
 
 - A wrong code shows "Invalid authenticator or backup code".
+- If you wait too long after **Passkey confirmed**, you see "Your passkey confirmation expired. Confirm with your passkey again." Click **Confirm again** under **Passkey confirmed**, use your passkey, then click the box's button again.
 - Too many tries in a short time shows "Too many attempts. Please slow down." Wait a few minutes and try again.
 
 ## Names cannot be changed

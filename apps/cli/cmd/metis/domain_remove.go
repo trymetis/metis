@@ -21,6 +21,7 @@ func newDomainRemoveCommand() *cobra.Command {
 				return err
 			}
 			ui.Done("Metis is reachable on 127.0.0.1 only")
+			ui.Warn("%s", passkeysTiedToAddress)
 			return nil
 		},
 	}

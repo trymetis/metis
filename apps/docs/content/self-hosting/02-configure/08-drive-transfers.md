@@ -62,7 +62,7 @@ Open **Dashboard**, **System**, **Instance**. The **Drive relay** card has two l
 | **Max transfer size (MB)**          | 256     | The size of each relayed file.                                  |
 | **Transfers per user, per process** | 3       | How many relayed transfers one person can run at the same time. |
 
-Change a value, click **Save changes** and enter your authenticator code.
+Change a value, click **Save changes** and [confirm it's you](/guide/account/two-factor-authentication#switch-between-them), then click **Save**.
 
 Relayed S3 uploads go to the bucket in parts. Each S3 entry sets the size of those parts in its **Part size** field. See [S3](/self-hosting/configure/server-lists#s3). Each running upload holds about one part in memory. A larger part size, or a higher **Transfers per user, per process**, raises your server's memory use.
 

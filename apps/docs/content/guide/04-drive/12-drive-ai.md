@@ -32,7 +32,7 @@ The file list has no move action, so ask Drive AI when you want a file in anothe
 
 ## When Drive AI is turned off
 
-AI is off for each drive until someone turns it on. The person who connected the drive can turn it on in the workspace's drive settings. Metis asks for a code from their authenticator app first. See [Workspaces](/guide/workspaces).
+AI is off for each drive until someone turns it on. The person who connected the drive can turn it on in the workspace's drive settings. Metis asks them to confirm it's them first, with a code from their authenticator app, a passkey or a backup code. See [Workspaces](/guide/workspaces).
 
 While AI is off, the panel says "Assistant turned off", then the reason and a button:
 

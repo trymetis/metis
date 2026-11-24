@@ -123,5 +123,5 @@ On purpose, no assistant can:
 - Add or remove mailboxes, calendars, drives and address books from a workspace, or join a workspace
 - Change MCP client settings
 - Change member roles, send workspace invitations or change the workspace logo
-- Do anything that needs your two-factor code
+- Do anything that asks you to confirm it's you
 - Decide what happened to a send, or another change, whose outcome is unclear. You resolve that yourself: a scheduled message in the mailbox (see [Mail](/guide/mail)), and a workflow step from the run's details (see [Resolve a step with an unconfirmed outcome](/guide/workflows/cancel-and-retry-runs#resolve-a-step-with-an-unconfirmed-outcome)).

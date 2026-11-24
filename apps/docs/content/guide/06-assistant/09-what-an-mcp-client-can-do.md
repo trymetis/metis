@@ -83,4 +83,4 @@ If you are the instance owner, an instance admin or an instance observer, your c
 
 ## What a client can never do
 
-Like the in-app assistants, an MCP client cannot upload files or create share links. It cannot change AI switches, calendar visibility, drive folders or which address books a workspace shows. It cannot change member roles, send workspace invitations, or do anything that needs your two-factor code. See [What the assistant can do](/guide/assistant/what-the-assistant-can-do).
+Like the in-app assistants, an MCP client cannot upload files or create share links. It cannot change AI switches, calendar visibility, drive folders or which address books a workspace shows. It cannot change member roles, send workspace invitations, or do anything that asks you to confirm it's you. See [What the assistant can do](/guide/assistant/what-the-assistant-can-do).

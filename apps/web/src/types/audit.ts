@@ -1,6 +1,10 @@
 export const AUDIT_ACTIONS = [
   "account.deleted",
   "two_factor.disabled",
+  "authenticator.added",
+  "authenticator.removed",
+  "passkey.added",
+  "passkey.removed",
   "sign_in_alerts.disabled",
   "mcp_client.created",
   "mcp_client.approved",
@@ -72,6 +76,10 @@ export type AuditDetail = Record<string, string | number | boolean | null | stri
 export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   "account.deleted": "Account deleted",
   "two_factor.disabled": "Two-factor authentication disabled",
+  "authenticator.added": "Authenticator app added",
+  "authenticator.removed": "Authenticator app removed",
+  "passkey.added": "Passkey added",
+  "passkey.removed": "Passkey removed",
   "sign_in_alerts.disabled": "Sign-in alerts turned off",
   "mcp_client.created": "MCP client added",
   "mcp_client.approved": "MCP client approved",

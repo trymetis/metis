@@ -1,6 +1,6 @@
 # Auth — accounts, sign-in, 2FA and the Better Auth schema
 
-How accounts are created, how the instance owner is fixed, how invites work, how sign-in and the second factor are enforced, and how Better Auth's own tables are regenerated.
+How accounts are created, how the instance owner is fixed, how invites work, how sign-in and the second factor (authenticator app, backup codes, passkeys) are enforced, and how Better Auth's own tables are regenerated.
 Paths are relative to `apps/web/`.
 See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](connections.md), [configuration.md](configuration.md), [dashboard.md](dashboard.md) (instance roles), [workspaces.md](workspaces.md) (workspace membership), [database.md](database.md).
 
@@ -16,7 +16,11 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
 | Invite tokens                                 | `src/auth/invite-token.ts` → `newInviteToken` · `src/db/schema.ts` → `invite`                                                                                                                                                                                                                   |
 | 2FA gates                                     | `src/proxy.ts` → `proxy`, `protectedPath`, `config.matcher` · `src/server/middlewares/app-session.ts` → `appSession`                                                                                                                                                                            |
 | 2FA step-up in procedures                     | `src/server/require-totp.ts` → `requireTotp`                                                                                                                                                                                                                                                    |
-| Code classification                           | `src/auth/two-factor-code.ts` → `twoFactorCodeKind` · client hook `src/hooks/use-two-factor-code.ts` → `useTwoFactorCode`                                                                                                                                                                       |
+| Code classification                           | `src/auth/two-factor-code.ts` → `twoFactorCodeKind` · client hook `src/hooks/use-two-factor-code.ts` → `useTwoFactorCode` · shared input `src/components/two-factor-input.tsx` → `TwoFactorInput`                                                                                               |
+| The two-factor plugin                         | `src/auth/two-factor/` → `twoFactor` (`index.ts`), `twoFactorEndpoints` (`endpoints.ts`), schema `schema.ts`, events `events.ts`, client `twoFactorClient` (`client.ts`)                                                                                                                        |
+| Two-factor internals                          | `verify.ts` → `checkFactor`, `requireSecondFactor` · `challenge.ts` → `challengeSignIn`, `finishSignIn` · `store.ts` → `loadFactors` · `webauthn.ts` · `secrets.ts`                                                                                                                             |
+| Second factors in the browser                 | `src/auth/two-factor/passkey-client.ts` → `addPasskey`, `confirmWithPasskey`, `signInWithPasskey`, `usePasskeySupport` · `src/hooks/use-two-factor-methods.ts` → `useTwoFactorMethods` · setup `src/app/(auth)/2fa/setup/`                                                                      |
+| Security page cards                           | `src/app/settings/security/_components/` → `authenticator-section.tsx`, `passkeys-section.tsx`, `default-method-section.tsx`                                                                                                                                                                    |
 | Return-to after 2FA                           | `src/auth/two-factor-callback.ts` → `rememberTwoFactorCallback`, `consumeTwoFactorCallback`, `TWO_FACTOR_CALLBACK_COOKIE`                                                                                                                                                                       |
 | Native sign-in endpoints (Better Auth plugin) | `src/auth/native.ts` ([desktop.md](desktop.md))                                                                                                                                                                                                                                                 |
 | Bans                                          | `src/auth/ban.ts` → `isBanned`, `activeBan`, `userBanned`, `BANNED_MESSAGE` · columns `user.banned`, `ban_reason`, `ban_expires` (Better Auth `additionalFields` in `src/auth/base.ts`) · set in `src/dashboard/users.ts` → `banUser`, `unbanUser` ([dashboard.md](dashboard.md))               |
@@ -31,7 +35,7 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
 ### The instance and its config
 
 - **Reach Better Auth only through `getAuth()`, resolved per request; types use `Auth`.** It caches one instance per version of the sections it depends on (`signup`, `cache`) and builds a new one on the first call after either changes; running requests finish on the instance they started with ([configuration.md](configuration.md)).
-- **`BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` are boot config.** Changing the secret breaks every session, TOTP secret, backup code and JWKS-signed token; the URL is baked into OAuth redirect URIs and the MCP issuer and audience.
+- **`BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` are boot config.** Changing the secret breaks every session, TOTP secret, backup code and JWKS-signed token; the URL is baked into OAuth redirect URIs and the MCP issuer and audience, and its host is every passkey's relying party, so a new host makes every passkey stop working.
 - **Sign-up mode and legal consent are database-backed and read per request** (`getInstanceConfig().signup.signupDisabled`, `legalConfig()`), so the sign-in page, `/setup`, invite creation, the invite page and the consent check follow a dashboard edit without a redeploy.
 - **Sessions and verification tokens are stored in the database** (`storeSessionInDatabase`, `verification: { storeInDatabase: true }`), so a cache driver change drops only rate-limit counters.
   - Keep `verification.storeInDatabase`: with `secondaryStorage`, `getAuthTables` drops the `verification` table unless it is set, which would move verification, reset and magic-link tokens into the cache driver, where `memory` loses them on restart.
@@ -86,6 +90,7 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
 
 - **A banned account can't hold a session, so it can't sign in on any path.** `databaseHooks.session.create.before` refuses with `ACCOUNT_BANNED` and `BANNED_MESSAGE`, which covers password, magic link, the 2FA step and native sign-in, since each creates its session through Better Auth.
   - Only the password form shows the message; requesting a magic link still answers as usual, and opening it ends in Better Auth's plain 403, because its verify endpoint does not catch the hook's error.
+- **Revoking every session also expires the caller's session cookies.** Better Auth's `/revoke-sessions` only deletes the rows, so `hooks.after` in `server.ts` runs `deleteSessionCookie`; without it the cookie cache keeps this browser signed in until it expires. Other browsers' revoked sessions keep that window, as bans do.
 - **Banning deletes the user's sessions** (`internalAdapter.deleteUserSessions`, which clears the secondary storage too); nothing checks the ban per request.
   - The cookie cache (`session.cookieCache.maxAge` in `authOptions`) keeps a deleted session readable until it expires, so a ban reaches open tabs within that window, and the dashboard's ban dialog and toast say so.
   - The window is kept short instead of adding a lookup to every request, because sessions can't be recreated once the ban is in place.
@@ -107,7 +112,7 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
 - **Every completed sign-in emails the account an alert unless the user turned alerts off** (`user_prefs.sign_in_alerts`, on when no row exists). The alert names the time in UTC, the device, the IP address and the method, and links to the sessions list in account settings.
 - **A sign-in is complete when a session survives the second-factor challenge**, so one sign-in sends one alert.
   - `signInNotifier` must stay after `twoFactorPlugin` in `authOptions` → `plugins`. Better Auth runs `hooks.after` first and plugin hooks in plugin order, and the two-factor hook is what deletes the pre-challenge session and nulls `newSession`.
-  - It fires on `/sign-in/email` and `/magic-link/verify` (no challenge: no 2FA yet, or a trusted device), `/two-factor/verify-totp` and `/two-factor/verify-backup-code` (the challenge passed) and `/native/exchange` (the desktop and mobile apps, [desktop.md](desktop.md), [mobile.md](mobile.md)).
+  - It fires on `/sign-in/email` and `/magic-link/verify` (no challenge: no 2FA yet, or a trusted device), `/two-factor/verify` (the challenge passed, the method read from the body) and `/native/exchange` (the desktop and mobile apps, [desktop.md](desktop.md), [mobile.md](mobile.md)).
   - A second-factor request that already carries a session cookie is enabling 2FA or a step-up, never a sign-in, so it sends nothing.
 - **`signInNotifier` reaches the database and mailer only through `AuthDeps.onSignIn`**, because `base.ts` must stay free of `server-only` imports (below).
 - **A failed alert never fails the sign-in.** `sendSignInAlert` catches and logs `[auth] failed to send sign-in alert`; it is awaited inside the sign-in request, like every other auth mail.
@@ -115,21 +120,44 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
 
 ### Second factor
 
-- **A session alone proves nothing: check 2FA wherever a session is trusted.** Better Auth issues a full session before 2FA exists (`/two-factor/enable` needs one).
+- **A session alone proves nothing: check 2FA wherever a session is trusted.** Better Auth issues a full session before 2FA exists (`/two-factor/enroll` needs one).
   - `proxy` runs on every path but built assets, the favicon and app icons, the health endpoints `/api/livez` and `/api/readyz` ([deployment.md](deployment.md)), `/rpc` and `/api/drive/relay/*`, because maintenance answers there first ([configuration.md](configuration.md)); Next buffers the body of every request it sees, so the two upload paths stay outside it.
   - `protectedPath` limits its session and 2FA gates to `/w/*`, `/settings/*`, `/dashboard/*` ([dashboard.md](dashboard.md)), `/invite/accept` and `/api/*`; every other path goes on untouched.
   - Within `/api/*` it skips `/api/auth/*`, `/api/mcp*` (bearer), `/api/workflows/tick` (secret), `/api/inbound/*` (each endpoint's own secret), `/api/drive/relay/*` (SigV4 signature) and the health endpoints.
   - `appSession` covers `/rpc` and in-process server calls, where no proxy runs; `/rpc` also carries the public `signup.*` procedures, so the proxy cannot gate it.
   - The native plugin endpoints `/api/auth/native/code` and `/api/auth/native/connect-ticket` check 2FA themselves.
-- **Every second-factor field takes a TOTP or a backup code, and `verify2FA` is the only server entry point** for them; procedures never call `getAuth().api.verifyTOTP` or `verifyBackupCode`.
-  - `verify2FA` verifies a backup code with `disableSession: true`, because a step-up must not re-issue the session.
+- **Every second-factor field takes a TOTP, a backup code or a step-up proof, and `verify2FA` is the only server entry point** for them; it calls the server-only `verifyStepUp`, which runs `requireSecondFactor`.
   - Its callers: `requireTotp` (oRPC), the `x-totp-code` header check on Better Auth endpoints in `server.ts`, and the procedures that rate-limit on their own scope.
-- **Classify 6 digits as TOTP before 10 alphanumerics as backup**, so an all-digit backup code is never misread. Pages use `useTwoFactorCode()`; no `src/app/**` file imports the classifier.
+  - The plugin's own endpoints that need a second factor take it as `code` in the body and call `requireSecondFactor` themselves.
+- **User-facing copy never says "second factor" or "factor"; it says "Confirm it's you" or names the authenticator app, passkey or backup code.** The feature itself is "two-factor authentication".
+- **Classify a step-up proof first, then 6 digits as TOTP, then 10 alphanumerics as backup**, so an all-digit backup code is never misread. Pages use `useTwoFactorCode()`; no `src/app/**` file imports the classifier.
+- **The two-factor plugin is our own (`src/auth/two-factor/`), adapted from Better Auth's two-factor and passkey plugins at 1.7.13** (credited in `NOTICE`); a `better-auth` bump never changes it, and upstream fixes are ported on purpose.
+  - `base.ts` builds it from `AuthDeps` (`onTwoFactorEvent`, `onTwoFactorRedirect`), so it imports nothing that reaches `server-only`.
+- **Three tables, one per concern.** `two_factor` holds per-user state (backup codes, default method, lockout counters), `totp` the one authenticator app, `passkey` the passkeys; each `user_id` in the first two is unique.
+  - `loadFactors` reads all three; `activeMethods` counts a verified `totp` row and any passkey.
+  - `user.two_factor_enabled` means at least one active method, and the gates read only it.
+- **Either method can come first.** `/two-factor/enroll` `{ method }` starts an authenticator (setup URI) or a passkey (creation options); `/two-factor/enroll/confirm` finishes it.
+  - Before 2FA is on, enroll takes the password and issues the backup codes into `two_factor`, as the stock plugin did at enable, so the authenticator setup page shows them before the code is entered.
+  - After that it takes a second factor and issues nothing.
+  - The first confirmed method turns 2FA on, refreshes the session cookie and becomes the default.
+- **Backup codes stay as the stock plugin made them:** ten mixed-case 5-5 codes, sealed with `symmetricEncrypt` as one JSON list, matched exactly, and a used one is removed with a guarded swap. Regenerating takes the password.
+- **One verify endpoint, the method in the body.** `/two-factor/verify` takes `{ method: "totp" | "backup_code", code }` or `{ method: "passkey", response }` and runs `checkFactor`.
+  - During a pending sign-in (the `two_factor` cookie) it applies the attempt cap and lockout and finishes the sign-in, with the trusted-device choice.
+  - With a session it mints a step-up proof: `proof-` plus 40 characters, stored as an HMAC under `2fa-step-up-…` in `verification`, bound to that user and session, valid for two minutes and not consumed, because the consent page sends one confirmation to two endpoints.
+  - A passkey needs `/two-factor/challenge` `{ method: "passkey" }` first; the stored challenge is bound to the user and session, or to none for a sign-in.
+- **The default second factor is `two_factor.preferred_method`**, set by `/two-factor/preferences`; `methodList` puts it first, and a default whose method is gone falls back to the first active one.
+  - The sign-in challenge returns the list as `twoFactorMethods`, and `GET /two-factor/methods` answers a session (with the passkey list) or a pending sign-in (without it), so `/2fa/verify` and every step-up dialog open on the default.
+- **Removing a method takes a second factor and never removes the last one** (`/two-factor/remove`, `LAST_METHOD`); turning 2FA off (`/two-factor/disable`) takes the password and a second factor and deletes all three tables' rows for the user.
+- **Two-factor changes are audited through `onTwoFactorEvent`** (`authenticator.added`, `authenticator.removed`, `passkey.added`, `passkey.removed` with the passkey's name, `two_factor.disabled`), which `server.ts` passes to `recordAuditEvent` ([audit.md](audit.md)).
+- **The relying party is `BETTER_AUTH_URL`:** its hostname is the RP ID and its origin the only expected origin.
 
 ### Better Auth schema
 
 - **Never hand-edit `src/db/auth-schema.ts` except the `$type` pass below.** Regenerate with `bun run --cwd apps/web db:auth-schema`, then `bun run lint:fix` (the CLI writes unformatted), then re-apply the `$type` pass, then write the migration ([database.md](database.md)).
-- **After a `better-auth` bump, regenerate before anything else.** `auth@latest` must match the installed `better-auth`: the CLI's own `@better-auth/core` decides the table shape, and startup schema validation rejects auth requests on a mismatch.
+- **After a `better-auth` bump, regenerate before anything else.** `auth@latest` must match the installed `better-auth`: the CLI's own `@better-auth/core` decides the table shape, and startup schema validation rejects auth requests on a mismatch. When `latest` is ahead, run the CLI at the installed version with the script's arguments.
+- **A `better-auth` bump also diffs upstream's two-factor plugin (`packages/better-auth/src/plugins/two-factor/`) and passkey package (`packages/passkey/`) from the adapted version to the new one, and ports the fixes and security changes that apply to `src/auth/two-factor/`.**
+  - The adapted version is the one named in the two-factor plugin rule above and in `NOTICE`; update both after porting.
+- **The `two_factor`, `totp` and `passkey` tables come from our plugin's schema (`src/auth/two-factor/schema.ts`)**, so a change there is a regeneration and a migration like any Better Auth table change.
 - **Re-apply `$type<string[]>()` on every array-valued json column of the OAuth tables after every regen.**
   - SQLite has no array type, so the generator emits `text(…, { mode: "json" })` and drizzle infers `unknown` (`{}` when notNull).
   - The object-valued json columns (`metadata`, `customClaims`, `confirmation`) keep the inferred type.
@@ -142,15 +170,18 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
 
 ## How it works
 
-- **Sign-in with 2FA.** Password sign-in goes through Better Auth's two-factor plugin. A magic-link sign-in for a user with 2FA is challenged by `hooks.after` on `/magic-link/verify`, which redirects to `/2fa/verify` and stores the requested page in `metis-2fa-callback`.
+- **Sign-in with 2FA.** The plugin's `hooks.after` challenges `/sign-in/email` with a JSON `twoFactorRedirect`, and `/magic-link/verify` (`redirectPaths`) with a redirect to `/2fa/verify`, after `onTwoFactorRedirect` stores the requested page in `metis-2fa-callback`.
+- **The second-factor page.** `/2fa/verify` reads `GET /two-factor/methods` with the pending cookie and opens on the default; a passkey there runs `/two-factor/challenge`, the browser ceremony and `/two-factor/verify`, which creates the session.
+- **Step-up dialogs.** `TwoFactorInput` offers the methods the account has plus backup codes; a passkey there fetches a proof (`confirmWithPasskey`) and puts it in the code field, so every caller sends it the same way it sends a code.
+- **Setup.** `/2fa/setup` takes the password, then either the authenticator flow (QR and backup codes, then the code) or **Set up a passkey instead** (the backup codes, then the browser ceremony on **I've saved my backup codes, continue**, so 2FA turns on only after the codes were shown).
+  - `startPasskeyEnrollment` and `finishPasskeyEnrollment` split the passkey enrollment for that; the creation options live five minutes, so the page starts again with fresh codes when the user takes longer (`PASSKEY_ENROLLMENT_MAX_AGE_MS`) or the server side of the ceremony failed.
 - **Gate responses.**
   - No session: a redirect to `/` (401 JSON on `/api/*`).
   - No 2FA: a redirect to `/2fa/setup` (403 on `/api/*`) with the page stored in `metis-2fa-callback`, which `/2fa/setup` returns to.
   - `proxy` lets `/invite/accept` through without a session, connection callbacks through on their signed state and nonce cookie (the callback page and its Connect action, [connections.md](connections.md)), and native-ticket connection starts through on the ticket.
 - **Pages that check 2FA too.** The server pages and layouts under `/w` that redirect before rendering check `twoFactorEnabled` after `getAppUser` and redirect to `/2fa/setup`.
 - **Step-up on Better Auth endpoints.** `hooks.before` in `src/auth/server.ts` requires a code in `x-totp-code` for the password- and session-changing endpoints and for accepting `/oauth2/consent`.
-- **Disabling 2FA is audited in `hooks.after`** on `/two-factor/disable`, because the client calls Better Auth directly ([audit.md](audit.md)).
-- **Session cost.** `proxy` reads the real session (`getAuth().api.getSession`), which is cheap behind the cookie cache; enabling TOTP refreshes that cache.
+- **Session cost.** `proxy` reads the real session (`getAuth().api.getSession`), which is cheap behind the cookie cache; turning 2FA on or off refreshes that cache.
 - **Rate limiting.** Better Auth's limits run on `secondaryStorage` over the cache driver; `rateLimit` does an atomic `incr(key, ttl)` on the same driver for its callers. Both resolve the driver per call (`getCache()`), so a cache switch drops the counters and nothing else.
 - **The CLI and the `@/` alias.** `scripts/auth-generate.ts` symlinks `apps/web/node_modules/@ → ../src`, runs `bunx auth@latest generate` against `src/auth/generate.ts`, and removes the symlink in a `finally`, because the CLI's jiti loader cannot resolve `@/`.
 
@@ -159,5 +190,10 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
 - **A ban reaches an open browser tab only when its cookie cache expires**, up to two minutes later, and a workflow run already executing a step finishes that step.
 - **Removing a user deletes the account** through the same deletion path a user takes ([dashboard.md](dashboard.md)).
 - **Magic link is sign-in only**; it never creates an account.
+- **Passkeys are a second factor only.** There is no passkey sign-in without a password or magic link first.
+- **An account has one authenticator app.** Another device scans the same secret (**Add another device**).
+- **Passkeys need a secure context**, so an instance served over plain HTTP on anything but `localhost` cannot add or use them; the card disables **Add a passkey** when the browser has no WebAuthn.
+- **Backup codes are sealed, not hashed, mixed-case and matched exactly**, as in the stock plugin.
+- **Whether passkeys work inside the desktop and mobile app windows is unchecked**; sign-in runs in the system browser, and a passkey-only account confirms changes in those windows with a backup code if they cannot.
 - **Sign-in alerts are sent for every sign-in, not only from new devices**, and the first sign-in of a new account sends one too. Sessions are long-lived, so sign-ins are rare, and a per-device memory would be a second record of devices beside the session table.
 - **Sign-in alerts need a mailer that delivers**; under `noop` or `log` the switch still saves but nothing arrives (`NOOP_DISABLED_FLOWS`, [configuration.md](configuration.md)).

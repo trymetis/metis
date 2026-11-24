@@ -12,7 +12,7 @@ The e2e stack is a seeded environment that two suites drive: Vitest in `api/` fo
 - **Usage coverage:** the recorder only produces rows for the paths that record usage in domain code (the decision classifier, the summary gate, summaries). Chats, smart replies and the LLM classifier record usage in their routes, which the recorder bypasses. Every seeded row carries the recording date.
 - **Second calendar visibility setting:** needs a second calendar connection or a second workspace.
 - **Workspace logo:** needs an image file.
-- **Six audit events:** `account.deleted`, `two_factor.disabled`, `mcp_client.approved`, `mcp_client.enabled`, `connection.deleted` and `resource.deleted` (`src/types/audit.ts` → `AUDIT_ACTIONS`) are never checked by name; the other 13 are, in `api/rpc/audit.test.ts`, `api/mcp/tools.test.ts`, `api/system/sign-in-alerts.test.ts`, `tests/write/members.spec.ts` and `tests/write/updates.spec.ts`. Retention pruning (`pruneAuditEvents`, the `system:audit-prune` workflow) is not run either; only `retentionDays` is read.
+- **Seven audit events:** `account.deleted`, `two_factor.disabled`, `authenticator.removed`, `mcp_client.approved`, `mcp_client.enabled`, `connection.deleted` and `resource.deleted` (`src/types/audit.ts` → `AUDIT_ACTIONS`) are never checked by name; the other 16 are, in `api/rpc/audit.test.ts`, `api/mcp/tools.test.ts`, `api/system/sign-in-alerts.test.ts`, `tests/write/members.spec.ts`, `tests/write/passkeys.spec.ts` and `tests/write/updates.spec.ts`. Retention pruning (`pruneAuditEvents`, the `system:audit-prune` workflow) is not run either; only `retentionDays` is read.
 - **Mail cache prune:** `system:mail-cache-prune` (`pruneCachedBodies`) is not run; seeded messages are fetched within the retention period, so no body is old enough to clear.
 - **Sender check results:** no seeded message carries an `Authentication-Results` header, so View original's PASS and FAIL rows and its "as reported by" note are never shown; every row reads **Not reported**. Adding the header to an existing anchor message changes no recorded model request (the classifier sends from, subject and snippet; summaries send only automation headers) and no screenshot.
 - **An empty message body on the print page:** the only seeded message with no body (`min-headers-only`, edge seed) has no subject either, so no test can find it by search, and the print page's "No content" is never shown.
@@ -20,6 +20,15 @@ The e2e stack is a seeded environment that two suites drive: Vitest in `api/` fo
 
 ## 2. Small infrastructure
 
+- **Passkey flows beyond the first setup:** `tests/write/passkeys.spec.ts` drives one throwaway account with a Chrome virtual authenticator: passkey-first setup, a passkey sign-in, confirming **Set up an authenticator app** and **Confirm password change** with the passkey, and removing it with an authenticator code. Not covered:
+  - adding a passkey from the **Passkeys** card on an account that already has two-factor on, and an account with more than one passkey;
+  - renaming a passkey;
+  - switching **Ask me first with** (the spec only reads that it shows **Passkey**);
+  - confirming with a passkey anywhere else: dashboard and workspace dialogs, delete account, turning two-factor off (the spec confirms that with an authenticator code), the OAuth consent page;
+  - a passkey after a magic-link sign-in;
+  - a used backup code being cleared from the field after an error, in any dialog;
+  - passkeys inside the desktop and mobile shells' windows.
+- **Passkeys in the API suite:** a passkey assertion needs a software authenticator over plain HTTP, so `api/system/two-factor-methods.test.ts` checks only the methods list, the confirmation gates and the creation options, never a passkey being used.
 - **More recordings:** summaries past the first page of the inbox and of each folder (the recorder summarizes the first 100 messages of each).
 - **A public app URL:** the stack serves the app at `http://localhost:3000` (`BETTER_AUTH_URL`), which the host-run suites, desktop tests and screenshot scripts reach directly, so the dashboard's Public URL, Secure cookies "No", webhook addresses, OAuth redirect URIs and the `noreply@localhost` default senders show `localhost` in screenshots. A real hostname such as `https://demo.trymetis.email` needs TLS on the proxy and an `/etc/hosts` entry on every machine and in CI.
 - **Real server hostnames:** the server entries use `*.localhost` hosts on test ports (`imap.localhost:31143`/`31587`, `caldav.localhost`, `s3.localhost`, …) because the host-run generator and recorder reach them by those names, so the provider pages show them in screenshots.

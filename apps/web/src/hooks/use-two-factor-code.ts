@@ -2,38 +2,39 @@
 
 import { useCallback, useMemo, useState } from "react";
 
-import {
-  formatBackupCode,
-  formatTotpCode,
-  isTwoFactorCodeComplete,
-  type TwoFactorCodeKind,
-} from "@/auth/two-factor-code";
+import { formatBackupCode, formatTotpCode, isTwoFactorCodeComplete } from "@/auth/two-factor-code";
+
+export type TwoFactorInputMode = "totp" | "backup" | "passkey";
 
 export type TwoFactorFieldHandle = {
   value: string;
-  kind: TwoFactorCodeKind;
+  kind: TwoFactorInputMode;
   setValue: (raw: string) => void;
-  setKind: (next: TwoFactorCodeKind) => void;
+  setKind: (next: TwoFactorInputMode) => void;
 };
 
 export type TwoFactorCode = {
   value: string;
-  kind: TwoFactorCodeKind;
+  kind: TwoFactorInputMode;
   complete: boolean;
   reset: () => void;
+  clearSpentCode: () => void;
   field: TwoFactorFieldHandle;
+};
+
+const FORMAT: Record<TwoFactorInputMode, (raw: string) => string> = {
+  totp: formatTotpCode,
+  backup: formatBackupCode,
+  passkey: (raw) => raw.trim(),
 };
 
 export function useTwoFactorCode(): TwoFactorCode {
   const [value, setRawValue] = useState("");
-  const [kind, setRawKind] = useState<TwoFactorCodeKind>("totp");
+  const [kind, setRawKind] = useState<TwoFactorInputMode>("totp");
 
-  const setValue = useCallback(
-    (raw: string) => setRawValue(kind === "backup" ? formatBackupCode(raw) : formatTotpCode(raw)),
-    [kind],
-  );
+  const setValue = useCallback((raw: string) => setRawValue(FORMAT[kind](raw)), [kind]);
 
-  const setKind = useCallback((next: TwoFactorCodeKind) => {
+  const setKind = useCallback((next: TwoFactorInputMode) => {
     setRawKind(next);
     setRawValue("");
   }, []);
@@ -43,14 +44,19 @@ export function useTwoFactorCode(): TwoFactorCode {
     setRawValue("");
   }, []);
 
+  const clearSpentCode = useCallback(() => {
+    if (kind === "backup") setRawValue("");
+  }, [kind]);
+
   return useMemo(
     () => ({
       value,
       kind,
       complete: isTwoFactorCodeComplete(value),
       reset,
+      clearSpentCode,
       field: { value, kind, setValue, setKind },
     }),
-    [value, kind, setValue, setKind, reset],
+    [value, kind, setValue, setKind, reset, clearSpentCode],
   );
 }

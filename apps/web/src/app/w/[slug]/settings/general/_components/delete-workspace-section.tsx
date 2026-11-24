@@ -43,6 +43,7 @@ export function DeleteWorkspaceSection({
       await orpc.workspaces.delete({ workspaceSlug, code: code.value });
       window.location.href = "/w";
     } catch (err) {
+      code.clearSpentCode();
       setError(err instanceof Error ? err.message : "Could not delete");
       setBusy(false);
       setConfirmOpen(false);

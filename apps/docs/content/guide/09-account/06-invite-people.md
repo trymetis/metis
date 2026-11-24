@@ -73,7 +73,7 @@ What you see depends on whether you are signed in, and whether the invited addre
 ### Accept or decline a workspace invite
 
 1. Open the invite email and click **Accept invite**.
-2. If you are signed out, click **Sign in to accept**. Sign in with the invited address and enter your two-factor code. You then come back to the invite page.
+2. If you are signed out, click **Sign in to accept**. Sign in with the invited address and confirm it's you. You then come back to the invite page.
 3. Click **Accept** to join, or **Decline** to turn it down.
 
 - **Accept:** you join the workspace with the role in the invite, and the workspace opens.

@@ -4,7 +4,7 @@ import { eq, sql } from "drizzle-orm";
 import sharp from "sharp";
 
 import { appActor, recordAuditEvent } from "@/audit";
-import { verify2FA } from "@/auth/server";
+import { invalidSecondFactorMessage, verify2FA } from "@/auth/server";
 import {
   listWorkspaceAddressBooks,
   listWorkspaceCalendars,
@@ -116,7 +116,7 @@ export const workspacesRouter = {
         code: input.code,
         headers: context.headers,
         scope: "workspace-delete",
-        message: "Enter your authenticator code to delete this workspace",
+        message: "Confirm it's you to delete this workspace",
       });
 
       const member = await getWorkspaceMember(context.appUser.workspaceId, context.appUser.userId);
@@ -198,7 +198,7 @@ export const workspacesRouter = {
         code: input.code,
         headers: context.headers,
         scope: "workspace-policy",
-        message: "Enter your authenticator code to change these settings",
+        message: "Confirm it's you to change these settings",
       });
 
       const patch: Partial<{
@@ -304,7 +304,7 @@ export const workspacesRouter = {
           code: input.code,
           headers: context.headers,
           scope: "member-role",
-          message: "Enter your authenticator code to make someone an admin",
+          message: "Confirm it's you to make someone an admin",
         });
       }
 
@@ -349,7 +349,7 @@ export const workspacesRouter = {
       });
       if (!verified) {
         throw new ORPCError("UNAUTHORIZED", {
-          message: "Invalid authenticator or backup code",
+          message: invalidSecondFactorMessage(input.code),
         });
       }
 

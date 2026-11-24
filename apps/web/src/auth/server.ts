@@ -1,4 +1,5 @@
 import { APIError, createAuthMiddleware } from "better-auth/api";
+import { deleteSessionCookie } from "better-auth/cookies";
 import { betterAuth } from "better-auth/minimal";
 import { eq } from "drizzle-orm";
 
@@ -19,19 +20,18 @@ import { rateLimit } from "@/services/rate-limit";
 import { createWorkspace, personalWorkspaceName, setDefaultWorkspaceSlug } from "@/workspace";
 
 import { BANNED_MESSAGE, userBanned } from "./ban";
-import { authOptions, twoFactorPlugin } from "./base";
+import { authOptions } from "./base";
 import { recordSignIn } from "./last-sign-in";
 import { attachLegalConsent, enforceLegalConsent } from "./legal-consent";
 import { isOwnerEmail } from "./owner";
 import { sendSignInAlert } from "./sign-in-alert";
+import type { TwoFactorEvent } from "./two-factor";
 import {
   TWO_FACTOR_CALLBACK_COOKIE,
   TWO_FACTOR_CALLBACK_MAX_AGE,
   toCallbackPath,
 } from "./two-factor-callback";
 import { isTwoFactorCodeComplete, twoFactorCodeKind } from "./two-factor-code";
-
-const TWO_FACTOR_GATED_PATHS = new Set(["/magic-link/verify"]);
 
 async function userExists(email: string): Promise<boolean> {
   const [row] = await db
@@ -44,20 +44,9 @@ async function userExists(email: string): Promise<boolean> {
 
 export async function verify2FA(opts: { code: string; headers: Headers }): Promise<boolean> {
   const code = opts.code.trim();
-  const kind = twoFactorCodeKind(code);
-  if (!kind) return false;
+  if (!twoFactorCodeKind(code)) return false;
   try {
-    if (kind === "totp") {
-      await getAuth().api.verifyTOTP({
-        body: { code },
-        headers: opts.headers,
-      });
-    } else {
-      await getAuth().api.verifyBackupCode({
-        body: { code, disableSession: true },
-        headers: opts.headers,
-      });
-    }
+    await getAuth().api.verifyStepUp({ body: { code }, headers: opts.headers });
     return true;
   } catch {
     return false;
@@ -79,9 +68,22 @@ async function requireTotpCode(headers: Headers | undefined, message: string) {
   if (!verified) {
     throw APIError.from("UNAUTHORIZED", {
       code: "INVALID_TWO_FACTOR_CODE",
-      message: "Invalid authenticator or backup code",
+      message: invalidSecondFactorMessage(code),
     });
   }
+}
+
+export function invalidSecondFactorMessage(code: string): string {
+  return twoFactorCodeKind(code.trim()) === "proof"
+    ? "Your passkey confirmation expired. Confirm with your passkey again."
+    : "Invalid authenticator or backup code";
+}
+
+async function recordTwoFactorEvent(event: TwoFactorEvent) {
+  await recordAuditEvent(
+    { userId: event.user.id, email: event.user.email, via: "app", headers: event.headers },
+    { action: event.action, targetLabel: event.label },
+  );
 }
 
 function buildAuth(cfg: InstanceConfig) {
@@ -106,6 +108,21 @@ function buildAuth(cfg: InstanceConfig) {
       onSignIn: async (signIn) => {
         await recordSignIn(signIn);
         await sendSignInAlert(signIn);
+      },
+      onTwoFactorEvent: recordTwoFactorEvent,
+      onTwoFactorRedirect: (ctx) => {
+        const callbackURL = isRecord(ctx.query) ? ctx.query.callbackURL : undefined;
+        const target = toCallbackPath(
+          typeof callbackURL === "string" ? callbackURL : undefined,
+          config.auth.url,
+        );
+        if (!target) return;
+        ctx.setCookie(TWO_FACTOR_CALLBACK_COOKIE, target, {
+          path: "/",
+          maxAge: TWO_FACTOR_CALLBACK_MAX_AGE,
+          sameSite: "Lax",
+          secure: config.auth.secureCookies,
+        });
       },
     }),
     databaseHooks: {
@@ -163,28 +180,19 @@ function buildAuth(cfg: InstanceConfig) {
         }
 
         if (ctx.path === "/change-password") {
-          await requireTotpCode(
-            ctx.headers,
-            "Enter your authenticator code to change your password",
-          );
+          await requireTotpCode(ctx.headers, "Confirm it's you to change your password");
           return;
         }
 
         if (ctx.path === "/revoke-sessions" || ctx.path === "/revoke-other-sessions") {
-          await requireTotpCode(
-            ctx.headers,
-            "Enter your authenticator code to sign out those sessions",
-          );
+          await requireTotpCode(ctx.headers, "Confirm it's you to sign out those sessions");
           return;
         }
 
         if (ctx.path === "/oauth2/consent") {
           const accept = isRecord(ctx.body) ? ctx.body.accept : undefined;
           if (accept === true) {
-            await requireTotpCode(
-              ctx.headers,
-              "Enter your authenticator code to approve this client",
-            );
+            await requireTotpCode(ctx.headers, "Confirm it's you to approve this client");
           }
           return;
         }
@@ -192,59 +200,9 @@ function buildAuth(cfg: InstanceConfig) {
         return undefined;
       }),
       after: createAuthMiddleware(async (ctx) => {
-        if (ctx.path === "/two-factor/disable") {
-          const disabledFor = ctx.context.newSession?.user;
-          if (disabledFor && !(ctx.context.returned instanceof APIError)) {
-            await recordAuditEvent(
-              {
-                userId: disabledFor.id,
-                email: disabledFor.email,
-                via: "app",
-                headers: ctx.headers,
-              },
-              { action: "two_factor.disabled" },
-            );
-          }
-          return;
+        if (ctx.path === "/revoke-sessions" && !(ctx.context.returned instanceof APIError)) {
+          deleteSessionCookie(ctx);
         }
-
-        if (!TWO_FACTOR_GATED_PATHS.has(ctx.path)) return;
-
-        const newSession = ctx.context.newSession;
-        if (!newSession) return;
-
-        if (!("twoFactorEnabled" in newSession.user)) return;
-        if (newSession.user.twoFactorEnabled !== true) return;
-
-        const challenge = twoFactorPlugin.hooks?.after?.[0]?.handler;
-        if (!challenge) {
-          console.error("[auth] two-factor challenge handler unavailable");
-          return;
-        }
-
-        const result = (await challenge(ctx)) as
-          | {
-              twoFactorRedirect?: boolean;
-              response?: { twoFactorRedirect?: boolean };
-            }
-          | undefined;
-
-        const challenged =
-          result?.twoFactorRedirect === true || result?.response?.twoFactorRedirect === true;
-        if (!challenged) return;
-
-        const { callbackURL } = (ctx.query ?? {}) as { callbackURL?: string };
-        const target = toCallbackPath(callbackURL, config.auth.url);
-        if (target) {
-          ctx.setCookie(TWO_FACTOR_CALLBACK_COOKIE, target, {
-            path: "/",
-            maxAge: TWO_FACTOR_CALLBACK_MAX_AGE,
-            sameSite: "Lax",
-            secure: config.auth.secureCookies,
-          });
-        }
-
-        throw ctx.redirect(new URL("/2fa/verify", config.auth.url).toString());
       }),
     },
   });

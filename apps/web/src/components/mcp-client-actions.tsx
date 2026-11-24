@@ -75,6 +75,7 @@ export function McpClientEnableSwitch({
       onChange(true);
       setConfirming(false);
     } catch (err) {
+      code.clearSpentCode();
       setCodeError(err instanceof Error ? err.message : "Could not verify");
     } finally {
       setBusy(false);
@@ -93,8 +94,8 @@ export function McpClientEnableSwitch({
           <DialogHeader>
             <DialogTitle>Re-enable {client.label}</DialogTitle>
             <DialogDescription>
-              Re-enabling lets this client sign back in on its own, even after you log out — so we
-              need your authenticator code to confirm it&rsquo;s really you.
+              Re-enabling lets this client sign back in on its own, even after you log out, so
+              confirm it&rsquo;s you first.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={confirmEnable} className="mt-1 flex flex-col gap-3">

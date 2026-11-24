@@ -130,6 +130,7 @@ func (fx *fromExport) notices(env *envfile.File) {
 	previous := fx.boot.Get("BETTER_AUTH_URL")
 	if current := env.Value("BETTER_AUTH_URL"); previous != "" && current != previous {
 		ui.Warn("BETTER_AUTH_URL changes from %s to %s, so register the Google, Microsoft and Zoho redirect URIs again for the new address, and every MCP client must sign in again.", previous, current)
+		ui.Warn("%s", passkeysTiedToAddress)
 	}
 	if fx.console || fx.boot.Get("METIS_MAIL_DRIVER") == "console" {
 		ui.Warn("The export sends mail through the Metis Cloud console, which works only on Cloud. Set outgoing mail: sudo metis config set METIS_MAIL_DRIVER=…")

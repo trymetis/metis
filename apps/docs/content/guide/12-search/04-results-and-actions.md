@@ -98,8 +98,8 @@ The preview shows **Email**, **Role** and **Joined** (or **Invited** and **Expir
 | **Search everything with** and their name | Searches for mail from or to them, and events they are invited to or organized. | Everyone                                      |
 | **Ask the assistant**                     | Starts a Workspace AI message about this person.                                | Everyone, when AI is on                       |
 | **Copy email**                            | Copies their email address.                                                     | Everyone                                      |
-| **Make admin** or **Make member**         | Changes their role. **Make admin** asks for your authenticator code.            | The owner                                     |
-| **Transfer ownership**                    | Makes them the owner. Asks for your authenticator code.                         | The owner                                     |
+| **Make admin** or **Make member**         | Changes their role. **Make admin** asks you to confirm it's you.                | The owner                                     |
+| **Transfer ownership**                    | Makes them the owner. Asks you to confirm it's you.                             | The owner                                     |
 | **Remove from workspace**                 | Asks you to confirm, then removes them.                                         | Owners and admins. Never shown for the owner. |
 
 For a pending invite, the actions are **Copy email** and, for owners and admins, **Revoke the invite**.

@@ -64,9 +64,9 @@ export function DeleteAccountSection() {
       await authClient.signOut().catch(() => {});
       window.location.href = "/";
     } catch (err) {
+      code.clearSpentCode();
       setError(err instanceof Error ? err.message : "Could not delete");
       setBusy(false);
-      setStep("idle");
     }
   }
 
@@ -128,7 +128,9 @@ export function DeleteAccountSection() {
           Delete account
         </Button>
       </div>
-      {error && <p className="mt-2 text-[12px] text-destructive-text">{error}</p>}
+      {error && step !== "code" && (
+        <p className="mt-2 text-[12px] text-destructive-text">{error}</p>
+      )}
 
       <AlertDialog
         open={step === "confirm"}
@@ -157,18 +159,21 @@ export function DeleteAccountSection() {
       <AlertDialog
         open={step === "code"}
         onOpenChange={(open) => {
-          if (!open && !busy) setStep("idle");
+          if (open || busy) return;
+          setStep("idle");
+          setError(null);
         }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Enter your authenticator code</AlertDialogTitle>
+            <AlertDialogTitle>Confirm it&rsquo;s you</AlertDialogTitle>
             <AlertDialogDescription>
-              Last step. Enter the code from your authenticator app, or a backup code, to delete the
-              account.
+              Last step. Confirm with your authenticator app, a passkey or a backup code to delete
+              the account.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <TwoFactorInput autoFocus field={code.field} />
+          {error && <p className="text-center text-[12px] text-destructive-text">{error}</p>}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={busy}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={deleteAccount} disabled={busy || !code.complete}>

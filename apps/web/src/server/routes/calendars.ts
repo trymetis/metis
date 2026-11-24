@@ -83,7 +83,7 @@ export const calendarsRouter = {
           code: input.code,
           headers: context.headers,
           scope: "calendar-ai-on",
-          message: "Enter your authenticator code to turn AI on",
+          message: "Confirm it's you to turn AI on",
         });
       }
 
@@ -121,7 +121,7 @@ export const calendarsRouter = {
           code: input.code,
           headers: context.headers,
           scope: "calendar-ai-on",
-          message: "Enter your authenticator code to turn AI on everywhere",
+          message: "Confirm it's you to turn AI on everywhere",
         });
       }
 

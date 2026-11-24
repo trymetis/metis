@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@metis/ui/components/button";
+import { Fingerprint } from "lucide-react";
 import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
@@ -8,12 +9,20 @@ import { useEffect, useState } from "react";
 import { authClient, useSession } from "@/auth/client";
 import { consumeTwoFactorCallback } from "@/auth/two-factor-callback";
 import { extractTotpSecret } from "@/auth/two-factor-code";
+import {
+  finishPasskeyEnrollment,
+  PASSKEY_ENROLLMENT_MAX_AGE_MS,
+  PasskeyCeremonyError,
+  type PasskeyEnrollment,
+  startPasskeyEnrollment,
+  usePasskeySupport,
+} from "@/auth/two-factor/passkey-client";
 import { BackupCodesCard } from "@/components/backup-codes-card";
 import { TwoFactorInput } from "@/components/two-factor-input";
 import { useTwoFactorCode } from "@/hooks/use-two-factor-code";
 import { route } from "@/lib/route";
 
-type Step = "password" | "scan" | "verify" | "done";
+type Step = "password" | "scan" | "verify" | "codes" | "done";
 
 export default function TwoFactorSetupPage() {
   const router = useRouter();
@@ -24,8 +33,11 @@ export default function TwoFactorSetupPage() {
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const code = useTwoFactorCode();
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting] = useState<"totp" | "passkey" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const canUsePasskey = usePasskeySupport();
+  const [enrollment, setEnrollment] = useState<PasskeyEnrollment | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isPending && !session) router.replace("/");
@@ -38,35 +50,82 @@ export default function TwoFactorSetupPage() {
     );
   }, [totpURI]);
 
+  function finish() {
+    setStep("done");
+    setTimeout(() => router.replace(route(consumeTwoFactorCallback())), 1200);
+  }
+
+  function passwordReady(): boolean {
+    if (password.length >= 8) return true;
+    setError("Enter your account password");
+    return false;
+  }
+
   async function handleEnable(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-    if (password.length < 8) {
-      setError("Enter your account password");
-      return;
-    }
-    setSubmitting(true);
+    if (!passwordReady()) return;
+    setSubmitting("totp");
     try {
-      const result = await authClient.twoFactor.enable({
-        password,
-        method: "totp",
-      });
+      const result = await authClient.twoFactor.enroll({ method: "totp", password });
       if (result?.error) {
         setError(result.error.message ?? "Could not start 2FA setup");
         return;
       }
-      const data = result?.data;
-      if (data?.method !== "totp") {
+      if (!result.data?.totpURI) {
         setError("Couldn't start authenticator setup. Try again.");
         return;
       }
-      setTotpURI(data.totpURI);
-      setBackupCodes(data.backupCodes);
+      setTotpURI(result.data.totpURI);
+      setBackupCodes(result.data.backupCodes ?? []);
       setStep("scan");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not start 2FA setup");
     } finally {
-      setSubmitting(false);
+      setSubmitting(null);
+    }
+  }
+
+  async function beginPasskey(): Promise<PasskeyEnrollment> {
+    const started = await startPasskeyEnrollment({ password });
+    setEnrollment(started);
+    setBackupCodes(started.backupCodes ?? []);
+    return started;
+  }
+
+  async function handlePasskey() {
+    setError(null);
+    if (!passwordReady()) return;
+    setSubmitting("passkey");
+    try {
+      await beginPasskey();
+      setNotice(null);
+      setStep("codes");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't set up the passkey");
+    } finally {
+      setSubmitting(null);
+    }
+  }
+
+  async function createPasskey() {
+    setError(null);
+    setSubmitting("passkey");
+    try {
+      if (!enrollment || Date.now() - enrollment.startedAt > PASSKEY_ENROLLMENT_MAX_AGE_MS) {
+        await beginPasskey();
+        setNotice(
+          "Here is a fresh set of backup codes. Save these instead of the earlier ones, then continue.",
+        );
+        return;
+      }
+      await finishPasskeyEnrollment(enrollment, "");
+      finish();
+    } catch (err) {
+      if (!(err instanceof PasskeyCeremonyError)) setEnrollment(null);
+      setError(err instanceof Error ? err.message : "Couldn't set up the passkey");
+    } finally {
+      setSubmitting(null);
     }
   }
 
@@ -74,25 +133,26 @@ export default function TwoFactorSetupPage() {
     e.preventDefault();
     setError(null);
     if (!code.complete) return;
-    setSubmitting(true);
+    setSubmitting("totp");
     try {
-      const result = await authClient.twoFactor.verifyTotp({
+      const result = await authClient.twoFactor.enroll.confirm({
+        method: "totp",
         code: code.value,
       });
       if (result?.error) {
         setError(result.error.message ?? "Invalid code");
         return;
       }
-      setStep("done");
-      setTimeout(() => router.replace(route(consumeTwoFactorCallback())), 1200);
+      finish();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Invalid code");
     } finally {
-      setSubmitting(false);
+      setSubmitting(null);
     }
   }
 
   const manualSecret = totpURI ? extractTotpSecret(totpURI) : null;
+  const busy = submitting !== null;
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center bg-white dark:bg-neutral-950 p-4">
@@ -111,7 +171,9 @@ export default function TwoFactorSetupPage() {
             onSubmit={handleEnable}
             className="flex flex-col gap-3 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6"
           >
-            <p className="text-xs text-neutral-500">Confirm your password to begin.</p>
+            <p className="text-xs text-neutral-500">
+              Confirm your password, then set up an authenticator app or a passkey.
+            </p>
             <input
               type="password"
               value={password}
@@ -119,13 +181,27 @@ export default function TwoFactorSetupPage() {
               placeholder="Your password"
               autoComplete="current-password"
               autoFocus
-              disabled={submitting}
+              disabled={busy}
               className={inputCls}
             />
             {error && <p className="text-xs text-destructive-text">{error}</p>}
-            <Button type="submit" disabled={submitting} className={btnCls}>
-              {submitting ? "Generating…" : "Continue"}
+            <Button type="submit" disabled={busy} className={btnCls}>
+              {submitting === "totp" ? "Generating…" : "Continue"}
             </Button>
+            {canUsePasskey && (
+              <Button
+                type="button"
+                variant="outline"
+                disabled={busy}
+                onClick={handlePasskey}
+                className="h-auto w-full rounded-xl py-3 text-sm"
+              >
+                <Fingerprint data-icon="inline-start" />
+                {submitting === "passkey"
+                  ? "Waiting for your passkey…"
+                  : "Set up a passkey instead"}
+              </Button>
+            )}
           </form>
         )}
 
@@ -176,12 +252,13 @@ export default function TwoFactorSetupPage() {
             <TwoFactorInput
               field={code.field}
               autoFocus
-              disabled={submitting}
+              disabled={busy}
               allowBackupCode={false}
+              allowPasskey={false}
             />
             {error && <p className="text-center text-xs text-destructive-text">{error}</p>}
-            <Button type="submit" disabled={submitting || !code.complete} className={btnCls}>
-              {submitting ? "Verifying…" : "Verify and enable"}
+            <Button type="submit" disabled={busy || !code.complete} className={btnCls}>
+              {busy ? "Verifying…" : "Verify and enable"}
             </Button>
             <Button
               variant="link"
@@ -191,6 +268,23 @@ export default function TwoFactorSetupPage() {
               Back
             </Button>
           </form>
+        )}
+
+        {step === "codes" && (
+          <div className="flex flex-col gap-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 p-6">
+            <p className="text-xs text-neutral-500">
+              Keep these codes somewhere safe before you create the passkey. They get you in if you
+              lose access to it.
+            </p>
+            {notice && <p className="text-xs text-neutral-700 dark:text-neutral-300">{notice}</p>}
+            {session && <BackupCodesCard codes={backupCodes} accountEmail={session.user.email} />}
+            {error && <p className="text-center text-xs text-destructive-text">{error}</p>}
+            <Button onClick={createPasskey} disabled={busy} className={btnCls}>
+              {submitting === "passkey"
+                ? "Waiting for your passkey…"
+                : "I've saved my backup codes, continue"}
+            </Button>
+          </div>
         )}
 
         {step === "done" && (

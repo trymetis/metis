@@ -129,12 +129,14 @@ export function ConsentInner() {
       );
       const redirectURI = consentResultSchema.safeParse(data).data?.redirectURI;
       if (err || !redirectURI) {
+        code.clearSpentCode();
         setError(err?.message ?? "Could not complete the request");
         setSubmitting(null);
         return;
       }
       window.location.href = redirectURI;
     } catch (err) {
+      code.clearSpentCode();
       setError(err instanceof Error ? err.message : "Something went wrong");
       setSubmitting(null);
     }
@@ -378,11 +380,11 @@ export function ConsentInner() {
           >
             <div>
               <span className="text-[10px] font-medium uppercase tracking-[1.5px] text-faint">
-                Two-factor code
+                Confirm it&rsquo;s you
               </span>
               <TwoFactorInput field={code.field} align="start" className="mt-1" />
               <p className="mt-1.5 text-[12px] text-faint">
-                Enter this code to confirm — access continues even after you sign out.
+                Access continues even after you sign out, so confirm it&rsquo;s you first.
               </p>
             </div>
 

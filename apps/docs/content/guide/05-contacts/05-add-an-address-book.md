@@ -66,7 +66,7 @@ If the workspace has AI turned off, the **Add an address book** dialog tells you
 Each row has an AI control: a robot icon whose label reads "AI is on for this address book here" or "AI is off for this address book here". It controls whether the assistants and connected MCP clients can read this address book in this workspace and, with your approval, change it. Other workspaces are not affected.
 
 - **Only the person who connected the account can click it.** Everyone else sees a plain icon.
-- **Turning AI on asks for your authenticator code.** The dialog is "Turn AI on for this address book here?". Enter the code and click **Turn AI on**.
+- **Turning AI on asks you to confirm it's you.** The dialog is "Turn AI on for this address book here?". [Confirm it's you](/guide/account/two-factor-authentication#switch-between-them) and click **Turn AI on**.
 - **Turning AI off needs no code.**
 
 When the address book's own AI setting is on but the workspace has AI turned off, the row shows **Off here**. The AI control appears only when your instance has AI set up. See [Add and remove resources](/guide/workspaces/add-resources#turn-ai-on-or-off-for-a-resource).

@@ -7,7 +7,7 @@ MCP (Model Context Protocol) is a standard way for AI apps to use tools. With it
 
 Before you start, you need:
 
-- Two-factor authentication set up on your account. You type a code to approve the sign-in.
+- Two-factor authentication set up on your account. You confirm it's you with a code from your authenticator app, a passkey or a backup code.
 - At least one workspace where AI is allowed, with AI turned on for the mailboxes, calendars, drives and address books you want the app to reach. See [How AI works in Metis Suite](/guide/assistant/how-ai-works).
 - The AI app itself, installed and working.
 
@@ -124,7 +124,17 @@ If you do not see **MCP clients** in your settings, AI is not set up on your Met
     - **What it will never get**: your password or any way to sign in as you, workspaces you hide from it and any workspace with AI turned off, mailboxes, calendars, drives and address books that have AI turned off, and permission to change your AI settings or this app's own access.
     - **It will be able to**: which workspaces it can reach, which tools it can use, see your name and email address, and stay connected so you do not need to approve it each time.
 
-    Type your code in **Two-factor code** and click **Approve**. The app stays connected even after you sign out of Metis Suite. If you do not want to connect after all, click **Deny**.
+    Under **Confirm it’s you**, confirm in one of these ways:
+
+    - Type a code from your authenticator app.
+    - Or click **Use a passkey instead**, then **Use your passkey**. The field opens on **Use your passkey** when **Ask me first with** is set to **Passkey**, or when you have passkeys and no authenticator app, in a browser that supports passkeys. To switch back, click **Use your authenticator instead**.
+    - Or click **Use a backup code instead** and type a backup code.
+
+    The links under the field (the code boxes, the backup code field or the **Use your passkey** button) list only the other ways your account has.
+
+    The line below the field says "Access continues even after you sign out, so confirm it’s you first." See [Switch between them](/guide/account/two-factor-authentication#switch-between-them). Then click **Approve**.
+
+    The app stays connected even after you sign out of Metis Suite. If you do not want to connect after all, click **Deny**.
 
   </Step>
 
@@ -150,15 +160,16 @@ Some AI apps can connect without being added first. They identify themselves by 
 - **Workspaces**: the workspaces it will reach. Click the X on a workspace to leave it out, or type in the box after the workspaces to add one back. Workspaces with AI off show "AI off" and cannot be picked. Workspaces you join later are included too.
 - **Tools**: the tools it may use, set up the same way as on a client's page.
 
-Approve it the same way, with your two-factor code. Afterwards it appears in your list as "Self-identified client".
+Approve it the same way: confirm it's you, then click **Approve**. Afterwards it appears in your list as "Self-identified client".
 
 ## If the sign-in page shows a problem
 
-| Message                                | What it means                                                                                                                           |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| "This app can't connect here"          | The app is not added and did not identify itself. Click **Go back to the app**, then add the client in **MCP clients** and start again. |
-| "Invalid authenticator or backup code" | The two-factor code was wrong or expired. Type a new one.                                                                               |
-| "This client is already connected"     | Someone else on this server already connected this app. Add your own client in **MCP clients** instead.                                 |
-| "Nothing to authorize"                 | The link is missing information. Start the connection again from your app.                                                              |
-| "This request could not be loaded"     | Click **Try again**. If it keeps failing, start again from your app.                                                                    |
-| "Could not complete the request"       | Click **Approve** again.                                                                                                                |
+| Message                                                               | What it means                                                                                                                                                   |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "This app can't connect here"                                         | The app is not added and did not identify itself. Click **Go back to the app**, then add the client in **MCP clients** and start again.                         |
+| "Invalid authenticator or backup code"                                | The authenticator or backup code was wrong or expired. Type a new one.                                                                                          |
+| "Your passkey confirmation expired. Confirm with your passkey again." | Too much time passed after you confirmed with your passkey. Click **Confirm again** under **Passkey confirmed**, use your passkey, then click the button again. |
+| "This client is already connected"                                    | Someone else on this server already connected this app. Add your own client in **MCP clients** instead.                                                         |
+| "Nothing to authorize"                                                | The link is missing information. Start the connection again from your app.                                                                                      |
+| "This request could not be loaded"                                    | Click **Try again**. If it keeps failing, start again from your app.                                                                                            |
+| "Could not complete the request"                                      | Click **Approve** again.                                                                                                                                        |

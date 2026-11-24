@@ -41,7 +41,7 @@ Click **In 1 workspace** (or **In 2 workspaces**, and so on) on a row. The butto
 
 The dialog lists each workspace that uses the resource, with its own switches:
 
-- The robot icon (AI) and, for a mailbox, the shield icon (phishing detection): click them to turn these on or off for that workspace. Turning one on asks for your authenticator code. These icons appear only when your instance has AI or phishing detection set up.
+- The robot icon (AI) and, for a mailbox, the shield icon (phishing detection): click them to turn these on or off for that workspace. Turning one on asks you to [confirm it's you](/guide/account/two-factor-authentication#switch-between-them). These icons appear only when your instance has AI or phishing detection set up.
 - **Turn AI on everywhere** or **Turn AI off everywhere**, and **Turn detection on everywhere** or **Turn detection off everywhere**: change every workspace at once. These buttons also appear only when your instance has that feature set up.
 - The unlink icon (**Remove from** and the workspace's name): take the resource out of that workspace. A dialog asks you to confirm removing the address from that workspace; click **Remove**. It keeps working in your other workspaces.
 

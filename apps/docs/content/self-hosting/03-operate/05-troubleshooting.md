@@ -72,8 +72,8 @@ The **Mail** card on the **System** page shows **Console only** or **Not deliver
 
 When implicit TLS is off, Metis Suite requires STARTTLS, which upgrades the connection to TLS. If the server does not offer it, as with a local test server, the connection fails.
 
-- **IMAP accounts:** open the **IMAP** page under **System**, **Providers**. On the entry, turn on **Allow unencrypted IMAP** or **Allow unencrypted SMTP**, for the side that has no TLS. Click **Save changes** and enter your authenticator code. See [Server lists](/self-hosting/configure/server-lists#imap).
-- **Sign-in links and invitations:** open the **Mail** page under **System**, **Drivers**, turn on **Allow unencrypted**, click **Save changes** and enter your authenticator code. See [Outgoing email](/self-hosting/configure/outgoing-email#fields).
+- **IMAP accounts:** open the **IMAP** page under **System**, **Providers**. On the entry, turn on **Allow unencrypted IMAP** or **Allow unencrypted SMTP**, for the side that has no TLS. Click **Save changes** and [confirm it's you](/guide/account/two-factor-authentication#switch-between-them), then click **Save**. See [Server lists](/self-hosting/configure/server-lists#imap).
+- **Sign-in links and invitations:** open the **Mail** page under **System**, **Drivers**, turn on **Allow unencrypted**, click **Save changes** and [confirm it's you](/guide/account/two-factor-authentication#switch-between-them), then click **Save**. See [Outgoing email](/self-hosting/configure/outgoing-email#fields).
 
 Turn these on only for a server that has no TLS. If you can, set up TLS on the server instead.
 
@@ -105,7 +105,7 @@ Only the owner (the account whose email matches `METIS_OWNER_EMAIL`), admins and
 
 ### Someone sees "This account is banned. Ask the instance owner or an admin."
 
-The owner or an admin banned their account. Open **Dashboard**, **Accounts**, **Users** and set the status filter (it shows **Any status**) to **Banned** to find it. A ban with an end date shows it in the **Status** column, and ends by itself. To lift the ban sooner, open the row's actions menu, click **Unban** and enter your authenticator code. The reason for the ban, if one was given, is in the **Audit log**. See [Ban an account](/self-hosting/operate/owner-dashboard#ban-an-account).
+The owner or an admin banned their account. Open **Dashboard**, **Accounts**, **Users** and set the status filter (it shows **Any status**) to **Banned** to find it. A ban with an end date shows it in the **Status** column, and ends by itself. To lift the ban sooner, open the row's actions menu, click **Unban**, [confirm it's you](/guide/account/two-factor-authentication#switch-between-them), then click **Unban user**. The reason for the ban, if one was given, is in the **Audit log**. See [Ban an account](/self-hosting/operate/owner-dashboard#ban-an-account).
 
 ### The app does not start: METIS_OWNER_EMAIL is required
 
@@ -133,10 +133,11 @@ Metis Suite could not send the invite email, so it created no invite. Check the 
 
 For messages in the **Upgrade** and **Undo last upgrade** dialogs, see [Errors in the dialog](/self-hosting/operate/upgrade-and-undo#errors-in-the-dialog).
 
-| Message                                         | What to do                                                                                                                                                                                                                           |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Check failed**, "Nothing was saved."          | A setting did not pass its check against the real service. Fix the fields shown and save again. To store the change as it is, click **Save anyway**. See [Save anyway](/self-hosting/configure/how-configuration-works#save-anyway). |
-| **Restore refused**                             | A setting in the version you restore did not pass its check. Nothing changed. To store the version as it is, click **Restore anyway**. See [History](/self-hosting/operate/owner-dashboard#history).                                 |
-| "Invalid authenticator or backup code"          | Enter a fresh code from your authenticator app, or a backup code.                                                                                                                                                                    |
-| "Too many attempts. Please slow down."          | Wait a few minutes. You can try 10 codes every 5 minutes.                                                                                                                                                                            |
-| "The configuration changed since you opened it" | Someone saved a change while you were editing. Reload the page and try again.                                                                                                                                                        |
+| Message                                                               | What to do                                                                                                                                                                                                                           |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Check failed**, "Nothing was saved."                                | A setting did not pass its check against the real service. Fix the fields shown and save again. To store the change as it is, click **Save anyway**. See [Save anyway](/self-hosting/configure/how-configuration-works#save-anyway). |
+| **Restore refused**                                                   | A setting in the version you restore did not pass its check. Nothing changed. To store the version as it is, click **Restore anyway**. See [History](/self-hosting/operate/owner-dashboard#history).                                 |
+| "Invalid authenticator or backup code"                                | Enter a fresh code from your authenticator app, or a backup code.                                                                                                                                                                    |
+| "Your passkey confirmation expired. Confirm with your passkey again." | Too much time passed after you confirmed with your passkey. Click **Confirm again** under **Passkey confirmed**, use your passkey, then click the dialog's button again.                                                             |
+| "Too many attempts. Please slow down."                                | Wait a few minutes. You can make 10 attempts every 5 minutes. Every attempt counts, whether you use an authenticator code, a backup code or a passkey.                                                                               |
+| "The configuration changed since you opened it"                       | Someone saved a change while you were editing. Reload the page and try again.                                                                                                                                                        |

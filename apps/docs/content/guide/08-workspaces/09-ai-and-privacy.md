@@ -35,6 +35,6 @@ The confirm dialog lists the mailboxes whose setting the change overrides. A mai
 
 ## Confirm the change
 
-Every change opens a dialog, such as "Turn AI off for this workspace?" or "Turn detection on for every mailbox here?". Enter your authenticator code and click **Confirm**.
+Every change opens a dialog, such as "Turn AI off for this workspace?" or "Turn detection on for every mailbox here?". [Confirm it's you](/guide/account/two-factor-authentication#switch-between-them) and click **Confirm**.
 
 On the workspace's **Mailboxes**, **Calendars**, **Drives** and **Contacts** pages, a resource that the workspace overrides shows an **Off here** or **Required here** badge.

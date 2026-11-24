@@ -217,7 +217,7 @@ export function useMemberAdmin({
                     setTransferring(null);
                     transferCode.reset();
                   })
-                  .catch(() => {});
+                  .catch(() => transferCode.clearSpentCode());
               }}
             >
               {busy ? "Transferring…" : "Transfer ownership"}

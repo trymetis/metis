@@ -65,7 +65,7 @@ export const drivesRouter = {
           code: input.code,
           headers: context.headers,
           scope: "drive-ai-on",
-          message: "Enter your authenticator code to turn AI on",
+          message: "Confirm it's you to turn AI on",
         });
       }
 
@@ -103,7 +103,7 @@ export const drivesRouter = {
           code: input.code,
           headers: context.headers,
           scope: "drive-ai-on",
-          message: "Enter your authenticator code to turn AI on everywhere",
+          message: "Confirm it's you to turn AI on everywhere",
         });
       }
 

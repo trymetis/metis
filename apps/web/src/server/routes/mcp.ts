@@ -7,7 +7,7 @@ import { z } from "zod";
 
 import { appActor, recordAuditEvent } from "@/audit";
 import { instanceRoleOf } from "@/auth/instance-role";
-import { verify2FA } from "@/auth/server";
+import { invalidSecondFactorMessage, verify2FA } from "@/auth/server";
 import { config } from "@/config";
 import { db } from "@/db";
 import { oauthAccessToken, oauthClient, oauthConsent, oauthRefreshToken } from "@/db/auth-schema";
@@ -242,7 +242,7 @@ export const mcpRouter = {
         }
         if (!input.code) {
           throw new ORPCError("BAD_REQUEST", {
-            message: "Enter your authenticator code to re-enable this client",
+            message: "Confirm it's you to re-enable this client",
           });
         }
         const verified = await verify2FA({
@@ -251,7 +251,7 @@ export const mcpRouter = {
         });
         if (!verified) {
           throw new ORPCError("UNAUTHORIZED", {
-            message: "Invalid authenticator or backup code",
+            message: invalidSecondFactorMessage(input.code),
           });
         }
       }
@@ -533,7 +533,7 @@ export const mcpRouter = {
       });
       if (!verified) {
         throw new ORPCError("UNAUTHORIZED", {
-          message: "Invalid authenticator or backup code",
+          message: invalidSecondFactorMessage(input.code),
         });
       }
 

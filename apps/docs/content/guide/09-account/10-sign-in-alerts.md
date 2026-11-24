@@ -13,11 +13,11 @@ You get one alert for each sign-in. This includes sign-ins from a device you hav
 
 The alert is sent when the sign-in is complete:
 
-- If Metis Suite asks for your two-factor code, the alert is sent after it accepts the code.
+- If Metis Suite asks you to confirm it's you, the alert is sent after it accepts your code or passkey.
 - If you ticked **Trust this device for 30 days** and Metis Suite skips the code, the alert is sent right after your password or magic link.
 - Signing in to the [desktop app](/guide/apps/desktop-app) or the [mobile app](/guide/apps/mobile-app) sends its own alert.
 
-You get no alert when you enter a code while you are already signed in. For example, setting up two-factor authentication or confirming a password change sends no alert.
+You get no alert when you enter a code or use a passkey while you are already signed in. For example, setting up two-factor authentication, adding a passkey or an authenticator app, or confirming a password change sends no alert.
 
 If the alert email cannot be sent, you can still sign in.
 
@@ -37,11 +37,12 @@ The email has the subject "New sign-in to your Metis Suite account". It says "So
 | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Authenticator code**                              | The last step was a code from an authenticator app.                                                                                           |
 | **Backup code**                                     | The last step was a backup code.                                                                                                              |
+| **Passkey**                                         | The last step was a passkey.                                                                                                                  |
 | **Password**                                        | The sign-in used a password and no code was asked for. This happens when two-factor authentication is not set up yet, or on a trusted device. |
 | **Email sign-in link**                              | The sign-in used a magic link and no code was asked for, for example on a trusted device.                                                     |
 | **Desktop or mobile app, from a signed-in browser** | The desktop app or the mobile app was signed in from a browser that was already signed in.                                                    |
 
-When a sign-in has a code step, the alert names the kind of code, not the password or magic link that came before it.
+When a sign-in asks you to confirm it's you, the alert names how you confirmed (an authenticator code, a backup code or a passkey), not the password or magic link that came before it.
 
 The email has a **Review your sessions** button. It opens your **Account** settings page, where you can see every browser that is signed in. If the button does not work, the email also has the link as text that you can paste into your browser.
 

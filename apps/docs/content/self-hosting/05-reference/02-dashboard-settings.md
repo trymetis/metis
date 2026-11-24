@@ -3,7 +3,7 @@ title: Dashboard settings
 description: Every setting on the System pages of the owner dashboard, with the environment variable that sets its starting value.
 ---
 
-These settings live under **Dashboard**, **System**. Saving any of them asks for your authenticator code and checks the change against the real service first. On a server list, only new entries and entries whose connection settings changed are checked. See [What a save checks](/self-hosting/configure/how-configuration-works#what-a-save-checks). Secret fields show only **Set** or **Not set**. Leave a secret empty to keep the stored value.
+These settings live under **Dashboard**, **System**. Saving any of them asks you to confirm it's you and checks the change against the real service first. On a server list, only new entries and entries whose connection settings changed are checked. See [What a save checks](/self-hosting/configure/how-configuration-works#what-a-save-checks). Secret fields show only **Set** or **Not set**. Leave a secret empty to keep the stored value.
 
 The **Set by** column names the environment variable that gives each field its starting value. Fields marked (startup only) come only from that variable, and change only with an edit to `.env` and a restart. **Reset to environment** on a card returns its fields to the values from their **Set by** variables or the config file, as they were when the app last started, or to their defaults. See [Reset a card to the environment](/self-hosting/operate/owner-dashboard#reset-a-card-to-the-environment).
 
@@ -30,13 +30,13 @@ When someone opens a message, your instance stores a copy of its body (the text 
 
 The card has one field, **Keep message bodies (days)**: "Days a message's body stays stored after it was last opened. Subjects, senders, AI labels, summaries and phishing checks are kept; an older message's body is fetched again when it is opened."
 
-| Rule        | Value                                                                                                                                                              |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Value       | A whole number of days, from 1 to 3650.                                                                                                                            |
-| Wrong value | Refused. The message starts with "Mail cache: Invalid configuration".                                                                                              |
-| Saving      | **Save changes** and your authenticator code. The card runs no check against another service. Every process uses the new value within 30 seconds, with no restart. |
-| Reset       | **Reset to environment** puts back the value of `METIS_MAIL_CACHE_DAYS` or the config file key `mailCache.retentionDays`.                                          |
-| Default     | 30.                                                                                                                                                                |
+| Rule        | Value                                                                                                                                                                   |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Value       | A whole number of days, from 1 to 3650.                                                                                                                                 |
+| Wrong value | Refused. The message starts with "Mail cache: Invalid configuration".                                                                                                   |
+| Saving      | **Save changes**, confirm it's you, then **Save**. The card runs no check against another service. Every process uses the new value within 30 seconds, with no restart. |
+| Reset       | **Reset to environment** puts back the value of `METIS_MAIL_CACHE_DAYS` or the config file key `mailCache.retentionDays`.                                               |
+| Default     | 30.                                                                                                                                                                     |
 
 #### When stored bodies are cleared
 
@@ -59,7 +59,7 @@ The card has one optional field, **Trusted proxies**: "IP addresses or CIDR rang
 | Entries     | Up to 50, separated by commas.                                                                                                                                                  |
 | Each entry  | An IP address, such as `198.51.100.7`, or a CIDR range (a block of addresses), such as `198.51.100.0/24`. The number after the slash is 0 to 32 for IPv4 and 0 to 128 for IPv6. |
 | Wrong entry | Refused. The message ends with "must be an IP address or CIDR range".                                                                                                           |
-| Saving      | **Save changes** and your authenticator code. The card runs no check against another service. Every process uses the new list within 30 seconds, with no restart.               |
+| Saving      | **Save changes**, confirm it's you, then **Save**. The card runs no check against another service. Every process uses the new list within 30 seconds, with no restart.          |
 | Reset       | **Reset to environment** puts back the value of `METIS_TRUSTED_PROXIES` or the config file key `proxies.trustedProxies`.                                                        |
 | Default     | Empty.                                                                                                                                                                          |
 

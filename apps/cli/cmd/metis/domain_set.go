@@ -33,6 +33,7 @@ func newDomainSetCommand() *cobra.Command {
 				}
 			}
 			ui.Done("Metis is served on https://%s once its DNS points at this server", host)
+			ui.Warn("%s", passkeysTiedToAddress)
 			return nil
 		},
 	}

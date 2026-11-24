@@ -9,7 +9,7 @@ You can ask everyone who creates an account to agree to your terms of service an
 
 1. Open **Dashboard**, **System**, **Instance**.
 2. In the **Legal consent** card, enter the **Terms URL**, the **Privacy policy URL**, or both.
-3. Click **Save changes** and enter your authenticator code.
+3. Click **Save changes** and [confirm it's you](/guide/account/two-factor-authentication#switch-between-them), then click **Save**.
 
 The card's badge shows the current version, or **Off** when no link is set.
 

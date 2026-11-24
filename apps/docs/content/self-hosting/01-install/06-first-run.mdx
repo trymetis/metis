@@ -36,13 +36,22 @@ Use the `METIS_SETUP_CODE` you set, and open the instance at your `BETTER_AUTH_U
   </Step>
 
 <Step title="Create the account">
-  Click **Create account**. Metis Suite signs you in and takes you to authenticator setup.
+  Click **Create account**. Metis Suite signs you in and takes you to two-factor setup.
 </Step>
 
 <Step title="Set up two-factor authentication">
-  Two-factor authentication is required for every account. Follow the steps on the page to add Metis
-  Suite to an authenticator app. Save the backup codes you are given: they work anywhere a six-digit
-  code does. See [Get started](/guide/get-started) for the user side of signing in.
+  Two-factor authentication is required for every account. Confirm your password, then set up an
+  authenticator app (**Continue**) or a passkey (**Set up a passkey instead**). Save the backup codes
+  you are given: they work anywhere your authenticator app or passkey does. See [Sign in for the
+  first time](/guide/get-started/sign-in-for-the-first-time) for each step.
+
+:::warning[Setting up through the SSH tunnel]
+At `http://localhost:3000`, a passkey you create is tied to `localhost`. It stops working once you
+set a domain. Set up the authenticator app here instead, or keep your backup codes to get back in
+after the domain is set. At a plain `http://` address other than `localhost`, **Set up a passkey
+instead** does not appear. See [Passkeys and your address](/self-hosting/install/domain-and-https#passkeys-and-your-address).
+:::
+
 </Step>
 
   <Step title="Open the owner dashboard">

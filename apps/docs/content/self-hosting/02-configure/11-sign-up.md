@@ -16,7 +16,7 @@ Every account needs two-factor authentication in both modes.
 
 1. Open **Dashboard**, **System**, **Instance**.
 2. In the **Sign-up** card, turn **Invite only** on or off. When it is on, accounts are created only through invites, never through open sign-up with an email and password.
-3. Click **Save changes** and enter your authenticator code.
+3. Click **Save changes** and [confirm it's you](/guide/account/two-factor-authentication#switch-between-them), then click **Save**.
 
 The **Sign-up** card's badge shows **Invite only** or **Open**. On the System page, the **Instance** card shows **Setup code live** while a setup code is set and no account has the owner's email. Otherwise it shows **Invite only** or **Open sign-up**.
 

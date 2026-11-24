@@ -69,8 +69,8 @@ Choose which of your workspaces this client can reach. Each workspace has a swit
 
 Each time you approve the client's sign-in, it gets an authorization. This section lists each one, with when you approved it and when it expires. If the client has none, the section shows "Not authorized. The client will ask for consent the next time it connects."
 
-- **Revoke** ends one authorization. The client must sign in again on its next request. If it has other authorizations, it signs back in through them without asking you. If that was its last one, it must ask for your approval again, with your two-factor code.
-- **Revoke all** (shown when there is more than one) ends every authorization. The client's access stops working on its next request, and it must ask for your approval again. The client stays on your list, so you do not need to set it up again in your app.
+- **Revoke** ends one authorization. The client must sign in again on its next request. If it has other authorizations, it signs back in through them without asking you. If that was its last one, it must ask for your approval again, and you confirm it's you when you approve it.
+- **Revoke all** (shown when there is more than one) ends every authorization. A box titled, for example, **Revoke every authorization for Claude Code?** says "All 2 authorizations stop working immediately, and the client must ask for your approval again, which you confirm with your authenticator app, a passkey or a backup code. The client itself stays connected, so you won’t need to reconfigure it." Click **Revoke all** in the box. The client stays on your list, so you do not need to set it up again in your app.
 
 After a revoke, the client's next request is refused with "This access token was revoked. Sign in again." Your AI app may show this message or ask you to sign in again.
 
@@ -81,7 +81,7 @@ Changes to tools and workspaces apply from the client's next request.
 Use the switch next to the client, in the list or on its page.
 
 - **Off:** the client stops working at once. Its requests are refused with "This MCP client is disabled or no longer registered."
-- **On again:** Metis Suite asks for your two-factor code, because a client that is on can sign back in by itself, even after you sign out. In the **Re-enable** dialog, type the code and click **Enable**.
+- **On again:** Metis Suite asks you to confirm it's you. A dialog opens, titled "Re-enable" followed by the client's name, for example **Re-enable Claude Code**. It says "Re-enabling lets this client sign back in on its own, even after you log out, so confirm it’s you first." Type a code from your authenticator app. The field opens on **Use your passkey** instead when **Ask me first with** is set to **Passkey**, or when you have passkeys and no authenticator app, in a browser that supports passkeys. Links under the field switch to the other ways your account has: **Use your authenticator instead**, **Use a passkey instead** and **Use a backup code instead**. Then click **Enable**. The button says "Verifying…" while it checks. To leave the client off, click **Cancel**.
 
 If the instance owner or an instance admin bans your account, all your clients stop working too. While the ban lasts, their requests are refused with "This account is banned. Ask the instance owner or an admin." They work again once the ban ends. A client may ask you to sign in again first.
 
@@ -117,14 +117,15 @@ Adding a client, approving a client, turning a client back on, and turning on se
 
 ## Common messages
 
-| Message                                                  | What it means                                                                                                     |
-| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| "Invalid authenticator or backup code"                   | The two-factor code was wrong or expired. Type a new one.                                                         |
-| "Enter your authenticator code to re-enable this client" | Type your two-factor code before you click **Enable**.                                                            |
-| "Too many attempts. Please slow down."                   | You tried too many times in a short time. Wait a few minutes, then try again.                                     |
-| "Claude Code needs a fixed sign-in port."                | Fill in **Sign-in port** when you add a Claude Code client.                                                       |
-| "At least one callback URL is required"                  | Fill in **Sign-in return URL** when you add an **Other client**.                                                  |
-| "Could not add the client"                               | Something went wrong. Try again.                                                                                  |
-| "This access token was revoked. Sign in again."          | Your AI app may show this after you revoke its authorizations. Approve its sign-in again, or leave it signed out. |
+| Message                                                               | What it means                                                                                                                                                   |
+| --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Invalid authenticator or backup code"                                | The authenticator or backup code was wrong or expired. Type a new one.                                                                                          |
+| "Your passkey confirmation expired. Confirm with your passkey again." | Too much time passed after you confirmed with your passkey. Click **Confirm again** under **Passkey confirmed**, use your passkey, then click the button again. |
+| "Confirm it's you to re-enable this client"                           | Confirm with your authenticator app, a passkey or a backup code before you click **Enable**.                                                                    |
+| "Too many attempts. Please slow down."                                | You tried too many times in a short time. Wait a few minutes, then try again.                                                                                   |
+| "Claude Code needs a fixed sign-in port."                             | Fill in **Sign-in port** when you add a Claude Code client.                                                                                                     |
+| "At least one callback URL is required"                               | Fill in **Sign-in return URL** when you add an **Other client**.                                                                                                |
+| "Could not add the client"                                            | Something went wrong. Try again.                                                                                                                                |
+| "This access token was revoked. Sign in again."                       | Your AI app may show this after you revoke its authorizations. Approve its sign-in again, or leave it signed out.                                               |
 
 If your AI app reports that it is sending too many requests, wait a minute and try again. Metis Suite limits how many requests each client can make per minute.

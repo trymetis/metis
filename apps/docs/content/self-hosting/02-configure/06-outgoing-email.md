@@ -50,7 +50,7 @@ Press Ctrl+C to stop. `-f` works the same as `--follow`.
 
 Like other hosting providers, Metis Cloud blocks outgoing SMTP ports 25 and 465 to protect its servers' IP reputation and prevent spam. Use port 587 with **Implicit TLS** off (STARTTLS). Resend is not affected.
 
-Click **Save changes** and enter your authenticator code. Then click **Run check** in the **Health** card. It signs in to the SMTP server or checks the Resend API key. It sends nothing. With `console`, there is nothing to check.
+Click **Save changes** and [confirm it's you](/guide/account/two-factor-authentication#switch-between-them), then click **Save**. Then click **Run check** in the **Health** card. It signs in to the SMTP server or checks the Resend API key. It sends nothing. With `console`, there is nothing to check.
 
 If **Implicit TLS** and **Allow unencrypted** are both off and your SMTP server does not offer STARTTLS, the check fails. The check also runs when you click **Save changes**, so the change is not saved. If you want to store it anyway, click **Save anyway** on the **Check failed** card. Outgoing email then fails until the SMTP server offers STARTTLS, or until you turn on **Implicit TLS** or **Allow unencrypted**. See [Save anyway](/self-hosting/configure/how-configuration-works#save-anyway).
 
@@ -68,7 +68,7 @@ Resend sends only from a domain you have verified with it.
 4. Open the **API keys** page and click **Create API Key**. **Sending access** is enough, and it passes the dashboard's check. You can limit the key to your domain. Copy the key: Resend shows it only once.
 5. In Metis Suite, open **Dashboard**, **System**, **Mail**. Set **Driver** to `resend` and paste the key into **Resend API key**.
 6. Set **From** to an address on the verified domain, such as `Metis Suite <noreply@mail.example.com>`. Also set **From, for sign-in mail** and **From, for invites** to addresses on the verified domain. They keep the sender they had when the instance was set up, and do not change when you change **From**.
-7. Click **Save changes**, enter your authenticator code, then click **Run check**.
+7. Click **Save changes**, [confirm it's you](/guide/account/two-factor-authentication#switch-between-them), click **Save**, then click **Run check**.
 
 The check confirms the key only. It does not check the domain. If Resend refuses a message, for example because the From domain is not verified, the server log shows a line that contains `Resend error:`.
 

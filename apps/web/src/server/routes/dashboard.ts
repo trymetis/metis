@@ -159,7 +159,7 @@ export const dashboardRouter = {
           code: input.code,
           headers: context.headers,
           scope: "instance-users",
-          message: "Enter your authenticator code to change this role",
+          message: "Confirm it's you to change this role",
         });
         const result = await setUserRole({
           actor: { userId: context.appUser.userId, role: context.instanceRole },
@@ -180,7 +180,7 @@ export const dashboardRouter = {
           code: input.code,
           headers: context.headers,
           scope: "instance-users",
-          message: "Enter your authenticator code to ban this user",
+          message: "Confirm it's you to ban this user",
         });
         const result = await banUser({
           actor: { userId: context.appUser.userId, role: context.instanceRole },
@@ -202,7 +202,7 @@ export const dashboardRouter = {
           code: input.code,
           headers: context.headers,
           scope: "instance-users",
-          message: "Enter your authenticator code to unban this user",
+          message: "Confirm it's you to unban this user",
         });
         const result = await unbanUser({
           actor: { userId: context.appUser.userId, role: context.instanceRole },
@@ -222,7 +222,7 @@ export const dashboardRouter = {
           code: input.code,
           headers: context.headers,
           scope: "instance-users",
-          message: "Enter your authenticator code to remove this user",
+          message: "Confirm it's you to remove this user",
         });
         const result = await removeUser({
           actor: { userId: context.appUser.userId, role: context.instanceRole },
@@ -254,7 +254,7 @@ export const dashboardRouter = {
             code: input.code,
             headers: context.headers,
             scope: "instance-users",
-            message: "Enter your authenticator code to invite someone with an instance role",
+            message: "Confirm it's you to invite someone with an instance role",
           });
         }
         const result = await createInvite({
@@ -387,7 +387,7 @@ export const dashboardRouter = {
           code: input.code,
           headers: context.headers,
           scope: "instance-config",
-          message: "Enter your authenticator code to change the configuration",
+          message: "Confirm it's you to change the configuration",
         });
         return saveConfigSections(input, context.appUser.userId);
       }),
@@ -410,7 +410,7 @@ export const dashboardRouter = {
           code: input.code,
           headers: context.headers,
           scope: "instance-config",
-          message: "Enter your authenticator code to restore that version",
+          message: "Confirm it's you to restore that version",
         });
         return revertConfig(input, context.appUser.userId);
       }),
@@ -425,7 +425,7 @@ export const dashboardRouter = {
             code: input.code,
             headers: context.headers,
             scope: "instance-config",
-            message: "Enter your authenticator code to reset this section",
+            message: "Confirm it's you to reset this section",
           });
         }
         return resetConfigSection(
@@ -470,7 +470,7 @@ export const dashboardRouter = {
           code: input.code,
           headers: context.headers,
           scope: "instance-update",
-          message: "Enter your authenticator code to upgrade",
+          message: "Confirm it's you to upgrade",
         });
         return startUpgrade(input.version, context.appUser.userId);
       }),
@@ -485,7 +485,7 @@ export const dashboardRouter = {
           code: input.code,
           headers: context.headers,
           scope: "instance-update",
-          message: "Enter your authenticator code to undo the upgrade",
+          message: "Confirm it's you to undo the upgrade",
         });
         return rollbackRelease(context.appUser.userId);
       }),

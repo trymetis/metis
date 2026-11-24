@@ -42,7 +42,7 @@ The **Sign out all** button appears when you are signed in somewhere else too.
 1. Click **Sign out all**.
 2. The box **Sign out other browsers?** tells you how many other sessions will end.
 3. To sign out this browser as well, tick **Also sign out this device**. You then go back to the sign-in page.
-4. Enter a code from your authenticator app or a backup code.
+4. Enter a code from your authenticator app or a backup code, or confirm with a passkey.
 5. Click **Sign out others**. If you ticked the box, the button says **Sign out everywhere** instead.
 
 The other sessions end immediately.

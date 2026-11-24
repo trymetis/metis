@@ -1,9 +1,9 @@
 ---
 title: Sign in
-description: Sign in with your password or a magic link, enter your two-factor code, create an account when your instance allows it, and sign out.
+description: Sign in with your password or a magic link, confirm with your authenticator app, a passkey or a backup code, create an account when your instance allows it, and sign out.
 ---
 
-Every sign-in to Metis Suite has two parts. First you prove who you are with your password or a magic link. Then you enter a code from your authenticator app. This page covers both, plus creating an account and signing out.
+Every sign-in to Metis Suite has two parts. First you prove who you are with your password or a magic link. Then you confirm it's you with a code from your authenticator app, a passkey or a backup code, depending on what your account has. This page covers both, plus creating an account and signing out.
 
 New here? Start with [Sign in for the first time](/guide/get-started/sign-in-for-the-first-time) instead.
 
@@ -24,15 +24,21 @@ New here? Start with [Sign in for the first time](/guide/get-started/sign-in-for
      class="hidden dark:block"
    />
 
-4. Enter your two-factor code, as described below.
+4. Confirm it's you, as described below.
 
 Metis Suite then opens your default workspace. To pick which workspace that is, see [Choose where signing in takes you](#choose-where-signing-in-takes-you).
 
 When you sign in, Metis Suite also emails you a sign-in alert, unless you turned alerts off. If someone else signs in to your account, you find out. To learn what the alert shows and how to turn it off, see [Sign-in alerts](/guide/account/sign-in-alerts).
 
-## Enter your two-factor code
+## Confirm it's you
 
-After your password or magic link, the page **Two-factor authentication** asks you to "Enter the code from your authenticator app."
+After your password or magic link, the page **Two-factor authentication** opens. It opens on your default way to confirm. That is the one you set up first (an authenticator app or a passkey), unless you chose another under **Ask me first with**. See [Choose which way you are asked first](/guide/account/two-factor-authentication#choose-which-way-you-are-asked-first). The line under the title tells you what to do.
+
+Links under the code boxes, the backup code field or the **Use your passkey** button switch to the other ways your account has. You see **Use your authenticator instead** only if you set up an authenticator app, and **Use a passkey instead** only if you added a passkey and your browser supports passkeys. **Use a backup code instead** is always there.
+
+### Use your authenticator app
+
+If your account has an authenticator app, the page opens this way when it is your default, or when you click **Use your authenticator instead**. The page says "Enter the code from your authenticator app."
 
 1. Open your authenticator app and find Metis Suite.
 2. Type the six-digit code into the boxes.
@@ -55,11 +61,37 @@ If you see "Invalid code", wait for your app to show a new code and try again.
 
 ### Use a backup code
 
-If you do not have your phone, click **Use a backup code instead**. The boxes change to a single field. Type one of the backup codes you saved when you set up two-factor authentication, then click **Verify**. Each backup code works only once.
+If you do not have your phone or your passkey, click **Use a backup code instead**. The page says "Enter one of your backup codes." and the field changes to a single box. Type one of the backup codes you saved when you set up two-factor authentication, then click **Verify**. Each backup code works only once.
 
-To go back to the six boxes, click **Use your authenticator instead**.
+If you see "Invalid backup code", check the code, or use another one. The code stays in the box, so you can correct a typo.
 
-Once you are in, set up your new phone or make fresh backup codes. See [If you lose your phone](/guide/account/two-factor-authentication#if-you-lose-your-phone).
+To switch back, click **Use your authenticator instead** or **Use a passkey instead**, whichever your account has.
+
+Once you are in, replace what you lost and make fresh backup codes. See [If you lose your phone or passkey](/guide/account/two-factor-authentication#if-you-lose-your-phone-or-passkey).
+
+### Use a passkey
+
+If your account has a passkey, click **Use a passkey instead**. If a passkey is your default way to confirm, the page opens this way. The page says "Use the passkey you added to this account."
+
+1. To skip this step on this browser for a while, tick **Trust this device for 30 days** first. Do this only on your own computer.
+2. Click **Use your passkey**.
+3. Confirm the passkey the way your browser or device asks.
+
+There is no **Verify** button. Metis Suite signs you in as soon as your passkey is confirmed.
+
+If you close the passkey prompt or wait too long, you see "The passkey request was cancelled or timed out." Click **Use your passkey** to try again. If you see "Passkey verification failed", try again, or use another way to confirm.
+
+**Use a passkey instead** shows only if your account has a passkey and your browser supports passkeys. If you have passkeys but no authenticator app, and your browser cannot use passkeys, the page shows only the backup code field. A passkey does not replace your password or magic link. You always sign in with one of them first. To add a passkey, see [Add a passkey](/guide/account/two-factor-authentication#add-a-passkey).
+
+### If something goes wrong
+
+| Message                                                                                              | What to do                                                                            |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| "Invalid code"                                                                                       | The authenticator code was wrong. Wait for a new code in your app and try again.      |
+| "Invalid backup code"                                                                                | The backup code was wrong. Check it, or use another one.                              |
+| "Passkey verification failed"                                                                        | Click **Use your passkey** again, or use another way to confirm.                      |
+| "Too many attempts. Sign in again to get a new challenge."                                           | Click **Cancel and sign out**, then sign in again with your password or a magic link. |
+| "Too many failed verification attempts. Your account is temporarily locked. Please try again later." | Wait a while, then sign in again.                                                     |
 
 ### Cancel
 
@@ -85,7 +117,7 @@ A magic link lets you sign in from your email instead of typing your password.
    />
 
 4. Open the email with the subject "Sign in to Metis Suite" and click the link.
-5. Enter your two-factor code.
+5. Confirm it's you.
 
 Each magic link works only once. A magic link signs in to an account that already exists. It never creates a new account. For your privacy, the page looks the same whether or not an account exists for the address you typed.
 

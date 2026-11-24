@@ -27,7 +27,7 @@ Write the name only, without `https://`. The command:
 3. Shows what it changes and restarts the app on the new address.
 4. Creates or lists the DNS record (see below).
 
-It ends with "Metis is served on https://mail.example.com once its DNS points at this server". Caddy gets the certificate on the first request, so the first page load can take a few seconds.
+It prints "Metis is served on https://mail.example.com once its DNS points at this server". Then it ends with a warning about passkeys, on a line that starts with `!`. See [Passkeys and your address](#passkeys-and-your-address). Caddy gets the certificate on the first request, so the first page load can take a few seconds.
 
 You can also set the domain during the install, in the **Domain** field of the form or with `--domain`. Setup creates no DNS record. See [Install with the metis CLI](/self-hosting/install/install-with-bootstrap).
 
@@ -56,11 +56,30 @@ If the server's address cannot be found, the command prints nothing about DNS. C
 sudo metis domain remove
 ```
 
-`BETTER_AUTH_URL` goes back to `http://localhost:3000`, Caddy stops, and the command prints "Metis is reachable on 127.0.0.1 only". Reach the app through an SSH tunnel again. The certificates stay on the server, in the `metis-caddy-data` Docker volume, so they are reused if you set the domain again.
+`BETTER_AUTH_URL` goes back to `http://localhost:3000`, Caddy stops, and the command prints "Metis is reachable on 127.0.0.1 only", followed by the same warning about passkeys. Reach the app through an SSH tunnel again. The certificates stay on the server, in the `metis-caddy-data` Docker volume, so they are reused if you set the domain again.
 
 :::warning[Update your OAuth redirect URIs]
 The redirect URIs for Google, Microsoft and Zoho are built from your app's address. After you change the domain, open each provider page under **Dashboard**, **System**, copy the new **Redirect URI** and register it in the provider's console. Until you do, connecting those accounts fails. See [OAuth providers](/self-hosting/configure/sign-in-providers).
 :::
+
+## Passkeys and your address
+
+Users can confirm it's them with a passkey instead of a code. They can start with a passkey when they first set up two-factor authentication, or add one later. A passkey works only at the address it was added on, the host name in `BETTER_AUTH_URL`. There is nothing to configure, but:
+
+- **Passkeys need HTTPS, or `localhost`.** At a plain `http://` address other than `localhost`, the two-factor setup page has no **Set up a passkey instead** button, and the **Passkeys** card says "This browser can’t create passkeys." Users set up an authenticator app instead.
+- **Through the SSH tunnel, passkeys are tied to `localhost`.** They work at `http://localhost:3000`, but stop working once you set a domain. Ask users to add passkeys after the domain is set, or to keep their backup codes.
+- **Changing the address makes every user's passkeys stop working.** This happens when you run `metis domain set` with a new name, or `metis domain remove`. Both commands end with this warning: "Passkeys belong to the address users open, so a new address stops every user's passkeys working: users sign in with their authenticator app or a backup code, add new passkeys, then remove the old ones."
+- **Users must open the app at the address in `BETTER_AUTH_URL`.**
+
+After the address changes, each user does this:
+
+1. Sign in with their password or a magic link. On the two-factor page, click **Use your authenticator instead** (if they have an authenticator app) or **Use a backup code instead**, because the old passkey no longer works.
+2. Under **Settings**, **Security**, **Passkeys**, add a new passkey. They confirm with their authenticator app or another backup code.
+3. Remove the old passkeys.
+
+Add the new passkey first. A user with one passkey and no authenticator app cannot remove that passkey until they add another one. See [Add a passkey](/guide/account/two-factor-authentication#add-a-passkey).
+
+A user who has only passkeys and no backup codes left cannot get back in after the address changes. Tell your users before you change it.
 
 ## Check the result
 
@@ -77,7 +96,7 @@ If you use Cloudflare, you can fix this. List Cloudflare's address ranges:
 1. Copy the IPv4 and IPv6 ranges that Cloudflare lists at [cloudflare.com/ips](https://www.cloudflare.com/ips/).
 2. In the owner dashboard, open **System**, then **Instance**.
 3. On the **Proxies** card, enter the ranges in **Trusted proxies**, separated by commas. You can enter up to 50.
-4. Click **Save changes** and enter a code from your authenticator app.
+4. Click **Save changes** and [confirm it's you](/guide/account/two-factor-authentication#switch-between-them), then click **Save**.
 
 Caddy puts only the address of the Cloudflare server into `X-Forwarded-For`. Once that address is on your list, the app takes the visitor's address from the `cf-connecting-ip` header that Cloudflare adds.
 

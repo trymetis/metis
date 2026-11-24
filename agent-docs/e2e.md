@@ -38,6 +38,7 @@ The `metis` CLI's own suite, which reuses this stack's fakes, certificates, test
   - The browser includes what a user reaches through DevTools: cookies, local storage, IndexedDB and the console, read and written with plain browser APIs (`page.evaluate`).
   - They never import app modules or replicate how the server encrypts, stores or generates anything.
   - TOTP: use the secret from the enrollment response with a generic TOTP library.
+  - Passkeys: a Chrome DevTools Protocol virtual authenticator on the page (`WebAuthn.addVirtualAuthenticator`, `tests/write/passkeys.spec.ts`), so the browser runs the real ceremony; the API suite only checks what needs no authenticator.
   - Accounts and connections: call the app's endpoints.
   - Fixtures: talk to IMAP, CalDAV, S3, WebDAV, FTP and SFTP directly with standard clients.
   - A generic client that fails against the app is a server bug.
@@ -120,6 +121,7 @@ The `metis` CLI's own suite, which reuses this stack's fakes, certificates, test
 ## How it works
 
 - **`generate`** needs no running stack: it runs the app's code against a scratch database and writes the account, a second member account (Cy, outside Ana's workspace), both 2FA enrollments, connections, seeded workspace state and the MCP clients with their tokens into `e2e/harness/`.
+  - Both 2FA enrollments use the fixed secrets and backup codes in `apps/web/scripts/e2e/generate/two-factor.ts` (`TWO_FACTOR_FIXTURES`), written through `enrollTwoFactor`, so `enrollment.json` and any authenticator holding the seeded accounts stay the same across runs; only the sealed values in the seed change.
   - Ids are rewritten to stable values (`stable-ids.ts`); the token's `kid` survives because Better Auth's ids are not UUIDs.
 - **`generate:record`** runs a supervisor that imports no app code: free preflight checks (time zone, harness files, every test server's port, the OpenRouter key and its credit), then the recorder proxy, then one child process per scenario. Its flags are in `record/index.ts`.
   - Each child gets its own copy of its source database (`from` in `catalog.ts`), its own environment (`env`), a recorder URL `…/s/<scenario>/v1` that attributes every request to it, and a timeout.

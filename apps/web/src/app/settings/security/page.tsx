@@ -1,15 +1,5 @@
 "use client";
 
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@metis/ui/components/alert-dialog";
 import { Button } from "@metis/ui/components/button";
 import {
   Dialog,
@@ -29,10 +19,15 @@ import { authClient, useSession } from "@/auth/client";
 import { extractTotpSecret } from "@/auth/two-factor-code";
 import { BackupCodesCard } from "@/components/backup-codes-card";
 import { PageHeader } from "@/components/page-header";
+import { TotpConfirmDialog } from "@/components/totp-confirm-dialog";
 import { TwoFactorInput } from "@/components/two-factor-input";
 import { useTwoFactorCode } from "@/hooks/use-two-factor-code";
+import { useTwoFactorMethods } from "@/hooks/use-two-factor-methods";
 
+import { AuthenticatorSection } from "./_components/authenticator-section";
+import { DefaultMethodSection } from "./_components/default-method-section";
 import { DeleteAccountSection } from "./_components/delete-account-section";
+import { PasskeysSection } from "./_components/passkeys-section";
 import { SecurityActivitySection } from "./_components/security-activity-section";
 import { SignInAlertsSection } from "./_components/sign-in-alerts-section";
 
@@ -40,6 +35,8 @@ export default function SecuritySettingsPage() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const twoFactorEnabled = session?.user?.twoFactorEnabled === true;
+  const methods = useTwoFactorMethods({ enabled: twoFactorEnabled });
+  const hasAuthenticator = methods.data?.methods.includes("totp") ?? false;
 
   const [regenSecret, setRegenSecret] = useState("");
   const [regenBusy, setRegenBusy] = useState(false);
@@ -81,7 +78,7 @@ export default function SecuritySettingsPage() {
     setRegenBusy(true);
     setRegenError(null);
     try {
-      const res = await authClient.twoFactor.generateBackupCodes({
+      const res = await authClient.twoFactor.backupCodes({
         password: regenSecret,
       });
       if (res.error) {
@@ -102,7 +99,7 @@ export default function SecuritySettingsPage() {
     setQrBusy(true);
     setQrError(null);
     try {
-      const res = await authClient.twoFactor.getTotpUri({ password: qrSecret });
+      const res = await authClient.twoFactor.totpUri({ password: qrSecret });
       if (res.error) {
         setQrError(res.error.message ?? "Couldn't start authenticator setup. Try again.");
         return;
@@ -144,6 +141,7 @@ export default function SecuritySettingsPage() {
         { headers: { "x-totp-code": pwCode.value } },
       );
       if (res.error) {
+        pwCode.clearSpentCode();
         setPwError(res.error.message ?? "Could not change password");
         return;
       }
@@ -153,29 +151,22 @@ export default function SecuritySettingsPage() {
       setPwDialogOpen(false);
       setPwDone("changed");
     } catch (err) {
+      pwCode.clearSpentCode();
       setPwError(err instanceof Error ? err.message : "Could not change password");
     } finally {
       setPwBusy(false);
     }
   }
 
-  async function disableTwoFactor() {
+  async function disableTwoFactor(code: string) {
     setDisableBusy(true);
     setDisableError(null);
     try {
-      const res = await authClient.twoFactor.disable({
-        password: disableSecret,
-      });
-      if (res.error) {
-        setDisableError(res.error.message ?? "Could not disable 2FA");
-        return;
-      }
+      const res = await authClient.twoFactor.disable({ password: disableSecret, code });
+      if (res.error) throw new Error(res.error.message || "Could not disable 2FA");
       router.push("/2fa/setup");
-    } catch (err) {
-      setDisableError(err instanceof Error ? err.message : "Could not disable 2FA");
     } finally {
       setDisableBusy(false);
-      setConfirmDisableOpen(false);
     }
   }
 
@@ -187,7 +178,7 @@ export default function SecuritySettingsPage() {
     <div>
       <PageHeader
         title="Security"
-        description="Manage two-factor authentication, your password and sign-in alerts."
+        description="Manage two-factor authentication, passkeys, your password and sign-in alerts."
       />
 
       {!twoFactorEnabled ? (
@@ -207,7 +198,7 @@ export default function SecuritySettingsPage() {
             </div>
             <p className="mt-1 text-[12px] text-faint">
               Generates a fresh set of one-time codes. Your previous backup codes stop working
-              immediately; your authenticator app is not affected.
+              immediately; your authenticator app and passkeys are not affected.
             </p>
             <form
               className="mt-3 flex flex-col items-start gap-2 sm:flex-row"
@@ -238,52 +229,63 @@ export default function SecuritySettingsPage() {
             )}
           </section>
 
-          <section className="rounded-xl border border-border bg-surface p-4">
-            <div className="flex items-center gap-2">
-              <QrCode className="size-4 text-brand-text" />
-              <h2 className="text-[13px] font-medium text-foreground">Add another device</h2>
-            </div>
-            <p className="mt-1 text-[12px] text-faint">
-              Shows the QR code for your existing secret so you can scan it with a second
-              authenticator. Devices already set up keep working.
-            </p>
-            <form className="mt-3 flex flex-col items-start gap-2 sm:flex-row" onSubmit={revealQr}>
-              <Input
-                type="password"
-                placeholder="Account password"
-                autoComplete="current-password"
-                value={qrSecret}
-                onChange={(e) => setQrSecret(e.target.value)}
-                disabled={qrBusy}
-                className="sm:max-w-60 text-[13px]"
-              />
-              <Button type="submit" variant="outline" disabled={qrBusy || qrSecret.length === 0}>
-                Show QR code
-              </Button>
-            </form>
-            {qrError && <p className="mt-2 text-[12px] text-destructive-text">{qrError}</p>}
-            {qrDataUrl && (
-              <div className="mt-4 flex flex-col items-start gap-2">
-                <div className="rounded-lg border border-border bg-background p-3">
-                  {/* oxlint-disable-next-line nextjs/no-img-element --data URL QR code */}
-                  <img
-                    src={qrDataUrl}
-                    alt="QR code for your authenticator app"
-                    width={200}
-                    height={200}
-                  />
-                </div>
-                {manualSecret && (
-                  <details className="text-xs text-faint">
-                    <summary className="cursor-pointer">Can't scan? Show manual key</summary>
-                    <code className="mt-2 block break-all rounded bg-panel p-2 text-muted-foreground">
-                      {manualSecret}
-                    </code>
-                  </details>
-                )}
+          <AuthenticatorSection />
+
+          {hasAuthenticator && (
+            <section className="rounded-xl border border-border bg-surface p-4">
+              <div className="flex items-center gap-2">
+                <QrCode className="size-4 text-brand-text" />
+                <h2 className="text-[13px] font-medium text-foreground">Add another device</h2>
               </div>
-            )}
-          </section>
+              <p className="mt-1 text-[12px] text-faint">
+                Shows the QR code for your existing secret so you can scan it with a second
+                authenticator. Devices already set up keep working.
+              </p>
+              <form
+                className="mt-3 flex flex-col items-start gap-2 sm:flex-row"
+                onSubmit={revealQr}
+              >
+                <Input
+                  type="password"
+                  placeholder="Account password"
+                  autoComplete="current-password"
+                  value={qrSecret}
+                  onChange={(e) => setQrSecret(e.target.value)}
+                  disabled={qrBusy}
+                  className="sm:max-w-60 text-[13px]"
+                />
+                <Button type="submit" variant="outline" disabled={qrBusy || qrSecret.length === 0}>
+                  Show QR code
+                </Button>
+              </form>
+              {qrError && <p className="mt-2 text-[12px] text-destructive-text">{qrError}</p>}
+              {qrDataUrl && (
+                <div className="mt-4 flex flex-col items-start gap-2">
+                  <div className="rounded-lg border border-border bg-background p-3">
+                    {/* oxlint-disable-next-line nextjs/no-img-element --data URL QR code */}
+                    <img
+                      src={qrDataUrl}
+                      alt="QR code for your authenticator app"
+                      width={200}
+                      height={200}
+                    />
+                  </div>
+                  {manualSecret && (
+                    <details className="text-xs text-faint">
+                      <summary className="cursor-pointer">Can't scan? Show manual key</summary>
+                      <code className="mt-2 block break-all rounded bg-panel p-2 text-muted-foreground">
+                        {manualSecret}
+                      </code>
+                    </details>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
+
+          <PasskeysSection />
+
+          <DefaultMethodSection />
 
           <section className="rounded-xl border border-border bg-surface p-4">
             <div className="flex items-center gap-2">
@@ -343,8 +345,8 @@ export default function SecuritySettingsPage() {
               </h2>
             </div>
             <p className="mt-1 text-[12px] text-destructive-muted">
-              Turns off two-factor sign-in and deletes your backup codes. Mail access requires 2FA,
-              so you'll be taken back to setup.
+              Turns off two-factor sign-in and removes your authenticator app, passkeys and backup
+              codes. Mail access requires 2FA, so you'll be taken back to setup.
             </p>
             <div className="mt-3 flex flex-col items-start gap-2 sm:flex-row">
               <Input
@@ -380,7 +382,7 @@ export default function SecuritySettingsPage() {
           <DialogHeader>
             <DialogTitle>Confirm password change</DialogTitle>
             <DialogDescription>
-              Enter the code from your authenticator app, or a backup code, to confirm.
+              Confirm with your authenticator app, a passkey or a backup code.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={changePassword} className="flex flex-col gap-3">
@@ -405,23 +407,14 @@ export default function SecuritySettingsPage() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={confirmDisableOpen} onOpenChange={setConfirmDisableOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Disable two-factor auth?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Your authenticator entries and backup codes will stop working. You will need to set up
-              2FA again to access your mail.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={disableBusy}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={disableTwoFactor} disabled={disableBusy}>
-              {disableBusy ? "Disabling…" : "Disable 2FA"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <TotpConfirmDialog
+        open={confirmDisableOpen}
+        title="Disable two-factor auth?"
+        body="Your authenticator app, passkeys and backup codes will stop working, and you will need to set up 2FA again to access your mail. Confirm it's you to turn it off."
+        confirmLabel="Disable 2FA"
+        onOpenChange={setConfirmDisableOpen}
+        onConfirm={disableTwoFactor}
+      />
     </div>
   );
 }

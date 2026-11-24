@@ -196,7 +196,7 @@ function BanDialog({ user, onClose }: { user: DashboardUser | null; onClose: () 
       title="Ban user"
       body={
         user
-          ? `Sign ${user.email} out everywhere within 2 minutes and stop them signing in, their MCP clients and the workflows that run as them. What they linked to workspaces stays linked. Enter your authenticator code to confirm.`
+          ? `Sign ${user.email} out everywhere within 2 minutes and stop them signing in, their MCP clients and the workflows that run as them. What they linked to workspaces stays linked. Confirm it's you to continue.`
           : ""
       }
       confirmLabel="Ban user"
@@ -397,8 +397,8 @@ export function UsersView() {
         body={
           roleChange
             ? roleChange.role === "user"
-              ? `Make ${roleChange.user.email} a plain user, so they no longer reach the dashboard. Enter your authenticator code to confirm.`
-              : `Make ${roleChange.user.email} an instance ${USER_ROLE_LABELS[roleChange.role].toLowerCase()}. Enter your authenticator code to confirm.`
+              ? `Make ${roleChange.user.email} a plain user, so they no longer reach the dashboard. Confirm it's you to continue.`
+              : `Make ${roleChange.user.email} an instance ${USER_ROLE_LABELS[roleChange.role].toLowerCase()}. Confirm it's you to continue.`
             : ""
         }
         confirmLabel="Change role"
@@ -423,7 +423,7 @@ export function UsersView() {
         title="Unban user"
         body={
           unbanning
-            ? `Let ${unbanning.email} sign in again. Their MCP clients and workflows work again too. Enter your authenticator code to confirm.`
+            ? `Let ${unbanning.email} sign in again. Their MCP clients and workflows work again too. Confirm it's you to continue.`
             : ""
         }
         confirmLabel="Unban user"

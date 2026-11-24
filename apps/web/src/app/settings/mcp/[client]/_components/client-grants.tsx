@@ -73,8 +73,9 @@ export function ClientGrants({
                 <AlertDialogTitle>Revoke every authorization for {label}?</AlertDialogTitle>
                 <AlertDialogDescription>
                   All {grants.length} authorizations stop working immediately, and the client must
-                  ask for your approval again with your authenticator code. The client itself stays
-                  connected, so you won&rsquo;t need to reconfigure it.
+                  ask for your approval again, which you confirm with your authenticator app, a
+                  passkey or a backup code. The client itself stays connected, so you won&rsquo;t
+                  need to reconfigure it.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>

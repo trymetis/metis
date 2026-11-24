@@ -18,6 +18,7 @@ Metis Suite permanently deletes your account and almost everything it stores for
 - your labels
 - your workflows
 - your scheduled sends
+- your passkeys
 
 Your mail and contacts stay with your providers, such as Gmail or Outlook. Metis Suite does not delete anything from your accounts there.
 
@@ -35,9 +36,9 @@ Some changes are recorded for security, such as removing a member or turning off
 
 - **Download a copy of your data.** On the **Account** settings page, click **Download export**. The file holds your preferences, workspaces, labels, workflows, Workspace Assistant chats and security activity. It does not hold your mail or your scheduled sends. See [Export your data](/guide/account/export-your-data).
 - **If you connected Outlook**, also remove Metis Suite from your Microsoft account. The **Delete account** card has links for a personal Microsoft account and for a work or school account.
-- **If you own a workspace that other people use**, make someone else its owner first. Open that workspace, click **Workspace settings** (the gear at the top of the left rail) and click **Members** in the list on the left. On the new owner's row, click **Transfer ownership** and enter your code. See [Transfer ownership](/guide/workspaces/members-and-roles#transfer-ownership). If you skip this, you see "You're the owner of" followed by the number of workspaces, and you are asked to transfer ownership first.
+- **If you own a workspace that other people use**, make someone else its owner first. Open that workspace, click **Workspace settings** (the gear at the top of the left rail) and click **Members** in the list on the left. On the new owner's row, click **Transfer ownership** and confirm it's you. See [Transfer ownership](/guide/workspaces/members-and-roles#transfer-ownership). If you skip this, you see "You're the owner of" followed by the number of workspaces, and you are asked to transfer ownership first.
 - **If you are the owner of your Metis Suite instance** (the account whose email the person who runs your server set as the owner), you cannot delete your account. You see "You're this instance's owner. Point METIS_OWNER_EMAIL at another account first, then come back." Whoever runs your server sets the owner, and can make another account the owner. See [Owner dashboard](/self-hosting/operate/owner-dashboard).
-- **Have your authenticator app ready**, or a backup code. The last step asks for a code.
+- **Have your authenticator app, a passkey or a backup code ready.** The last step asks you to confirm it's you with one of them.
 
 ## Delete your account
 
@@ -58,7 +59,7 @@ Some changes are recorded for security, such as removing a member or turning off
 3. Type your email address exactly as shown in the field, to confirm.
 4. Click **Delete account**.
 5. The box **Delete your account?** asks you to confirm. Click **Continue**.
-6. The box **Enter your authenticator code** opens. Enter the code from your authenticator app, or a backup code.
+6. The box **Confirm it’s you** opens. It says "Last step. Confirm with your authenticator app, a passkey or a backup code to delete the account." Enter a code from your authenticator app, or click **Use a passkey instead** and confirm with your passkey. If **Ask me first with** is set to **Passkey**, or you have no authenticator app, the box opens on **Use your passkey** in a browser that supports passkeys. To use a backup code, click **Use a backup code instead**. See [Switch between them](/guide/account/two-factor-authentication#switch-between-them).
 7. Click **Delete account**.
 
 Metis Suite deletes your account and signs you out.

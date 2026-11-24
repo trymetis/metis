@@ -36,7 +36,7 @@ export function AccountsView() {
     { label: "Accounts", hint: "On this instance", value: data?.users },
     {
       label: "With 2FA",
-      hint: "Second factor enabled",
+      hint: "Two-factor authentication on",
       value: data?.withTwoFactor,
     },
     { label: "Banned", hint: "Can't sign in", value: data?.banned },

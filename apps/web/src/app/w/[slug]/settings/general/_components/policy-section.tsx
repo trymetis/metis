@@ -127,6 +127,7 @@ export function PolicySection({ canEdit }: { canEdit: boolean }) {
       setPending(null);
       code.reset();
     } catch (err) {
+      code.clearSpentCode();
       setError(err instanceof Error ? err.message : "Could not save");
     } finally {
       setSaving(false);

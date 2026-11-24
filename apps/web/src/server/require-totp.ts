@@ -1,7 +1,7 @@
 import "server-only";
 import { ORPCError } from "@orpc/server";
 
-import { verify2FA } from "@/auth/server";
+import { invalidSecondFactorMessage, verify2FA } from "@/auth/server";
 import { rateLimit } from "@/services/rate-limit";
 
 export async function requireTotp(opts: {
@@ -33,8 +33,6 @@ export async function requireTotp(opts: {
     headers: opts.headers,
   });
   if (!verified) {
-    throw new ORPCError("UNAUTHORIZED", {
-      message: "Invalid authenticator or backup code",
-    });
+    throw new ORPCError("UNAUTHORIZED", { message: invalidSecondFactorMessage(opts.code) });
   }
 }

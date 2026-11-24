@@ -12,7 +12,7 @@ Phishing detection needs a separate backend service. That service is not part of
 1. Open **Dashboard**, **System**, **Phishing detection** under **Drivers**.
 2. Set **Driver** to `metis`.
 3. Enter the **Backend URL**: the address of the phishing detection backend.
-4. Click **Save changes** and enter your authenticator code.
+4. Click **Save changes** and [confirm it's you](/guide/account/two-factor-authentication#switch-between-them), then click **Save**.
 5. In the **Health** card, click **Run check**. It calls the backend's `/health` endpoint.
 
 The backend must be able to reach your instance's address, because it checks that each request really comes from your instance. Your instance must be able to reach the **Backend URL** too.

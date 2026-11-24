@@ -4,7 +4,7 @@ import { mcp } from "@better-auth/mcp";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import type { betterAuth } from "better-auth/minimal";
 import { nextCookies } from "better-auth/next-js";
-import { jwt, magicLink, twoFactor } from "better-auth/plugins";
+import { jwt, magicLink } from "better-auth/plugins";
 
 import type { db } from "@/db";
 import * as schema from "@/db/schema";
@@ -13,6 +13,7 @@ import type { rateLimit } from "@/services/rate-limit";
 
 import { native } from "./native";
 import { type CompletedSignIn, signInNotifier } from "./sign-in-notifier";
+import { twoFactor, type TwoFactorEvent, type TwoFactorOptions } from "./two-factor";
 
 type Options = NonNullable<Parameters<typeof betterAuth>[0]>;
 
@@ -28,11 +29,11 @@ export interface AuthDeps {
   sendResetPassword: NonNullable<Options["emailAndPassword"]>["sendResetPassword"];
   sendVerificationEmail: NonNullable<Options["emailVerification"]>["sendVerificationEmail"];
   onSignIn: (signIn: CompletedSignIn) => Promise<void>;
+  onTwoFactorEvent: (event: TwoFactorEvent) => Promise<void>;
+  onTwoFactorRedirect: TwoFactorOptions["onRedirect"];
 }
 
-export const twoFactorPlugin = twoFactor({
-  issuer: "Metis Suite",
-});
+export const TWO_FACTOR_ISSUER = "Metis Suite";
 
 export function authOptions(deps: AuthDeps) {
   return {
@@ -71,8 +72,7 @@ export function authOptions(deps: AuthDeps) {
         "/send-verification-email": { window: 60 * 60, max: 5 },
         "/sign-in/email": { window: 60, max: 10 },
         "/sign-up/email": { window: 60 * 60, max: 5 },
-        "/two-factor/verify-totp": { window: 60, max: 10 },
-        "/two-factor/verify-backup-code": { window: 60, max: 5 },
+        "/two-factor/verify": { window: 60, max: 10 },
         "/native/code": { window: 60, max: 10 },
         "/native/exchange": { window: 60, max: 10 },
         "/native/connect-ticket": { window: 60, max: 20 },
@@ -84,7 +84,13 @@ export function authOptions(deps: AuthDeps) {
         disableSignUp: true,
         sendMagicLink: deps.sendMagicLink,
       }),
-      twoFactorPlugin,
+      twoFactor({
+        issuer: TWO_FACTOR_ISSUER,
+        verifyPage: "/2fa/verify",
+        redirectPaths: ["/magic-link/verify"],
+        onRedirect: deps.onTwoFactorRedirect,
+        onEvent: deps.onTwoFactorEvent,
+      }),
       signInNotifier(deps.onSignIn),
       native(),
       jwt({

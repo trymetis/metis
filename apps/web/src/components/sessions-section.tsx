@@ -76,6 +76,7 @@ export function SessionsSection() {
       : await authClient.revokeOtherSessions({}, opts);
 
     if (err) {
+      code.clearSpentCode();
       setError(err.message ?? "Could not revoke your sessions");
       setBusy(null);
       return;

@@ -46,7 +46,7 @@ Near the top, the file also has a short note that says it is not a mailbox archi
 Among other things, the file leaves out:
 
 - Your mail, calendar events, files and contacts. They stay with your provider. Export them there.
-- Your password, sign-in details, two-factor secrets and backup codes.
+- Your password and sign-in details, and everything you use to confirm it's you: your authenticator app setup, backup codes and passkeys.
 - Scheduled sends and snoozes.
 - Workflow run history, pinned test samples and webhook secrets.
 - Muted conversations and **Read later**.

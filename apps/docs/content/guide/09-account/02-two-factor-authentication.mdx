@@ -1,13 +1,32 @@
 ---
 title: Two-factor authentication
-description: Use sign-in codes and backup codes, make new backup codes, add another device, turn two-factor off and on again, and recover if you lose your phone.
+description: Use an authenticator app, passkeys and backup codes, set up or remove an authenticator app, add another device or a passkey, choose which way you are asked first, turn two-factor off and on again, and recover if you lose a device.
 ---
 
-Two-factor authentication protects your account with a second step after your password. You enter a six-digit code from an authenticator app on your phone, such as Google Authenticator, 1Password or Authy. Someone who learns your password still cannot get in without that code.
+Two-factor authentication protects your account with a second check after your password: you confirm it's you. Someone who learns your password still cannot get in without it.
 
-Every Metis Suite account must use two-factor authentication. You set it up the first time you sign in, as shown in [Sign in for the first time](/guide/get-started/sign-in-for-the-first-time).
+You confirm it's you with one of these:
 
-You manage it under **Settings**, then **Security**. To get there, open your account menu (the round button with your initials at the bottom of the left rail) and click **Security**. The same page also has the **Sign-in alerts** card, your **Security activity** and the **Delete account** card. See [Sign-in alerts](/guide/account/sign-in-alerts) and [Security activity](/guide/account/security-activity).
+- **A code from an authenticator app** on your phone, such as Google Authenticator, 1Password or Authy.
+- **A passkey.** A passkey is a sign-in key that your device or password manager keeps for you. You confirm it with Touch ID, Windows Hello, your phone or a security key, so you do not type a code.
+- **A backup code** that you saved when you set up two-factor authentication.
+
+Every Metis Suite account must use two-factor authentication. The first time you sign in, you set it up with an authenticator app or a passkey, whichever you prefer. See [Sign in for the first time](/guide/get-started/sign-in-for-the-first-time). You can add the other kind later, and you can have both.
+
+You manage it under **Settings**, then **Security**. To get there, open your account menu (the round button with your initials at the bottom of the left rail) and click **Security**. The page has these cards:
+
+- **Regenerate backup codes**
+- **Authenticator app**
+- **Add another device** (only if you set up an authenticator app)
+- **Passkeys**
+- **Ask me first with** (only if you have both an authenticator app and a passkey)
+- **Change password**
+- **Sign-in alerts**
+- **Disable two-factor authentication**
+- **Security activity**
+- **Delete account**
+
+For the last cards, see [Change or reset your password](/guide/account/change-or-reset-your-password), [Sign-in alerts](/guide/account/sign-in-alerts), [Security activity](/guide/account/security-activity) and [Delete your account](/guide/account/delete-your-account).
 
 <img
   src="/images/account/security.webp"
@@ -20,16 +39,53 @@ You manage it under **Settings**, then **Security**. To get there, open your acc
   class="hidden dark:block"
 />
 
-## Codes and backup codes
+## Codes, passkeys and backup codes
 
-There are two kinds of code:
+There are three ways to confirm it is you. Your account always has backup codes, plus an authenticator app, passkeys or both:
 
-- **Authenticator codes** come from your authenticator app. They are six digits long and change all the time.
-- **Backup codes** are one-time codes you saved when you set up two-factor authentication. They look like `abcde-12345`. Each one works only once.
+- **Authenticator codes** come from your authenticator app. They are six digits long and change all the time. See [Set up an authenticator app](#set-up-an-authenticator-app).
+- **Passkeys** are kept on your device or in your password manager. See [Add a passkey](#add-a-passkey).
+- **Backup codes** are one-time codes. You get them when you first set up two-factor authentication, whichever way you chose. They look like `abcde-12345`. Each one works only once.
 
-Metis Suite asks for a code when you sign in. It also asks before some sensitive actions, such as changing your password, signing out your other browsers, deleting your account, or turning on AI or phishing detection. In every one of these places, you can type either an authenticator code or a backup code.
+Metis Suite asks you to confirm it's you when you sign in. It also asks before some sensitive actions, such as changing your password, signing out your other browsers, deleting your account, or turning on AI or phishing detection. In every one of these places, you can use any way your account has: your authenticator app if you set one up, a passkey if you added one, or a backup code.
 
-If a code is wrong when you change your password, sign out other browsers or delete your account, you see "Invalid authenticator or backup code". At sign-in, you see "Invalid code".
+### Switch between them
+
+The box opens on the way you chose under [**Ask me first with**](#choose-which-way-you-are-asked-first). Links under it switch to the other ways. You see only the ways your account has:
+
+- **Use a passkey instead**. It shows only if you added a passkey and your browser supports passkeys.
+- **Use your authenticator instead**. It shows only if you set up an authenticator app.
+- **Use a backup code instead**.
+
+If you have only passkeys and your browser cannot use passkeys, the box shows only the backup code field.
+
+### Confirm with a passkey
+
+1. Click **Use your passkey**. While your browser or device asks you, the button says "Waiting for your passkey…".
+2. Confirm the passkey the way your device asks, for example with your fingerprint, your face, a PIN or your security key.
+3. The box shows **Passkey confirmed**.
+4. Click the box's own button to finish, for example **Verify** or **Delete account**.
+
+On the sign-in page, there is no button to click after the passkey. See [Use a passkey](/guide/account/sign-in#use-a-passkey).
+
+### If something goes wrong
+
+| Message                                                               | What to do                                                                                                                                            |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Invalid authenticator or backup code"                                | The code was wrong. Wait for a new code in your app, or use another backup code.                                                                      |
+| "Invalid code"                                                        | The authenticator code was wrong at sign-in. Wait for a new code in your app and try again.                                                           |
+| "Invalid backup code"                                                 | The backup code was wrong at sign-in. Check it, or use another one. Each backup code works only once.                                                 |
+| "The passkey request was cancelled or timed out."                     | You closed the passkey prompt, or waited too long. Click **Use your passkey** again.                                                                  |
+| "The passkey request was cancelled."                                  | You closed the passkey prompt. Click **Use your passkey** again.                                                                                      |
+| "Passkey verification failed"                                         | The passkey could not be checked. Click **Use your passkey** again, or use another way to confirm.                                                    |
+| "The passkey request expired. Try again."                             | Click **Use your passkey** again.                                                                                                                     |
+| "Your passkey confirmation expired. Confirm with your passkey again." | You waited too long between **Passkey confirmed** and the box's button. Click **Confirm again**, use your passkey, then click the box's button again. |
+| "Too many attempts. Please slow down."                                | Wait a few minutes and try again.                                                                                                                     |
+| "Confirm it's you first"                                              | Confirm with your authenticator app, a passkey or a backup code, then click the box's button again.                                                   |
+
+If a box that asks you to confirm a change shows an error after you enter a backup code, it clears the code, because that code may already be used up. To try again, enter a different backup code. An authenticator code stays in the box. A passkey confirmation stays too (**Passkey confirmed**, with **Confirm again**). If it has expired, you see "Your passkey confirmation expired. Confirm with your passkey again."
+
+This does not apply when you sign in. On the **Two-factor authentication** page, a wrong backup code stays in the box, so you can fix a typo.
 
 ## Make new backup codes
 
@@ -40,11 +96,28 @@ Make new backup codes if you used most of yours, or if you think someone else ha
 3. Click **Regenerate**.
 4. A **Save these backup codes** card appears. Click **Download .txt** or **Copy**, and keep the codes somewhere safe.
 
-Your old backup codes stop working right away. Your authenticator app keeps working as before.
+Your old backup codes stop working right away. Your authenticator app and your passkeys keep working as before.
+
+## Set up an authenticator app
+
+If you have no authenticator app, for example because you started with a passkey, you can add one as another way to confirm it's you. Your account can have one authenticator app at a time.
+
+1. Go to **Settings**, then **Security**.
+2. In the **Authenticator app** card, click **Set up an authenticator**.
+3. The **Set up an authenticator app** box says "Confirm it's you, then scan the QR code with your authenticator app." Use your passkey or a backup code, then click **Continue**.
+4. The **Scan the QR code** box opens. Open your authenticator app, add a new account, and scan the QR code. If you cannot scan it, click **Can't scan? Show manual key** and type the key into your app instead.
+5. Type the six-digit code your app shows into the boxes.
+6. Click **Verify and add**.
+
+You see "Authenticator app added". If you see "Invalid code", wait for your app to show a new code and try again.
+
+If you close the **Scan the QR code** box before you click **Verify and add**, no authenticator app is added. Click **Set up an authenticator** to start again.
+
+You do not get new backup codes, and you do not need your password. Your passkeys and backup codes keep working.
 
 ## Add another device
 
-You can put the same Metis Suite entry on a second phone or in a second authenticator app. This is a good way to have a spare.
+You can put the same Metis Suite entry on a second phone or in a second authenticator app. This is a good way to have a spare. The **Add another device** card shows only if you set up an authenticator app.
 
 1. Go to **Settings**, then **Security**.
 2. In the **Add another device** card, type your **Account password**.
@@ -65,39 +138,149 @@ You can put the same Metis Suite entry on a second phone or in a second authenti
 
 The devices you already set up keep working. All of them show the same codes.
 
-## Turn two-factor authentication off and on again
+## Remove your authenticator app
 
-You cannot use Metis Suite without two-factor authentication. Turning it off is only useful if you want to start over with a new setup, for example to replace every device at once.
+You can remove your authenticator app if you also have a passkey.
 
 1. Go to **Settings**, then **Security**.
-2. In the **Disable two-factor authentication** card, type your **Account password**.
+2. In the **Authenticator app** card, click **Remove authenticator**.
+3. The **Remove your authenticator app?** box says "Its codes stop working for this account straight away. Confirm it's you to remove it." Confirm with a code from your authenticator app, a passkey or a backup code.
+4. Click **Remove authenticator**.
+
+You see "Authenticator app removed". The Metis Suite entry in every authenticator app stops working, including on any device you added with **Add another device**.
+
+If you have no passkey, **Remove authenticator** is greyed out, and the card says "Add a passkey first. You need at least one way to confirm it’s you."
+
+To move to a new phone, remove your authenticator app, then [set up an authenticator app](#set-up-an-authenticator-app) again. You get a new QR code, and the old entries stop working. This needs a passkey on your account, because you cannot remove your authenticator app without one.
+
+## Add a passkey
+
+A passkey lets you confirm sign-ins and sensitive changes without typing a code. You can start with a passkey when you first set up two-factor authentication, or add one later. Your backup codes keep working, and so does your authenticator app if you have one.
+
+You can add more than one passkey, for example one on your laptop and one on a security key.
+
+1. Go to **Settings**, then **Security**.
+2. In the **Passkeys** card, click **Add a passkey**.
+3. The **Add a passkey** box says "Name it so you can tell your passkeys apart, then confirm it's you. Your browser asks you to create the passkey next." Type a name, for example "Work laptop". The name is optional and can be up to 64 characters.
+4. Confirm it's you with an authenticator code, a passkey you added before or a backup code.
+5. Click **Add passkey**.
+6. Your browser or device asks you to create the passkey. Follow its steps.
+
+The box closes and you see "Passkey added". The passkey shows in the list on the **Passkeys** card. Your password manager lists it under your instance's domain name, such as `mail.example.com`, with your email address.
+
+If you leave the name empty, Metis Suite names the passkey after the password manager that keeps it, when it recognizes it, such as **Apple Passwords**, **Google Password Manager**, **Windows Hello** or **1Password**. Otherwise the name is **Passkey**. A passkey you create during the first setup is named this way too.
+
+Each passkey in the list shows its name and the date you added it, for example "Added Nov 19, 2026". After the date, it says one of these:
+
+- **Synced**: your password manager copies the passkey to your other devices.
+- **This device only**: the passkey stays on the one device or security key.
+
+If **Add a passkey** is greyed out and the card says "This browser can’t create passkeys.", try another browser. If no browser can add one, ask the person who runs your Metis Suite server.
+
+### If adding a passkey fails
+
+The message shows in red in the box, and the box stays open.
+
+| Message                                                                 | What to do                                                                                                                                                                      |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "This passkey is already on your account."                              | This device or password manager already has a passkey for your account. Use that one.                                                                                           |
+| "The passkey request was cancelled or timed out."                       | You closed your browser's prompt, or waited too long. Click **Add passkey** again. If you confirmed with a backup code, the box clears it. Enter a different backup code first. |
+| "The passkey request expired. Try again."                               | Click **Add passkey** again. If you confirmed with a backup code, the box clears it. Enter a different backup code first.                                                       |
+| "Invalid authenticator or backup code"                                  | The code was wrong. Enter a new code, then click **Add passkey** again. A backup code works only once, so use a different one.                                                  |
+| "Your passkey confirmation expired. Confirm with your passkey again."   | Click **Confirm again**, use your passkey, then click **Add passkey** again.                                                                                                    |
+| "Couldn't verify the new passkey", or another message from your browser | Try again. If it keeps failing, try another browser or device.                                                                                                                  |
+
+## Rename or remove a passkey
+
+Each passkey in the **Passkeys** card has two buttons: a pencil to rename it and a bin to remove it.
+
+### Rename a passkey
+
+1. Click the pencil next to the passkey.
+2. In the **Rename passkey** box, type the new name. The box says "The name shows in your passkey list and in security activity." Rows already in your security activity keep the old name.
+3. Click **Save**.
+
+Renaming does not ask you to confirm it's you.
+
+### Remove a passkey
+
+1. Click the bin next to the passkey.
+2. A box asks, for example, **Remove Work laptop?** It says "It stops working for this account straight away. Confirm it's you to remove it."
+3. Confirm it's you with an authenticator code, any of your passkeys or a backup code.
+4. Click **Remove passkey**.
+
+You see "Passkey removed". Adding and removing passkeys is recorded in your [Security activity](/guide/account/security-activity). Remove any passkey you do not recognize.
+
+If you have one passkey and no authenticator app, its bin is greyed out, and the card says "Add an authenticator app or another passkey first. You need at least one way to confirm it’s you." [Set up an authenticator app](#set-up-an-authenticator-app) or [add another passkey](#add-a-passkey) first.
+
+If you see "You need at least one way to confirm it's you. Add another one first, or turn off two-factor authentication.", the passkey or authenticator app you tried to remove is the last one on your account. Add a passkey or an authenticator app first, then remove it.
+
+## Choose which way you are asked first
+
+When you sign in or confirm a change, Metis Suite shows one way to confirm it's you first. This is your default. You can always pick another one in the box.
+
+The way you set up first is your default. Adding the other kind later keeps it as it is.
+
+The **Ask me first with** card shows only when you have both an authenticator app and a passkey. It says "Shown first when you sign in or confirm a change. You can always pick another." Pick one from the **Ask me first with** list:
+
+- **Passkey**
+- **Authenticator app**
+
+Your choice is saved right away. You do not need a code. If it cannot be saved, you see "Couldn't save your default". A backup code cannot be your default.
+
+If you remove your default (your authenticator app, or your last passkey), the one you have left becomes your default.
+
+With **Passkey** as your default, the sign-in page and every confirmation box open on **Use your passkey**. In a browser that cannot use passkeys, they open on the authenticator code instead, or on the backup code field if you have no authenticator app.
+
+## Turn two-factor authentication off and on again
+
+You cannot use Metis Suite without two-factor authentication. You rarely need to turn it off: you can add and remove your authenticator app and your passkeys one at a time. Turn it off only if you want to start over, for example to replace every device and every backup code at once.
+
+1. Go to **Settings**, then **Security**.
+2. In the **Disable two-factor authentication** card, type your **Account password**. The card says "Turns off two-factor sign-in and removes your authenticator app, passkeys and backup codes. Mail access requires 2FA, so you'll be taken back to setup."
 3. Click **Disable 2FA**.
-4. In the **Disable two-factor auth?** box, confirm.
+4. The **Disable two-factor auth?** box opens. It says "Your authenticator app, passkeys and backup codes will stop working, and you will need to set up 2FA again to access your mail. Confirm it's you to turn it off."
+5. Confirm it's you with a code from your authenticator app, a passkey or a backup code. See [Switch between them](#switch-between-them).
+6. Click **Disable 2FA** in the box. While it works, the button says "Saving…".
 
-Your authenticator entries and backup codes stop working. Metis Suite then takes you to the two-factor setup page. You cannot use the app until you set it up again with a new QR code and new backup codes.
+Your authenticator entries, passkeys and backup codes stop working. Your authenticator app and your passkeys are removed from your account. Metis Suite then takes you to the two-factor setup page. You cannot use the app until you set it up again, with an authenticator app or a passkey, and save your new backup codes. See [Sign in for the first time](/guide/get-started/sign-in-for-the-first-time). Then add the other kind again if you want it.
 
-Turning two-factor authentication off is recorded in your [Security activity](/guide/account/security-activity). The row starts with your name (or your email address, if your account has no name) and reads "… turned off two-factor authentication". To find it, pick **Two-factor authentication disabled** in the event type list.
+If something is wrong, the message shows in the box. "Invalid authenticator or backup code" means the code was wrong. If your password was wrong, you see an error too. Click **Cancel**, check the password in the card, and try again.
 
-## If you lose your phone
+Turning two-factor authentication off is recorded in your [Security activity](/guide/account/security-activity). The row starts with your name (or your email address, if your account has no name) and reads "… turned off two-factor authentication". To find it, pick **Two-factor authentication disabled** in the event type list. The authenticator app and passkeys it removes get no rows of their own.
+
+## If you lose your phone or passkey
 
 :::warning[Keep your backup codes]
-Your backup codes are your way back in if you lose your phone. Store them somewhere other than that phone, such as a password manager.
+Your backup codes are your way back in if you lose the device with your authenticator app or your passkey. Store them somewhere other than that device, such as a password manager. A second way to confirm, such as a passkey on a security key or an authenticator app on another phone, is another way back in.
 :::
 
-If you lost your phone but still have your backup codes:
+If you lost a device but still have your backup codes or another way to confirm it's you:
 
 1. Sign in with your email and password, or a magic link.
-2. On the two-factor page, click **Use a backup code instead** and enter one of your backup codes.
+2. On the two-factor page, use a way you still have. Click **Use a backup code instead** and enter one of your backup codes. Or switch to your authenticator app, or to a passkey on another device.
 3. Go to **Settings**, then **Security**.
-4. Use **Add another device** to put Metis Suite on your new phone.
-5. Use **Regenerate backup codes** to make a fresh set, because you used one of your old codes.
+4. Replace what you lost, as described below.
+5. Use **Regenerate backup codes** to make a fresh set, if you used one of your old codes.
 
-Your lost phone still has a working Metis Suite entry. If someone else might have it, [turn two-factor authentication off and on again](#turn-two-factor-authentication-off-and-on-again) instead of step 4. That gives you a new QR code, and the entry on the lost phone stops working. This also gives you new backup codes, so you can skip step 5.
+**If you lost the phone with your authenticator app:**
 
-Then sign out every other browser, so the lost phone is no longer signed in. See [Manage signed-in devices](/guide/account/signed-in-devices).
+- If you also have a passkey, click **Remove authenticator** in the **Authenticator app** card, then **Set up an authenticator** and scan the new QR code with your new phone. The entry on the lost phone stops working. See [Remove your authenticator app](#remove-your-authenticator-app).
+- If your authenticator app is your only way to confirm it's you, you can [add a passkey](#add-a-passkey) first and then do the same. Or [turn two-factor authentication off and on again](#turn-two-factor-authentication-off-and-on-again). That also gives you new backup codes, so you can skip step 5.
 
-Lost your authenticator app and your backup codes? If you lose both, you cannot get back into your account, and there is no recovery inside Metis Suite. Keep your backup codes safe.
+**Add another device** is not the right tool here. It puts the same entry on your new phone, and the entry on the lost phone keeps working too.
+
+**If you lost a passkey** (for example a laptop, a phone or a security key):
+
+- In the **Passkeys** card, remove the passkey that was on the lost device. See [Remove a passkey](#remove-a-passkey).
+- If it was your only way to confirm it's you, its bin is greyed out. [Add a passkey](#add-a-passkey) on a device you still have, or [set up an authenticator app](#set-up-an-authenticator-app), first. Use a backup code to confirm. Then remove the lost one.
+
+If your only passkey is gone, a backup code is your way back in. If the passkey was **Synced**, your password manager may still have it on your other devices.
+
+Then sign out every other browser, so the lost device is no longer signed in. See [Manage signed-in devices](/guide/account/signed-in-devices).
+
+Lost your authenticator app (if you have one), your backup codes and every passkey? If you lose all of them, you cannot get back into your account, and there is no recovery inside Metis Suite. Keep your backup codes safe.
 
 ## Changing your password does not affect two-factor
 
-Resetting or changing your password keeps your two-factor setup as it is. Your authenticator app and backup codes keep working. See [Change or reset your password](/guide/account/change-or-reset-your-password).
+Resetting or changing your password keeps your two-factor setup as it is. Your authenticator app (if you have one), passkeys and backup codes keep working. See [Change or reset your password](/guide/account/change-or-reset-your-password).

@@ -64,6 +64,14 @@ export function formatAuditEvent(event: AuditEvent): string {
     }
     case "two_factor.disabled":
       return `${actor} turned off two-factor authentication`;
+    case "authenticator.added":
+      return `${actor} added an authenticator app`;
+    case "authenticator.removed":
+      return `${actor} removed their authenticator app`;
+    case "passkey.added":
+      return `${actor} added the passkey ${target}`;
+    case "passkey.removed":
+      return `${actor} removed the passkey ${target}`;
     case "sign_in_alerts.disabled":
       return `${actor} turned off sign-in alerts`;
     case "mcp_client.created":
@@ -164,6 +172,14 @@ export function auditPhrase(action: AuditAction, kind: AuditResourceKind | null)
       return "deleted their account";
     case "two_factor.disabled":
       return "turned off two-factor authentication";
+    case "authenticator.added":
+      return "added an authenticator app";
+    case "authenticator.removed":
+      return "removed their authenticator app";
+    case "passkey.added":
+      return "added the passkey";
+    case "passkey.removed":
+      return "removed the passkey";
     case "sign_in_alerts.disabled":
       return "turned off sign-in alerts";
     case "mcp_client.created":

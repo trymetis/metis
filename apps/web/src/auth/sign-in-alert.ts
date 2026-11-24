@@ -14,6 +14,7 @@ const METHOD_LABELS: Record<SignInMethod, string> = {
   "magic-link": "Email sign-in link",
   totp: "Authenticator code",
   "backup-code": "Backup code",
+  passkey: "Passkey",
   "native-app": "Desktop or mobile app, from a signed-in browser",
 };
 

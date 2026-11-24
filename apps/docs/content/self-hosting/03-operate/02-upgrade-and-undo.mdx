@@ -68,11 +68,14 @@ If you skip releases, read the notes of every release between yours and the one 
 
   <Step title="Confirm">
     The dialog says "The app restarts on that release. Open pages reconnect
-    once it is ready." Enter your authenticator code and click **Upgrade**.
+    once it is ready." Confirm it's you and click **Upgrade**.
     To use a backup code, click **Use a backup code instead** first.
+    If **Ask me first with** is set to **Passkey**, or you have no
+    authenticator app, the dialog opens on **Use your passkey** instead. See
+    [Switch between them](/guide/account/two-factor-authentication#switch-between-them).
 
-    <img src="/images/self-hosting/upgrade-dialog.webp" alt="The Upgrade dialog for a newer release, asking for an authenticator code" class="dark:hidden" />
-    <img src="/images/self-hosting/upgrade-dialog-dark.webp" alt="The Upgrade dialog for a newer release, asking for an authenticator code" class="hidden dark:block" />
+    <img src="/images/self-hosting/upgrade-dialog.webp" alt="The Upgrade dialog for a newer release, asking you to confirm it's you" class="dark:hidden" />
+    <img src="/images/self-hosting/upgrade-dialog-dark.webp" alt="The Upgrade dialog for a newer release, asking you to confirm it's you" class="hidden dark:block" />
 
   </Step>
 
@@ -205,12 +208,15 @@ To undo:
 
   <Step title="Confirm">
     Click **Undo last upgrade**. The dialog names the release and the
-    snapshot time, and says the upgrade cannot be undone again. Enter your
-    authenticator code and click **Undo**. To use a backup code, click
-    **Use a backup code instead** first.
+    snapshot time, and says the upgrade cannot be undone again.
+    Confirm it's you and click **Undo**. To use a backup code, click
+    **Use a backup code instead** first. If **Ask me first with** is set to
+    **Passkey**, or you have no authenticator app, the dialog opens on
+    **Use your passkey** instead. See
+    [Switch between them](/guide/account/two-factor-authentication#switch-between-them).
 
-    <img src="/images/self-hosting/undo-dialog.webp" alt="The Undo last upgrade dialog asking for an authenticator code" class="dark:hidden" />
-    <img src="/images/self-hosting/undo-dialog-dark.webp" alt="The Undo last upgrade dialog asking for an authenticator code" class="hidden dark:block" />
+    <img src="/images/self-hosting/undo-dialog.webp" alt="The Undo last upgrade dialog asking you to confirm it's you" class="dark:hidden" />
+    <img src="/images/self-hosting/undo-dialog-dark.webp" alt="The Undo last upgrade dialog asking you to confirm it's you" class="hidden dark:block" />
 
   </Step>
 
@@ -351,15 +357,16 @@ When it runs as a container, use `sudo metis logs updater`.
 
 ### Errors in the dialog
 
-| Message                                                                                                  | What to do                                                                                |
-| -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| "Invalid authenticator or backup code"                                                                   | Enter a fresh code from your authenticator app, or a backup code.                         |
-| "Too many attempts. Please slow down."                                                                   | Wait a few minutes. You can try 10 codes every 5 minutes, for upgrades and undo together. |
-| "an upgrade or rollback is already running"                                                              | Wait until the **Last upgrade** or **Last undo** card shows the result.                   |
-| "another metis command is changing this install; try again in a moment"                                  | A `metis` command is changing the server. Try again in a moment.                          |
-| "1.4.0 is already running"                                                                               | Reload the page.                                                                          |
-| "This release needs Metis CLI 0.5.0 or later. Run sudo metis self-update on the server, then try again." | Update the CLI, then upgrade. See [Update the metis CLI](#update-the-metis-cli).          |
-| "there is no upgrade to undo"                                                                            | The undo is no longer available. Reload the page.                                         |
+| Message                                                                                                  | What to do                                                                                                                                                                             |
+| -------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Invalid authenticator or backup code"                                                                   | Enter a fresh code from your authenticator app, or a backup code.                                                                                                                      |
+| "Your passkey confirmation expired. Confirm with your passkey again."                                    | Click **Confirm again** under **Passkey confirmed**, use your passkey, then click the dialog's button again.                                                                           |
+| "Too many attempts. Please slow down."                                                                   | Wait a few minutes. You can make 10 attempts every 5 minutes, for upgrades and undo together. Every attempt counts, whether you use an authenticator code, a backup code or a passkey. |
+| "an upgrade or rollback is already running"                                                              | Wait until the **Last upgrade** or **Last undo** card shows the result.                                                                                                                |
+| "another metis command is changing this install; try again in a moment"                                  | A `metis` command is changing the server. Try again in a moment.                                                                                                                       |
+| "1.4.0 is already running"                                                                               | Reload the page.                                                                                                                                                                       |
+| "This release needs Metis CLI 0.5.0 or later. Run sudo metis self-update on the server, then try again." | Update the CLI, then upgrade. See [Update the metis CLI](#update-the-metis-cli).                                                                                                       |
+| "there is no upgrade to undo"                                                                            | The undo is no longer available. Reload the page.                                                                                                                                      |
 
 ## Update the metis CLI
 

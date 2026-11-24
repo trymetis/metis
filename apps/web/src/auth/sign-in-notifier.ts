@@ -1,17 +1,25 @@
 import type { BetterAuthPlugin } from "better-auth";
 import { createAuthMiddleware } from "better-auth/api";
 
-import { keysOf } from "@/lib/guards";
+import { isRecord, keysOf } from "@/lib/guards";
 
 const SIGN_IN_METHODS = {
   "/sign-in/email": "password",
   "/magic-link/verify": "magic-link",
-  "/two-factor/verify-totp": "totp",
-  "/two-factor/verify-backup-code": "backup-code",
   "/native/exchange": "native-app",
 } as const;
 
-export type SignInMethod = (typeof SIGN_IN_METHODS)[keyof typeof SIGN_IN_METHODS];
+const SECOND_FACTOR_PATH = "/two-factor/verify";
+
+const SECOND_FACTORS = {
+  totp: "totp",
+  backup_code: "backup-code",
+  passkey: "passkey",
+} as const;
+
+export type SignInMethod =
+  | (typeof SIGN_IN_METHODS)[keyof typeof SIGN_IN_METHODS]
+  | (typeof SECOND_FACTORS)[keyof typeof SECOND_FACTORS];
 
 export interface CompletedSignIn {
   userId: string;
@@ -22,9 +30,12 @@ export interface CompletedSignIn {
   method: SignInMethod;
 }
 
-const SECOND_FACTOR_METHODS = new Set<SignInMethod>(["totp", "backup-code"]);
-
-function signInMethod(path: string | undefined): SignInMethod | null {
+function signInMethod(path: string | undefined, body: unknown): SignInMethod | null {
+  if (path === SECOND_FACTOR_PATH) {
+    const method = isRecord(body) ? body.method : undefined;
+    const known = keysOf(SECOND_FACTORS).find((key) => key === method);
+    return known ? SECOND_FACTORS[known] : null;
+  }
   const known = keysOf(SIGN_IN_METHODS).find((key) => key === path);
   return known ? SIGN_IN_METHODS[known] : null;
 }
@@ -35,12 +46,12 @@ export const signInNotifier = (onSignIn: (signIn: CompletedSignIn) => Promise<vo
     hooks: {
       after: [
         {
-          matcher: (ctx) => signInMethod(ctx.path) !== null,
+          matcher: (ctx) => signInMethod(ctx.path, ctx.body) !== null,
           handler: createAuthMiddleware(async (ctx) => {
-            const method = signInMethod(ctx.path);
+            const method = signInMethod(ctx.path, ctx.body);
             const created = ctx.context.newSession;
             if (!method || !created) return;
-            if (SECOND_FACTOR_METHODS.has(method)) {
+            if (ctx.path === SECOND_FACTOR_PATH) {
               const signedIn = await ctx.getSignedCookie(
                 ctx.context.authCookies.sessionToken.name,
                 ctx.context.secret,

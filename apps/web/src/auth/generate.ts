@@ -24,5 +24,7 @@ export const auth = {
     sendResetPassword: async () => {},
     sendVerificationEmail: async () => {},
     onSignIn: async () => {},
+    onTwoFactorEvent: async () => {},
+    onTwoFactorRedirect: () => {},
   }),
 };

@@ -12,6 +12,7 @@ import invitesAndInstanceRoles from "./0008_invites_and_instance_roles";
 import mailSignatures from "./0009_mail_signatures";
 import exportRecords from "./0010_export_records";
 import themes from "./0011_themes";
+import twoFactorMethods from "./0012_two_factor_methods";
 
 export const MIGRATIONS: readonly Migration[] = [
   baseline,
@@ -26,4 +27,5 @@ export const MIGRATIONS: readonly Migration[] = [
   mailSignatures,
   exportRecords,
   themes,
+  twoFactorMethods,
 ];

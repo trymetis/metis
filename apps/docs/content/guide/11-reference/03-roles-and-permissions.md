@@ -40,9 +40,9 @@ To keep a resource away from a workspace's members, do not add it to that worksp
 
 Whatever their role, only the person who connected a mailbox, calendar, drive or address book can turn AI on or off for it (the robot icon on its row), or phishing detection for a mailbox (the shield icon). Everyone else sees whether it is on. The workspace's own [AI and privacy settings](/guide/workspaces/ai-and-privacy) can still turn these features off, or require phishing detection. Only the person who connected a mailbox can change its **Mailbox signatures**. Everyone else sees them. See [Signatures and the mail footer](/guide/mail/signatures).
 
-## Changes that need your authenticator code
+## Changes that ask you to confirm it's you
 
-These actions ask for a code from your authenticator app before they take effect:
+These actions ask you to confirm it's you before they take effect, with a code from your authenticator app, a passkey or a backup code, whichever your account has. See [Two-factor authentication](/guide/account/two-factor-authentication#codes-passkeys-and-backup-codes).
 
 - Making a member an admin (the owner).
 - Transferring ownership (the owner).
@@ -70,7 +70,7 @@ Everyone else has the instance role **User**, which is the default. A user works
 
 People with the owner, admin or observer role see **Dashboard** in their account menu and in search. Users do not see it.
 
-Managing someone means changing their instance role, banning or unbanning them, or removing their account. All of these ask for your authenticator code. Nobody can ban themselves. An account invite can also make the new account an admin or observer. If it does, sending it asks for your code too. An account invite with no role needs no code. See [How invites work](/guide/account/invite-people).
+Managing someone means changing their instance role, banning or unbanning them, or removing their account. All of these ask you to confirm it's you with a code from your authenticator app, a passkey or a backup code. Nobody can ban themselves. An account invite can also make the new account an admin or observer. If it does, sending it asks you to confirm it's you too. An account invite with no role needs no code. See [How invites work](/guide/account/invite-people).
 
 A ban signs the person out everywhere within 2 minutes and stops them signing in until the ban ends. It does not remove them from any workspace. See [If a member's account is banned](/guide/workspaces/members-and-roles#if-a-members-account-is-banned).
 

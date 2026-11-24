@@ -83,6 +83,7 @@ func runDBLoad(ctx context.Context, path string, flags dbLoadFlags) error {
 	ui.Info("Run the preflight of Metis %s or newer with this environment, then deploy it.", result.AppVersion)
 	if result.URLChanged {
 		ui.Warn("BETTER_AUTH_URL changes from %s, so register the Google, Microsoft and Zoho redirect URIs again for the new address, and every MCP client must sign in again.", result.PreviousURL)
+		ui.Warn("%s", passkeysTiedToAddress)
 	}
 	return nil
 }

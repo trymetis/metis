@@ -166,7 +166,7 @@ function InviteForm({
       <TotpConfirmDialog
         open={confirming}
         title="Send invite"
-        body={`Enter your authenticator code to invite ${email.trim()} as an instance ${INVITE_ROLE_LABELS[role].toLowerCase()}.`}
+        body={`Confirm it's you to invite ${email.trim()} as an instance ${INVITE_ROLE_LABELS[role].toLowerCase()}.`}
         confirmLabel="Send invite"
         onOpenChange={setConfirming}
         onConfirm={(code) => send(code)}

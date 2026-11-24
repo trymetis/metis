@@ -92,6 +92,28 @@
     "pad": 17
   },
   {
+    "name": "account/authenticator-app",
+    "path": "/settings/security",
+    "steps": [
+      { "waitFor": "main h2:text-is('Authenticator app')" },
+      {
+        "waitFor": "section:has(h2:text-is('Authenticator app')) button:has-text('Remove authenticator')"
+      },
+      { "scroll": "main h2:text-is('Authenticator app')" }
+    ],
+    "element": "section:has(h2:text-is('Authenticator app'))"
+  },
+  {
+    "name": "account/passkeys",
+    "path": "/settings/security",
+    "steps": [
+      { "waitFor": "main h2:text-is('Passkeys')" },
+      { "waitFor": "section:has(h2:text-is('Passkeys')) button:has-text('Add a passkey')" },
+      { "scroll": "main h2:text-is('Passkeys')" }
+    ],
+    "element": "section:has(h2:text-is('Passkeys'))"
+  },
+  {
     "name": "account/sign-in-alerts",
     "path": "/settings/security",
     "steps": [

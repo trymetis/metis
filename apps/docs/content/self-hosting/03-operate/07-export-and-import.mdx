@@ -251,7 +251,7 @@ To restore into Turso or another sqld, pass the databases as for [Use Turso or y
 
 At the end, setup can print these notes:
 
-- **When the address changes**, it warns, for example: "BETTER_AUTH_URL changes from https://mail.example.com to http://localhost:3000, so register the Google, Microsoft and Zoho redirect URIs again for the new address, and every MCP client must sign in again." Then do the steps in [Move to a new address](#move-to-a-new-address).
+- **When the address changes**, it warns, for example: "BETTER_AUTH_URL changes from https://mail.example.com to http://localhost:3000, so register the Google, Microsoft and Zoho redirect URIs again for the new address, and every MCP client must sign in again." A second warning follows: "Passkeys belong to the address users open, so a new address stops every user's passkeys working: users sign in with their authenticator app or a backup code, add new passkeys, then remove the old ones." Then do the steps in [Move to a new address](#move-to-a-new-address).
 - **When the archive holds the Resend gateway's database**, it prints "The export holds a Resend gateway's database. Setup does not restore it; metis export decrypt writes it as gateway-resend.sqlite."
 
 If the restore fails once setup starts installing, for example while it loads the databases or runs preflight, setup removes what it made and says "Restoring the export failed, so setup removed what it had made; fix the cause and run setup again." Fix the cause and run the same command again.
@@ -560,12 +560,13 @@ metis db load metis-export-20261111T100000Z.tar \
   --write-env production-new.env
 ```
 
-The CLI puts the new address in `BETTER_AUTH_URL` and warns, for example: "BETTER_AUTH_URL changes from https://mail.example.com, so register the Google, Microsoft and Zoho redirect URIs again for the new address, and every MCP client must sign in again."
+The CLI puts the new address in `BETTER_AUTH_URL` and warns, for example: "BETTER_AUTH_URL changes from https://mail.example.com, so register the Google, Microsoft and Zoho redirect URIs again for the new address, and every MCP client must sign in again." A second warning follows: "Passkeys belong to the address users open, so a new address stops every user's passkeys working: users sign in with their authenticator app or a backup code, add new passkeys, then remove the old ones."
 
 So after the move:
 
 - Register the redirect URI for the new address with each sign-in provider you use. See [Find your redirect URI](/self-hosting/configure/sign-in-providers#find-your-redirect-uri).
 - Sign in again in every MCP client.
+- Tell your users that their passkeys stop working at the new address. Each user signs in, and on the two-factor page clicks **Use your authenticator instead** (if they have an authenticator app) or **Use a backup code instead**, because the old passkey no longer works. Under **Settings**, **Security**, **Passkeys**, they add new passkeys first, then remove the old ones. A user with one passkey and no authenticator app cannot remove it until they add another one. See [Passkeys and your address](/self-hosting/install/domain-and-https#passkeys-and-your-address).
 - If you set **Public URL for webhooks and push** under **Dashboard**, **System**, **Workflow runner**, change it to the new address. If you did not set it, every webhook address changes with the address, so update the services that call them.
 
 ## Read an archive

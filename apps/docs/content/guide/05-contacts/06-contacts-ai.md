@@ -41,7 +41,7 @@ Before it changes anything, it asks you to approve the change in a box above the
 
 ## When Contacts AI is turned off
 
-AI is off for each address book until someone turns it on. The person who connected the account can turn it on in the workspace's contacts settings. Metis Suite asks for a code from their authenticator app first. See [Turn AI on or off for an address book](/guide/contacts/add-an-address-book#turn-ai-on-or-off-for-an-address-book).
+AI is off for each address book until someone turns it on. The person who connected the account can turn it on in the workspace's contacts settings. Metis Suite asks them to confirm it's them first, with a code from their authenticator app, a passkey or a backup code. See [Turn AI on or off for an address book](/guide/contacts/add-an-address-book#turn-ai-on-or-off-for-an-address-book).
 
 While AI is off, the panel says "Assistant turned off", then the reason and a button:
 

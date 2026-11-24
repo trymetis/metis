@@ -28,7 +28,7 @@ All four model fields are required when a driver is on. Enter the model names yo
 
 Without structured outputs, summaries need a model with a context window of about 8k tokens or more.
 
-Click **Save changes** and enter your authenticator code. Saving a change to these fields checks the LLM before anything is stored: it lists your provider's models with your key and confirms that every model you entered is offered. If the check fails, for example with "the API key was rejected (401)", nothing is saved. Fix the field and save again, or click **Save anyway** on the **Check failed** card to store the change as it is. See [Save anyway](/self-hosting/configure/how-configuration-works#save-anyway).
+Click **Save changes** and [confirm it's you](/guide/account/two-factor-authentication#switch-between-them), then click **Save**. Saving a change to these fields checks the LLM before anything is stored: it lists your provider's models with your key and confirms that every model you entered is offered. If the check fails, for example with "the API key was rejected (401)", nothing is saved. Fix the field and save again, or click **Save anyway** on the **Check failed** card to store the change as it is. See [Save anyway](/self-hosting/configure/how-configuration-works#save-anyway).
 
 A model that is "not in the provider's model list" does not stop the save. After the save, a warning message names the models the provider does not list.
 
@@ -113,7 +113,7 @@ With **Inbox labels** on, a message the decision model is not sure about stays u
 
 The card's badge shows **Off** while the driver is `disabled`, **Configured** when a driver is set but every switch is off, and **On** when at least one switch is on.
 
-Click **Save changes** and enter your authenticator code. The decision model is checked against its server before anything is stored. **Run check** in the **Health** card checks it too.
+Click **Save changes** and [confirm it's you](/guide/account/two-factor-authentication#switch-between-them), then click **Save**. The decision model is checked against its server before anything is stored. **Run check** in the **Health** card checks it too.
 
 :::warning
 A decision switch does nothing while the LLM driver is `disabled`, because AI is off for the whole instance. The dashboard refuses to save a change that leaves a decision switch on without an LLM. Set up an LLM first, or turn the switch off.

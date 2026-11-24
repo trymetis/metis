@@ -122,7 +122,7 @@ The CLI passes this variable to one preflight run only. Never put it in `.env` o
 Each **System** page edits its own settings:
 
 1. Change a field. A bar at the bottom shows how many changes are not saved yet, with **Reset** and **Save changes**.
-2. Click **Save changes** and enter a code from your authenticator app. Backup codes work too.
+2. Click **Save changes**. A dialog titled **Save changes** says "Confirm it's you to change the instance configuration." [Confirm it's you](/guide/account/two-factor-authentication#switch-between-them) with a code from your authenticator app, a passkey or a backup code, then click **Save**.
 3. The changed settings are checked against the real service before anything is stored. If a check fails, you see **Check failed** and "Nothing was saved. Fix the fields below and save again, or save anyway." See [Save anyway](#save-anyway).
 4. If the check passes, you see "Saved as version N". The line at the top of the page says that every process picks up a change within 30 seconds.
 
@@ -159,7 +159,7 @@ Restoring a version under **History** and **Reset to environment** follow the sa
 When a check fails, the **Check failed** card has a **Save anyway** button. It stores your changes even though the check failed.
 
 1. Click **Save anyway**. A dialog titled **Save anyway** says: "The check above failed. Saving anyway stores these changes as they are, so whatever failed the check may not work until it is fixed."
-2. Enter a code from your authenticator app and click **Save anyway**.
+2. [Confirm it's you](/guide/account/two-factor-authentication#switch-between-them) and click **Save anyway**.
 
 You see "Saved as version N". **History** lists the version as an ordinary **Edit**.
 

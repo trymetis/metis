@@ -5,8 +5,8 @@ description: Sign in, keep your account secure, choose your privacy settings and
 
 These pages cover your own Metis Suite account: how you sign in, how you keep it safe, and the choices that follow you into every workspace. Most of what they describe lives in your account settings. Open your account menu (the round button with your initials at the bottom of the left rail) and click the page you want, such as **Account** or **Security**.
 
-- [Sign in](/guide/account/sign-in): sign in with a password or a magic link, enter your two-factor code, create an account, and sign out.
-- [Two-factor authentication](/guide/account/two-factor-authentication): backup codes, adding another device, turning it off and on, and what to do if you lose your phone.
+- [Sign in](/guide/account/sign-in): sign in with a password or a magic link, confirm with your authenticator app, a passkey or a backup code, create an account, and sign out.
+- [Two-factor authentication](/guide/account/two-factor-authentication): backup codes, setting up and removing an authenticator app, adding another device, adding passkeys, choosing which way you are asked first, turning it off and on, and what to do if you lose your phone or passkey.
 - [Change or reset your password](/guide/account/change-or-reset-your-password): change it in settings, or reset it by email if you forgot it.
 - [Manage signed-in devices](/guide/account/signed-in-devices): see every browser signed in to your account and sign out the ones you do not want.
 - [Sign-in alerts](/guide/account/sign-in-alerts): get an email each time someone signs in to your account, and turn these emails off or on.

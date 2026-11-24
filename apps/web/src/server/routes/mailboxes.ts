@@ -91,7 +91,7 @@ export const mailboxesRouter = {
           code: input.code,
           headers: context.headers,
           scope: "mailbox-policy-on",
-          message: `Enter your authenticator code to turn ${turningOn} on`,
+          message: `Confirm it's you to turn ${turningOn} on`,
         });
       }
 
@@ -130,7 +130,7 @@ export const mailboxesRouter = {
           code: input.code,
           headers: context.headers,
           scope: "mailbox-policy-on",
-          message: `Enter your authenticator code to turn ${turningOn} on everywhere`,
+          message: `Confirm it's you to turn ${turningOn} on everywhere`,
         });
       }
 

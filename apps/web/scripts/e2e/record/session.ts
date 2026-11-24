@@ -39,8 +39,8 @@ export async function signIn(): Promise<RecordSession> {
   keepCookies(signedIn.headers);
   const totp = OTPAuth.URI.parse(enrollment.totpURI);
   if (!(totp instanceof OTPAuth.TOTP)) throw new Error("not a TOTP URI");
-  const verified = await getAuth().api.verifyTOTP({
-    body: { code: totp.generate() },
+  const verified = await getAuth().api.verifyTwoFactor({
+    body: { method: "totp", code: totp.generate() },
     headers: cookieHeader(),
     returnHeaders: true,
   });

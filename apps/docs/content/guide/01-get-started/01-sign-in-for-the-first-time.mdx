@@ -8,7 +8,7 @@ In this tutorial you will create your Metis Suite account, protect it with two-f
 You need two things before you start:
 
 - **A way in.** This is an invite email from someone who already uses Metis Suite. If you are the owner of a new instance, it is the setup link and setup code from whoever installed it.
-- **An authenticator app on your phone**, such as Google Authenticator, 1Password or Authy. Two-factor authentication is required for every account, so you cannot skip this part.
+- **An authenticator app or a passkey.** An authenticator app runs on your phone, such as Google Authenticator, 1Password or Authy. A passkey is a sign-in key that your device keeps for you. You can make one with Touch ID, Windows Hello, a phone, a security key or a password manager. Two-factor authentication is required for every account, so you cannot skip this part.
 
 :::note[What is an instance?]
 An instance is one Metis Suite server, run by your company, your team or yourself. Everyone on an instance signs in at the same web address. Your administrator is the person who runs it.
@@ -51,42 +51,56 @@ An instance is one Metis Suite server, run by your company, your team or yoursel
   <Step title="Confirm your password">
     The page **Set up two-factor authentication** opens. It says "Required to protect your Metis Suite account."
 
-    Two-factor authentication means that signing in needs two things: your password and a six-digit code from your phone. Someone who steals your password still cannot get in without your phone.
+    Two-factor authentication means that signing in needs two things. First you type your password. Then you confirm it's you with a code from an authenticator app or with a passkey. Someone who steals your password still cannot get in without it.
 
-    Enter the password you just chose and click **Continue**.
+    The page says "Confirm your password, then set up an authenticator app or a passkey." Type the password you just chose. Then pick how you want to confirm sign-ins:
 
-    Until you finish this setup, every page in Metis Suite brings you back here.
+    - **Continue** sets up an authenticator app.
+    - **Set up a passkey instead** sets up a passkey. This button shows only if your browser supports passkeys.
 
-  </Step>
+    If you see "Enter your account password", type the password you chose (at least 8 characters) and try again.
 
-  <Step title="Scan the QR code">
-    Open your authenticator app on your phone and add a new account. Point the camera at the QR code on the screen.
-
-    If you cannot scan it, click **Can't scan? Show manual key** and type the key into your app instead.
-
-    Your app now shows a six-digit code for Metis Suite. The code keeps changing, so always use the one it shows right now.
+    You can add the other kind later. Until you finish this setup, every page in Metis Suite brings you back here.
 
   </Step>
 
-  <Step title="Save your backup codes">
-    Below the QR code is a card called **Save these backup codes**. Backup codes let you sign in if you lose your phone. Each one works only once.
+  <Step title="Set up an authenticator app or a passkey">
+    Pick the tab that matches the button you clicked.
 
-    Click **Download .txt** to save them as a file, or **Copy** to paste them somewhere safe, such as a password manager. Do not keep them only on the same phone as your authenticator app.
+    <Tabs>
+      <Tab title="Authenticator app">
+        1. A QR code appears. Open your authenticator app on your phone and add a new account. Point the camera at the QR code on the screen. If you cannot scan it, click **Can't scan? Show manual key** and type the key into your app instead.
+        2. Below the QR code is a card called **Save these backup codes**. Backup codes let you sign in if you lose your phone. Each one works only once. Click **Download .txt** to save them as a file, or **Copy** to paste them somewhere safe, such as a password manager. Do not keep them only on the same phone as your authenticator app.
+        3. When they are saved, click **I've saved my backup codes, continue**.
+        4. The page says "Enter the 6-digit code from your authenticator app to finish setup." Type the code your app shows right now. The code keeps changing, so always use the current one.
+        5. Click **Verify and enable**.
 
-    When they are saved, click **I've saved my backup codes, continue**.
+        If you see "Invalid code", wait for your app to show a new code and try again. You can click **Back** to see the QR code again.
+      </Tab>
+      <Tab title="Passkey">
+        1. The page says "Keep these codes somewhere safe before you create the passkey. They get you in if you lose access to it." Your browser does not ask for a passkey yet.
+        2. Below it is a card called **Save these backup codes**. It says "Each can be used once if you can't use your authenticator app or passkey." Click **Download .txt** to save them as a file, or **Copy** to paste them somewhere safe, such as a password manager.
+        3. When they are saved, click **I've saved my backup codes, continue**.
+        4. Your browser or device asks you to create the passkey. While it waits, the button says "Waiting for your passkey…". Create the passkey the way it asks, for example with your fingerprint, your face, a PIN or your security key. It can be kept by your device, your phone, a security key or a password manager.
 
-    :::warning[If you lose your phone]
-    Your backup codes are your way back in if you lose your phone. If you lose both, you cannot get back into your account, and there is no recovery inside Metis Suite. Keep your backup codes safe.
+        Two-factor authentication turns on only once the passkey is saved.
+
+        Metis Suite names the passkey after the password manager that keeps it, when it recognizes it. Otherwise the name is **Passkey**. You can rename it later. See [Rename a passkey](/guide/account/two-factor-authentication#rename-a-passkey).
+
+        If something goes wrong, a message shows above the button. There is no way back to the password step from here:
+
+        - "The passkey request was cancelled or timed out." or "The passkey request was cancelled.": you closed the prompt, or waited too long. Click **I've saved my backup codes, continue** again. Your backup codes stay the same.
+        - "Couldn't verify the new passkey", "The passkey request expired. Try again.", "Couldn't save the passkey" or "Couldn't set up the passkey": click **I've saved my backup codes, continue** again. You get a fresh set of backup codes, with the note "Here is a fresh set of backup codes. Save these instead of the earlier ones, then continue." The earlier codes stop working. Save the new ones, then click the button again to create the passkey.
+
+        If you wait a few minutes before you click the button, you also get a fresh set of backup codes with the same note. Save them, then click the button again.
+      </Tab>
+    </Tabs>
+
+    Either way, you see **Two-factor enabled** and "Taking you to your inbox…". Metis Suite then takes you into your workspace.
+
+    :::warning[If you lose your device]
+    Your backup codes are your way back in if you lose the phone with your authenticator app, or the device with your passkey. Store them somewhere other than that device. If you lose your authenticator app or passkey and your backup codes, you cannot get back into your account, and there is no recovery inside Metis Suite. Keep your backup codes safe.
     :::
-
-  </Step>
-
-  <Step title="Enter a code to finish">
-    Type the six-digit code your authenticator app shows right now, then click **Verify and enable**.
-
-    If you see "Invalid code", wait for your app to show a new code and try again. You can click **Back** to see the QR code again.
-
-    When it works, you see **Two-factor enabled**, and Metis Suite takes you into your workspace.
 
   </Step>
 
@@ -102,7 +116,9 @@ An instance is one Metis Suite server, run by your company, your team or yoursel
 
 ## Next time you sign in
 
-Go to your instance's web address, enter your email and password, and click **Sign in**. Then enter the code from your authenticator app. [Sign in](/guide/account/sign-in) covers this, plus magic links and backup codes.
+Go to your instance's web address, enter your email and password, and click **Sign in**. Then enter the code from your authenticator app, or use your passkey. [Sign in](/guide/account/sign-in) covers this, plus magic links and backup codes.
+
+Once you are in, you can add a passkey or an authenticator app, whichever you did not set up, under **Settings**, then **Security**. See [Add a passkey](/guide/account/two-factor-authentication#add-a-passkey) and [Set up an authenticator app](/guide/account/two-factor-authentication#set-up-an-authenticator-app).
 
 ## Next steps
 

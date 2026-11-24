@@ -42,6 +42,7 @@
 - **S3: AWS SDK commands only**; never hand-roll the S3 protocol, including the drive relay's SigV4 URLs ([drive.md](agent-docs/drive.md)).
 - **MCP OAuth: `@better-auth/mcp` only.** It is `@better-auth/oauth-provider` preconfigured, so registering both is forbidden.
 - **`ai` and every `@ai-sdk/*` package are pinned exactly and bumped together, to the `@ai-sdk/provider` version `@mastra/core` pins**, so one copy exists ([ai-agents.md](agent-docs/ai-agents.md)).
+- **A `better-auth` bump diffs upstream's two-factor and passkey plugins against the version `src/auth/two-factor/` was adapted from and ports what applies** ([auth.md](agent-docs/auth.md)).
 - **UI primitives are shadcn on Base UI (`base-nova`)**, installed with `bunx shadcn@latest add` from the consuming app into `packages/ui` ([ui.md](agent-docs/ui.md)).
 
 ## 4. Code

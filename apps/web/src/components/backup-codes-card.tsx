@@ -38,7 +38,7 @@ export function BackupCodesCard({ codes, accountEmail }: BackupCodesCardProps) {
     <div className="rounded-xl border border-brand/30 bg-brand-soft p-3">
       <p className="text-xs font-semibold text-brand-text">Save these backup codes</p>
       <p className="mt-1 text-[11px] text-brand-text">
-        Each can be used once if you lose access to your authenticator.
+        Each can be used once if you can't use your authenticator app or passkey.
       </p>
       <ul className="mt-2 grid grid-cols-2 gap-1 font-mono text-[11px] text-brand-text">
         {codes.map((c) => (

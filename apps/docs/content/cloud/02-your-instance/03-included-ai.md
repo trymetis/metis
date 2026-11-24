@@ -48,11 +48,11 @@ You can switch the LLM, the decision model, or both, to your own provider at any
 1. Open your instance and click your initials at the bottom of the left rail. Choose **Dashboard**.
 2. Open **System**, then **LLM** under **Drivers**. The **Decision model** card is on the same page.
 3. Change the driver and its fields to your own provider's values. [AI models](/self-hosting/configure/ai-models) explains every field.
-4. Click **Save changes** and enter your authenticator code.
+4. Click **Save changes** and [confirm it's you](/guide/account/two-factor-authentication#switch-between-them), then click **Save**.
 
 ## Go back to the included models
 
-The [**Billing**](https://console.trymetis.email/instances/~/billing) tab of your instance in the console has a card called **Using your own provider**. It lists the values the included models need, under **LLM** and **Decision model**. Each value except **Driver** has a copy button. Set **Driver**, copy the other values into the dashboard's **LLM** page, then click **Save changes** and enter your authenticator code.
+The [**Billing**](https://console.trymetis.email/instances/~/billing) tab of your instance in the console has a card called **Using your own provider**. It lists the values the included models need, under **LLM** and **Decision model**. Each value except **Driver** has a copy button. Set **Driver**, copy the other values into the dashboard's **LLM** page, then click **Save changes** and [confirm it's you](/guide/account/two-factor-authentication#switch-between-them), then click **Save**.
 
 Some names in the console differ from the names in the dashboard:
 

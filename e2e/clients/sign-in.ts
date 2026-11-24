@@ -45,7 +45,7 @@ export async function signIn(
 
   const signedIn = await post("/sign-in/email", { email, password });
   if (signedIn.twoFactorRedirect) {
-    await post("/two-factor/verify-totp", { code: await code() });
+    await post("/two-factor/verify", { method: "totp", code: await code() });
   }
   return cookie();
 }

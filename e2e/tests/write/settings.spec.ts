@@ -364,10 +364,9 @@ export default function settingsSpecs() {
       const disable = securitySection(page, "Disable two-factor authentication");
       await disable.getByRole("textbox", { name: "Account password" }).fill(newPassword);
       await disable.getByRole("button", { name: "Disable 2FA", exact: true }).click();
-      await page
-        .getByRole("alertdialog", { name: "Disable two-factor auth?" })
-        .getByRole("button", { name: "Disable 2FA", exact: true })
-        .click();
+      const turnOff = page.getByRole("alertdialog", { name: "Disable two-factor auth?" });
+      await enterCode(page, totpFor(user));
+      await turnOff.getByRole("button", { name: "Disable 2FA", exact: true }).click();
       await page.waitForURL(/\/2fa\/setup/);
       await page.goto("/settings/account");
       await expect(page).toHaveURL(/\/2fa\/setup/);
@@ -384,9 +383,7 @@ export default function settingsSpecs() {
         .getByRole("alertdialog", { name: "Delete your account?" })
         .getByRole("button", { name: "Continue", exact: true })
         .click();
-      const code = page.getByRole("alertdialog", {
-        name: "Enter your authenticator code",
-      });
+      const code = page.getByRole("alertdialog", { name: "Confirm it’s you" });
       await enterCode(page, totpFor(reenrolled));
       await code.getByRole("button", { name: "Delete account", exact: true }).click();
       await page.waitForURL(`${APP}/`);

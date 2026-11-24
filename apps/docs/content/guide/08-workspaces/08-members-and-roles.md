@@ -105,7 +105,7 @@ Owners and admins manage members straight from the rows of the **Members** page.
 
 Only the owner can change roles. Use the **Member** or **Admin** picker on the member's row.
 
-- **Making someone an admin** asks for your authenticator code. The dialog "Make this member an admin?" explains that they will be able to change the workspace's AI and privacy settings, "and manage its mailboxes, calendars, drives and address books." Enter the code and click **Make admin**.
+- **Making someone an admin** asks you to confirm it's you. The dialog "Make this member an admin?" explains that they will be able to change the workspace's AI and privacy settings, "and manage its mailboxes, calendars, drives and address books." [Confirm it's you](/guide/account/two-factor-authentication#switch-between-them) and click **Make admin**.
 - **Changing an admin back to member** needs no code.
 
 ### Transfer ownership
@@ -114,7 +114,7 @@ Only the owner can transfer ownership.
 
 1. On the row of the member who should become the owner, click **Transfer ownership**.
 2. The dialog "Transfer ownership?" says the workspace will belong to them and you will become an admin.
-3. Enter your authenticator code and click **Transfer ownership**.
+3. [Confirm it's you](/guide/account/two-factor-authentication#switch-between-them) and click **Transfer ownership**.
 
 ### Remove a member
 
