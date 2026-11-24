@@ -17,6 +17,7 @@ import { authClient } from "@/auth/client";
 import { extractTotpSecret } from "@/auth/two-factor-code";
 import { InfoHint } from "@/components/info-hint";
 import { ManualKey } from "@/components/manual-key";
+import { PasswordConfirmDialog } from "@/components/password-confirm-dialog";
 import { TotpConfirmDialog } from "@/components/totp-confirm-dialog";
 import { TwoFactorInput } from "@/components/two-factor-input";
 import { useTwoFactorCode } from "@/hooks/use-two-factor-code";
@@ -39,8 +40,8 @@ export function AuthenticatorSection() {
   const active = methods.methods.includes("totp");
   const onlyMethod = active && methods.methods.length === 1;
 
-  async function start(code: string) {
-    const { data, error } = await authClient.twoFactor.enroll({ method: "totp", code });
+  async function start(password: string) {
+    const { data, error } = await authClient.twoFactor.enroll({ method: "totp", password });
     if (error || !data?.totpURI) {
       throw new Error(error?.message || "Couldn't start authenticator setup");
     }
@@ -75,10 +76,10 @@ export function AuthenticatorSection() {
         )}
       </div>
 
-      <TotpConfirmDialog
+      <PasswordConfirmDialog
         open={starting}
         title="Set up an authenticator app"
-        body="Confirm it's you, then scan the QR code with your authenticator app."
+        body="Enter your account password to confirm it's you, then scan the QR code with your authenticator app."
         confirmLabel="Continue"
         onOpenChange={setStarting}
         onConfirm={start}

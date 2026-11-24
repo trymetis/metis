@@ -353,13 +353,14 @@ export async function summarizeThread(
   session: MailScope,
   messageId: string,
   threadId?: string,
-): Promise<{ cards: SummaryCard[]; spec: Spec | null }> {
-  const { cards } = await buildThreadSummary(session, messageId, threadId, () =>
+): Promise<{ cards: SummaryCard[]; spec: Spec | null; failed: boolean }> {
+  const { cards, failedAt } = await buildThreadSummary(session, messageId, threadId, () =>
     enforceRateLimit(session.userId, RATE_LIMITS.threadSummary),
   );
   return {
     cards,
     spec: cards.length > 0 ? buildSummarySpec(cards) : null,
+    failed: failedAt !== undefined,
   };
 }
 

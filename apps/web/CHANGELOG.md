@@ -92,6 +92,8 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 ### Fixed
 
+- A summary that could not be made says so, and that it tries again when you open the conversation after an hour or when a new message arrives, instead of "No summary for this email".
+- **Details** on a run in the workflow editor's **Runs** tab asks before leaving a workflow with unsaved changes, like **Back** and the app rail.
 - A summary or phishing check that hits its limit shows how long to wait and tries again on its own once that time has passed.
 - Recent searches are cleared when you sign out, like Drive's **Recent** list, so the next person on a shared browser doesn't see them.
 - A file in Drive's **Recent** list that was deleted or moved drops off the list when its preview can't find it.
@@ -123,7 +125,8 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 ### Security
 
-- **Add another device** asks you to confirm it's you, with your authenticator app, a passkey or a backup code, instead of your password, and shows the QR code in a window that forgets it once closed, instead of leaving it on the page.
+- Setting up an authenticator app, showing its QR code for another device (**Add another device**) and regenerating backup codes ask for your account password in a dialog. An authenticator code or a passkey cannot confirm them.
+- **Add another device** shows the QR code in a window that forgets it once closed, instead of leaving it on the page.
 
 ## Releases
 

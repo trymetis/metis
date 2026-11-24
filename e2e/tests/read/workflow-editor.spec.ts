@@ -355,6 +355,31 @@ test("leaving a workflow with unsaved changes asks first", async ({ page }) => {
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
 });
 
+test("Details on a run asks first when the workflow has unsaved changes", async ({ page }) => {
+  await openSeeded(page, REBRAND);
+  const name = page.getByRole("textbox", { name: "Workflow name" });
+  await name.fill(`${REBRAND} (edited)`);
+  await expect(page.getByText("Unsaved changes", { exact: true })).toBeVisible();
+
+  await page.getByRole("tab", { name: "Runs" }).click();
+  await page
+    .getByRole("list", { name: "Recent runs" })
+    .getByRole("button")
+    .filter({ hasText: "completed" })
+    .first()
+    .click();
+  const details = page.getByRole("link", { name: "Details", exact: true });
+  const confirm = page.getByRole("alertdialog", { name: "Discard unsaved changes?" });
+
+  await details.click();
+  await confirm.getByRole("button", { name: "Keep editing", exact: true }).click();
+  await expect(name).toHaveValue(`${REBRAND} (edited)`);
+
+  await details.click();
+  await confirm.getByRole("button", { name: "Discard", exact: true }).click();
+  await expect(page).toHaveURL(/\/runs\/[^/?]+\?from=workflow$/);
+});
+
 test("a test run of a seeded workflow shows each step's result and changes nothing", async ({
   page,
 }) => {

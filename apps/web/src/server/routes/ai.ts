@@ -154,8 +154,8 @@ export const aiRouter = {
       requireAi(mail, input.messageId);
 
       try {
-        const { spec } = await summarizeThread(mail, input.messageId, input.threadId);
-        return { spec };
+        const { spec, failed } = await summarizeThread(mail, input.messageId, input.threadId);
+        return { spec, failed };
       } catch (err) {
         if (err instanceof RateLimitedError) throw err;
         throw new ORPCError("BAD_GATEWAY", { cause: err });

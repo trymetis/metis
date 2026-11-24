@@ -20,6 +20,7 @@ import { extractTotpSecret } from "@/auth/two-factor-code";
 import { BackupCodesCard } from "@/components/backup-codes-card";
 import { ManualKey } from "@/components/manual-key";
 import { PageHeader } from "@/components/page-header";
+import { PasswordConfirmDialog } from "@/components/password-confirm-dialog";
 import { TotpConfirmDialog } from "@/components/totp-confirm-dialog";
 import { TwoFactorInput } from "@/components/two-factor-input";
 import { useTwoFactorCode } from "@/hooks/use-two-factor-code";
@@ -39,9 +40,7 @@ export default function SecuritySettingsPage() {
   const methods = useTwoFactorMethods({ enabled: twoFactorEnabled });
   const hasAuthenticator = methods.data?.methods.includes("totp") ?? false;
 
-  const [regenSecret, setRegenSecret] = useState("");
-  const [regenBusy, setRegenBusy] = useState(false);
-  const [regenError, setRegenError] = useState<string | null>(null);
+  const [regenConfirming, setRegenConfirming] = useState(false);
   const [newCodes, setNewCodes] = useState<string[]>([]);
 
   const [qrConfirming, setQrConfirming] = useState(false);
@@ -72,25 +71,10 @@ export default function SecuritySettingsPage() {
 
   const manualSecret = totpUri ? extractTotpSecret(totpUri) : null;
 
-  async function regenerateCodes(e: React.SubmitEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setRegenBusy(true);
-    setRegenError(null);
-    try {
-      const res = await authClient.twoFactor.backupCodes({
-        password: regenSecret,
-      });
-      if (res.error) {
-        setRegenError(res.error.message ?? "Could not regenerate codes");
-        return;
-      }
-      setNewCodes(res.data?.backupCodes ?? []);
-      setRegenSecret("");
-    } catch (err) {
-      setRegenError(err instanceof Error ? err.message : "Could not regenerate codes");
-    } finally {
-      setRegenBusy(false);
-    }
+  async function regenerateCodes(password: string) {
+    const res = await authClient.twoFactor.backupCodes({ password });
+    if (res.error) throw new Error(res.error.message || "Could not regenerate codes");
+    setNewCodes(res.data?.backupCodes ?? []);
   }
 
   function closeQr() {
@@ -98,8 +82,8 @@ export default function SecuritySettingsPage() {
     setQr(null);
   }
 
-  async function revealQr(code: string) {
-    const res = await authClient.twoFactor.totpUri({ code });
+  async function revealQr(password: string) {
+    const res = await authClient.twoFactor.totpUri({ password });
     if (res.error || !res.data?.totpURI) {
       throw new Error(res.error?.message || "Couldn't show the QR code. Try again.");
     }
@@ -191,28 +175,17 @@ export default function SecuritySettingsPage() {
               Generates a fresh set of one-time codes. Your previous backup codes stop working
               immediately; your authenticator app and passkeys are not affected.
             </p>
-            <form
-              className="mt-3 flex flex-col items-start gap-2 sm:flex-row"
-              onSubmit={regenerateCodes}
-            >
-              <Input
-                type="password"
-                placeholder="Account password"
-                autoComplete="current-password"
-                value={regenSecret}
-                onChange={(e) => setRegenSecret(e.target.value)}
-                disabled={regenBusy}
-                className="sm:max-w-60 text-[13px]"
-              />
-              <Button
-                type="submit"
-                variant="outline"
-                disabled={regenBusy || regenSecret.length === 0}
-              >
-                Regenerate
-              </Button>
-            </form>
-            {regenError && <p className="mt-2 text-[12px] text-destructive-text">{regenError}</p>}
+            <Button variant="outline" className="mt-3" onClick={() => setRegenConfirming(true)}>
+              Regenerate
+            </Button>
+            <PasswordConfirmDialog
+              open={regenConfirming}
+              title="Regenerate backup codes?"
+              body="Your current backup codes stop working straight away. Enter your account password to confirm it's you."
+              confirmLabel="Regenerate"
+              onOpenChange={setRegenConfirming}
+              onConfirm={regenerateCodes}
+            />
             {newCodes.length > 0 && session && (
               <div className="mt-4">
                 <BackupCodesCard codes={newCodes} accountEmail={session.user.email} />
@@ -235,10 +208,10 @@ export default function SecuritySettingsPage() {
               <Button variant="outline" className="mt-3" onClick={() => setQrConfirming(true)}>
                 Show QR code
               </Button>
-              <TotpConfirmDialog
+              <PasswordConfirmDialog
                 open={qrConfirming}
                 title="Show your authenticator QR code"
-                body="Confirm it's you, then scan the code with your other device."
+                body="Enter your account password to confirm it's you, then scan the code with your other device."
                 confirmLabel="Show QR code"
                 onOpenChange={setQrConfirming}
                 onConfirm={revealQr}

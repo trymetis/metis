@@ -12,6 +12,7 @@ import { IconButton } from "@/components/icon-button";
 import { runOverlay } from "@/components/workflow-graph/overlay";
 import { StatusIcon, statusLabel } from "@/components/workflow-history/run-status";
 import { RunWaits } from "@/components/workflow-history/run-waits";
+import { guardedLeave } from "@/hooks/leave-guard";
 import { useWorkspaceScope } from "@/hooks/use-workspace-path";
 import { rpc } from "@/lib/orpc";
 import type { WorkflowRun } from "@/server/schema";
@@ -88,10 +89,11 @@ export function RunsPanel({
   }
 
   const list = runs.data?.runs ?? [];
+  const detailsHref = run ? workflowRunPath(scope.workspaceSlug, run.id, true) : null;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {run && run.id === selectedRunId && (
+      {run && detailsHref && run.id === selectedRunId && (
         <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-border-soft border-b px-4 py-2 text-[12px]">
           <StatusIcon status={stopping(run) ? "running" : run.status} className="size-3.5" />
           <span className="font-medium">Showing run {run.id.slice(0, 8)} on the canvas</span>
@@ -112,7 +114,14 @@ export function RunsPanel({
               label="Details"
               size="icon-xs"
               nativeButton={false}
-              render={<Link href={workflowRunPath(scope.workspaceSlug, run.id, true)} />}
+              render={
+                <Link
+                  href={detailsHref}
+                  onClick={(event) => {
+                    if (guardedLeave(detailsHref)) event.preventDefault();
+                  }}
+                />
+              }
             >
               <ExternalLink className="size-3.5" />
             </IconButton>

@@ -1,3 +1,4 @@
+import * as OTPAuth from "otpauth";
 import { expect, test } from "vitest";
 import { z } from "zod";
 
@@ -88,6 +89,37 @@ test("adding a passkey once two-factor is on needs a second factor first", async
     })
     .parse(started.body);
   expect(parsed.options.rp.id).toBe(new URL(APP).hostname);
+});
+
+test("the authenticator QR code and authenticator setup take the account password, never a second factor", async () => {
+  const { cookie, account } = await ana();
+  const code = totpCode(account.totpURI);
+
+  const qrWithCode = await auth("/two-factor/totp-uri", {
+    cookie,
+    body: { password: "not-the-password", code },
+  });
+  expect(qrWithCode.status).toBe(400);
+  expect(errorCode(qrWithCode.body)).toBe("INVALID_PASSWORD");
+  const qr = await auth("/two-factor/totp-uri", { cookie, body: { password: account.password } });
+  expect(qr.status).toBe(200);
+  const shown = z.object({ totpURI: z.string() }).parse(qr.body);
+  expect(OTPAuth.URI.parse(shown.totpURI).secret.base32).toBe(
+    OTPAuth.URI.parse(account.totpURI).secret.base32,
+  );
+
+  const setupWithCode = await auth("/two-factor/enroll", {
+    cookie,
+    body: { method: "totp", password: "not-the-password", code },
+  });
+  expect(setupWithCode.status).toBe(400);
+  expect(errorCode(setupWithCode.body)).toBe("INVALID_PASSWORD");
+  const setup = await auth("/two-factor/enroll", {
+    cookie,
+    body: { method: "totp", password: account.password },
+  });
+  expect(setup.status).toBe(400);
+  expect(errorCode(setup.body)).toBe("TOTP_ALREADY_ENABLED");
 });
 
 test("the last second factor can't be removed", async () => {

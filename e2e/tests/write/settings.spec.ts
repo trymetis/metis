@@ -244,8 +244,11 @@ export default function settingsSpecs() {
     const before = await harness.backupCodes();
     await page.goto("/settings/security");
     const section = securitySection(page, "Regenerate backup codes");
-    await section.getByRole("textbox", { name: "Account password" }).fill(account.password);
     await section.getByRole("button", { name: "Regenerate", exact: true }).click();
+    const confirm = page.getByRole("alertdialog", { name: "Regenerate backup codes?" });
+    await confirm.getByRole("textbox", { name: "Account password" }).fill(account.password);
+    await confirm.getByRole("button", { name: "Regenerate", exact: true }).click();
+    await expect(confirm).toBeHidden();
     await expect(section.getByText("Save these backup codes")).toBeVisible();
     const codes = section.getByRole("listitem");
     await expect.poll(() => codes.count()).toBeGreaterThanOrEqual(8);
@@ -253,15 +256,16 @@ export default function settingsSpecs() {
     for (const code of shown) expect(before).not.toContain(code.trim());
   });
 
-  test("showing the authenticator QR code asks to confirm it's you, opens in a dialog and is gone once closed", async ({
+  test("showing the authenticator QR code asks for the account password, opens in a dialog and is gone once closed", async ({
     page,
+    account,
   }) => {
     await page.goto("/settings/security");
     const section = securitySection(page, "Add another device");
     await section.getByRole("button", { name: "Show QR code", exact: true }).click();
     const confirm = page.getByRole("alertdialog", { name: "Show your authenticator QR code" });
     await expect(confirm).toBeVisible();
-    await enterCode(page, await harness.totp());
+    await confirm.getByRole("textbox", { name: "Account password" }).fill(account.password);
     await confirm.getByRole("button", { name: "Show QR code", exact: true }).click();
     const shown = page.getByRole("dialog", { name: "Scan with your other device" });
     await expect(

@@ -2523,6 +2523,7 @@ export const threadSummaryInputSchema = mailboxScopeSchema.extend({
 
 export const threadSummaryOutputSchema = z.object({
   spec: summarySpecSchema.nullable(),
+  failed: z.boolean(),
 });
 
 export const summaryPreviewThreadSchema = z.object({

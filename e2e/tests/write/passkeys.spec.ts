@@ -80,15 +80,15 @@ export default function passkeySpecs() {
       let secret = "";
       const totp = () => new OTPAuth.TOTP({ secret: OTPAuth.Secret.fromBase32(secret) }).generate();
 
-      await test.step("an authenticator app is added after confirming with the passkey", async () => {
+      await test.step("an authenticator app is added after confirming with the account password", async () => {
         await page.goto("/settings/security");
         const authenticator = section(page, "Authenticator app");
         await authenticator
           .getByRole("button", { name: "Set up an authenticator", exact: true })
           .click();
         const confirm = page.getByRole("alertdialog", { name: "Set up an authenticator app" });
-        await confirm.getByRole("button", { name: "Use your passkey", exact: true }).click();
-        await expect(confirm.getByText("Passkey confirmed")).toBeVisible();
+        await expect(confirm.getByRole("button", { name: "Use your passkey" })).toHaveCount(0);
+        await confirm.getByRole("textbox", { name: "Account password" }).fill(user.password);
         await confirm.getByRole("button", { name: "Continue", exact: true }).click();
         const scan = page.getByRole("dialog", { name: "Scan the QR code" });
         await scan.getByText("Can't scan? Show manual key").click();

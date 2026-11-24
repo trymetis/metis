@@ -84,6 +84,7 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [mail.md](mail
   - `loadConversation` keeps one copy per `Message-ID`, preferring a labelled copy, so a thread listed mid-move with both copies never counts as a new message.
   - New messages `refine()` the cards in place, with a full rebuild after `REBUILD_AFTER` refinements.
   - A failed generation is cached too (`failedAt`, previous cards kept) and retried only after `FAILURE_RETRY_MS` or when the thread changes.
+  - `ai.threadSummary` returns `failed` with the spec, so a failed generation with no previous cards shows "Couldn't summarize this thread." and when it is tried again, never "No summary for this email", which means the gate skipped it or no card fit.
 - **Summary gate (`decisionEnabled("summaryGate")`).** After the cache check, `gateSummary` makes one decision call over the messages about to be sent (each capped at `GATE_TEXT_MAX` chars): `worth`, plus one `card:<type>` question per card type other than `Summary`, worded from `CARD_DEFINITIONS`.
   - Below `GATE_WORTH_MIN`, a full build caches `{ cards: [], skipped: true }` without calling the summarizer.
   - Below it on a refine, the previous cards and `incrementCount` stay and the message count advances.

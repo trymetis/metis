@@ -142,8 +142,10 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
   - `user.two_factor_enabled` means at least one active method, and the gates read only it.
 - **Either method can come first.** `/two-factor/enroll` `{ method }` starts an authenticator (setup URI) or a passkey (creation options); `/two-factor/enroll/confirm` finishes it.
   - Before 2FA is on, enroll takes the password and issues the backup codes into `two_factor`, as the stock plugin did at enable, so the authenticator setup page shows them before the code is entered.
-  - After that it takes a second factor and issues nothing.
+  - After that, an authenticator takes the password and a passkey takes a second factor; neither issues codes.
   - The first confirmed method turns 2FA on, refreshes the session cookie and becomes the default.
+- **Creating or revealing an authenticator secret and regenerating backup codes take the account password, never a second factor**, so a stolen code or passkey cannot mint or copy another way in: authenticator setup (`/two-factor/enroll` `{ method: "totp" }`), **Show QR code** (`/two-factor/totp-uri`) and `/two-factor/backup-codes`.
+  - The Security page asks for it in `PasswordConfirmDialog` (`src/components/password-confirm-dialog.tsx`).
 - **Backup codes stay as the stock plugin made them:** ten mixed-case 5-5 codes, sealed with `symmetricEncrypt` as one JSON list, matched exactly, and a used one is removed with a guarded swap. Regenerating takes the password.
 - **One verify endpoint, the method in the body.** `/two-factor/verify` takes `{ method: "totp" | "backup_code", code }` or `{ method: "passkey", response }` and runs `checkFactor`.
   - During a pending sign-in (the `two_factor` cookie) it applies the attempt cap and lockout and finishes the sign-in, with the trusted-device choice.
@@ -196,7 +198,7 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [connections.md](c
 - **Magic link is sign-in only**; it never creates an account.
 - **Passkeys are a second factor only.** There is no passkey sign-in without a password or magic link first.
 - **An account has one authenticator app.** Another device scans the same secret (**Add another device**).
-  - `/two-factor/totp-uri` takes a second factor (`code`, `requireSecondFactor`), not the password, and the page shows the QR only in a dialog whose close drops the URI and the drawn QR from state.
+  - `/two-factor/totp-uri` takes the password (`checkPassword`), and the page shows the QR only in a dialog whose close drops the URI and the drawn QR from state.
 - **Passkeys need a secure context**, so an instance served over plain HTTP on anything but `localhost` cannot add or use them; the card disables **Add a passkey** when the browser has no WebAuthn.
 - **Backup codes are sealed, not hashed, mixed-case and matched exactly**, as in the stock plugin.
 - **Whether passkeys work inside the desktop and mobile app windows is unchecked**; sign-in runs in the system browser, and a passkey-only account confirms changes in those windows with a backup code if they cannot.

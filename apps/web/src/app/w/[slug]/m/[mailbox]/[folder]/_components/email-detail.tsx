@@ -1590,6 +1590,20 @@ function ThreadSummaryCard({
 
   if (!result) return null;
 
+  if (!result.spec && result.failed) {
+    return (
+      <div className="my-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-[12px] text-destructive-muted">
+        <AlertTriangle className="mt-0.5 size-3.5 shrink-0 text-destructive-text" />
+        <div className="min-w-0">
+          <div>Couldn't summarize this thread.</div>
+          <div className="mt-0.5 text-[11px]">
+            It tries again when you open it after an hour, or when a new message arrives.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!result.spec) {
     return (
       <div className="my-4 rounded-lg border px-3 py-2 text-[12px] bg-surface border-border text-faint">
