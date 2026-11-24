@@ -97,7 +97,8 @@ export default function calendarSpecs() {
     await expect(created).toHaveCount(0);
 
     await edited.click();
-    await eventPopover(page, renamed).getByRole("button", { name: "Delete event" }).click();
+    await eventPopover(page, renamed).getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("menuitem", { name: "Delete event" }).click();
     await page
       .getByRole("alertdialog", { name: `Delete ${renamed}?` })
       .getByRole("button", { name: "Delete", exact: true })

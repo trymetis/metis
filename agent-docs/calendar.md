@@ -53,6 +53,7 @@ The calendar resource, per-workspace visibility, `CalendarAdapter` and its Googl
 - **Procedures take `{ accountId?, calendarId, eventId }` as separate fields**, with no composite ids, because no table is keyed by an event id.
 - **Everything renders in the viewer's timezone.** All-day events are parsed date-only so they cannot slide a day across zones, and writes send the viewer's IANA zone (`viewerTimeZone`).
 - **The calendar shell is client-only** (`CalendarShellClient`, `next/dynamic` with `ssr: false`): every label comes from `new Date()` and the local zone, so a server render in the server's zone cannot hydrate in the viewer's.
+- **A calendar shows its provider's `#rrggbb` color; one without a color hashes its id over the shared palette** (`event-colors.ts` → `calendarColor`, `src/lib/palette.ts` → `paletteMark`), the same list mailbox colors use ([mail.md](mail.md)).
 - **Sidebar toggles are session-local (localStorage)**, separate from `visible_calendar_ids`, so hiding a calendar for yourself cannot remove it from a teammate's view.
 - **A view's range ends at the start of the day after its last day** (`viewRange` → `dayAfter`), so a week is seven days.
   - `calendar-context.tsx` feeds the range to the event fetch and `calendar-agent-panel.tsx` to the calendar agent's turn envelope.
@@ -62,7 +63,7 @@ The calendar resource, per-workspace visibility, `CalendarAdapter` and its Googl
 - **Year view's dots come from `calendarEvents.days`, never from the view's events.** It lists with `fields: "times"` (Google `fields`, Graph `$select`; Zoho and CalDAV list in full) and counts days in the viewer's zone on the server (`countEventDays`).
   - The view's own event fetch stays capped at `YEAR_EVENT_MAX` per calendar (`calendar-context.tsx`), since in Year view it serves only the agent panel's attach list and the error banner.
 - **The New/Edit event dialog initializes only when it opens or its target changes**, and picks the default calendar in a separate effect, so a calendar-list refresh while it is open cannot wipe what the user typed (`event-dialog.tsx`).
-- **Deleting an event asks first**: the popover's Delete opens a confirmation (`event-popover.tsx`), because a provider delete cannot be undone here.
+- **Deleting an event asks first**: **Delete event** in the popover's **More actions** menu opens a confirmation (`event-popover.tsx`), because a provider delete cannot be undone here.
 - **`src/calendar/providers/zoho.ts` keeps its own DC probe** against `calendar.zoho.<dc>/api/v1/calendars`, because a calendar-only grant has no mail scope for the mail probe.
 
 ## How it works

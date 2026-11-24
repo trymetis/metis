@@ -66,7 +66,7 @@ See also [AGENTS.md](../AGENTS.md), [gateways.md](gateways.md), [mail-ai.md](mai
 - **A custom label's color is a palette name or a `#rrggbb` hex** (`customLabelColorSchema`).
   - A palette name resolves to the `--label-custom-*` tokens of the current theme; a hex is the mark as-is, and chip text takes its hue at the theme's `--label-custom-text-l` lightness (`customLabelColor`), so any pick stays readable in light and dark.
   - Labels exist only in Metis, so no provider palette limits the colors.
-  - Mailbox colors hash over their own fixed eight-color list (`mailbox-color.ts`), so a new palette color never recolors a mailbox.
+  - Mailbox colors hash over the fixed eight-color list in `src/lib/palette.ts` (`paletteMark`, `paletteText`), shared with calendars that have no provider color, so a new label color never recolors a mailbox or a calendar.
 - **Editing a custom label changes its name and color, never its key** (`updateCustomLabel`), because label rows and workflows store the key.
 - **The list, its search results, labels, mute and read later live in the TanStack Query cache** (`mail-cache.ts`); `mail-store` keeps only UI state and the `updateEmail` / `removeEmail(s)` actions, which write into every cached list and search result.
   - `useMailList` pages `messages.list` with `useInfiniteQuery` (staleTime `Infinity`); polling and re-entering a folder fetch the first page and merge it in (`refreshMailListHead`), so loaded pages stay.

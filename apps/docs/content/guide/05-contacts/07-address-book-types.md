@@ -20,12 +20,12 @@ A contacts server is also called a CardDAV server. Your administrator sets it up
 
 - **Connecting.** Your administrator decides which providers and servers you can pick. For a contacts server, you bring only your own login. See [Add an address book](/guide/contacts/add-an-address-book).
 - **Groups.** Google contact groups and Zoho categories show under **Groups** in the **Show** menu. Click one to see only its contacts. On Google, the **Groups** checkboxes in the contact dialog change which groups a contact belongs to. On Zoho, saving a contact never changes its categories. Outlook and contacts servers have no groups.
-- **Photos.** Google and Zoho contacts show the photo from your provider. Other contacts show their first letter. You cannot add or change a photo in Metis Suite.
+- **Photos.** Google and Zoho contacts show the photo from your provider. Other contacts show a colored circle with their initials. You cannot add or change a photo in Metis Suite.
 - **Read-only address books.** An address book is marked **Read-only** when the contacts server reports that your login can only read it. You can see its contacts, but you cannot add, edit or delete them. Google, Outlook and Zoho address books are never read-only.
 - **Which address books show.** Every account starts with no address books shown in a workspace. You switch them on yourself. See [Show and hide address books](/guide/contacts/show-and-hide-address-books).
 
 ## What Metis Suite does not do
 
-- It does not import address book files, and it does not export a whole address book. To save one person as a `.vcf` file, use **Download** on the contact's card in Contacts, or on a mail summary card. See [Browse your contacts](/guide/contacts/browse-your-contacts#open-a-contact).
+- It does not import address book files, and it does not export a whole address book. To save one person as a `.vcf` file, use **Download**. On a contact's card in Contacts, it is under **More actions**. A mail summary card has it too. See [Browse your contacts](/guide/contacts/browse-your-contacts#open-a-contact).
 - It does not show Google's "Other contacts" list.
 - Very large address books may not show every contact.

@@ -35,6 +35,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
+import { SidebarSection } from "@/components/sidebar-section";
 import {
   addCustomLabel,
   removeCustomLabel,
@@ -287,17 +288,6 @@ export function Sidebar() {
         </AlertDialogContent>
       </AlertDialog>
     </aside>
-  );
-}
-
-function SidebarSection({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="mb-6 px-3">
-      <div className="mb-1.5 px-2 text-[10px] font-medium uppercase tracking-[1.5px] text-faint">
-        {label}
-      </div>
-      <div className="space-y-px">{children}</div>
-    </div>
   );
 }
 

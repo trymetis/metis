@@ -91,10 +91,10 @@
     "seededWeek": true,
     "steps": [
       {
-        "waitFor": "role=complementary[name=\"Calendars\"] >> role=button[name=\"Create\"]"
+        "waitFor": "role=complementary[name=\"Calendars\"] >> role=button[name=\"New event\"]"
       },
       {
-        "click": "role=complementary[name=\"Calendars\"] >> role=button[name=\"Create\"]"
+        "click": "role=complementary[name=\"Calendars\"] >> role=button[name=\"New event\"]"
       },
       {
         "waitFor": "role=dialog[name=\"New event\"]"
@@ -171,7 +171,10 @@
         "waitFor": "role=dialog >> role=heading[name=\"Design review\"]"
       },
       {
-        "click": "role=dialog >> role=button[name=\"Delete event\"]"
+        "click": "role=dialog >> role=button[name=\"More actions\"]"
+      },
+      {
+        "click": "role=menuitem[name=\"Delete event\"]"
       },
       {
         "waitFor": "role=alertdialog[name=\"Delete Design review?\"]"

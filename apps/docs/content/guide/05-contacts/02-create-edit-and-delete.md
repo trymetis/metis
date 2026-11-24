@@ -7,7 +7,7 @@ Every change you make here is saved in the address book at your provider. It sho
 
 ## Create a contact
 
-1. In Contacts, click **New contact** at the top right of the page. The **New contact** dialog opens.
+1. In Contacts, click **New contact**, the button with a person and a plus, right beside the filter box. The **New contact** dialog opens.
 2. Fill in the contact's details. You need at least a name, an email address or an organization. All the fields are described [below](#the-contact-fields).
 3. Under **Address book**, pick where to save the contact. The list shows each address book you can write to, with its account's email address, such as "Contacts · you@example.com". It starts on the address book you are looking at, or on the account's main address book.
 4. Click **Save**.
@@ -21,9 +21,9 @@ You can also save a person straight from an email. See [Save contacts from mail]
 
 ## Edit a contact
 
-You cannot edit or delete a contact in a read-only address book. Its card shows **Edit** and **Delete** turned off. Only contacts servers have read-only address books. See [Address book types](/guide/contacts/address-book-types).
+You cannot edit or delete a contact in a read-only address book. On its card, **Edit contact** and the **Delete contact** item under **More actions** are turned off. Only contacts servers have read-only address books. See [Address book types](/guide/contacts/address-book-types).
 
-1. Open the contact and click **Edit**. The **Edit contact** dialog opens with their details filled in.
+1. Open the contact and click **Edit contact** (the pencil at the top right of the card). The **Edit contact** dialog opens with their details filled in.
 2. Change what you need.
 3. Click **Save**. You see "Contact saved".
 
@@ -61,11 +61,12 @@ The dialog shows a message in red:
 
 ## Delete a contact
 
-1. Open the contact and click **Delete**.
-2. The dialog asks "Delete" followed by the contact's name. It explains that the contact is deleted from its address book at your provider, for every app that uses that address book.
-3. Click **Delete**.
+1. Open the contact and click **More actions** (the three dots at the top right of the card).
+2. Choose **Delete contact**.
+3. The dialog asks "Delete" followed by the contact's name, for example "Delete Ana Lopes?", or "Delete this contact?" when the contact has no name. It explains that the contact is deleted from its address book at your provider, for every app that uses that address book.
+4. Click **Delete**. The button says "Deleting…" while it works. To keep the contact, click **Cancel** instead.
 
-You see "Contact deleted". If it does not work, you see the error, or "Could not delete the contact".
+You see "Contact deleted". The card closes and the list fills the page again. If it does not work, you see the error, or "Could not delete the contact".
 
 Metis Suite has no way to bring back a deleted contact.
 

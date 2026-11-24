@@ -13,12 +13,19 @@ import {
 import { Avatar, AvatarFallback } from "@metis/ui/components/avatar";
 import { Button } from "@metis/ui/components/button";
 import { Dialog, DialogContent, DialogTitle } from "@metis/ui/components/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@metis/ui/components/dropdown-menu";
 import { cn } from "@metis/ui/lib/utils";
 import { format, isValid } from "date-fns";
 import {
   CalendarDays,
   Check,
   MapPin,
+  MoreHorizontal,
   Pencil,
   Phone,
   Trash2,
@@ -116,38 +123,11 @@ export function EventPopover() {
         showCloseButton={false}
         className="flex max-h-[85vh] max-w-md flex-col gap-0 overflow-hidden p-0 sm:max-w-md"
       >
-        <div className="flex shrink-0 items-center justify-end gap-0.5 px-3 pt-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Edit event"
-            onClick={() => {
-              setEditing(event);
-              setSelected(null);
-            }}
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Delete event"
-            disabled={busy}
-            onClick={() => setConfirmDelete(true)}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="icon" aria-label="Close" onClick={() => setSelected(null)}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="flex min-h-0 flex-1 gap-3 overflow-y-auto px-5 pb-5">
+        <div className="flex shrink-0 items-start gap-3 px-5 pt-4">
           <span
-            className="mt-1.5 h-3 w-3 shrink-0 rounded-[3px]"
+            className="mt-1 size-3 shrink-0 rounded-[3px]"
             style={{ backgroundColor: colorFor(event) }}
           />
-
           <div className="min-w-0 flex-1">
             <DialogTitle className="wrap-break-word text-[20px] leading-snug font-medium tracking-tight text-foreground">
               {event.title}
@@ -159,126 +139,164 @@ export function EventPopover() {
               </p>
             )}
             {event.recurring && <p className="text-[12px] text-faint">Repeats</p>}
+          </div>
+          <div className="-mt-1 -mr-2 flex shrink-0 items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Edit event"
+              onClick={() => {
+                setEditing(event);
+                setSelected(null);
+              }}
+            >
+              <Pencil className="size-4" />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="ghost" size="icon-sm" aria-label="More actions" disabled={busy}>
+                    <MoreHorizontal className="size-4" />
+                  </Button>
+                }
+              />
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem variant="destructive" onClick={() => setConfirmDelete(true)}>
+                  <Trash2 />
+                  Delete event
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Close"
+              onClick={() => setSelected(null)}
+            >
+              <X className="size-4" />
+            </Button>
+          </div>
+        </div>
 
-            <div className="mt-4 flex flex-col gap-3">
-              {event.meetingUrl && (
-                <Row icon={Video}>
-                  <div className="flex min-w-0 flex-col gap-0.5">
-                    <div className="flex min-w-0 items-center gap-1">
+        <div className="min-h-0 flex-1 overflow-y-auto pt-4 pr-5 pb-5 pl-11">
+          <div className="flex flex-col gap-3">
+            {event.meetingUrl && (
+              <Row icon={Video}>
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <div className="flex min-w-0 items-center gap-1">
+                    <a
+                      href={event.meetingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="truncate text-[13px] text-primary underline-offset-2 hover:underline"
+                    >
+                      {conference?.name ? `Join with ${conference.name}` : "Join the meeting"}
+                    </a>
+                    <CopyButton
+                      value={event.meetingUrl}
+                      label="Copy meeting link"
+                      className="-my-1 size-6 shrink-0"
+                    />
+                  </div>
+                  <span className="truncate text-[12px] text-muted-foreground">
+                    {meetingAddress(event.meetingUrl)}
+                  </span>
+                  {meetingId && (
+                    <span className="text-[12px] text-muted-foreground">
+                      Meeting ID: {meetingId}
+                    </span>
+                  )}
+                  {conference?.passcode && (
+                    <span className="text-[12px] text-muted-foreground">
+                      Passcode: {conference.passcode}
+                    </span>
+                  )}
+                </div>
+              </Row>
+            )}
+
+            {conference?.phones && (
+              <Row icon={Phone}>
+                <div className="flex min-w-0 flex-col gap-1.5">
+                  {conference.phones.slice(0, 4).map((phone) => (
+                    <div
+                      key={`${phone.number}${phone.pin ?? ""}`}
+                      className="flex min-w-0 flex-col"
+                    >
                       <a
-                        href={event.meetingUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        href={telHref(phone)}
                         className="truncate text-[13px] text-primary underline-offset-2 hover:underline"
                       >
-                        {conference?.name ? `Join with ${conference.name}` : "Join the meeting"}
+                        {phone.number}
                       </a>
-                      <CopyButton
-                        value={event.meetingUrl}
-                        label="Copy meeting link"
-                        className="-my-1 size-6 shrink-0"
-                      />
-                    </div>
-                    <span className="truncate text-[12px] text-muted-foreground">
-                      {meetingAddress(event.meetingUrl)}
-                    </span>
-                    {meetingId && (
-                      <span className="text-[12px] text-muted-foreground">
-                        Meeting ID: {meetingId}
-                      </span>
-                    )}
-                    {conference?.passcode && (
-                      <span className="text-[12px] text-muted-foreground">
-                        Passcode: {conference.passcode}
-                      </span>
-                    )}
-                  </div>
-                </Row>
-              )}
-
-              {conference?.phones && (
-                <Row icon={Phone}>
-                  <div className="flex min-w-0 flex-col gap-1.5">
-                    {conference.phones.slice(0, 4).map((phone) => (
-                      <div
-                        key={`${phone.number}${phone.pin ?? ""}`}
-                        className="flex min-w-0 flex-col"
-                      >
-                        <a
-                          href={telHref(phone)}
-                          className="truncate text-[13px] text-primary underline-offset-2 hover:underline"
-                        >
-                          {phone.number}
-                        </a>
-                        {(phone.label || phone.pin) && (
-                          <span className="truncate text-[12px] text-muted-foreground">
-                            {[phone.label, phone.pin && `PIN: ${phone.pin}`]
-                              .filter(Boolean)
-                              .join(" · ")}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </Row>
-              )}
-
-              {event.location && (
-                <Row icon={MapPin}>
-                  <span className="wrap-break-word text-[13px] text-muted-foreground">
-                    {event.location}
-                  </span>
-                </Row>
-              )}
-
-              {event.organizer && (
-                <Row icon={UserRound}>
-                  <span className="truncate text-[13px] text-muted-foreground">
-                    Organized by {event.organizer.name || event.organizer.email}
-                  </span>
-                </Row>
-              )}
-
-              {event.attendees && event.attendees.length > 0 && (
-                <Row icon={Users}>
-                  <div className="flex min-w-0 flex-col gap-2">
-                    <span className="text-[13px] text-muted-foreground">
-                      {event.attendees.length} guest
-                      {event.attendees.length === 1 ? "" : "s"}
-                    </span>
-                    {event.attendees.slice(0, 8).map((attendee) => (
-                      <div key={attendee.email} className="flex min-w-0 items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarFallback className="text-[10px]">
-                            {getInitials(attendee.name || attendee.email)}
-                          </AvatarFallback>
-                        </Avatar>
+                      {(phone.label || phone.pin) && (
                         <span className="truncate text-[12px] text-muted-foreground">
-                          {attendee.name || attendee.email}
+                          {[phone.label, phone.pin && `PIN: ${phone.pin}`]
+                            .filter(Boolean)
+                            .join(" · ")}
                         </span>
-                        {attendee.response === "accepted" && (
-                          <Check className="h-3 w-3 shrink-0 text-primary" />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </Row>
-              )}
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </Row>
+            )}
 
-              {event.description && (
-                <p className="min-w-0 wrap-break-word whitespace-pre-wrap text-[13px] text-muted-foreground">
-                  {event.description.slice(0, 600)}
-                </p>
-              )}
-
-              <Row icon={CalendarDays}>
-                <span className="truncate text-[13px] text-muted-foreground">
-                  {source?.name ??
-                    event.calendarName ??
-                    accountName(event.accountId, event.accountEmail)}
+            {event.location && (
+              <Row icon={MapPin}>
+                <span className="wrap-break-word text-[13px] text-muted-foreground">
+                  {event.location}
                 </span>
               </Row>
-            </div>
+            )}
+
+            {event.organizer && (
+              <Row icon={UserRound}>
+                <span className="truncate text-[13px] text-muted-foreground">
+                  Organized by {event.organizer.name || event.organizer.email}
+                </span>
+              </Row>
+            )}
+
+            {event.attendees && event.attendees.length > 0 && (
+              <Row icon={Users}>
+                <div className="flex min-w-0 flex-col gap-2">
+                  <span className="text-[13px] text-muted-foreground">
+                    {event.attendees.length} guest
+                    {event.attendees.length === 1 ? "" : "s"}
+                  </span>
+                  {event.attendees.slice(0, 8).map((attendee) => (
+                    <div key={attendee.email} className="flex min-w-0 items-center gap-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarFallback className="text-[10px]">
+                          {getInitials(attendee.name || attendee.email)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="truncate text-[12px] text-muted-foreground">
+                        {attendee.name || attendee.email}
+                      </span>
+                      {attendee.response === "accepted" && (
+                        <Check className="h-3 w-3 shrink-0 text-primary" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </Row>
+            )}
+
+            {event.description && (
+              <p className="min-w-0 wrap-break-word whitespace-pre-wrap text-[13px] text-muted-foreground">
+                {event.description.slice(0, 600)}
+              </p>
+            )}
+
+            <Row icon={CalendarDays}>
+              <span className="truncate text-[13px] text-muted-foreground">
+                {source?.name ??
+                  event.calendarName ??
+                  accountName(event.accountId, event.accountEmail)}
+              </span>
+            </Row>
           </div>
         </div>
 

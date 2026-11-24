@@ -28,7 +28,7 @@ The address book resource, per-book visibility, `ContactsAdapter` and its Google
 - **Book visibility is an app-level restriction, never isolation.** `address_book_workspace.visible_book_ids` lists the books a workspace sees; an empty list shows nothing, and a book added later stays hidden until someone turns it on.
 - **Every read and write of an attached address book goes through `src/contacts/aggregate.ts`**, so a hidden book is invisible to the UI, the agents, MCP and workflows alike. `assertBookVisible` and `resolveAddressBookAccount` throw `NotVisibleError`, which oRPC answers with `NOT_FOUND`.
 - **An address book is shown by its name, never its email alone** (`addressBookName`): a CardDAV account by its server's name, the others as the provider label and the email.
-- **A contact without an email is allowed.** Email and Invite to event are disabled on its card; it is in the saved-contact index with an empty email, so search finds it, and the email lookups and compose suggestions skip it.
+- **A contact without an email is allowed.** Its card has no address to click and **Invite to event** is disabled; it is in the saved-contact index with an empty email, so search finds it, and the email lookups and compose suggestions skip it.
 - **Groups are list filters for Google (contact groups) and Zoho (categories) only.** Microsoft and CardDAV return no groups; the dialog's group picker appears only when the book has groups, and only Google writes it back.
 - **Google writes run one at a time per account** (`serialized` in `src/contacts/fields.ts`), as the People API asks; an update re-reads the person for its `etag` first.
 - **A CardDAV write sends the object's current ETag** (tsdav's `If-Match`), read just before the write, and keeps every vCard property it does not manage (`mergeVCard`), such as `PHOTO` and `UID`.
@@ -39,7 +39,9 @@ The address book resource, per-book visibility, `ContactsAdapter` and its Google
 
 ## How it works
 
-- **The page is one column and the card.** The address-book switcher and the **Show** menu (All contacts, the books per account, the groups of the current book) head the contact list, and **New contact** sits in the header (`contacts-column-header.tsx`, `contacts-shell.tsx`).
+- **With no contact open, the list is a full-width table; opening one narrows it to a column beside the card** (`contacts-shell.tsx`, `ContactList` → `wide`); the card's **Close contact** (wider screens) or **Back to contacts** (phones) returns to the table. The address-book switcher and the **Show** menu (All contacts, the books per account, the groups of the current book) head the list, and **New contact** is the icon button beside the filter (`contacts-column-header.tsx`, `contact-list.tsx`).
+- **On the card, the data is the control.** An email composes to it and a phone is a `tel:` link, each with a copy button; the header holds **Edit contact** and a **More actions** menu (**Invite to event**, **Download**, **Delete contact**) (`contact-card.tsx`).
+- **People avatars hash the email (or the name) over the shared palette** (`src/components/person-avatar.tsx` → `PersonAvatar`, `src/lib/palette.ts`), on contacts and on the email view's sender, so one person keeps one color.
 - **Landing.** `/w/[slug]/p` redirects to `/p/all/all` when the workspace has any address book, else shows the attach card.
 - **The `all` view lists one row per contact per visible book**, merged across accounts and sorted by display name, each row carrying its book's name; picking a book in the list's **Show** menu narrows the list to that book, a group to that group.
 - **The saved-contact index.** `savedContactIndex` lists every visible contact once per email (once with an empty email when it has none), with its book name, phones, organization and title, and caches it with the book lists (`address-book-lists:<workspace>`); any contact write and any visibility change forget both.

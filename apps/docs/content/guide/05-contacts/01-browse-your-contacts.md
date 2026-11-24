@@ -5,8 +5,8 @@ description: Open Contacts, switch between address books, filter the list and op
 
 This page shows you how to open your contacts, move between address books, find a person and read their details.
 
-<img src="/images/contacts/all-contacts.webp" alt="The Contacts section showing All contacts, with the list of contacts on the left and the New contact button at the top right" class="dark:hidden" />
-<img src="/images/contacts/all-contacts-dark.webp" alt="The Contacts section showing All contacts, with the list of contacts on the left and the New contact button at the top right" class="hidden dark:block" />
+<img src="/images/contacts/all-contacts.webp" alt="The Contacts section showing All contacts as a table with the Name, Email, Phone, Organization and Address book columns" class="dark:hidden" />
+<img src="/images/contacts/all-contacts-dark.webp" alt="The Contacts section showing All contacts as a table with the Name, Email, Phone, Organization and Address book columns" class="hidden dark:block" />
 
 ## Open Contacts
 
@@ -14,9 +14,13 @@ Click the **Contacts** icon in the left rail. It sits between **Drive** and **Wo
 
 If your workspace has address books, you see **All contacts**: the contacts from every address book in the workspace in one list, sorted by name.
 
-The top of the page shows the title (**All contacts**, or the name of the address book you picked) and, on the right, the **New contact** button. See [Create, edit and delete contacts](/guide/contacts/create-edit-and-delete). When your instance has AI turned on, the **Contacts AI** button comes after it. See [Contacts AI](/guide/contacts/contacts-ai).
+The top of the page shows the title: **All contacts**, or the name of the address book you picked. When your instance has AI turned on, the **Contacts AI** button (a robot icon) sits at the right end of the title bar. See [Contacts AI](/guide/contacts/contacts-ai).
 
-Below the title, the list column has, from top to bottom: the **Switch address book** button, the **Show** menu, the filter box and the list of contacts.
+Below the title, you find, from top to bottom:
+
+1. The **Switch address book** button and the **Show** menu. When no contact is open, they sit side by side. When a contact is open, they are stacked.
+2. The filter box, with the **New contact** button (a person with a plus) right beside it. See [Create, edit and delete contacts](/guide/contacts/create-edit-and-delete).
+3. The list of contacts.
 
 If the workspace has no address book yet, you see "No address book in this workspace" and a **Go to contacts settings** button. To add one, see [Add an address book](/guide/contacts/add-an-address-book). If the card says "No address book providers are set up yet. The instance owner adds them in the dashboard.", nobody on your instance can connect an address book yet. Ask your instance owner to add a provider.
 
@@ -39,12 +43,12 @@ The **Switch address book** button at the top of the list column shows which acc
 
 ## Choose what the list shows
 
-Use the **Show** menu, under the **Switch address book** button, to pick which contacts the list shows.
+Use the **Show** menu to pick which contacts the list shows. It is the button next to the **Switch address book** button, and it names what the list shows now, such as **All contacts**.
 
 <img src="/images/contacts/show-menu.webp" alt="The Show menu open, listing All contacts, the address books and the groups" class="dark:hidden" />
 <img src="/images/contacts/show-menu-dark.webp" alt="The Show menu open, listing All contacts, the address books and the groups" class="hidden dark:block" />
 
-1. Click **Show**.
+1. Click the **Show** menu (it shows your current choice, such as **All contacts**).
 2. Choose one of these:
    - **All contacts**, to see every contact in view.
    - An address book, to see only that address book. The title at the top of the page changes to the address book's name. The address books are listed under the heading **Books**. When the workspace has more than one account, each account has its own heading instead: the account's email address.
@@ -54,14 +58,24 @@ Use the **Show** menu, under the **Switch address book** button, to pick which c
 
 ### When no address books are showing
 
-If no address book is showing, a message appears under the **Switch address book** button instead of **Show**:
+If no address book is showing, a message appears next to the **Switch address book** button (under it when a contact is open, or on a phone) instead of **Show**:
 
 - "None of your address books are showing in this workspace yet." means you added an account to this workspace, but none of its address books are switched on. Click **Choose which address books to show** to fix it. See [Show and hide address books](/guide/contacts/show-and-hide-address-books).
 - "No address books are showing in this workspace yet." means no address book is switched on for this workspace. The **Contacts settings** link opens the workspace's contacts settings.
 
 ### On a phone
 
-On a phone, the list column fills the screen, with the **Switch address book** button and **Show** at the top. Contacts has no **Open sidebar** button.
+On a phone, the list fills the screen, with the **Switch address book** button and **Show** stacked at the top. Contacts has no **Open sidebar** button.
+
+## Read the list
+
+When no contact is open, the list fills the page as a table. The heading row shows **Name**, **Email**, **Phone** and **Organization**. In **All contacts**, a fifth column, **Address book**, shows which address book each contact is in. Each row shows the contact's picture and name, their main email address, their first phone number and their organization.
+
+When you open a contact, the list becomes a narrow column on the left, and the contact you opened is highlighted. Each row then shows the picture, the name and one more line: the email address, or else the first phone number, or else the organization. In **All contacts**, that line also ends with the name of the address book, such as "Contacts". On a phone, the list always looks like this, with no column headings.
+
+The picture is the contact's photo when your provider has one. Otherwise it is a colored circle with up to two initials, such as "AL" for Ana Lopes. A one-word name or an email address gets one letter, and a contact with neither a name nor an email address gets "?". An email address keeps the same color in Contacts and as a sender in Mail.
+
+A contact with no name shows its email address instead, or "Unnamed".
 
 ## Filter the list
 
@@ -70,37 +84,57 @@ Type in the box above the list (it says "Filter by name, email or phone"). The l
 <img src="/images/contacts/filter.webp" alt="The contact list filtered by an organization name" class="dark:hidden" />
 <img src="/images/contacts/filter-dark.webp" alt="The contact list filtered by an organization name" class="hidden dark:block" />
 
-Each row shows the contact's picture or first letter, their name, and one more line: their email address, or their first phone number, or their organization. In **All contacts**, that line also ends with the name of the address book, such as "Contacts".
-
-A contact with no name shows its email address instead, or "Unnamed".
-
 If nothing matches, you see "No contact matches that filter." An empty address book shows "No contacts here yet."
 
 To find a contact from anywhere in the workspace, you can also use [workspace search](/guide/search/search-your-workspace). When you open search while you look at one address book account, the search box already holds `addressbook:` and the account's short name, so you search only there. From **All contacts**, the box starts empty.
 
 ## Open a contact
 
-Click a contact in the list. Their card opens on the right. Until you pick one, the right side says "Pick a contact to see its details."
+Click a contact in the list. The list moves into a narrow column on the left, and the contact's card fills the rest of the page.
 
-<img src="/images/contacts/contact-card.webp" alt="A contact's card with the Email, Invite to event, Edit, Delete and Download buttons, their details and recent mail" class="dark:hidden" />
-<img src="/images/contacts/contact-card-dark.webp" alt="A contact's card with the Email, Invite to event, Edit, Delete and Download buttons, their details and recent mail" class="hidden dark:block" />
+<img src="/images/contacts/contact-card.webp" alt="A contact's card with the Edit contact and More actions buttons, their details and recent mail, beside the narrow contact list" class="dark:hidden" />
+<img src="/images/contacts/contact-card-dark.webp" alt="A contact's card with the Edit contact and More actions buttons, their details and recent mail, beside the narrow contact list" class="hidden dark:block" />
 
 The card shows:
 
-- **The name**, with their job title and organization under it, or the name of the address book.
+- **The picture and the name**, with their job title and organization under it, or else the name of the address book.
 - **Badges.** **Member** and their role, such as "Member · admin", when one of their email addresses belongs to a member of this workspace. Then the name of the address book.
-- **Buttons:**
-  - **Email** opens a new message to them.
-  - **Invite to event** opens a new event with them as a guest.
-  - **Edit** and **Delete**. See [Create, edit and delete contacts](/guide/contacts/create-edit-and-delete). They are turned off for a contact in a read-only address book.
-  - **Download** saves the contact as a `.vcf` file. The file is named after the contact's name, or its organization or email address when it has no name. Letters in any language are kept, and only characters a file name cannot hold are left out. If nothing usable is left, the file is `contact.vcf`. The file holds the contact's name, nickname, email addresses, phone numbers, addresses, organization, department, job title, birthday, websites and notes, with labels such as "work" kept. You can import it into another app.
+- **Their details**, each only when it has a value:
+  - **Email**. The main address says **Email (primary)**. A label such as "work" shows in parentheses, for example "ana@example.com (work)".
+  - **Phone**, with its label in parentheses, for example "+351 912 345 678 (cell)".
+  - **Address**, with its label in parentheses when it has one, such as **Address (home)**.
+  - **Nickname**, **Organization**, **Department**, **Job title**, **Birthday**, **Website** and **Notes**.
+  - **Address book**, which shows which account the contact belongs to.
+- **Recent mail with them** and **Upcoming events with them**, up to 5 of each. They show only when the contact has an email address. Click an item to open that message or event. When there is nothing to show, you see "No mail found." or "No upcoming events."
 
-  **Email** and **Invite to event** are turned off when the contact has no email address.
+To close the card on a computer, click **Close contact** (the X at the top right of the card). The card closes and the list fills the page again.
 
-- **Their details**, each only when it has a value: **Email** (the main one says **Email (primary)**, and a label such as "work" shows in parentheses), **Phone**, **Address**, **Nickname**, **Organization**, **Department**, **Job title**, **Birthday**, **Website** and **Notes**. **Address book** shows which account the contact belongs to.
-- **Recent mail with them** and **Upcoming events with them**, up to 5 of each.
+On a phone, the card fills the screen and the list is hidden. To go back to the list, tap the back arrow (**Back to contacts**).
 
-On a phone, the card fills the screen. Tap the back arrow (**Back to contacts**) to return to the list.
+If a contact cannot be opened, a red line under the title shows the error, or "Could not open that contact".
+
+### Write to, call or copy
+
+The email addresses and phone numbers on the card are links.
+
+- **Click an email address** to write to it. Metis Suite takes you to Mail and opens a new message to that address. When you point at the address, you see "Write to" and the address, for example "Write to ana@example.com".
+- **Click a phone number** to call it. Your device opens its calling app, if it has one. What happens depends on your device and browser. When you point at the number, you see "Call" and the number, for example "Call +351 912 345 678".
+- **Copy an address or a number** with the copy button beside it. The button shows when you point at the row. On a touch screen, it is always there. After a copy, its icon turns into a check mark for about a second and a half. If copying does not work, you see "Could not copy".
+
+The other details are plain text.
+
+### Card actions
+
+The top right of the card has these buttons:
+
+- **Edit contact** (the pencil) opens the **Edit contact** dialog. See [Create, edit and delete contacts](/guide/contacts/create-edit-and-delete).
+- **More actions** (the three dots) opens a menu with:
+  - **Invite to event**: opens Calendar, showing all calendars, with a new event that has the contact's main email address as a guest. It is turned off when the contact has no email address.
+  - **Download**: saves the contact as a `.vcf` file. The file is named after the contact's name, or its organization or email address when it has no name. Letters in any language are kept, and only characters a file name cannot hold are left out. If nothing usable is left, the file is `contact.vcf`. The file holds the contact's name, nickname, email addresses, phone numbers, addresses, organization, department, job title, birthday, websites and notes, with labels such as "work" kept. You can import it into another app.
+  - **Delete contact**: deletes the contact. See [Create, edit and delete contacts](/guide/contacts/create-edit-and-delete#delete-a-contact).
+- **Close contact** (the X) closes the card. It is not there on a phone.
+
+**Edit contact** and **Delete contact** are turned off for a contact in a read-only address book.
 
 ### How accounts are named
 

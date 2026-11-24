@@ -47,8 +47,15 @@ test("the filter narrows the list and a contact card shows its fields", async ({
   await expect(card.getByText("raj@demo.trymetis.email (work)")).toBeVisible();
   await expect(card.getByText("+351 912 345 678 (cell)")).toBeVisible();
   await expect(card.getByText("Rebrand lead · Fernhill Studio")).toBeVisible();
-  await expect(card.getByRole("button", { name: "Email", exact: true })).toBeEnabled();
+  await expect(card.getByRole("button", { name: "raj@demo.trymetis.email (work)" })).toBeEnabled();
+  await expect(card.getByRole("link", { name: "+351 912 345 678 (cell)" })).toHaveAttribute(
+    "href",
+    "tel:+351912345678",
+  );
   await expect(card.getByText("Recent mail with them")).toBeVisible();
+  await card.getByRole("button", { name: "Close contact" }).click();
+  await expect(card).toHaveCount(0);
+  await expect(contactList(page).getByRole("button", { name: /Raj Mehta/ })).toBeVisible();
 });
 
 test("Download saves the open contact as a vCard", async ({ page, account }) => {
@@ -58,7 +65,8 @@ test("Download saves the open contact as a vCard", async ({ page, account }) => 
     .click();
   const card = page.getByRole("article", { name: "Raj Mehta" });
   const download = page.waitForEvent("download");
-  await card.getByRole("button", { name: "Download", exact: true }).click();
+  await card.getByRole("button", { name: "More actions" }).click();
+  await page.getByRole("menuitem", { name: "Download", exact: true }).click();
   const file = await download;
   expect(file.suggestedFilename()).toBe("Raj Mehta.vcf");
   const text = await readFile((await file.path()) ?? "", "utf8");
@@ -66,15 +74,15 @@ test("Download saves the open contact as a vCard", async ({ page, account }) => 
   expect(text).toContain("raj@demo.trymetis.email");
 });
 
-test("a contact without an email cannot be emailed or invited", async ({ page, account }) => {
+test("a contact without an email cannot be invited", async ({ page, account }) => {
   await page.goto(workspacePath(account, "/p/all/all"));
   await contactList(page)
     .getByRole("button", { name: /Harbour Hall front desk/ })
     .click();
   const card = page.getByRole("article", { name: "Harbour Hall front desk" });
-  await expect(card.getByRole("button", { name: "Email", exact: true })).toBeDisabled();
-  await expect(card.getByRole("button", { name: "Invite to event", exact: true })).toBeDisabled();
-  await expect(card.getByRole("button", { name: "Edit", exact: true })).toBeEnabled();
+  await expect(card.getByRole("button", { name: "Edit contact", exact: true })).toBeEnabled();
+  await card.getByRole("button", { name: "More actions" }).click();
+  await expect(page.getByRole("menuitem", { name: "Invite to event", exact: true })).toBeDisabled();
 });
 
 test("picking a book in Show lists only that book", async ({ page, account }) => {

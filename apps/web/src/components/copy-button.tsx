@@ -3,6 +3,7 @@
 import { Button } from "@metis/ui/components/button";
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 export function CopyButton({
   value,
@@ -16,7 +17,12 @@ export function CopyButton({
   const [copied, setCopied] = useState(false);
 
   async function copy() {
-    await navigator.clipboard.writeText(value);
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      toast.error("Could not copy");
+      return;
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }

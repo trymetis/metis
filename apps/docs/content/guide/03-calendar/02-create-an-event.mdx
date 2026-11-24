@@ -9,12 +9,12 @@ When you save a new event, Metis Suite creates it at your calendar provider, in 
 
 Each of these opens the **New event** dialog:
 
-| Where            | What to do                                        | When the event starts                                 |
-| ---------------- | ------------------------------------------------- | ----------------------------------------------------- |
-| Sidebar          | Click **Create**.                                 | At the start of the next hour.                        |
-| Keyboard         | Press <kbd>c</kbd>, then <kbd>n</kbd>.            | At the start of the next hour.                        |
-| Day or Week view | Click an empty spot in the hour grid.             | At the quarter hour you clicked, for example 3:15 PM. |
-| Month view       | Click the empty space in a day, below its events. | At 9:00 AM on that day.                               |
+| Where            | What to do                                                                      | When the event starts                                                 |
+| ---------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Sidebar          | Click **New event** (the button with a plus sign, near the top of the sidebar). | At the start of the next hour. For example, at 2:20 PM it is 3:00 PM. |
+| Keyboard         | Press <kbd>c</kbd>, then <kbd>n</kbd>.                                          | At the start of the next hour.                                        |
+| Day or Week view | Click an empty spot in the hour grid.                                           | At the quarter hour you clicked, for example 3:15 PM.                 |
+| Month view       | Click the empty space in a day, below its events.                               | At 9:00 AM on that day.                                               |
 
 The new event lasts one hour. You can change the times in the dialog.
 
@@ -63,11 +63,15 @@ That depends on your calendar provider:
 
 The dialog shows a message under the calendar picker and stays open, so you can fix the problem and click **Save** again.
 
-| Message                                | What to do                                                   |
-| -------------------------------------- | ------------------------------------------------------------ |
-| "Give the event a title"               | Type a title.                                                |
-| "Pick a calendar to save it to"        | Choose a calendar in the picker.                             |
-| "Not a valid email: ..."               | Correct the guest addresses listed in the message.           |
-| "Duplicate email: ..."                 | Remove the guest address you entered twice.                  |
-| "The event has to end after it starts" | Move the end later, or the start earlier.                    |
-| "Could not save the event"             | Try again. Your provider may also show its own message here. |
+| Message                                                        | What to do                                         |
+| -------------------------------------------------------------- | -------------------------------------------------- |
+| "Give the event a title"                                       | Type a title.                                      |
+| "Pick a calendar to save it to"                                | Choose a calendar in the picker.                   |
+| "Not a valid email: ..."                                       | Correct the guest addresses listed in the message. |
+| "Duplicate email: ..."                                         | Remove the guest address you entered twice.        |
+| "The event has to end after it starts"                         | Move the end later, or the start earlier.          |
+| "Couldn't create that event. Try again."                       | Click **Save** again.                              |
+| "Couldn't create that event" with "too many requests just now" | Wait a moment, then click **Save** again.          |
+| "This account needs to be reconnected."                        | Reconnect the account, then click **Save** again.  |
+
+Other messages explain the problem, such as "You don't have permission to create that event."

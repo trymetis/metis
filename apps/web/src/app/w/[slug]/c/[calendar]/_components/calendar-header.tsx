@@ -52,23 +52,23 @@ export function CalendarHeader({
       <div className="flex items-center">
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-sm"
           aria-label="Previous"
           onClick={() => setDate(navigateDate(date, view, "previous"))}
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="size-4" />
         </Button>
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-sm"
           aria-label="Next"
           onClick={() => setDate(navigateDate(date, view, "next"))}
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="size-4" />
         </Button>
       </div>
 
-      <h1 className="ml-1 text-[20px] font-medium tracking-tight text-foreground">
+      <h1 className="ml-1 text-[22px] font-medium leading-tight tracking-tight text-foreground">
         {rangeLabel(view, date)}
       </h1>
 
@@ -76,11 +76,11 @@ export function CalendarHeader({
         {showAgentToggle && (
           <Button
             variant={agentOpen ? "secondary" : "ghost"}
-            size="icon"
+            size="icon-sm"
             aria-label="Calendar AI"
             onClick={onToggleAgent}
           >
-            <Bot className="h-4 w-4" />
+            <Bot className="size-4" />
           </Button>
         )}
 

@@ -67,6 +67,7 @@ import { viewerTimeZone } from "@/ai/turn";
 import { PersonMenu, SavedBadge } from "@/components/contacts/person-menu";
 import { useSaveContact } from "@/components/contacts/use-save-contact";
 import { type DrivePick, DrivePickerDialog } from "@/components/drive-picker-dialog";
+import { PersonAvatar } from "@/components/person-avatar";
 import { PickTimeDialog } from "@/components/pick-time-dialog";
 import { useScopePolicy } from "@/components/scope-policy-context";
 import { base64ToBlob, uploadToDrive } from "@/drive/upload-client";
@@ -974,9 +975,7 @@ export function EmailDetail() {
                 decorative
                 className="relative shrink-0 rounded-full hover:no-underline"
               >
-                <span className="flex h-11 w-11 items-center justify-center rounded-full border text-[15px] bg-surface border-border text-brand-text">
-                  {fromName.charAt(0).toUpperCase()}
-                </span>
+                <PersonAvatar name={fromName} email={fromEmail} className="size-11 text-[15px]" />
                 {senderMatch && <SavedBadge />}
               </PersonMenu>
               <div className="min-w-0 flex-1">

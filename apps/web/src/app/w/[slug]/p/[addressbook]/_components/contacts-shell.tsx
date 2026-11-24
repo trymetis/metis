@@ -2,7 +2,7 @@
 
 import { Button } from "@metis/ui/components/button";
 import { cn } from "@metis/ui/lib/utils";
-import { Bot, Plus } from "lucide-react";
+import { Bot } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { AgentDisabled } from "@/components/agent/agent-disabled";
@@ -19,7 +19,7 @@ import { ContactsProvider, useContacts } from "./contacts-context";
 function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAgent: () => void }) {
   const platformAi = usePlatformPolicy().ai;
   const policy = useScopePolicy();
-  const { scope, selected, selectedLoading, errors, book, bookName, setEditor } = useContacts();
+  const { scope, selected, selectedLoading, selectedError, errors, book, bookName } = useContacts();
   const hasSelection = selected !== null || selectedLoading;
 
   return (
@@ -29,18 +29,11 @@ function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAge
           <h1 className="min-w-0 truncate text-[20px] font-medium tracking-tight text-foreground">
             {book ? bookName(book) : "All contacts"}
           </h1>
-          <Button
-            size="sm"
-            className="ml-auto gap-1.5 rounded-full"
-            onClick={() => setEditor({ mode: "create" })}
-          >
-            <Plus className="h-4 w-4" />
-            New contact
-          </Button>
           {platformAi && (
             <Button
               variant={agentOpen ? "secondary" : "ghost"}
               size="icon"
+              className="ml-auto"
               aria-label="Contacts AI"
               aria-pressed={agentOpen}
               onClick={onToggleAgent}
@@ -49,6 +42,12 @@ function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAge
             </Button>
           )}
         </header>
+
+        {!hasSelection && selectedError && (
+          <div className="shrink-0 border-b border-destructive/25 bg-destructive/8 px-4 py-2 text-[12px] text-destructive-text">
+            {selectedError}
+          </div>
+        )}
 
         {errors.length > 0 && (
           <div className="shrink-0 border-b border-destructive/25 bg-destructive/8 px-4 py-2 text-[12px] text-destructive-text">
@@ -59,16 +58,20 @@ function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAge
         <div className="flex min-h-0 flex-1">
           <div
             className={cn(
-              "flex min-h-0 w-80 shrink-0 flex-col border-r border-border max-md:w-full max-md:border-r-0",
-              hasSelection && "max-md:hidden",
+              "flex min-h-0 flex-col max-md:w-full",
+              hasSelection
+                ? "w-80 shrink-0 border-r border-border max-md:hidden max-md:border-r-0"
+                : "min-w-0 flex-1",
             )}
           >
-            <ContactsColumnHeader />
-            <ContactList />
+            <ContactsColumnHeader wide={!hasSelection} />
+            <ContactList wide={!hasSelection} />
           </div>
-          <div className={cn("min-w-0 flex-1", !hasSelection && "max-md:hidden")}>
-            <ContactCard />
-          </div>
+          {hasSelection && (
+            <div className="min-w-0 flex-1">
+              <ContactCard />
+            </div>
+          )}
         </div>
       </div>
 

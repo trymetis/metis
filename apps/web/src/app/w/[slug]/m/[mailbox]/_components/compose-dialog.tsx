@@ -220,9 +220,7 @@ function ComposeHeader({ title, status }: { title: string; status?: DraftStatus 
   return (
     <div className="flex shrink-0 items-center justify-between border-b px-5 py-3 bg-panel border-border-soft">
       <span className="flex min-w-0 items-center gap-3">
-        <DialogTitle className="truncate text-[17px] font-medium leading-normal tracking-tight text-foreground">
-          {title}
-        </DialogTitle>
+        <DialogTitle className="truncate leading-normal">{title}</DialogTitle>
         {status && <DraftStatusIndicator status={status} />}
       </span>
       <Button

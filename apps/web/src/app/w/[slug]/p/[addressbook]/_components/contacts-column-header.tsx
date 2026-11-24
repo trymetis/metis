@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@metis/ui/components/select";
+import { cn } from "@metis/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { useMemo } from "react";
@@ -105,7 +106,7 @@ function BookFilter() {
   );
 }
 
-export function ContactsColumnHeader() {
+export function ContactsColumnHeader({ wide }: { wide: boolean }) {
   const scope = useWorkspaceScope();
   const { books } = useContacts();
   const attachedQuery = useQuery(rpc.workspaceAddressBooks.list.queryOptions({ input: scope }));
@@ -114,9 +115,20 @@ export function ContactsColumnHeader() {
   const mine = attached?.find((b) => b.ownedByMe) ?? null;
 
   return (
-    <div className="flex shrink-0 flex-col gap-2 border-b border-border p-3">
-      <AddressBookSwitcher books={attached} />
-      {books.length > 0 && <BookFilter />}
+    <div
+      className={cn(
+        "flex shrink-0 gap-2 border-b border-border p-3",
+        wide ? "flex-col md:flex-row md:flex-wrap md:items-center" : "flex-col",
+      )}
+    >
+      <div className={cn(wide && "md:w-72")}>
+        <AddressBookSwitcher books={attached} />
+      </div>
+      {books.length > 0 && (
+        <div className={cn(wide && "md:w-72")}>
+          <BookFilter />
+        </div>
+      )}
       {books.length === 0 && attached !== null && (
         <div className="flex flex-col items-start gap-1 px-1">
           <p className="text-[12px] text-faint">

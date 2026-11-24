@@ -12,7 +12,7 @@ Click any event in the Day, Week, Month or Schedule view to open its details.
 
 The details show, from top to bottom:
 
-- The event's color and its title. An event with no title shows "(no title)".
+- The event's color and its title, on the same row as the buttons. An event with no title shows "(no title)".
 - The date, such as "Thursday, 8 October". For an event with a set time, the start and end times follow the date. An all-day event shows only the date.
 - "Repeats", if the event is part of a repeating series.
 - The online meeting, if the event has a meeting link. The link reads "Join with" and the name of the service, such as "Join with Google Meet", "Join with Zoom" or "Join with Microsoft Teams". If Metis Suite does not know the service, it reads "Join the meeting". The link opens the meeting in a new tab.
@@ -27,7 +27,9 @@ The details show, from top to bottom:
 
 Which of these details appear depends on your calendar. Google Calendar can show all of them. Outlook Calendar shows the name of the meeting service, the dial-in numbers with their PIN, and the organizer's name, but no meeting ID or passcode. Zoho Calendar shows the meeting link, the meeting ID and the organizer's email address, but no passcode or dial-in numbers. CalDAV calendars show the meeting link, dial-in numbers and organizer's name that the event includes. When the event has no meeting link of its own, Metis Suite looks in the event's web address, location and notes. It picks up a Google Meet, Zoom, Microsoft Teams, Whereby, Webex or Zoho Meeting link that starts with "https://".
 
-The buttons at the top right are **Edit event** (pencil), **Delete event** (bin) and **Close** (X).
+The buttons at the top right are **Edit event** (pencil), **More actions** (three dots) and **Close** (X). **More actions** opens a menu with **Delete event**. While Metis Suite sends your answer to an invitation or deletes the event, **More actions** is greyed out.
+
+If an event has a lot of details, scroll inside the window to see them all.
 
 ## Edit an event
 
@@ -39,6 +41,8 @@ The buttons at the top right are **Edit event** (pencil), **Delete event** (bin)
 
 3. Change what you need. The fields are the same as when you [create an event](/guide/calendar/create-an-event), except that you cannot add a Google Meet or Teams meeting while editing.
 4. Click **Save**.
+
+If the event cannot be saved, the dialog stays open and shows a message, such as "Couldn't update that event. Try again." For the other messages, see [If the event does not save](/guide/calendar/create-an-event#if-the-event-does-not-save).
 
 To change only the time or day, you can also [drag the event](/guide/calendar/move-and-resize-events) in Day or Week view.
 
@@ -54,8 +58,8 @@ Metis Suite has no option to change or delete every occurrence at once. To chang
 ## Delete an event
 
 1. Open the event.
-2. Click **Delete event**.
-3. Metis Suite asks "Delete &lt;event title&gt;?" It names the calendar the event is removed from and says "This can't be undone."
+2. Click **More actions** (the three dots at the top right), then **Delete event**.
+3. Metis Suite asks you to confirm, for example "Delete Team lunch?" It names the calendar the event is removed from, for example "It is removed from Work. This can't be undone." If the calendar's name is not known, it says "the calendar" instead.
 
    <img src="/images/calendar/delete-event.webp" alt="The confirmation shown before an event is deleted" class="dark:hidden" />
    <img src="/images/calendar/delete-event-dark.webp" alt="The confirmation shown before an event is deleted" class="hidden dark:block" />
@@ -64,7 +68,7 @@ Metis Suite has no option to change or delete every occurrence at once. To chang
 
 When the event is deleted, the calendar refreshes and the event's details close.
 
-If the event cannot be deleted, it stays in your calendar and its details stay open. A message explains why, such as "Couldn't delete that event. Try again." If it says "This account needs to be reconnected.", reconnect the account and try again.
+If the event cannot be deleted, it stays in your calendar and its details stay open. A message explains why, such as "Couldn't delete that event. Try again." or "You don't have permission to delete that event." You can try again. If the message says there were too many requests, wait a moment and try again. If it says "This account needs to be reconnected.", reconnect the account and try again.
 
 ## Answer an invitation
 
@@ -81,4 +85,4 @@ What happens next depends on your provider:
 
 On Google Calendar and CalDAV calendars, you can answer only if your email address is on the event's guest list. If it is not, the message "You are not an attendee on this event" appears and your answer is not saved.
 
-If your answer cannot be sent, a message appears, such as "Couldn't send your reply. Try again." If it says "This account needs to be reconnected.", reconnect the account and try again.
+If your answer cannot be sent, a message appears, such as "Couldn't send your reply. Try again." You can try again. If the message says there were too many requests, wait a moment and try again. If it says "This account needs to be reconnected.", reconnect the account and try again.

@@ -28,14 +28,15 @@ export default function contactSpecs() {
     const card = page.getByRole("article", { name });
     await expect(card.getByRole("heading", { level: 1, name })).toBeVisible();
 
-    await card.getByRole("button", { name: "Edit", exact: true }).click();
+    await card.getByRole("button", { name: "Edit contact", exact: true }).click();
     const edit = page.getByRole("dialog", { name: "Edit contact" });
     await edit.getByRole("textbox", { name: "Organization" }).fill("Harbour Hall Venues");
     await edit.getByRole("button", { name: "Save", exact: true }).click();
     await expect(edit).toBeHidden();
     await expect(card.getByText("Harbour Hall Venues").first()).toBeVisible();
 
-    await card.getByRole("button", { name: "Delete", exact: true }).click();
+    await card.getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("menuitem", { name: "Delete contact", exact: true }).click();
     await page
       .getByRole("alertdialog", { name: `Delete ${name}?` })
       .getByRole("button", { name: "Delete", exact: true })

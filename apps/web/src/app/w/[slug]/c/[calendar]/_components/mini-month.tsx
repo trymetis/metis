@@ -38,21 +38,19 @@ export function MiniMonth({
         <div className="flex items-center">
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-xs"
             aria-label="Previous month"
-            className="h-6 w-6"
             onClick={() => setCursor(subMonths(cursor, 1))}
           >
-            <ChevronLeft className="h-3.5 w-3.5" />
+            <ChevronLeft className="size-3.5" />
           </Button>
           <Button
             variant="ghost"
-            size="icon"
+            size="icon-xs"
             aria-label="Next month"
-            className="h-6 w-6"
             onClick={() => setCursor(addMonths(cursor, 1))}
           >
-            <ChevronRight className="h-3.5 w-3.5" />
+            <ChevronRight className="size-3.5" />
           </Button>
         </div>
       </div>

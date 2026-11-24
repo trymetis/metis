@@ -2,13 +2,13 @@
 
 import { Button } from "@metis/ui/components/button";
 import { Checkbox } from "@metis/ui/components/checkbox";
-import { cn } from "@metis/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { startOfHour } from "date-fns";
-import { ChevronDown, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import { SidebarSection } from "@/components/sidebar-section";
 import { useWorkspaceScope } from "@/hooks/use-workspace-path";
 import { rpc } from "@/lib/orpc";
 import type { SessionCalendar, WorkspaceCalendar } from "@/server/schema";
@@ -65,69 +65,58 @@ export function CalendarSidebar() {
     >
       <CalendarSwitcher calendars={attached} />
 
-      <Button className="w-fit gap-2 rounded-full pr-5" onClick={createAtNextHour}>
-        <Plus className="h-4 w-4" />
-        Create
+      <Button className="h-10 w-full rounded-[10px] tracking-[0.2px]" onClick={createAtNextHour}>
+        <Plus strokeWidth={2.2} />
+        New event
       </Button>
 
       <MiniMonth selected={date} onSelect={setDate} />
 
       <div className="flex flex-col gap-4">
         {groups.map((group) => {
-          const isCollapsed = grouped && collapsed.has(group.accountId);
+          const rows = group.calendars.map((calendar) => (
+            <label
+              key={`${calendar.accountId}:${calendar.id}`}
+              className="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 transition-colors hover:bg-hover"
+            >
+              <Checkbox
+                checked={!hidden.has(calendar.id)}
+                onCheckedChange={() => toggleCalendar(calendar.id)}
+                aria-label={`Show ${calendar.name}`}
+                style={{
+                  backgroundColor: hidden.has(calendar.id)
+                    ? undefined
+                    : calendarColor(calendar.id, calendar.color),
+                  borderColor: calendarColor(calendar.id, calendar.color),
+                }}
+              />
+              <span className="truncate text-[13px] text-muted-foreground">{calendar.name}</span>
+            </label>
+          ));
+          if (!grouped) {
+            return (
+              <div key={group.accountId} className="space-y-px">
+                {rows}
+              </div>
+            );
+          }
           return (
-            <section key={group.accountId}>
-              {grouped && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setCollapsed((prev) => {
-                      const next = new Set(prev);
-                      if (next.has(group.accountId)) next.delete(group.accountId);
-                      else next.add(group.accountId);
-                      return next;
-                    })
-                  }
-                  className="flex w-full items-center justify-between gap-2 rounded-md px-1.5 py-1 text-left transition-colors hover:bg-hover"
-                >
-                  <span className="truncate text-[11px] text-muted-foreground">
-                    {accountName(group.accountId, group.email)}
-                  </span>
-                  <ChevronDown
-                    className={cn(
-                      "h-3.5 w-3.5 shrink-0 text-faint transition-transform",
-                      isCollapsed && "-rotate-90",
-                    )}
-                  />
-                </button>
-              )}
-
-              {!isCollapsed && (
-                <div className="mt-0.5 flex flex-col">
-                  {group.calendars.map((calendar) => (
-                    <label
-                      key={`${calendar.accountId}:${calendar.id}`}
-                      className="flex cursor-pointer items-center gap-2.5 rounded-md px-1.5 py-1.5 transition-colors hover:bg-hover"
-                    >
-                      <Checkbox
-                        checked={!hidden.has(calendar.id)}
-                        onCheckedChange={() => toggleCalendar(calendar.id)}
-                        aria-label={`Show ${calendar.name}`}
-                        style={{
-                          backgroundColor: hidden.has(calendar.id)
-                            ? undefined
-                            : calendarColor(calendar.id, calendar.color),
-                          borderColor: calendarColor(calendar.id, calendar.color),
-                        }}
-                      />
-                      <span className="truncate text-[13px] text-muted-foreground">
-                        {calendar.name}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </section>
+            <SidebarSection
+              key={group.accountId}
+              label={accountName(group.accountId, group.email)}
+              className="mb-0 px-0"
+              collapsed={collapsed.has(group.accountId)}
+              onToggle={() =>
+                setCollapsed((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(group.accountId)) next.delete(group.accountId);
+                  else next.add(group.accountId);
+                  return next;
+                })
+              }
+            >
+              {rows}
+            </SidebarSection>
           );
         })}
 

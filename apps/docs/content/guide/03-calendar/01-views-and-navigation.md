@@ -92,7 +92,10 @@ Schedule lists your events day by day. Each row shows the time, a colored dot, t
 
 ### How events look
 
-- Each calendar has its own color. Metis Suite uses the color your provider gives the calendar. If there is none, it picks one.
+- Each calendar has its own color. You see it on the calendar's checkbox in the sidebar, on its events in Day, Week and Month views and the **All day** row, on the dots in Schedule view, and on the square beside the title in an event's details.
+- Metis Suite uses the color your provider gives the calendar. If there is none, it picks one of eight colors. These are the same colors Mail uses to mark each mailbox in the [**Switch mailbox**](/guide/mail/read-your-mail#switch-mailbox) menu.
+- A picked color stays the same for that calendar everywhere: in every view, browser and workspace, and for everyone who sees it. Because there are only eight colors, two calendars can have the same one.
+- You cannot change a calendar's color in Metis Suite.
 - Events that are already over look faded.
 - Cancelled events are crossed out.
 

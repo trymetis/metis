@@ -89,6 +89,7 @@ See also [AGENTS.md](../AGENTS.md), [shortcuts.md](shortcuts.md), [desktop.md](d
 ### Shells and the source link
 
 - **`MailShell` is the mail surface's chrome, and only `m/[mailbox]/layout.tsx` mounts it.** It holds the folder sidebar, the resizable folders / main / agent panels, the compose dialog, message drag-and-drop, and the mail chords and help. The workflow builder, the assistant, calendar and drive bring their own shells.
+- **Surface sidebars head their groups with `SidebarSection`** (`src/components/sidebar-section.tsx`): mail's Mailboxes and calendar's account groups, which pass `onToggle` to collapse.
 - **The rail starts with a gear that opens workspace settings; the workspaces are the tiles lower on the rail** (`WorkspaceRailSwitcher`).
 - **Every settings page is listed once, in `src/components/settings-nav.ts`.** Both settings sidebars, the rail's account menu and the search dialog's settings entries read it.
   - Workspace page slugs live apart in `src/workspace/settings-pages.ts` → `WORKSPACE_SETTINGS_PAGES`, the `page` type of `workspaceSettingsPath`; `NAV_COVERS_EVERY_PAGE` fails the build while a slug has no nav entry.

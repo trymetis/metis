@@ -24,6 +24,12 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 - Mail shortcuts do nothing while the composer is open, so a key pressed while writing can no longer move to another message, archive it or delete it.
 - **Undo** after sending brings back the whole message: Cc, Bcc, attachments, the mailbox it was sent from and, for a reply, its place in the conversation.
 - Replies sent from Outlook mailboxes land in the conversation they answer instead of going out as new messages, and a reply saved as a draft is stored in Outlook as a reply.
+- In Calendar, the sidebar button that adds an event is **New event**, shaped like **Compose** in Mail.
+- An event's details show its title on one row with **Edit event**, **More actions** and **Close**. **Delete event** is in the **More actions** menu.
+- A calendar without a color from its provider picks from the same colors as mailboxes, so its color may change once.
+- In Contacts, the list fills the page as a table (name, email, phone, organization, address book) until you open a contact, and **Close contact** returns to it. **New contact** is the button beside the filter.
+- On a contact, click an email address to write to it or a phone number to call it, and copy either with the button beside it. **Edit contact** sits at the top, with **Invite to event**, **Download** and **Delete contact** under **More actions**.
+- Contacts and email senders show two initials on a color picked from their address, so the same person has the same color everywhere.
 
 ## Releases
 
