@@ -61,7 +61,7 @@ export function rpcFor(request: APIRequestContext, record?: (entry: RecordedRequ
     const body = rpcBodySchema.parse(await res.json());
     if (!res.ok()) {
       const error = rpcErrorSchema.safeParse(body.json).data;
-      throw new RpcError(res.status(), error?.code ?? "", error?.message ?? "");
+      throw new RpcError(res.status(), error?.code ?? "", error?.message ?? "", error?.data);
     }
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- black-box client: the calling test names the response shape it expects and asserts on the values
     return body.json as T;

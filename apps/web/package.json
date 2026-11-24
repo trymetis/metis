@@ -101,6 +101,7 @@
     "css-tree": "^3.2.1",
     "date-fns": "^4.4.0",
     "defu": "^6.1.7",
+    "dexie": "^4.4.7",
     "domhandler": "^6.0.1",
     "drizzle-orm": "^0.45.4",
     "entities": "catalog:",

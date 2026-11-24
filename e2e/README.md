@@ -112,7 +112,7 @@ The `updater` stand-in (`fakes/updater.go`) is a fake updater: it serves the rea
 - `POST http://localhost:8090/updater/reset` restores them; a JSON body overrides any of `current`, `releases`, `notes`, `rollback`, `snapshots`, `stepMs` and `outcome`, which decides how the next upgrade ends (`succeed`, `preflight-fails` (switched back with snapshots, never installed without), `never-ready` (switched back) or `restore-fails` (needs attention)) and then returns to `succeed`; an undo always succeeds. `minCli` maps a release to the server CLI version it needs, and an upgrade to a listed release is refused with the updater's self-update message (no `minCli` by default). Reset also brings the socket back up.
 - `POST /updater/hold` leaves an upgrade running that never advances, so a second request is refused; `POST /updater/down` and `/updater/up` remove and recreate the socket; `GET /updater/state` returns everything.
 
-Both suites drive it through `clients/updater.ts` and reset it before every test. `tests/write/updates.spec.ts` covers what the Updates page shows; `api/system/updates.test.ts` covers the updater's refusals as oRPC errors. Each upgrade or undo costs one TOTP code and `instance-update` allows 10 per user per 5 minutes, so the API test's coded calls go through `withTotp`, which waits out the limit.
+Both suites drive it through `clients/updater.ts` and reset it before every test. `tests/write/updates.spec.ts` covers what the Updates page shows; `api/system/updates.test.ts` covers the updater's refusals as oRPC errors. Each upgrade or undo costs one TOTP code and `instance-update` allows 10 per user per 5 minutes, so the coded calls go through `withTotp` (`clients/totp.ts`), which waits out the limit.
 
 ## Cloudflare gateway
 

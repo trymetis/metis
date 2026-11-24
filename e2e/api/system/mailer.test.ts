@@ -4,8 +4,9 @@ import { ImapFlow } from "imapflow";
 import { expect, test } from "vitest";
 import { z } from "zod";
 
-import { HARNESS, harness } from "../../clients/harness";
+import { HARNESS } from "../../clients/harness";
 import type { Rpc } from "../../clients/rpc";
+import { withTotp } from "../../clients/totp";
 import { allOk, checkDriver, setSection } from "../support/config";
 import { uniqueName, until } from "../support/poll";
 import { ana } from "../support/session";
@@ -142,10 +143,12 @@ test(
         const { driver } = await rpc<{ driver: string }>("dashboard.system.mail");
         if (driver !== "console") await setSection(rpc, "mailer", consoleDriver);
       } finally {
-        await rpc("workspaces.delete", {
-          workspaceSlug: workspace.slug,
-          code: await harness.totp(),
-        });
+        await withTotp((code) =>
+          rpc("workspaces.delete", {
+            workspaceSlug: workspace.slug,
+            code,
+          }),
+        );
       }
     }
   },

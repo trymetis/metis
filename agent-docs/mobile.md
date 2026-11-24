@@ -41,6 +41,9 @@ See also [AGENTS.md](../AGENTS.md), [desktop.md](desktop.md), [downloads.md](dow
 - **Sign-out, server change and reset call `clearStorageData()`, so they work with the server unreachable**, as on the desktop.
   - iOS: all WKWebView website data and `HTTPCookieStorage`.
   - Android: `CookieManager.removeAllCookies`, `WebStorage` and the WebView HTTP cache.
+- **"Clear cache" (`clearCache()`) keeps the user signed in** and clears the web's shell cache ([orpc.md](orpc.md)) and drive previews with the HTTP cache.
+  - iOS: the disk and memory caches, IndexedDB and file-system data of the WKWebView store.
+  - Android: `WebStorage.deleteAllData()` and the WebView HTTP cache; Android has no narrower call, so local storage (remembered layouts, recent searches) goes too.
 - **`react-native-url-polyfill/auto` loads before any route**, because every origin comparison here is a security check and React Native's built-in `URL` is not WHATWG: it parses with regexes, returns an empty `hostname` / `origin` for `metis-suite://auth?…`, and never throws on garbage.
 - **Only `isTopFrame === false` counts as a subframe** (`useServerRequests`), because react-native-webview's Android event leaves `isTopFrame` out; treating a missing value as a subframe would let every Android navigation through.
 - **Only server-origin load failures reach the offline or sign-in screens.** A main-frame load that fails on another origin (a download redirect) shows an alert.

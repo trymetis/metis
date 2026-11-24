@@ -18,6 +18,7 @@ import { Loader2, Monitor } from "lucide-react";
 import { useState } from "react";
 
 import { authClient } from "@/auth/client";
+import { clearLocalData } from "@/auth/local-data";
 import { describeUserAgent } from "@/auth/user-agent";
 import { TwoFactorInput } from "@/components/two-factor-input";
 import { useTwoFactorCode } from "@/hooks/use-two-factor-code";
@@ -83,6 +84,7 @@ export function SessionsSection() {
     setRevokeOpen(false);
     code.reset();
     if (includeCurrent) {
+      await clearLocalData();
       window.location.href = "/";
       return;
     }

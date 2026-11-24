@@ -2,6 +2,7 @@ import { startAuthorization } from "@modelcontextprotocol/client";
 import type { Page } from "@playwright/test";
 import { z } from "zod";
 
+import { withTotp } from "../../clients/totp";
 import { enterCode } from "../auth";
 import { entry } from "../drive";
 import { type Rpc, uniqueName } from "../fixtures";
@@ -187,11 +188,13 @@ export default function mcpSpecs() {
       await expect(rpc("mcp.setEnabled", { clientId, enabled: true })).rejects.toMatchObject({
         status: 400,
       });
-      await rpc("mcp.setEnabled", {
-        clientId,
-        enabled: true,
-        code: await harness.totp(),
-      });
+      await withTotp((code) =>
+        rpc("mcp.setEnabled", {
+          clientId,
+          enabled: true,
+          code,
+        }),
+      );
       expect((await callStatus(tokens.access_token)).status).toBe(200);
     });
 
@@ -314,17 +317,21 @@ export default function mcpSpecs() {
         await rpc("mcp.setHiddenWorkspaces", { clientId, workspaceIds: [] });
         expect(await workspaceIdOf(token, created.slug)).toBe(created.workspaceId);
 
-        await rpc("workspaces.setPolicy", {
-          workspaceSlug: created.slug,
-          aiPolicy: "off",
-          code: await harness.totp(),
-        });
+        await withTotp((code) =>
+          rpc("workspaces.setPolicy", {
+            workspaceSlug: created.slug,
+            aiPolicy: "off",
+            code,
+          }),
+        );
         expect(await workspaceIdOf(token, created.slug)).toBeUndefined();
       } finally {
-        await rpc("workspaces.delete", {
-          workspaceSlug: created.slug,
-          code: await harness.totp(),
-        });
+        await withTotp((code) =>
+          rpc("workspaces.delete", {
+            workspaceSlug: created.slug,
+            code,
+          }),
+        );
       }
     });
 

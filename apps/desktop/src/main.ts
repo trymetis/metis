@@ -747,7 +747,9 @@ function registerIpc() {
 
   ipcMain.handle("metis:clear-cache", async (event) => {
     if (!fromLocalPage(event)) return false;
-    await appSession().clearCache();
+    const session = appSession();
+    await session.clearCache();
+    await session.clearStorageData({ storages: ["indexdb", "filesystem"] });
     return true;
   });
 

@@ -3,7 +3,7 @@ import { sentInviteLink } from "@metis/e2e/lib/invites";
 
 import { HARNESS } from "../../clients/harness";
 import type { Rpc } from "../../clients/rpc";
-import { withTotp } from "./config";
+import { withTotp } from "../../clients/totp";
 
 export interface EmailedInvite {
   id: string;

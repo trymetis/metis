@@ -17,7 +17,12 @@ public class MetisShellModule: Module {
     }.runOnQueue(.main)
 
     AsyncFunction("clearCache") { (promise: Promise) in
-      let types: Set<String> = [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache]
+      let types: Set<String> = [
+        WKWebsiteDataTypeDiskCache,
+        WKWebsiteDataTypeMemoryCache,
+        WKWebsiteDataTypeIndexedDBDatabases,
+        WKWebsiteDataTypeFileSystem,
+      ]
       WKWebsiteDataStore.default().removeData(ofTypes: types, modifiedSince: .distantPast) {
         URLCache.shared.removeAllCachedResponses()
         promise.resolve()

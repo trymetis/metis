@@ -8,6 +8,7 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 ### Changed
 
+- **Clear cache** in Settings also resets light or dark mode, layouts, views, hidden calendars and recent searches. You stay signed in.
 - The app's own screens use Inter and JetBrains Mono instead of DM Sans and DM Mono.
 
 ## Releases

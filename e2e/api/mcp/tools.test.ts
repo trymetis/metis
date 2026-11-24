@@ -4,9 +4,10 @@ import { appendFixture, deleteFixture } from "@metis/e2e/lib/fixture-mail";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { z } from "zod";
 
-import { type Account, harness } from "../../clients/harness";
+import type { Account } from "../../clients/harness";
 import { type Rpc, rpcWithCookie } from "../../clients/rpc";
 import { signIn } from "../../clients/sign-in";
+import { withTotp } from "../../clients/totp";
 import { TOOL_GROUPS, type ToolGroup } from "../../lib/mcp-clients";
 import { anchorMessageId } from "../../seed/mailbox/anchors";
 import { inviteToWorkspace } from "../support/invites";
@@ -2588,10 +2589,8 @@ afterAll(async () => {
     await seeded?.rpc("dashboard.invites.revoke", { inviteId: signupInvite.inviteId });
   }
   if (!seeded?.temp) return;
-  await seeded.rpc("workspaces.delete", {
-    workspaceSlug: seeded.temp.slug,
-    code: await harness.totp(),
-  });
+  const { rpc, temp } = seeded;
+  await withTotp((code) => rpc("workspaces.delete", { workspaceSlug: temp.slug, code }));
 });
 
 test("every listed tool has exactly one case", async () => {

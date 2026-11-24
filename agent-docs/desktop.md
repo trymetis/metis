@@ -109,6 +109,7 @@ See also [AGENTS.md](../AGENTS.md), [mobile.md](mobile.md), [auth.md](auth.md), 
   - sets `build.electronFuses` to turn off `runAsNode`, `enableNodeOptionsEnvironmentVariable` and `enableNodeCliInspectArguments`, and to turn on `enableCookieEncryption`, so the session cookie on disk is sealed with the OS keychain.
 - **The step log records page loads by origin and path only** (`urlPath`), so codes, states, verifiers and cookies never reach it.
 - **Sign-out is best effort**: the shell clears its own cookies even when the server is unreachable.
+- **"Clear cache" keeps the user signed in.** `metis:clear-cache` clears the HTTP cache and the partition's `indexdb` and `filesystem` storage, which hold the web's shell cache ([orpc.md](orpc.md)) and drive previews; cookies and local storage stay.
 - **On Ubuntu 24.04+ Electron's sandbox needs the AppArmor profile the `.deb` installs** (electron-builder's built-in `after-install.tpl`). The kernel there restricts unprivileged user namespaces unless a profile allows them ([downloads.md](downloads.md)).
 - **`desktopName` + `linux.syncDesktopName` keep Electron's Wayland `app_id`, the `.desktop` file name and `StartupWMClass` identical**, so the dock links the window to the entry.
 

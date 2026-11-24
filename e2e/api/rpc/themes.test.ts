@@ -1,7 +1,7 @@
 import { afterAll, expect, test } from "vitest";
 
 import { type Rpc, RpcError } from "../../clients/rpc";
-import { withTotp } from "../support/config";
+import { withTotp } from "../../clients/totp";
 import { uniqueName } from "../support/poll";
 import { ana, scope } from "../support/session";
 

@@ -1,6 +1,7 @@
 import { env } from "@metis/e2e/lib/env";
 import type { Page } from "@playwright/test";
 
+import { withTotp } from "../../clients/totp";
 import { enterCode } from "../auth";
 import { expect, type Rpc, test, uniqueName } from "../fixtures";
 import { harness } from "../harness";
@@ -147,11 +148,13 @@ export default function memberSpecs() {
     const ws = { workspaceSlug: created.slug };
     try {
       await joinByInvite(rpc, second.page, created.slug, user);
-      await rpc("workspaces.transferOwnership", {
-        ...ws,
-        memberId: await memberId(rpc, created.slug, user.email),
-        code: await harness.totp(),
-      });
+      await withTotp(async (code) =>
+        rpc("workspaces.transferOwnership", {
+          ...ws,
+          memberId: await memberId(rpc, created.slug, user.email),
+          code,
+        }),
+      );
       const roleOf = async (who: Rpc) =>
         (
           await who<{ workspaces: { slug: string; role: string }[] }>("workspaces.list")
@@ -166,7 +169,7 @@ export default function memberSpecs() {
       });
       expect(await roleOf(rpc)).toBe("owner");
     } finally {
-      await rpc("workspaces.delete", { ...ws, code: await harness.totp() });
+      await withTotp((code) => rpc("workspaces.delete", { ...ws, code }));
       await second.context.close();
     }
   });
@@ -224,7 +227,7 @@ export default function memberSpecs() {
         await expect(list.getByText(user.email, { exact: false })).toHaveCount(0);
       });
     } finally {
-      await rpc("workspaces.delete", { ...ws, code: await harness.totp() });
+      await withTotp((code) => rpc("workspaces.delete", { ...ws, code }));
       await second.context.close();
     }
   });

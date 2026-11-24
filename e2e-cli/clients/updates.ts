@@ -1,4 +1,5 @@
 import type { Rpc } from "@metis/e2e/clients/rpc";
+import { withTotp } from "@metis/e2e/clients/totp";
 import { z } from "zod";
 
 const upgradeSchema = z.object({
@@ -41,11 +42,7 @@ export async function settled(rpc: Rpc, timeoutMs = UPGRADE_TIMEOUT): Promise<Up
   throw new Error(`[updates] still running after ${timeoutMs} ms: ${JSON.stringify(last)}`);
 }
 
-export async function backTo(
-  rpc: Rpc,
-  version: string,
-  code: () => Promise<string>,
-): Promise<void> {
+export async function backTo(rpc: Rpc, version: string): Promise<void> {
   const status = await settled(rpc);
   if (status.currentVersion === version) return;
   if (status.rollbackVersion !== version) {
@@ -53,7 +50,7 @@ export async function backTo(
       `[updates] ${status.currentVersion ?? "nothing"} runs and undo goes to ${status.rollbackVersion ?? "nothing"}, not ${version}`,
     );
   }
-  await rpc("dashboard.system.rollback", { code: await code() });
+  await withTotp((code) => rpc("dashboard.system.rollback", { code }));
   const after = await settled(rpc);
   if (after.currentVersion !== version) {
     throw new Error(`[updates] the undo left ${after.currentVersion ?? "nothing"} running`);

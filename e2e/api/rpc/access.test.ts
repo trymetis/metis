@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
 
-import { harness } from "../../clients/harness";
 import { type Rpc, RpcError, rpcWithCookie } from "../../clients/rpc";
 import { signIn } from "../../clients/sign-in";
+import { withTotp } from "../../clients/totp";
 import { inviteToWorkspace } from "../support/invites";
 import { uniqueName } from "../support/poll";
 import { ana, totpCode } from "../support/session";
@@ -35,7 +35,7 @@ async function withWorkspace<T>(rpc: Rpc, run: (workspaceSlug: string) => Promis
   try {
     return await run(created.slug);
   } finally {
-    await rpc("workspaces.delete", { workspaceSlug: created.slug, code: await harness.totp() });
+    await withTotp((code) => rpc("workspaces.delete", { workspaceSlug: created.slug, code }));
   }
 }
 

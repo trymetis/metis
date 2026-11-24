@@ -6,9 +6,9 @@ import { useState } from "react";
 import { z } from "zod";
 
 import { signOut } from "@/auth/client";
+import { clearLocalData } from "@/auth/local-data";
 import { nativeAuthLink, nativeReturnPath } from "@/auth/native-link";
 import { NativeCard } from "@/components/native-card";
-import { clearPreviewCache } from "@/drive/preview-cache";
 import { route } from "@/lib/route";
 
 const codeResponseSchema = z.object({
@@ -53,7 +53,7 @@ export function NativeLoginConfirm({
 
   async function handleSwitchAccount() {
     setSubmitting(true);
-    await clearPreviewCache();
+    await clearLocalData();
     await signOut();
     window.location.reload();
   }

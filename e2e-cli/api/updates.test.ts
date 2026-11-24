@@ -1,6 +1,5 @@
-import { withTotp } from "@metis/e2e/api/support/config";
-import { harness } from "@metis/e2e/clients/harness";
 import { type Rpc, RpcError } from "@metis/e2e/clients/rpc";
+import { withTotp } from "@metis/e2e/clients/totp";
 import { afterAll, expect, test } from "vitest";
 
 import { ana } from "../cli/support/session";
@@ -37,14 +36,14 @@ async function unchanged(rpc: Rpc) {
 
 afterAll(async () => {
   const { rpc } = await ana();
-  await backTo(rpc, r.current, () => harness.totp());
-}, UPGRADE_TIMEOUT);
+  await backTo(rpc, r.current);
+}, 12 * 60_000);
 
 test("an upgrade that is not a release version fails input validation", async () => {
   const { rpc } = await ana();
   const before = await unchanged(rpc);
   await refused(
-    async () => rpc("dashboard.system.upgrade", { version: "latest", code: await harness.totp() }),
+    () => withTotp((code) => rpc("dashboard.system.upgrade", { version: "latest", code })),
     "BAD_REQUEST",
     "Input validation failed",
   );

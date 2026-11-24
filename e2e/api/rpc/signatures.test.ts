@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
 
-import { harness } from "../../clients/harness";
 import { type Rpc, RpcError, rpcWithCookie } from "../../clients/rpc";
 import { signIn } from "../../clients/sign-in";
+import { withTotp } from "../../clients/totp";
 import { inviteToWorkspace } from "../support/invites";
 import { uniqueName } from "../support/poll";
 import { ana, totpCode } from "../support/session";
@@ -86,7 +86,7 @@ async function withWorkspace(rpc: Rpc, run: (fresh: Fresh) => Promise<void>): Pr
     await run({ ws, box, email: imap.email });
   } finally {
     if (box) await clearMailboxSignatures(rpc, box);
-    await rpc("workspaces.delete", { ...ws, code: await harness.totp() });
+    await withTotp((code) => rpc("workspaces.delete", { ...ws, code }));
   }
 }
 

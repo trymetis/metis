@@ -17,10 +17,10 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { authClient, useSession } from "@/auth/client";
+import { clearLocalData } from "@/auth/local-data";
 import { useConnectServers } from "@/components/connect-servers-context";
 import { providerNames, serverProviders, serversForResource } from "@/components/provider-meta";
 import { TwoFactorInput } from "@/components/two-factor-input";
-import { clearPreviewCache } from "@/drive/preview-cache";
 import { useTwoFactorCode } from "@/hooks/use-two-factor-code";
 import { orpc } from "@/lib/orpc";
 
@@ -60,7 +60,7 @@ export function DeleteAccountSection() {
     setError(null);
     try {
       await orpc.user.deleteAccount({ email: typed.trim(), code: code.value });
-      await clearPreviewCache();
+      await clearLocalData();
       await authClient.signOut().catch(() => {});
       window.location.href = "/";
     } catch (err) {

@@ -15,6 +15,7 @@ import { getWorkspacePolicy } from "@/workspace";
 import { workspaceRootPath } from "@/workspace/path";
 import { workspaceAllowsAi } from "@/workspace/policy";
 
+import { ShellCache } from "./_components/shell-cache";
 import { WorkspaceBrand } from "./_components/workspace-brand";
 
 export default async function WorkspaceLayout({ children, params }: LayoutProps<"/w/[slug]">) {
@@ -28,9 +29,11 @@ export default async function WorkspaceLayout({ children, params }: LayoutProps<
   const policy = await getWorkspacePolicy(membership.id);
   const hasDashboard =
     (await instanceRoleOf({ id: appUser.userId, email: appUser.user.email })) !== null;
+  const source = sourceInfo();
 
   return (
     <WorkspaceScopeProvider workspaceSlug={slug}>
+      <ShellCache userId={appUser.userId} version={source.version} />
       <WorkspaceBrand theme={membership.theme} />
       <WorkspaceAccessProvider
         access={{
@@ -43,7 +46,7 @@ export default async function WorkspaceLayout({ children, params }: LayoutProps<
         <ConnectServersProvider servers={connectServers()}>
           <MobileAsideProvider>
             <div className="flex h-dvh overflow-hidden bg-background text-foreground">
-              <AppRail user={appUser.user} hasDashboard={hasDashboard} source={sourceInfo()} />
+              <AppRail user={appUser.user} hasDashboard={hasDashboard} source={source} />
               <div className="flex min-w-0 flex-1 overflow-hidden">{children}</div>
             </div>
             <WorkspaceSearch />

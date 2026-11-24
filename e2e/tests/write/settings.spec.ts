@@ -1,6 +1,7 @@
 import { env } from "@metis/e2e/lib/env";
 import type { Page } from "@playwright/test";
 
+import { withTotp } from "../../clients/totp";
 import { enterCode, signIn } from "../auth";
 import { expect, test, uniqueName } from "../fixtures";
 import { type Account, APP, calendarPath, harness, SIGNED_OUT, workspacePath } from "../harness";
@@ -118,10 +119,12 @@ export default function settingsSpecs() {
       await expect(blue).toHaveAttribute("aria-pressed", "true");
       expect((await toBlue).ok()).toBe(true);
     } finally {
-      await rpc("workspaces.delete", {
-        workspaceSlug: created?.slug,
-        code: await harness.totp(),
-      });
+      await withTotp((code) =>
+        rpc("workspaces.delete", {
+          workspaceSlug: created?.slug,
+          code,
+        }),
+      );
     }
   });
 

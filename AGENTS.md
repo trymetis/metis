@@ -75,7 +75,7 @@
 
 ## 6. Tests
 
-- **E2E treats the app as a black box**: public HTTP API and UI only, plus the `metis` binary in the CLI suite, generic clients, no app imports ([e2e.md](agent-docs/e2e.md), [e2e-cli.md](agent-docs/e2e-cli.md)).
+- **E2E treats the app as a black box: a test does only what a user or operator can do**, through the UI, the browser (DevTools included: storage, IndexedDB, console), the public HTTP API and the `metis` binary in the CLI suite, with generic clients and no app imports ([e2e.md](agent-docs/e2e.md), [e2e-cli.md](agent-docs/e2e-cli.md)).
 - **A change to anything in a recorded LLM or decision request (agent instructions, resident tools, prompts) needs `bun run generate:record` in `e2e/`.**
 
 ## 7. Domain docs
@@ -83,7 +83,7 @@
 | Doc                                                   | Domain                                                                                                                                                       |
 | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [configuration.md](agent-docs/configuration.md)       | boot config, the stored instance config and its snapshot, environment variables, the config file, driver notes                                               |
-| [orpc.md](agent-docs/orpc.md)                         | where oRPC procedures live, guards, errors, per-namespace rules                                                                                              |
+| [orpc.md](agent-docs/orpc.md)                         | where oRPC procedures live, guards, errors, per-namespace rules, the shell cache                                                                             |
 | [auth.md](agent-docs/auth.md)                         | the owner account, invites, sign-in, 2FA, rate limiting, regenerating the Better Auth schema                                                                 |
 | [audit.md](agent-docs/audit.md)                       | the audit log: recorded events, who reads which slice, retention, what it may be claimed to prove                                                            |
 | [connections.md](agent-docs/connections.md)           | the grant, encryption at rest, connecting, scopes, `connectServers`, quarantine, token refresh, revoke                                                       |

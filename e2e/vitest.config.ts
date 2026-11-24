@@ -11,7 +11,7 @@ export default defineConfig({
     projects: [
       {
         extends: true,
-        test: { name: "mcp", include: ["api/mcp/**/*.test.ts"] },
+        test: { name: "mcp", include: ["api/mcp/**/*.test.ts"], hookTimeout: 12 * 60_000 },
       },
       {
         extends: true,

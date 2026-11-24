@@ -37,8 +37,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { signOut } from "@/auth/client";
+import { clearLocalData } from "@/auth/local-data";
 import { isNativeUserAgent, NATIVE_SETTINGS_PATH } from "@/auth/native-link";
-import { clearPreviewCache } from "@/drive/preview-cache";
 import { useHydrated } from "@/hooks/use-stored-item";
 import { useWorkspacePath, useWorkspaceSlug } from "@/hooks/use-workspace-path";
 import { getInitials } from "@/lib/utils";
@@ -69,7 +69,7 @@ interface AppRailProps {
 }
 
 async function handleSignOut() {
-  await clearPreviewCache();
+  await clearLocalData();
   await signOut({
     fetchOptions: {
       onSuccess: () => {

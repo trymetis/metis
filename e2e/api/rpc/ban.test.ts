@@ -3,7 +3,7 @@ import { expect, test } from "vitest";
 import { jsonRpc, modernBody, modernHeaders, postMcp } from "../../clients/mcp";
 import { type Rpc, RpcError, rpcWithCookie } from "../../clients/rpc";
 import { signIn } from "../../clients/sign-in";
-import { withTotp } from "../support/config";
+import { withTotp } from "../../clients/totp";
 import { inviteAccount } from "../support/invites";
 import { McpSession, memberToken } from "../support/mcp";
 import { uniqueName, until } from "../support/poll";

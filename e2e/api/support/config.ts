@@ -1,8 +1,7 @@
 import { expect } from "vitest";
-import { z } from "zod";
 
-import { harness } from "../../clients/harness";
-import { type Rpc, RpcError } from "../../clients/rpc";
+import type { Rpc } from "../../clients/rpc";
+import { withTotp } from "../../clients/totp";
 
 type Values = Record<string, unknown>;
 
@@ -42,25 +41,6 @@ export interface Saved {
   saved: boolean;
   version: number;
   check: { results: CheckResult[] } | null;
-}
-
-const MAX_WAIT_SEC = 300;
-const TOTP_LIMITED = "Too many attempts. Please slow down.";
-
-export async function withTotp<T>(run: (code: string) => Promise<T>): Promise<T> {
-  for (;;) {
-    try {
-      return await run(await harness.totp());
-    } catch (err) {
-      if (!(err instanceof RpcError) || err.status !== 429 || err.message !== TOTP_LIMITED) {
-        throw err;
-      }
-      const wait = z.object({ retryAfterSec: z.number() }).safeParse(err.data).data?.retryAfterSec;
-      await new Promise((resolve) =>
-        setTimeout(resolve, Math.min(wait ?? 60, MAX_WAIT_SEC) * 1000 + 1000),
-      );
-    }
-  }
 }
 
 export function sectionForm(rpc: Rpc, section: string): Promise<ConfigForm> {

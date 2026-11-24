@@ -1,9 +1,10 @@
 import { expect, test } from "vitest";
 
-import { APP, harness } from "../../clients/harness";
+import { APP } from "../../clients/harness";
 import { type Rpc, RpcError, rpcWithCookie } from "../../clients/rpc";
 import { signIn } from "../../clients/sign-in";
-import { setSection, withTotp } from "../support/config";
+import { withTotp } from "../../clients/totp";
+import { setSection } from "../support/config";
 import { emailedInvite, inviteToWorkspace } from "../support/invites";
 import { uniqueName } from "../support/poll";
 import { ana, totpCode } from "../support/session";
@@ -48,7 +49,7 @@ async function withWorkspace<T>(rpc: Rpc, run: (workspaceSlug: string) => Promis
   try {
     return await run(created.slug);
   } finally {
-    await rpc("workspaces.delete", { workspaceSlug: created.slug, code: await harness.totp() });
+    await withTotp((code) => rpc("workspaces.delete", { workspaceSlug: created.slug, code }));
   }
 }
 
@@ -169,12 +170,14 @@ test("with invite-only sign-up, only the instance owner or an admin can invite a
       "workspaces.listMembers",
       { workspaceSlug },
     );
-    await rpc("workspaces.updateMemberRole", {
-      workspaceSlug,
-      memberId: members.find((m) => m.email === account.member.email)?.memberId,
-      role: "admin",
-      code: await harness.totp(),
-    });
+    await withTotp((code) =>
+      rpc("workspaces.updateMemberRole", {
+        workspaceSlug,
+        memberId: members.find((m) => m.email === account.member.email)?.memberId,
+        role: "admin",
+        code,
+      }),
+    );
 
     const refused = await rejection(
       cy.rpc("workspaces.createInvite", {
@@ -276,12 +279,14 @@ test("a workspace invite to a new address stops working once its sender loses th
       "workspaces.listMembers",
       { workspaceSlug },
     );
-    await rpc("workspaces.updateMemberRole", {
-      workspaceSlug,
-      memberId: members.find((m) => m.email === account.member.email)?.memberId,
-      role: "admin",
-      code: await harness.totp(),
-    });
+    await withTotp((code) =>
+      rpc("workspaces.updateMemberRole", {
+        workspaceSlug,
+        memberId: members.find((m) => m.email === account.member.email)?.memberId,
+        role: "admin",
+        code,
+      }),
+    );
 
     await setRole(rpc, cy.userId, "admin");
     let token: string;

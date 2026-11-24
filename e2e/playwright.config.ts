@@ -37,6 +37,7 @@ export default defineConfig({
       name: "write",
       testMatch: /write\/order\.list\.ts/,
       dependencies: ["read"],
+      timeout: 12 * 60_000,
       workers: 1,
       use: { storageState: ANA_STATE },
     },

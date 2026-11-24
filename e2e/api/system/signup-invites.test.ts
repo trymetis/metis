@@ -3,7 +3,8 @@ import { expect, test } from "vitest";
 
 import { type Rpc, RpcError, rpcWithCookie } from "../../clients/rpc";
 import { signIn } from "../../clients/sign-in";
-import { setSection, withTotp } from "../support/config";
+import { withTotp } from "../../clients/totp";
+import { setSection } from "../support/config";
 import { uniqueName } from "../support/poll";
 import { ana, totpCode } from "../support/session";
 

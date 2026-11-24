@@ -1,9 +1,8 @@
 import { afterAll, beforeEach, expect, test } from "vitest";
 
-import { harness } from "../../clients/harness";
 import { type Rpc, RpcError } from "../../clients/rpc";
+import { withTotp } from "../../clients/totp";
 import { updater } from "../../clients/updater";
-import { withTotp } from "../support/config";
 import { ana } from "../support/session";
 
 let release = { current: "", next: "", previous: "" };
@@ -41,7 +40,7 @@ afterAll(async () => {
 test("an upgrade that is not a release version fails input validation", async () => {
   const { rpc } = await ana();
   await refused(
-    async () => rpc("dashboard.system.upgrade", { version: "latest", code: await harness.totp() }),
+    () => withTotp((code) => rpc("dashboard.system.upgrade", { version: "latest", code })),
     "BAD_REQUEST",
     "Input validation failed",
   );

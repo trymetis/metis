@@ -23,6 +23,7 @@ class MetisShellModule : Module() {
     }.runOnQueue(Queues.MAIN)
 
     AsyncFunction("clearCache") { promise: Promise ->
+      WebStorage.getInstance().deleteAllData()
       clearHttpCache()
       promise.resolve()
     }.runOnQueue(Queues.MAIN)

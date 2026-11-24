@@ -30,7 +30,7 @@ See also [AGENTS.md](../AGENTS.md), [drive.md](drive.md), [drive-providers.md](d
 - **Size caps are checked against `entry.size` before the fetch**, with a counting read when the size is unknown (`PREVIEW_CAPS`).
 - **pdf.js loads only in the browser**, through `next/dynamic` with `ssr: false`.
 - **Cached bytes are fresh only while `modifiedAt` and `size` both match; an entry with `modifiedAt === null` is not cached.**
-- **Every web sign-out path calls `clearPreviewCache`**; the desktop and mobile shells clear all site storage on their own sign-out ([desktop.md](desktop.md), [mobile.md](mobile.md)).
+- **Every web sign-out path clears the preview cache through `clearLocalData`** ([orpc.md](orpc.md)); the desktop and mobile shells clear all site storage on their own sign-out and the preview files on "Clear cache" ([desktop.md](desktop.md), [mobile.md](mobile.md)).
 
 ## How it works
 

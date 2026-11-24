@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
 
-import { harness } from "../../clients/harness";
 import { type Rpc, RpcError, rpcWithCookie } from "../../clients/rpc";
 import { signIn } from "../../clients/sign-in";
+import { withTotp } from "../../clients/totp";
 import { inviteToWorkspace } from "../support/invites";
 import { uniqueName } from "../support/poll";
 import { ana, totpCode } from "../support/session";
@@ -60,12 +60,14 @@ test("membership changes in a workspace are recorded for its admins, the member 
     const memberId = members.find((m) => m.email === account.member.email)?.memberId;
     expect(memberId).toBeDefined();
 
-    await rpc("workspaces.updateMemberRole", {
-      ...ws,
-      memberId,
-      role: "admin",
-      code: await harness.totp(),
-    });
+    await withTotp((code) =>
+      rpc("workspaces.updateMemberRole", {
+        ...ws,
+        memberId,
+        role: "admin",
+        code,
+      }),
+    );
 
     const adminView = await cy<AuditPage>("audit.workspace", ws);
     expect(adminView.events).toContainEqual(
@@ -92,7 +94,7 @@ test("membership changes in a workspace are recorded for its admins, the member 
       expect(own.events).toContainEqual(expect.objectContaining({ action, workspaceName: name }));
     }
   } finally {
-    await rpc("workspaces.delete", { ...ws, code: await harness.totp() });
+    await withTotp((code) => rpc("workspaces.delete", { ...ws, code }));
   }
 
   const instance = await rpc<AuditPage & { retentionDays: number }>("dashboard.audit");
@@ -227,6 +229,6 @@ test("an address book detach is recorded and found by searching for address book
       expect.objectContaining({ action: "resource.detached", resourceKind: "addressbook" }),
     );
   } finally {
-    await rpc("workspaces.delete", { ...ws, code: await harness.totp() });
+    await withTotp((code) => rpc("workspaces.delete", { ...ws, code }));
   }
 });

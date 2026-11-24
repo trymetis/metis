@@ -1,6 +1,6 @@
 # oRPC — where procedures live and the rules per namespace
 
-How `orpc.*` namespaces are laid out and guarded, how errors reach the client, how an endpoint is added, and the rules for individual namespaces.
+How `orpc.*` namespaces are laid out and guarded, how errors reach the client, how an endpoint is added, the rules for individual namespaces, and the shell cache that keeps the shell's lists in the browser.
 Paths are relative to `apps/web/`.
 See also [AGENTS.md](../AGENTS.md) (scope as explicit input), [auth.md](auth.md).
 
@@ -16,6 +16,7 @@ See also [AGENTS.md](../AGENTS.md) (scope as explicit input), [auth.md](auth.md)
 | Zod inputs and outputs          | `src/server/schema.ts` → `workspaceScopeSchema`, `mailboxScopeSchema`, `calendarScopeSchema`, `driveScopeSchema`                                                                                                                                                                              |
 | Clients                         | `src/lib/orpc.ts` → `orpc` (browser, `RPCLink`), `rpc` (TanStack Query utils) · `src/lib/orpc.server.ts` → `orpc` (`createRouterClient`)                                                                                                                                                      |
 | Query client                    | `src/lib/query-client.ts` → `getQueryClient`, `refreshQuery`, `refreshQueries` · `src/app/_components/query-provider.tsx` → `QueryProvider` (in the root `layout.tsx`)                                                                                                                        |
+| Shell cache                     | `src/lib/shell-cache.ts` → `CACHED_QUERIES`, `startShellCache`, `clearShellCache` · `src/app/w/[slug]/_components/shell-cache.tsx` → `ShellCache` · `src/auth/local-data.ts` → `clearLocalData`                                                                                               |
 | Scope hooks                     | `src/hooks/use-workspace-path.ts` → `useWorkspaceScope`, `useMailboxScope`                                                                                                                                                                                                                    |
 | Workspace admin checks          | `src/workspace/admin.ts` (called from `src/server/routes/workspaces.ts`)                                                                                                                                                                                                                      |
 | Sender for the `all` mailbox    | `src/server/routes/mail/sender.ts` → `resolveSender`                                                                                                                                                                                                                                          |
@@ -67,6 +68,18 @@ See also [AGENTS.md](../AGENTS.md) (scope as explicit input), [auth.md](auth.md)
 - **`connections.createCredential` and `connections.delete`** are described in [servers.md](servers.md) and [connections.md](connections.md).
 - **`audit.*` is read-only**: `audit.mine` on `appSession`, `audit.workspace` on `workspaceSession` for owners and admins ([audit.md](audit.md)).
 
+### Shell cache
+
+- **The shell cache keeps only the lists the shell shows on nearly every page, in `CACHED_QUERIES`, plus the first page of a drive's root folder.**
+  - Mail, events, contacts, file contents, chat messages, AI results, sessions, grants and dashboard data are never added.
+  - It covers all four resource kinds: their workspace link lists, mail custom labels, sub-calendars, drive pins, quotas and root folder, and address books.
+  - Anything the server layouts render (user, roles, workspace policy, AI switch, theme) stays out, because those decide access and arrive with the page.
+- **The query cache stays the source of truth; IndexedDB only mirrors it.** Nothing reads the shell cache except `startShellCache`, which copies rows into the query cache.
+- **A row is seeded only into a query that already has an observer and no data.** `useQuery` reads the cache on its first render and subscribes only after that render commits, so a component still hydrating sees a seed only when another component already subscribed to the same key, the same race as a fast server answer.
+- **Every seeded key is invalidated and fetched again**, so its stored copy shows only until the server answers, whatever its `staleTime`.
+- **The cache belongs to one user and one app version.** `startShellCache` compares both with its owner row and empties the cache on any mismatch, which covers a session that ended without sign-out (expiry, revocation, a ban).
+- **Every web sign-out path calls `clearLocalData`**, which clears the shell cache and the drive preview cache ([drive-preview.md](drive-preview.md)).
+
 ## How it works
 
 - **A new endpoint**: a procedure in `src/server/routes/*.ts`, wired into the router, with its schemas in `src/server/schema.ts`; the client calls it as `orpc.*`.
@@ -78,7 +91,19 @@ See also [AGENTS.md](../AGENTS.md) (scope as explicit input), [auth.md](auth.md)
 - **A refresh never aborts a request and never returns data read before the write.** `refreshQuery` / `refreshQueries` (`src/lib/query-client.ts`) wait for any fetch of that key already running, then fetch again; a bare `refetch()` either cancels a running fetch (once the query has data) or hands back the one that started before the write (while it has none).
   - Polling joins a running fetch with `refetch({ cancelRefetch: false })`.
   - A local edit buffer over loaded data (a draft, a selection) re-syncs at render time when the query's `data` reference changes.
-  - Server data shared across components lives only in the query cache, never in a Zustand store or a module variable; code outside React reads and writes it through `getQueryClient()`.
+  - Server data shared across components lives only in the query cache, never in a Zustand store or a module variable; code outside React reads and writes it through `getQueryClient()`. The shell cache mirrors part of it to IndexedDB (see Shell cache).
   - `QueryProvider` turns off retries and refetch on window focus, so a page loads once on mount and on explicit refresh, and an error shows at once; `usePollingRefresh` or `refetchInterval` polls where a page needs it.
 - **The server client.** Server components call procedures in-process through `@/lib/orpc.server`, which the root `layout.tsx` imports so it initializes. No proxy runs on those calls, which is why `appSession` checks 2FA itself.
 - **Headers.** `base` reads `next/headers` once per call and puts them on `context.headers`, which every session middleware and `requireTotp` use.
+- **The shell cache** is a Dexie database (`metis-shell-cache`) with a `queries` table keyed by query hash and an `owner` row.
+  - `ShellCache`, in the workspace layout, calls `startShellCache` with the user id and the server version (`sourceInfo().version`) once mounted.
+  - Once the rows are read, queries that already have observers are seeded at once and refreshed with `refreshQuery` unless a fetch is running; every later query is seeded on its `observerAdded` event, which fires before the observer decides whether to fetch on mount.
+  - A seed is `setQueryData` with the stored `updatedAt`, then an invalidation with `refetchType: "none"`, so the mount fetch runs.
+  - The same `QueryCache` subscriber writes every other `success` update of a cached key back, including `setQueryData` after a mutation, so call sites need no changes; the rows stay in memory too, so a query collected after `gcTime` is seeded again on its next mount.
+  - Rows older than 30 days are dropped on start. `clearShellCache` deletes the database and stops any write already queued.
+  - Dexie reopens the database by itself when the browser closes it, as the desktop and mobile "Clear cache" do while the page is open.
+
+## Deliberate limits
+
+- **The shell cache only speeds up a cold start** (a new tab, a reload, launching the desktop or mobile app); navigation within a session is already served from memory. It adds no offline mode: there is no service worker, and the page still comes from the server.
+- **The shell cache is not encrypted.** Its rows are names and addresses, never tokens or credentials, and a key kept beside them in IndexedDB would add nothing against someone with the profile; OS disk encryption and the wipes above cover it, as for the drive preview cache.

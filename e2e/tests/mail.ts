@@ -1,7 +1,8 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
+import { withTotp } from "../clients/totp";
 import type { Rpc } from "./fixtures";
-import { type Account, harness, mailPath } from "./harness";
+import { type Account, mailPath } from "./harness";
 
 export const BUILT_IN_LABELS = [
   "Action Required",
@@ -24,11 +25,12 @@ async function mailboxLink(rpc: Rpc, account: Account): Promise<string> {
 }
 
 export async function setMailboxAi(rpc: Rpc, account: Account, on: boolean): Promise<void> {
-  await rpc("mailboxes.setPolicy", {
-    linkId: await mailboxLink(rpc, account),
-    aiEnabled: on,
-    ...(on ? { code: await harness.totp() } : {}),
-  });
+  const linkId = await mailboxLink(rpc, account);
+  if (!on) {
+    await rpc("mailboxes.setPolicy", { linkId, aiEnabled: false });
+    return;
+  }
+  await withTotp((code) => rpc("mailboxes.setPolicy", { linkId, aiEnabled: true, code }));
 }
 
 export function mailList(page: Page): Locator {
