@@ -2,6 +2,7 @@ import "server-only";
 import { and, desc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
+import { isUniqueViolation } from "@/db/errors";
 import { instanceConfig, user } from "@/db/schema";
 import type { InstanceConfigKind } from "@/types/instance-config";
 
@@ -82,18 +83,6 @@ export interface NewConfigVersion {
   kind: InstanceConfigKind;
   revertedFromVersion?: number | null;
   createdByUserId?: string | null;
-}
-
-function isUniqueViolation(err: unknown): boolean {
-  let current: unknown = err;
-  for (let depth = 0; depth < 5 && current; depth++) {
-    const message = (current as { message?: unknown }).message;
-    if (typeof message === "string" && /UNIQUE constraint failed/i.test(message)) {
-      return true;
-    }
-    current = (current as { cause?: unknown }).cause;
-  }
-  return false;
 }
 
 export async function insertConfigVersion(input: NewConfigVersion): Promise<number> {

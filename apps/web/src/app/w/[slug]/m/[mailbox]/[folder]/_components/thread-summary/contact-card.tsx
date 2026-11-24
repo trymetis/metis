@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 
 import { downloadVcard } from "@/components/contacts/download-vcard";
 import { matchHref, useSaveContact } from "@/components/contacts/use-save-contact";
+import { PersonAvatar } from "@/components/person-avatar";
 import { emptyDraft } from "@/contacts/fields";
 import { useWorkspaceSlug } from "@/hooks/use-workspace-path";
 import { rpc } from "@/lib/orpc";
@@ -23,7 +24,16 @@ import { route } from "@/lib/route";
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 import type { ContactDraft } from "@/server/schema";
 
-import { CardAction, CardLink, CardShell, CopyButton, Detail, Details, Title } from "./card-parts";
+import {
+  CardAction,
+  CardLink,
+  CardShell,
+  CopyButton,
+  Detail,
+  Details,
+  Title,
+  CompactShell,
+} from "./card-parts";
 import { directionsUrl, hostOf } from "./format";
 
 type ContactProps = SummaryCardProps<"Contact">;
@@ -45,7 +55,7 @@ function toDraft(props: ContactProps): ContactDraft {
   };
 }
 
-export function ContactCard({ props }: { props: ContactProps }) {
+function ContactActions({ props }: { props: ContactProps }) {
   const router = useRouter();
   const workspaceSlug = useWorkspaceSlug();
   const saveContact = useSaveContact();
@@ -56,43 +66,44 @@ export function ContactCard({ props }: { props: ContactProps }) {
     staleTime: 60_000,
   });
   const saved = lookup.data?.matches[0];
+  return (
+    <>
+      {saved ? (
+        <CardAction
+          intent="primary"
+          icon={BookUser}
+          onClick={() => router.push(route(matchHref(workspaceSlug, saved)))}
+        >
+          Open contact
+        </CardAction>
+      ) : (
+        <CardAction
+          intent="primary"
+          icon={UserPlus}
+          onClick={() => saveContact.save(toDraft(props))}
+        >
+          Save contact
+        </CardAction>
+      )}
+      <CardAction
+        icon={Download}
+        iconOnly
+        onClick={() => downloadVcard(toDraft(props), crypto.randomUUID())}
+      >
+        Download contact card
+      </CardAction>
+      {saveContact.dialog}
+    </>
+  );
+}
+
+export function ContactCard({ props }: { props: ContactProps }) {
   const role = [props.title, props.organization].filter(Boolean).join(" · ");
   const [email] = props.emails;
   const [phone] = props.phones;
   const directions = directionsUrl(props.addresses[0]);
   return (
-    <CardShell
-      icon={UserRound}
-      label="Contact"
-      aside={
-        <>
-          {saved ? (
-            <CardAction
-              intent="primary"
-              icon={BookUser}
-              onClick={() => router.push(route(matchHref(workspaceSlug, saved)))}
-            >
-              Open contact
-            </CardAction>
-          ) : (
-            <CardAction
-              intent="primary"
-              icon={UserPlus}
-              onClick={() => saveContact.save(toDraft(props))}
-            >
-              Save contact
-            </CardAction>
-          )}
-          <CardAction
-            icon={Download}
-            iconOnly
-            onClick={() => downloadVcard(toDraft(props), crypto.randomUUID())}
-          >
-            Download contact card
-          </CardAction>
-        </>
-      }
-    >
+    <CardShell icon={UserRound} label="Contact" aside={<ContactActions props={props} />}>
       <Title>{props.name}</Title>
       {role && <p className="text-[12px] text-muted-foreground">{role}</p>}
       <Details columns="two">
@@ -166,7 +177,34 @@ export function ContactCard({ props }: { props: ContactProps }) {
           </Detail>
         )}
       </Details>
-      {saveContact.dialog}
     </CardShell>
+  );
+}
+
+export function ContactCompact({ props }: { props: ContactProps }) {
+  const role = [props.title, props.organization].filter(Boolean).join(" · ");
+  const [email] = props.emails;
+  const [phone] = props.phones;
+  return (
+    <CompactShell>
+      <PersonAvatar name={props.name} email={email ?? null} className="size-5.5 text-[9px]" />
+      <span className="min-w-0 truncate font-medium">{props.name}</span>
+      {role && <span className="min-w-0 truncate text-[12px] text-faint">{role}</span>}
+      {email && (
+        <span className="flex min-w-0 items-center gap-1 text-[12px] text-faint">
+          <Mail aria-hidden className="size-3 shrink-0" />
+          <span className="truncate">{email}</span>
+        </span>
+      )}
+      {phone && (
+        <span className="flex shrink-0 items-center gap-1 text-[12px] text-faint">
+          <Phone aria-hidden className="size-3" />
+          {phone}
+        </span>
+      )}
+      <span className="ml-auto flex shrink-0 items-center gap-1.5">
+        <ContactActions props={props} />
+      </span>
+    </CompactShell>
   );
 }

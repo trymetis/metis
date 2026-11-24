@@ -531,7 +531,7 @@ Only the owner sees this page. Admins and observers do not see it in the sidebar
 
 On a Metis Cloud instance, this page does not list the exports you make in the Cloud console. The console's **Exports** tab lists them. See [Export your data](/cloud/your-instance/export-your-data).
 
-The ⓘ next to **Exports** says: "Newest first. The metis CLI records each export when it makes it: sudo metis db export on a server, or metis db export `--env-file` from any machine." This works on every kind of deployment: a server the `metis` CLI runs, a container platform, Vercel or another Node host.
+The ⓘ next to **Exports** says: "Newest first. The metis CLI records each export when it makes it: sudo metis db export on a server, or metis db export --env-file from any machine." This works on every kind of deployment: a server the `metis` CLI runs, a container platform, Vercel or another Node host.
 
 Each export is one row, newest first. A row has two lines:
 
@@ -549,9 +549,9 @@ Click a row, or the arrow at its end, to open its details. Each line has a copy 
 | A place               | One line for each place the archive was written, labelled **On the server**, **On a computer** or **In S3**, with the full path or the `s3://` address. |
 | **Host**              | Below a path, the name of the machine, when it is known.                                                                                                |
 | **Endpoint**          | Below an address on an S3-compatible service, the service's address.                                                                                    |
-| **Recipient**         | The fingerprint of each key the export is encrypted to. For a passphrase key, the line is labelled **Passphrase** instead of **Recipient**.             |
+| **Recipient**         | The fingerprint of each key the export is encrypted to, one line per key. A passphrase key has the grey note "passphrase key" after its fingerprint.    |
 
-When you click a copy button, it shows a tick for a moment. If your browser does not allow the copy, you see "Could not copy".
+A long value is cut short to fit one line. Point at it to see the full value. The copy button always copies the full value. When you click it, it shows a tick for a moment. If your browser does not allow the copy, you see "Could not copy".
 
 <img src="/images/self-hosting/dashboard-exports.webp" alt="The Exports page listing recorded exports, with the newest one open to show its checksum, migration, addresses and recipients" class="dark:hidden" />
 <img src="/images/self-hosting/dashboard-exports-dark.webp" alt="The Exports page listing recorded exports, with the newest one open to show its checksum, migration, addresses and recipients" class="hidden dark:block" />

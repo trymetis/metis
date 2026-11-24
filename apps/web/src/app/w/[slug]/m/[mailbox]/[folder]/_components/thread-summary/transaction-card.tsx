@@ -15,7 +15,15 @@ import {
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { CardLink, CardShell, Detail, Details, Title } from "./card-parts";
+import {
+  CardLink,
+  CardShell,
+  Detail,
+  Details,
+  Title,
+  CompactShell,
+  CopyButton,
+} from "./card-parts";
 import { formatMoney, formatWhen } from "./format";
 
 type TransactionProps = SummaryCardProps<"Transaction">;
@@ -87,5 +95,52 @@ export function TransactionCard({ props }: { props: TransactionProps }) {
         )}
       </Details>
     </CardShell>
+  );
+}
+
+export function TransactionCompact({ props }: { props: TransactionProps }) {
+  const direction = DIRECTIONS[props.direction];
+  const amount = formatMoney(props.amount);
+  const balance = formatMoney(props.balance);
+  const incoming = props.direction === "credit" || props.direction === "refund";
+  const Icon = direction.icon;
+  return (
+    <CompactShell>
+      <Icon aria-hidden className="size-3.5 shrink-0 text-primary" />
+      <span className="min-w-0 truncate font-medium">{props.counterparty ?? direction.label}</span>
+      {amount && (
+        <span
+          className={cn(
+            "shrink-0 text-[14px] font-medium",
+            incoming ? "text-primary" : "text-foreground",
+          )}
+        >
+          {direction.sign}
+          {amount}
+        </span>
+      )}
+      {(props.account || props.institution) && (
+        <span className="min-w-0 truncate text-[12px] text-faint">
+          {[props.account, props.institution].filter(Boolean).join(" · ")}
+        </span>
+      )}
+      {balance && <span className="shrink-0 text-[12px] text-faint">Balance {balance}</span>}
+      <span className="ml-auto flex shrink-0 items-center gap-1.5">
+        {props.reference && (
+          <>
+            <span className="font-mono text-[11px] text-faint">{props.reference}</span>
+            <CopyButton text={props.reference} label="Copy reference" iconOnly />
+          </>
+        )}
+        <Badge variant={props.direction === "failed" ? "destructive" : "outline"}>
+          {direction.label}
+        </Badge>
+        {props.detailsUrl && (
+          <CardLink href={props.detailsUrl}>
+            {props.direction === "request" ? "Review request" : "View details"}
+          </CardLink>
+        )}
+      </span>
+    </CompactShell>
   );
 }

@@ -37,6 +37,7 @@ import {
   Detail,
   Details,
   Title,
+  CompactShell,
 } from "./card-parts";
 import { directionsUrl, formatRange, hostOf, humanize } from "./format";
 import { useCalendarMatch } from "./use-calendar-match";
@@ -203,5 +204,47 @@ export function MeetingCard({ props }: { props: SummaryCardProps<"Meeting"> }) {
         </p>
       )}
     </CardShell>
+  );
+}
+
+export function MeetingCompact({ props }: { props: SummaryCardProps<"Meeting"> }) {
+  const cancelled = props.status === "cancelled";
+  const when = formatRange(props.start, props.end);
+  const onCalendar = useCalendarMatch(props)?.event ?? null;
+  return (
+    <CompactShell>
+      <Video aria-hidden className="size-3.5 shrink-0 text-primary" />
+      <span className={cn("min-w-0 truncate font-medium", cancelled && "line-through")}>
+        {props.title}
+      </span>
+      {when && (
+        <span className="flex shrink-0 items-center gap-1 text-[12px] text-faint">
+          <Clock aria-hidden className="size-3" />
+          {when}
+        </span>
+      )}
+      {props.location && (
+        <span className="flex min-w-0 items-center gap-1 text-[12px] text-faint">
+          <MapPin aria-hidden className="size-3 shrink-0" />
+          <span className="truncate">{props.location}</span>
+        </span>
+      )}
+      <span className="ml-auto flex shrink-0 items-center gap-1.5">
+        {props.status !== "scheduled" ? (
+          <Badge variant={cancelled ? "destructive" : "outline"}>{humanize(props.status)}</Badge>
+        ) : onCalendar ? (
+          <Badge variant="outline">
+            <CalendarCheck />
+            On your calendar
+          </Badge>
+        ) : null}
+        {!cancelled && !onCalendar && <AddToCalendar props={props} />}
+        {!cancelled && props.meetingUrl && (
+          <CardLink href={props.meetingUrl} icon={Video}>
+            Join
+          </CardLink>
+        )}
+      </span>
+    </CompactShell>
   );
 }

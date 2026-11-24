@@ -25,6 +25,8 @@ export interface UpstreamTarget {
   url: string;
   key: string;
   concurrency: number;
+  model: string | null;
+  provider: string | null;
 }
 
 export interface ScenarioUsage {
@@ -166,6 +168,42 @@ function bodyFailure(response: LlmResponse): string | null {
   return hasError(body) ? "error body" : null;
 }
 
+const providerSchema = z.object({ provider: z.string() });
+
+function providerKey(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function servedBy(response: LlmResponse): string | null {
+  for (const payload of payloads(response)) {
+    try {
+      const parsed = providerSchema.safeParse(JSON.parse(payload));
+      if (parsed.success) return parsed.data.provider;
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+function providerFailure(target: UpstreamTarget, response: LlmResponse): string | null {
+  if (!target.provider) return null;
+  const provider = servedBy(response);
+  if (provider && providerKey(provider) === providerKey(target.provider)) return null;
+  return `served by ${provider ?? "an unnamed provider"}, not ${target.provider}`;
+}
+
+function upstreamRequest(
+  target: UpstreamTarget,
+  request: Record<string, unknown>,
+): Record<string, unknown> {
+  return {
+    ...request,
+    ...(target.model ? { model: target.model } : {}),
+    ...(target.provider ? { provider: { order: [target.provider], allow_fallbacks: false } } : {}),
+  };
+}
+
 function retryAfter(header: string | null): number | null {
   if (!header) return null;
   const seconds = Number(header);
@@ -209,7 +247,7 @@ async function fetchOnce(
         "content-type": "application/json",
         authorization: `Bearer ${target.key}`,
       },
-      body: JSON.stringify(request),
+      body: JSON.stringify(upstreamRequest(target, request)),
       signal: controller.signal,
     });
     const idleReason = `no data for ${IDLE_TIMEOUT_MS / 1000}s`;
@@ -307,9 +345,12 @@ export async function startRecorder(options: RecorderOptions): Promise<Recorder>
       if (reason) return { ok: false, message: reason };
       let fetched: Fetched | undefined;
       let failure: string | null;
+      let wrongProvider: string | null = null;
       try {
         fetched = await fetchOnce(target, path, request);
         failure = bodyFailure(fetched);
+        wrongProvider = failure ? null : providerFailure(target, fetched);
+        failure ??= wrongProvider;
       } catch (err) {
         failure = `network: ${describe(err)}`;
       }
@@ -331,6 +372,7 @@ export async function startRecorder(options: RecorderOptions): Promise<Recorder>
         return { ok: false, message: stop, response: fetched };
       }
       const status = fetched?.status ?? 0;
+      if (wrongProvider) return last;
       if (status >= 400 && status < 500 && !RETRYABLE_STATUSES.has(status)) {
         return last;
       }

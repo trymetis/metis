@@ -3,7 +3,7 @@ import { CalendarClock, Repeat, Settings2 } from "lucide-react";
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { CardLink, CardShell, Detail, Details, Title } from "./card-parts";
+import { CardLink, CardShell, Detail, Details, Title, CompactShell } from "./card-parts";
 import { formatMoney, formatWhen } from "./format";
 import { RemindButton } from "./remind-button";
 
@@ -71,5 +71,45 @@ export function SubscriptionCard({ props }: { props: SubscriptionProps }) {
         </Details>
       )}
     </CardShell>
+  );
+}
+
+export function SubscriptionCompact({ props }: { props: SubscriptionProps }) {
+  const event = EVENTS[props.event];
+  const amount = formatMoney(props.amount);
+  const previous = formatMoney(props.previousAmount);
+  return (
+    <CompactShell>
+      <Repeat aria-hidden className="size-3.5 shrink-0 text-primary" />
+      <span className="min-w-0 truncate font-medium">
+        {props.service}
+        {props.plan && <span className="font-normal text-muted-foreground"> · {props.plan}</span>}
+      </span>
+      {amount && (
+        <span className="shrink-0 font-medium">
+          {previous && (
+            <span className="mr-1.5 text-[12px] font-normal text-faint line-through">
+              {previous}
+            </span>
+          )}
+          {amount}
+        </span>
+      )}
+      {props.date && (
+        <span className="flex shrink-0 items-center gap-1 text-[12px] text-faint">
+          <CalendarClock aria-hidden className="size-3" />
+          {event.dateLabel} {formatWhen(props.date)}
+        </span>
+      )}
+      <span className="ml-auto flex shrink-0 items-center gap-1.5">
+        <Badge variant={event.alert ? "destructive" : "outline"}>{event.label}</Badge>
+        {REMINDABLE.has(props.event) && <RemindButton date={props.date} daysBefore={1} />}
+        {props.manageUrl && (
+          <CardLink href={props.manageUrl} icon={Settings2}>
+            Manage
+          </CardLink>
+        )}
+      </span>
+    </CompactShell>
   );
 }

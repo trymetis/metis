@@ -3,7 +3,7 @@ import { ShoppingBag } from "lucide-react";
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { CardLink, CardShell, Title, CompactActions } from "./card-parts";
+import { CardLink, CardShell, Title, CompactActions, CompactShell, CopyButton } from "./card-parts";
 import { formatMoney } from "./format";
 
 export function OrderCard({ props }: { props: SummaryCardProps<"Order"> }) {
@@ -59,5 +59,31 @@ export function OrderCard({ props }: { props: SummaryCardProps<"Order"> }) {
         </ul>
       )}
     </CardShell>
+  );
+}
+
+export function OrderCompact({ props }: { props: SummaryCardProps<"Order"> }) {
+  const total = formatMoney(props.total);
+  return (
+    <CompactShell>
+      <ShoppingBag aria-hidden className="size-3.5 shrink-0 text-primary" />
+      <span className="min-w-0 truncate font-medium">{props.merchant}</span>
+      {props.orderNumber && (
+        <>
+          <span className="shrink-0 font-mono text-[11px] text-faint">#{props.orderNumber}</span>
+          <CopyButton text={props.orderNumber} label="Copy order number" iconOnly />
+        </>
+      )}
+      {props.items.length > 0 && (
+        <span className="shrink-0 text-[12px] text-faint">
+          {props.items.length} {props.items.length === 1 ? "item" : "items"}
+        </span>
+      )}
+      <span className="ml-auto flex shrink-0 items-center gap-1.5">
+        {total && <span className="font-medium">{total}</span>}
+        {props.status && <Badge variant="outline">{props.status}</Badge>}
+        {props.orderUrl && <CardLink href={props.orderUrl}>View order</CardLink>}
+      </span>
+    </CompactShell>
   );
 }

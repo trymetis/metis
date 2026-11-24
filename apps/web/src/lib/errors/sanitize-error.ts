@@ -124,7 +124,7 @@ function fromStatus(
     return "This account needs to be reconnected.";
   }
   if (status === 403 && reasons.some((reason) => RATE_LIMIT_REASONS.has(reason))) {
-    return `${lead(what, "That didn't go through")} — too many requests just now. Wait a moment and try again.`;
+    return `${lead(what, "That didn't go through")}: too many requests just now. Wait a moment and try again.`;
   }
   if (status === 403 && reasons.length > 0 && !reasons.some((r) => PERMISSION_REASONS.has(r))) {
     return `${lead(what, "That didn't go through")}. Try again.`;
@@ -134,20 +134,20 @@ function fromStatus(
   }
   if (status === 404 || status === 410) {
     return what
-      ? `${lead(what, "We couldn't find that")} — it may have been moved or deleted.`
+      ? `${lead(what, "We couldn't find that")}. It may have been moved or deleted.`
       : "We couldn't find that.";
   }
   if (status === 429) {
-    return `${lead(what, "That didn't go through")} — too many requests just now. Wait a moment and try again.`;
+    return `${lead(what, "That didn't go through")}: too many requests just now. Wait a moment and try again.`;
   }
   if (status === 408 || status === 504) {
-    return `${lead(what, "That didn't go through")} — the request timed out. Try again.`;
+    return `${lead(what, "That didn't go through")}. The request timed out. Try again.`;
   }
   if (status === 413) {
-    return `${lead(what, "That didn't go through")} — it's too large.`;
+    return `${lead(what, "That didn't go through")}. It's too large.`;
   }
   if (status >= 500) {
-    return `${lead(what, "That didn't go through")} — something went wrong on the other end. Try again shortly.`;
+    return `${lead(what, "That didn't go through")}. Something went wrong on the other end. Try again shortly.`;
   }
   if (status >= 400) {
     return `${lead(what, "That didn't go through")}. Try again.`;
@@ -176,11 +176,11 @@ function fromText(raw: string, what: string | undefined): string {
   }
   if (raw.includes("not found")) {
     return what
-      ? `${lead(what, "We couldn't find that")} — it may have been moved or deleted.`
+      ? `${lead(what, "We couldn't find that")}. It may have been moved or deleted.`
       : "We couldn't find that.";
   }
   if (raw.includes("rate limit") || raw.includes("too many requests")) {
-    return `${lead(what, "That didn't go through")} — too many requests just now. Wait a moment and try again.`;
+    return `${lead(what, "That didn't go through")}: too many requests just now. Wait a moment and try again.`;
   }
   if (
     raw.includes("fetch failed") ||
@@ -190,7 +190,7 @@ function fromText(raw: string, what: string | undefined): string {
     raw.includes("socket") ||
     raw.includes("network")
   ) {
-    return `${lead(what, "That didn't go through")} — check your connection and try again.`;
+    return `${lead(what, "That didn't go through")}. Check your connection and try again.`;
   }
   return `${lead(what, "That didn't go through")}. Try again.`;
 }

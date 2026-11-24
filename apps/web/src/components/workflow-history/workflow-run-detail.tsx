@@ -20,6 +20,7 @@ import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { IconButton } from "@/components/icon-button";
 import type { CardDirectory } from "@/components/workflow-graph/card-context";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
 import { useWorkspaceScope } from "@/hooks/use-workspace-path";
@@ -319,9 +320,9 @@ function NodeCard({
         )}
         <span className="ml-auto shrink-0 text-[11px] text-faint">{label}</span>
         {onClose && (
-          <Button aria-label="Close step detail" onClick={onClose} size="icon-xs" variant="ghost">
+          <IconButton label="Close step detail" onClick={onClose} size="icon-xs">
             <X className="size-3.5" />
-          </Button>
+          </IconButton>
         )}
       </div>
       {node.lines.length > 0 && (

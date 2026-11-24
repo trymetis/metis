@@ -9,7 +9,7 @@
     },
     "steps": [
       {
-        "waitFor": "role=list[name=\"Workflows\"s] >> role=link >> text=\"Label rebrand mail\""
+        "waitFor": "role=list[name=\"Workflows\"s] >> role=link[name=/Label rebrand mail/]"
       },
       {
         "wait": 400
@@ -65,10 +65,10 @@
     },
     "steps": [
       {
-        "waitFor": "role=list[name=\"Workflows\"s] >> role=link >> text=\"Label rebrand mail\""
+        "waitFor": "role=list[name=\"Workflows\"s] >> role=link[name=/Label rebrand mail/]"
       },
       {
-        "follow": "role=list[name=\"Workflows\"s] >> role=link >> text=\"Label rebrand mail\"",
+        "follow": "role=list[name=\"Workflows\"s] >> role=link[name=/Label rebrand mail/]",
         "query": "template=labelSender"
       },
       {
@@ -111,10 +111,10 @@
     "path": "{workspace}/workflow",
     "steps": [
       {
-        "waitFor": "role=list[name=\"Workflows\"s] >> role=link >> text=\"Label rebrand mail\""
+        "waitFor": "role=list[name=\"Workflows\"s] >> role=link[name=/Label rebrand mail/]"
       },
       {
-        "follow": "role=list[name=\"Workflows\"s] >> role=link >> text=\"Label rebrand mail\"",
+        "follow": "role=list[name=\"Workflows\"s] >> role=link[name=/Label rebrand mail/]",
         "query": "template=labelSender"
       },
       {
@@ -242,10 +242,10 @@
     },
     "steps": [
       {
-        "waitFor": "role=list[name=\"Workflows\"s] >> role=link >> text=\"Label rebrand mail\""
+        "waitFor": "role=list[name=\"Workflows\"s] >> role=link[name=/Label rebrand mail/]"
       },
       {
-        "click": "role=list[name=\"Workflows\"s] >> role=link >> text=\"Label rebrand mail\""
+        "click": "role=list[name=\"Workflows\"s] >> role=link[name=/Label rebrand mail/]"
       },
       {
         "waitFor": ".react-flow__node[data-id=\"rebrand\"]"
@@ -597,10 +597,10 @@
     },
     "steps": [
       {
-        "waitFor": "role=list[name=\"Workflows\"s] >> role=link >> text=\"Label rebrand mail\""
+        "waitFor": "role=list[name=\"Workflows\"s] >> role=link[name=/Label rebrand mail/]"
       },
       {
-        "follow": "role=list[name=\"Workflows\"s] >> role=link >> text=\"Label rebrand mail\"",
+        "follow": "role=list[name=\"Workflows\"s] >> role=link[name=/Label rebrand mail/]",
         "query": "template=labelSender"
       },
       {
@@ -709,10 +709,10 @@
     },
     "steps": [
       {
-        "waitFor": "role=list[name=\"Workflows\"s] >> role=link >> text=\"Label rebrand mail\""
+        "waitFor": "role=list[name=\"Workflows\"s] >> role=link[name=/Label rebrand mail/]"
       },
       {
-        "click": "role=list[name=\"Workflows\"s] >> role=link >> text=\"Label rebrand mail\""
+        "click": "role=list[name=\"Workflows\"s] >> role=link[name=/Label rebrand mail/]"
       },
       {
         "waitFor": ".react-flow__node[data-id=\"rebrand\"]"
@@ -799,10 +799,10 @@
     "path": "{workspace}/workflow",
     "steps": [
       {
-        "waitFor": "role=list[name=\"Workflows\"s] >> role=link >> text=\"Label rebrand mail\""
+        "waitFor": "role=list[name=\"Workflows\"s] >> role=link[name=/Label rebrand mail/]"
       },
       {
-        "click": "role=list[name=\"Workflows\"s] >> role=link >> text=\"Label rebrand mail\""
+        "click": "role=list[name=\"Workflows\"s] >> role=link[name=/Label rebrand mail/]"
       },
       {
         "waitFor": "role=region[name=\"Inspector\"s] >> role=region[name=\"Workflow settings\"s]"

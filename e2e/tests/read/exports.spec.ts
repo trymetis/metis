@@ -20,7 +20,7 @@ test("the owner sees each export and where it went, with nothing to change", asy
   await expect(newest).toContainText("On a computer");
   await expect(newest).toContainText("owner-laptop");
   await expect(newest).toContainText("a1b2c3d4e5f60718293a4b5c6d7e8f90");
-  await expect(newest).toContainText("Passphrase");
+  await expect(newest).toContainText("passphrase key");
   await expect(rows.filter({ hasText: "metis-export-20261110T090000Z.tar" })).toContainText(
     "On the server",
   );

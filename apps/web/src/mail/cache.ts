@@ -263,12 +263,15 @@ export async function getThreadSummary(scopedThread: ScopedMessage): Promise<Sto
 
 export async function getThreadSummaries(
   threads: readonly ScopedMessage[],
-): Promise<{ mailboxId: string; threadKey: string; updatedAt: Date; summary: ThreadSummary }[]> {
+): Promise<
+  { mailboxId: string; threadKey: string; model: string; updatedAt: Date; summary: ThreadSummary }[]
+> {
   if (threads.length === 0) return [];
   const rows = await db
     .select({
       mailboxId: mailThreadSummary.mailboxId,
       threadKey: mailThreadSummary.threadKey,
+      model: mailThreadSummary.model,
       updatedAt: mailThreadSummary.updatedAt,
       summary: mailThreadSummary.summary,
     })

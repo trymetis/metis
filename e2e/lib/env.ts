@@ -111,6 +111,8 @@ const envSchema = z
 
     LLM_UPSTREAM_URL: z.url().optional(),
     LLM_UPSTREAM_KEY: text.optional(),
+    LLM_UPSTREAM_MODEL: text.optional(),
+    LLM_UPSTREAM_PROVIDER: text.optional(),
     TYPESAFE_UPSTREAM_URL: z.url().optional(),
     TYPESAFE_UPSTREAM_KEY: text.optional(),
   })
@@ -221,6 +223,8 @@ const envSchema = z
     llm: {
       upstreamUrl: e.LLM_UPSTREAM_URL?.replace(/\/+$/, ""),
       upstreamKey: e.LLM_UPSTREAM_KEY,
+      upstreamModel: e.LLM_UPSTREAM_MODEL,
+      upstreamProvider: e.LLM_UPSTREAM_PROVIDER,
       force: e.E2E_LLM_FORCE === "1",
     },
     typesafe: {

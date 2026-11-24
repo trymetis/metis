@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@metis/ui/components/dialog";
-import { Field, FieldError, FieldLabel } from "@metis/ui/components/field";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@metis/ui/components/field";
 import { Input } from "@metis/ui/components/input";
 import {
   Select,
@@ -218,17 +218,18 @@ function ContactForm({
   editor: Exclude<ContactEditor, null>;
   onDone: () => void;
 }) {
-  const { scope, books, book, groups, refresh, openContact } = useContacts();
+  const { scope, books, book, groups, loading, refresh, openContact } = useContacts();
   const original = editor.mode === "edit" ? editor.contact : null;
   const [form, setForm] = useState<FormState>(() => formFrom(original));
   const writable = books.filter((b) => !b.readOnly);
-  const initialTarget = book
-    ? `${book.accountId}::${book.bookId}`
-    : writable.find((b) => b.primary)
-      ? `${writable.find((b) => b.primary)?.accountId}::${writable.find((b) => b.primary)?.id}`
-      : writable[0]
-        ? `${writable[0].accountId}::${writable[0].id}`
-        : "";
+  const initialTarget =
+    book && writable.some((b) => b.accountId === book.accountId && b.id === book.bookId)
+      ? `${book.accountId}::${book.bookId}`
+      : writable.find((b) => b.primary)
+        ? `${writable.find((b) => b.primary)?.accountId}::${writable.find((b) => b.primary)?.id}`
+        : writable[0]
+          ? `${writable[0].accountId}::${writable[0].id}`
+          : "";
   const [picked, setTarget] = useState<string | null>(null);
   const target = picked ?? initialTarget;
   const [saving, setSaving] = useState(false);
@@ -474,6 +475,11 @@ function ContactForm({
                 ))}
               </SelectContent>
             </Select>
+            {!target && (
+              <FieldDescription>
+                {loading ? "Loading address books…" : "No address book you can add contacts to"}
+              </FieldDescription>
+            )}
           </Field>
         )}
         {error && <FieldError>{error}</FieldError>}
@@ -482,7 +488,7 @@ function ContactForm({
         <Button variant="outline" onClick={onDone} disabled={saving}>
           Cancel
         </Button>
-        <Button onClick={() => void save()} disabled={saving}>
+        <Button onClick={() => void save()} disabled={saving || (!original && !target)}>
           {saving ? "Saving…" : "Save"}
         </Button>
       </DialogFooter>

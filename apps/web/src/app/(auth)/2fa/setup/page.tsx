@@ -18,6 +18,7 @@ import {
   usePasskeySupport,
 } from "@/auth/two-factor/passkey-client";
 import { BackupCodesCard } from "@/components/backup-codes-card";
+import { ManualKey } from "@/components/manual-key";
 import { TwoFactorInput } from "@/components/two-factor-input";
 import { useTwoFactorCode } from "@/hooks/use-two-factor-code";
 import { route } from "@/lib/route";
@@ -224,14 +225,7 @@ export default function TwoFactorSetupPage() {
                 <div className="size-55 animate-pulse rounded bg-neutral-100" />
               )}
             </div>
-            {manualSecret && (
-              <details className="text-xs text-neutral-500">
-                <summary className="cursor-pointer">Can't scan? Show manual key</summary>
-                <code className="mt-2 block break-all rounded bg-neutral-100 dark:bg-neutral-900 p-2 text-neutral-700 dark:text-neutral-300">
-                  {manualSecret}
-                </code>
-              </details>
-            )}
+            {manualSecret && <ManualKey secret={manualSecret} />}
 
             {session && <BackupCodesCard codes={backupCodes} accountEmail={session.user.email} />}
 

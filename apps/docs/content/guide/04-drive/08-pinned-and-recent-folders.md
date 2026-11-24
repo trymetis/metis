@@ -66,6 +66,8 @@ When you open an item that is already in the list, it moves to the top. An item 
 - **Click a folder** to open it.
 - **Click a file** to open its preview beside the folder you are in. You stay in that folder.
 
+If the drive can no longer find the file, for example because it was deleted, the preview shows an error such as "We couldn't find that." The file leaves **Recent** right away. This also happens when you preview the file any other way in Drive. When a preview fails for another reason, such as a lost connection, the file stays in the list.
+
 ### Where the list is kept
 
 Each drive has its own **Recent** list in each workspace. If you open the same drive in another workspace, it has a separate list there. This is unlike pins, which follow the drive into every workspace. [All drives](/guide/drive/all-drives) has its own separate list too.

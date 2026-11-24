@@ -5,11 +5,15 @@ import { Spinner } from "@metis/ui/components/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@metis/ui/components/tooltip";
 import { cn } from "@metis/ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Check, Copy, ExternalLink, type LucideIcon } from "lucide-react";
+import { Check, ChevronUp, Copy, ExternalLink, type LucideIcon } from "lucide-react";
 import { type ComponentProps, createContext, type ReactNode, useContext, useState } from "react";
 import { toast } from "sonner";
 
+import { IconButton } from "@/components/icon-button";
+
 const CompactActionsContext = createContext(false);
+
+export const CollapseContext = createContext<(() => void) | null>(null);
 
 export function CompactActions({ children }: { children: ReactNode }) {
   return <CompactActionsContext.Provider value={true}>{children}</CompactActionsContext.Provider>;
@@ -26,6 +30,7 @@ export function CardShell({
   aside?: ReactNode;
   children: ReactNode;
 }) {
+  const collapse = useContext(CollapseContext);
   return (
     <div className="@container rounded-lg border border-primary/22 bg-primary/8 px-3.5 py-3 wrap-anywhere">
       <div className="mb-1.5 flex items-center gap-1.5">
@@ -33,9 +38,14 @@ export function CardShell({
         <span className="text-[10px] font-medium uppercase tracking-[1.5px] text-primary">
           {label}
         </span>
-        {aside && (
+        {(aside || collapse) && (
           <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
-            <CompactActions>{aside}</CompactActions>
+            {aside && <CompactActions>{aside}</CompactActions>}
+            {collapse && (
+              <IconButton label="Hide summary" size="icon-xs" onClick={collapse}>
+                <ChevronUp className="size-3.5 text-primary" />
+              </IconButton>
+            )}
           </div>
         )}
       </div>
@@ -224,5 +234,13 @@ export function CopyButton({
     >
       {copied ? "Copied" : label}
     </CardAction>
+  );
+}
+
+export function CompactShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex min-w-0 flex-1 items-center gap-2.5 text-[13px] text-foreground">
+      <CompactActions>{children}</CompactActions>
+    </div>
   );
 }

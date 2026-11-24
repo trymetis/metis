@@ -90,9 +90,13 @@ export default function moveTests() {
       await expectPage(
         section("Running release").getByRole("button", { name: "Undo last upgrade" }),
       ).toHaveCount(0);
-      await expectPage(section("Releases")).toContainText(
-        "Upgrading pulls the release, runs preflight, which migrates the database, then switches the app and waits until it is ready. If a step fails, the updater switches back on its own.",
-      );
+      await section("Releases").getByRole("button", { name: "About Releases" }).click();
+      await expectPage(
+        page.getByText(
+          "Upgrading pulls the release, runs preflight, which migrates the database, then switches the app and waits until it is ready. If a step fails, the updater switches back on its own.",
+          { exact: true },
+        ),
+      ).toBeVisible();
     });
   });
 

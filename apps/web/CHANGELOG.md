@@ -37,11 +37,12 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 ### Changed
 
-- The mail list shows each message on two lines: sender and subject, then labels, a paperclip for attachments, a preview (the conversation's TL;DR once it has one) and the date. The Gmail, Outlook or Zoho tag shows only in All inboxes.
+- Searching subscriptions reads your latest 100 Inbox emails, like the **Subscriptions** page.
+- The mail list shows each message on two lines: sender and subject, then labels, a paperclip for attachments, a preview (the conversation's compact summary card once it has one) and the date. The Gmail, Outlook or Zoho tag shows only in All inboxes.
 - The mail list checks for new mail every 5 minutes instead of every minute, besides when you come back to the tab.
-- A message's summary starts collapsed to one line: the TL;DR and a chip for each card. Click it to open the cards; Metis Suite remembers whether you keep them open. A conversation gets at most one TL;DR, and notifications get none.
+- A conversation's summary is one card: a TL;DR, or a card for the one thing the conversation is about, such as a package, a code or a meeting. It starts as a compact card above the message; **Show summary** opens the full card and **Hide summary** goes back to the compact card. Rows in the message list show the compact card. Metis Suite remembers whether you keep it open. Notifications that no card fits get none.
 - Summary card actions sit next to what they act on: copy and track beside the tracking number, Join beside the meeting link, Directions beside the address, and whole-card actions such as Pay or Save contact in the card's header.
-- **Reply** is in the message toolbar, which uses icons for Back, Previous, Next, Reply, Reply all, Forward, Star, Archive, Delete and Print. Smart replies and reply-with-stance chips appear right after the message instead of in a panel that covered it, and the stance chips and **Draft apology** show only where AI is on.
+- **Reply** is in the message toolbar, which uses icons with tooltips for Back, Previous, Next, Reply, Reply all, Forward, Edit draft, Star, Read later, Unsubscribe, Mute, Archive, Restore, Delete, Draft apology, Print and View original; Label and Snooze are menus with text. Smart replies and reply-with-stance chips appear right after the message instead of in a panel that covered it, and the stance chips and **Draft apology** show only where AI is on.
 - Blocked remote images show as a small chip next to the trackers chip; it opens the explanation with **Load images** and **Always from**.
 - **Subscriptions** is a table you can sort by sender, number of emails or last received.
 - The composer is a large window that fills most of the screen, for new messages, drafts, replies and forwards alike, and slides up as a sheet on phones. A long message scrolls inside it and keeps the line you are typing in view. A click outside no longer closes it: use the close button or Escape.
@@ -52,7 +53,7 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 - Every "too many requests" message, including sign-in, the two-factor lockout, the AI assistants, MCP clients, View original and webhook answers, says how long to wait before trying again. Webhook and MCP answers over a limit also carry a `Retry-After` header and a `retryAfterSec` field.
 - Opening a message again no longer checks again whether you can unsubscribe from it. If that check is rate-limited, **Unsubscribe** shows greyed out with the wait.
 - Reopening a message no longer counts toward the thread summary, phishing check and smart reply limits; only new AI work does. Smart replies and AI labels that hit their limit try again on their own after the wait.
-- A subscriptions scan is reused for 5 minutes, so **Rescan**, searching subscriptions or asking the assistant again doesn't use up the scan limit, which now counts per mailbox.
+- **Subscriptions** always shows mail that just arrived. A scan only checks senders with new mail, so **Rescan**, searching subscriptions or asking the assistant again uses up the scan limit only when there is new mail to check, and the limit counts per mailbox.
 - Uploads to WebDAV, FTP, FTPS, SFTP and relayed S3 drives allow 600 files a minute instead of 60.
 - You can send up to 100 workspace or account invites an hour instead of 10, and an MCP client can make 120 calls a minute instead of 60.
 - **Runs** (previously **Activity**) filters by status and by one or more workflows, and loads older runs 50 at a time, with no limit on how far back.
@@ -91,6 +92,12 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 ### Fixed
 
+- A summary or phishing check that hits its limit shows how long to wait and tries again on its own once that time has passed.
+- Recent searches are cleared when you sign out, like Drive's **Recent** list, so the next person on a shared browser doesn't see them.
+- A file in Drive's **Recent** list that was deleted or moved drops off the list when its preview can't find it.
+- If the draft can't be deleted after you send a message, a notice says it's still in **Drafts**.
+- **New contact** waits for your address books before **Save** turns on, and never starts on an address book you cannot add to.
+- Saving two themes with the same name at the same moment shows "A theme with that name already exists" instead of failing.
 - Opening an emailed sign-in link, or an AI app's access page, too many times shows a page that says how long to wait, instead of raw text. Sign-in and AI app answers over a limit also carry a standard `Retry-After` header.
 - **Sign out everywhere** with **Also sign out this device** signs this browser out at once, instead of leaving it signed in for up to two minutes.
 - HTML messages use the full width of the reading pane, and a message wider than the pane shrinks to fit instead of cutting off its right side.

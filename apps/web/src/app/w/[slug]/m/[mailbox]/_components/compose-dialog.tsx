@@ -80,6 +80,7 @@ import { ComposeFormattingBar, type ReplyStance, type RewriteMode } from "./comp
 import { RecipientField } from "./recipient-field";
 import {
   hasSignature,
+  replaceAsOneStep,
   replaceTypedContent,
   SIGNATURE_META,
   setSignature,
@@ -440,7 +441,7 @@ function ComposeForm({ session, defaultFrom }: { session: ComposeSession; defaul
         mode,
       });
       if (range.to > range.from) {
-        editor.chain().focus().insertContentAt(range, paragraphsHtml(result.text)).run();
+        replaceAsOneStep(editor, range, paragraphsHtml(result.text));
       }
     } catch (err) {
       toast.error(err instanceof Error && err.message ? err.message : "Couldn't rewrite that text");
@@ -492,7 +493,7 @@ function ComposeForm({ session, defaultFrom }: { session: ComposeSession; defaul
         quoteImages: session.quoteImages,
       }),
     });
-    finish("delete");
+    finish("delete", () => toast.error("Couldn't delete the draft. It's still in Drafts."));
   }
 
   async function handleScheduledSend(date: Date) {

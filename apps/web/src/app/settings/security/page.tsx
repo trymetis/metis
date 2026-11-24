@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import { authClient, useSession } from "@/auth/client";
 import { extractTotpSecret } from "@/auth/two-factor-code";
 import { BackupCodesCard } from "@/components/backup-codes-card";
+import { ManualKey } from "@/components/manual-key";
 import { PageHeader } from "@/components/page-header";
 import { TotpConfirmDialog } from "@/components/totp-confirm-dialog";
 import { TwoFactorInput } from "@/components/two-factor-input";
@@ -268,14 +269,7 @@ export default function SecuritySettingsPage() {
                         />
                       )}
                     </div>
-                    {manualSecret && (
-                      <details className="self-stretch text-xs text-faint">
-                        <summary className="cursor-pointer">Can't scan? Show manual key</summary>
-                        <code className="mt-2 block break-all rounded bg-panel p-2 text-muted-foreground">
-                          {manualSecret}
-                        </code>
-                      </details>
-                    )}
+                    {manualSecret && <ManualKey secret={manualSecret} />}
                     <Button className="w-full" onClick={() => closeQr()}>
                       Done
                     </Button>

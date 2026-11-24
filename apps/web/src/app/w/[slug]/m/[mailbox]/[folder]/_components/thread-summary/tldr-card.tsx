@@ -2,12 +2,12 @@ import { ArrowRight, Sparkles } from "lucide-react";
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { CardShell } from "./card-parts";
+import { CardShell, CompactShell } from "./card-parts";
 
-export function SummaryCard({ props }: { props: SummaryCardProps<"Summary"> }) {
+export function TldrCard({ props }: { props: SummaryCardProps<"Tldr"> }) {
   return (
     <CardShell icon={Sparkles} label="TL;DR">
-      <p className="text-[13px] leading-relaxed text-foreground">{props.tldr}</p>
+      <p className="text-[13px] leading-relaxed text-foreground">{props.text}</p>
       {props.keyPoints.length > 0 && (
         <ul className="mt-2.5 space-y-1">
           {props.keyPoints.map((point) => (
@@ -34,5 +34,20 @@ export function SummaryCard({ props }: { props: SummaryCardProps<"Summary"> }) {
         </div>
       )}
     </CardShell>
+  );
+}
+
+export function TldrCompact({ props }: { props: SummaryCardProps<"Tldr"> }) {
+  return (
+    <CompactShell>
+      <Sparkles aria-hidden className="size-3.5 shrink-0 text-primary" />
+      <span className="min-w-0 flex-1 truncate">{props.text}</span>
+      {props.actionItems.length > 0 && (
+        <span className="flex shrink-0 items-center gap-1 text-[12px] text-faint">
+          <ArrowRight aria-hidden className="size-3 text-primary" />
+          {props.actionItems.length} to do
+        </span>
+      )}
+    </CompactShell>
   );
 }

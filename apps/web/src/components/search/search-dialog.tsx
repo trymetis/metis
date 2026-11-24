@@ -31,6 +31,7 @@ import { switchWorkspaceHref, useWorkspaces } from "@/hooks/use-workspaces";
 import { orpc, rpc } from "@/lib/orpc";
 import { refreshQuery } from "@/lib/query-client";
 import { matcherFor } from "@/search/match";
+import { readRecentSearches, writeRecentSearches } from "@/search/recent";
 import { caretContext } from "@/search/tokens";
 import type { SavedSearch, SearchSuggestion } from "@/server/schema";
 import { useSearchStore } from "@/store/search-store";
@@ -80,26 +81,6 @@ const TOGGLES: { id: string; label: string; text: string }[] = [
     text: "(type:command OR type:setting OR type:workspace)",
   },
 ];
-
-function recentKey(workspaceSlug: string) {
-  return `metis:search:recent:${workspaceSlug}`;
-}
-
-function readRecent(workspaceSlug: string): string[] {
-  try {
-    const raw = window.localStorage.getItem(recentKey(workspaceSlug));
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed.filter((q): q is string => typeof q === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeRecent(workspaceSlug: string, list: string[]) {
-  try {
-    window.localStorage.setItem(recentKey(workspaceSlug), JSON.stringify(list));
-  } catch {}
-}
 
 const RESOURCE_GROUP_LABELS = {
   mailbox: "Mailboxes",
@@ -237,7 +218,7 @@ export function SearchDialog() {
     const opening = open && !wasOpen.current;
     wasOpen.current = open;
     if (!opening) return;
-    setRecent(readRecent(workspaceSlug));
+    setRecent(readRecentSearches(workspaceSlug));
     setPage(null);
     setActive("");
     if (!seeded) {
@@ -253,11 +234,11 @@ export function SearchDialog() {
     (text: string) => {
       const trimmed = text.trim();
       if (!trimmed) return;
-      const next = [trimmed, ...readRecent(workspaceSlug).filter((q) => q !== trimmed)].slice(
-        0,
-        RECENT_LIMIT,
-      );
-      writeRecent(workspaceSlug, next);
+      const next = [
+        trimmed,
+        ...readRecentSearches(workspaceSlug).filter((q) => q !== trimmed),
+      ].slice(0, RECENT_LIMIT);
+      writeRecentSearches(workspaceSlug, next);
       setRecent(next);
     },
     [workspaceSlug],
@@ -655,8 +636,8 @@ export function SearchDialog() {
   };
 
   const removeRecent = (q: string) => {
-    const next = readRecent(workspaceSlug).filter((r) => r !== q);
-    writeRecent(workspaceSlug, next);
+    const next = readRecentSearches(workspaceSlug).filter((r) => r !== q);
+    writeRecentSearches(workspaceSlug, next);
     setRecent(next);
   };
 

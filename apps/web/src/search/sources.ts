@@ -36,7 +36,7 @@ import { matcherFor, type SearchDoc } from "./match";
 
 const MAX_CHAT_TEXT_THREADS = 40;
 const MAX_RUNS = 50;
-const SUBSCRIPTION_SCAN = 50;
+const SUBSCRIPTION_SCAN = 100;
 
 export interface LocalSearchContext {
   appUser: WorkspaceUserSession;

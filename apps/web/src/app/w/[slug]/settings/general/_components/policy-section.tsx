@@ -153,15 +153,15 @@ export function PolicySection({ canEdit }: { canEdit: boolean }) {
 
   return (
     <section className="mt-8">
-      <h2 className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-[1.5px] text-faint">
-        AI &amp; privacy
+      <div className="flex items-center gap-1.5">
+        <h2 className="text-[10px] font-medium uppercase tracking-[1.5px] text-faint">
+          AI &amp; privacy
+        </h2>
         <InfoHint label="AI & privacy">
-          <span className="normal-case tracking-normal">
-            What this workspace allows. A mailbox, calendar, drive or address book can always be
-            more restrictive than the workspace, never less.
-          </span>
+          What this workspace allows. A mailbox, calendar, drive or address book can always be more
+          restrictive than the workspace, never less.
         </InfoHint>
-      </h2>
+      </div>
 
       {error && !pending && (
         <p className="mt-3 rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2 text-[13px] text-destructive-text">

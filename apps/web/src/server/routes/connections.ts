@@ -92,7 +92,7 @@ function connectFailureMessage(err: unknown): string {
   }
 
   if (codes.some((code) => UNREACHABLE_CODES.has(code))) {
-    return "Could not reach that server — it may be down right now.";
+    return "Could not reach that server. It may be down right now.";
   }
 
   return "Could not sign in to that server. Check your username and password.";

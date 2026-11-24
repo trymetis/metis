@@ -1,4 +1,4 @@
 PRAGMA foreign_keys=OFF;
 BEGIN;
-INSERT INTO "ai_usage" ("id","user_id","workspace_id","feature","provider","model","input_tokens","output_tokens","total_tokens","cache_read_tokens","cache_write_tokens","reasoning_tokens","steps","finish_reason","run_id","created_at") VALUES ('51800627-3b42-45d2-aed0-b45b04c9fb98','f0c4be98-b2fd-59d7-b11e-c921e7d22615','39e2a274-68d1-5615-b91e-ed3087e0400f','classify','decision:systemone','jev-latest',11672,1980,13652,0,0,0,22,NULL,NULL,1795321930348);
+INSERT INTO "ai_usage" ("id","user_id","workspace_id","feature","provider","model","input_tokens","output_tokens","total_tokens","cache_read_tokens","cache_write_tokens","reasoning_tokens","steps","finish_reason","run_id","created_at") VALUES ('322392f2-fa28-4169-866d-3b8590f09aab','f0c4be98-b2fd-59d7-b11e-c921e7d22615','39e2a274-68d1-5615-b91e-ed3087e0400f','classify','decision:systemone','jev-latest',11672,1980,13652,0,0,0,22,NULL,NULL,1795410761382);
 COMMIT;

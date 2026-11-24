@@ -44,10 +44,10 @@ export function Section({
     <section className="rounded-xl border border-border bg-surface p-4">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="flex items-center gap-1.5 text-[13px] font-medium text-foreground">
-            {title}
+          <div className="flex items-center gap-1.5">
+            <h2 className="text-[13px] font-medium text-foreground">{title}</h2>
             {hint && <InfoHint label={title}>{hint}</InfoHint>}
-          </h2>
+          </div>
           {description && <p className="mt-0.5 text-[11px] text-faint">{description}</p>}
         </div>
         {badge}

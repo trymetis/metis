@@ -29,8 +29,8 @@ import {
   buildPrompt,
   CARD_DEFINITIONS,
   type DetailCardType,
-  SYSTEM_FULL,
-  SYSTEM_REFINE,
+  systemFull,
+  systemRefine,
 } from "./summary-prompt";
 
 export interface SummaryResponse extends ThreadSummary {
@@ -231,9 +231,9 @@ function fullBuild(
     buildPrompt(
       conversation,
       recent,
-      `Build the cards for this conversation (${conversation.messages.length} message(s)):`,
+      `Build the summary card for this conversation (${conversation.messages.length} message(s)):`,
     ),
-    SYSTEM_FULL,
+    systemFull(types),
     allowedLinks(recent),
     types,
   );
@@ -251,12 +251,16 @@ function refine(
     buildPrompt(
       conversation,
       newMsgs,
-      `Current cards:\n${JSON.stringify(outputFromCards(prev.cards))}\n\nNew message(s):`,
+      `Current card:\n${JSON.stringify(outputFromCards(prev.cards))}\n\nNew message(s):`,
     ),
-    SYSTEM_REFINE,
+    systemRefine(types),
     allowedLinks(newMsgs, prev.cards),
     types,
   );
+}
+
+function summaryModelKey(): string {
+  return `${getLlm().summary.modelId}#${SUMMARY_FORMAT}`;
 }
 
 export async function buildThreadSummary(
@@ -266,7 +270,7 @@ export async function buildThreadSummary(
   beforeModel?: () => Promise<void>,
 ): Promise<SummaryResponse> {
   const scopedThread = scopeMessage(session, threadId ?? messageId);
-  const model = `${getLlm().summary.modelId}#${SUMMARY_FORMAT}`;
+  const model = summaryModelKey();
 
   const conversation = await loadConversation(session, messageId, threadId);
   const msgs = conversation.messages;
@@ -359,10 +363,10 @@ export async function summarizeThread(
   };
 }
 
-export async function cachedTldrs(
+export async function cachedSummaryCards(
   session: MailScope,
   threads: readonly SummaryPreviewThread[],
-): Promise<Record<string, string>> {
+): Promise<Record<string, SummaryCard>> {
   const scoped = threads.flatMap((t) => {
     try {
       const thread = scopeMessage(session, t.threadId);
@@ -374,14 +378,15 @@ export async function cachedTldrs(
   });
   const rows = await getThreadSummaries(scoped.map((s) => s.thread));
   const byKey = new Map(rows.map((r) => [`${r.mailboxId}\u0000${r.threadKey}`, r]));
-  const tldrs: Record<string, string> = {};
+  const model = summaryModelKey();
+  const cards: Record<string, SummaryCard> = {};
   for (const { threadId, thread, latestAt } of scoped) {
     const row = byKey.get(`${thread.mailboxId}\u0000${thread.messageId}`);
-    if (!row || !(latestAt <= row.updatedAt.getTime())) continue;
+    if (!row || row.model !== model || !(latestAt <= row.updatedAt.getTime())) continue;
     const { summary } = row;
     if (summary.skipped || summary.failedAt) continue;
-    const card = summary.cards.find((c) => c.type === "Summary");
-    if (card?.type === "Summary" && card.tldr) tldrs[threadId] = card.tldr;
+    const card = summary.cards[0];
+    if (card) cards[threadId] = card;
   }
-  return tldrs;
+  return cards;
 }

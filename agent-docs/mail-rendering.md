@@ -81,7 +81,7 @@ See also [AGENTS.md](../AGENTS.md), [mail.md](mail.md), [mail-ai.md](mail-ai.md)
 - **Known trackers are removed in every mode and from reply and forward quotes.**
   - A quote keeps legitimate remote image URLs (the recipient's client decides), never proxy URLs, and drops `<style>` so the quoted message cannot restyle the reply.
 - **Wrapped links are unwrapped only when the destination is readable from the URL; the server never follows a tracking redirect.** Links that stay wrapped keep their `href` and get `data-tracked`; the sender's own `data-tracked` attributes are discarded.
-- **Links are cleaned at sanitize time**, so middle-click, copy link and both shells see the cleaned URL. `mail_clean_links` turns it off; summary-card URLs go through the same `cleanUrl`.
+- **Links are cleaned at sanitize time**, so middle-click, copy link and both shells see the cleaned URL. `mail_clean_links` turns it off; summary-card URLs go through the same `cleanUrl` in the reading pane and on list rows (`useSummaryUrlCleaner` in `thread-summary/index.tsx`).
 - **The rules files are generated, never hand-edited.**
   - MailTrackerBlocker is pinned to a commit and ClearURLs is verified against its published sha256 in `update-privacy-rules.ts`, which throws below a vendor/provider floor so an upstream format change fails the run.
   - `mail-privacy-store.ts` loads the generated modules with a dynamic `import()`, so only mail pages pull them.

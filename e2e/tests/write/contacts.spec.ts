@@ -1,6 +1,6 @@
 import { expect, test, uniqueName } from "../fixtures";
 import { mailPath, workspacePath } from "../harness";
-import { expandSummary, mailRow, openMail, rowLabel } from "../mail";
+import { expandSummary, mailRow, openMail, rowLabel, summaryCard } from "../mail";
 
 interface Match {
   email: string;
@@ -116,8 +116,8 @@ export default function contactSpecs() {
     ).toBeVisible();
     await openMail(page, "Introducing Layla Haddad from Saffron & Sage");
     await expandSummary(page);
-    const main = page.getByRole("main");
-    await main.getByRole("button", { name: "Save contact", exact: true }).click();
+    const card = summaryCard(page);
+    await card.getByRole("button", { name: "Save contact", exact: true }).click();
     const picker = page.getByRole("dialog", { name: "Save contact" });
     await picker.getByRole("button", { name: /Studio contacts/ }).click();
     await picker.getByRole("button", { name: "Save", exact: true }).click();
@@ -135,7 +135,7 @@ export default function contactSpecs() {
         contactId: saved?.contactId,
       });
       expect(contact.name.display).toBe("Layla Haddad");
-      await expect(main.getByRole("button", { name: "Open contact", exact: true })).toBeVisible();
+      await expect(card.getByRole("button", { name: "Open contact", exact: true })).toBeVisible();
     } finally {
       for (const match of await lookup()) {
         await rpc("contacts.delete", {

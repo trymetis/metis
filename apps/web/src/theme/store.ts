@@ -2,6 +2,7 @@ import "server-only";
 import { and, count, eq, inArray, isNotNull, isNull, ne, or, sql } from "drizzle-orm";
 
 import { db } from "@/db";
+import { isUniqueViolation } from "@/db/errors";
 import { theme, workspace } from "@/db/schema";
 import { themePaletteSchema } from "@/server/schema";
 
@@ -102,7 +103,21 @@ export async function themeUsage(): Promise<Map<string, number>> {
 
 export type SaveThemeResult = { theme: StoredTheme } | { error: string; notFound?: true };
 
+const NAME_TAKEN = "A theme with that name already exists";
+
 export async function saveTheme(
+  owner: ThemeOwner,
+  input: { id?: string; name: string; palette: ThemePalette },
+): Promise<SaveThemeResult> {
+  try {
+    return await writeTheme(owner, input);
+  } catch (err) {
+    if (isUniqueViolation(err)) return { error: NAME_TAKEN };
+    throw err;
+  }
+}
+
+async function writeTheme(
   owner: ThemeOwner,
   input: { id?: string; name: string; palette: ThemePalette },
 ): Promise<SaveThemeResult> {
@@ -118,7 +133,7 @@ export async function saveTheme(
       ),
     )
     .limit(1);
-  if (sameName.length > 0) return { error: "A theme with that name already exists" };
+  if (sameName.length > 0) return { error: NAME_TAKEN };
 
   if (input.id) {
     const [updated] = await db

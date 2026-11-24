@@ -22,7 +22,15 @@ import type { ReactNode } from "react";
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { CardAction, CardLink, CardShell, Detail, Details, Title } from "./card-parts";
+import {
+  CardAction,
+  CardLink,
+  CardShell,
+  Detail,
+  Details,
+  Title,
+  CompactShell,
+} from "./card-parts";
 import { ExpiryBadge, useExpiry } from "./expiry";
 import { formatWhen, hostOf } from "./format";
 import { useSummaryActions } from "./summary-context";
@@ -123,5 +131,31 @@ export function ActionLinkCard({ props }: { props: ActionLinkProps }) {
         <Hint icon={Info}>The link is in the email below.</Hint>
       )}
     </CardShell>
+  );
+}
+
+export function ActionLinkCompact({ props }: { props: ActionLinkProps }) {
+  const expiry = useExpiry(props.issuedAt, props.validForMinutes);
+  const purpose = PURPOSES[props.purpose];
+  const Icon = purpose.icon;
+  return (
+    <CompactShell>
+      <Icon aria-hidden className="size-3.5 shrink-0 text-primary" />
+      <span className="shrink-0 text-[10px] font-medium uppercase tracking-[1.5px] text-primary">
+        {purpose.label}
+      </span>
+      {props.service && <span className="min-w-0 truncate font-medium">{props.service}</span>}
+      {props.account && (
+        <span className="min-w-0 truncate text-[12px] text-faint">for {props.account}</span>
+      )}
+      <span className="ml-auto flex shrink-0 items-center gap-1.5">
+        <ExpiryBadge expiry={expiry} />
+        {!expiry.expired && props.url && (
+          <CardLink href={props.url} intent="primary" icon={Icon}>
+            {props.label}
+          </CardLink>
+        )}
+      </span>
+    </CompactShell>
   );
 }

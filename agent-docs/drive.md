@@ -123,7 +123,7 @@ See also [AGENTS.md](../AGENTS.md), [drive-providers.md](drive-providers.md), [d
   - The view menu offers the three `DRIVE_VIEWS` (`list`, `compact`, `large`), stored per browser under `metis:drive-view`; every style in `drive-entries.tsx` is a variant keyed by all three, and the icon scales with the cell.
   - Arrow keys read the column count from the computed grid (`gridColumns`), so they follow any width.
 - **Recent is per browser and drive** (`use-drive-recents.ts`, `localStorage`): the folder being shown is recorded once its name is known, however it was reached, and a file when its preview opens.
-  - A recent file keeps its whole entry, so clicking it reopens the preview over the current folder without a fetch.
+  - A recent file keeps its whole entry, so clicking it reopens the preview over the current folder without a fetch; a preview whose download answers 404 drops the row (`forget`, through `DrivePreview` → `onMissing`).
   - The key names the workspace and drive but not the user, so every web sign-out clears all lists (`src/drive/recents.ts` → `clearDriveRecents`, called by `clearLocalData`); otherwise the next account on a shared browser would see them.
   - Pinned and Recent rows show the entry's own `DriveIcon`, not a section icon.
 - **File type icons are generated, never hand-written.** `icons:drive` keeps a curated allowlist from `catppuccin/vscode-icons` and throws if an allowlisted icon vanished upstream; attribution is in the repository-root `NOTICE`.
@@ -139,6 +139,7 @@ See also [AGENTS.md](../AGENTS.md), [drive-providers.md](drive-providers.md), [d
 - **Aggregate drive.** `/d/all` lists one synthetic folder per drive (id `<driveId>:`); below it everything is inside exactly one adapter. The root of `/d/all` has no folder to write into, so writes go through `DrivePickerDialog` first.
 - **Explorer paths.** `/w/[slug]/d/[drive]/[[...path]]` segments are the ancestor folder id trail, so breadcrumbs survive a cold deep link.
 - **Icon theming.** `<DriveIcon>` sets two CSS custom properties and `.dark .drive-icon` swaps them, so theming costs no JavaScript and the unused flavor is never fetched.
+  - `.drive-icon` lives in `@layer components` (`src/styles/globals.css`), so a size utility such as the grid's `size-[75%]` overrides its default 1rem.
 - **Mail↔drive.** Save-attachment-to-drive downloads through the existing mail procedure and then PUTs browser-direct (`uploadToDrive`); attach-from-drive inserts the provider link.
 
 ## Deliberate limits

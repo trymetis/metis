@@ -14,7 +14,7 @@
         "waitFor": "main h2:has-text(\"Rebrand kickoff\")"
       },
       {
-        "click": "main >> role=button[name=\"Show summary cards\"]"
+        "click": "main >> role=button[name=\"Show summary\"]"
       },
       {
         "waitFor": "text=TL;DR"
@@ -476,7 +476,7 @@
         "waitFor": "role=dialog >> text=/remote images? blocked/"
       }
     ],
-    "element": "role=dialog:has-text(\"remote image\")",
+    "element": "role=dialog",
     "www": [
       {
         "name": "mail/images"
@@ -512,6 +512,31 @@
     ]
   },
   {
+    "name": "mail/summary-line",
+    "target": "docs",
+    "clip": {
+      "x": 640,
+      "y": 90,
+      "width": 780,
+      "height": 440
+    },
+    "path": "{workspace}/m/{mailbox}/inbox",
+    "steps": [
+      {
+        "click": "role=tab[name=/^All$/]"
+      },
+      {
+        "click": "main [aria-roledescription=\"draggable\"] >> text=\"Your order A-42 has shipped\""
+      },
+      {
+        "waitFor": "main h2:has-text(\"Your order A-42 has shipped\")"
+      },
+      {
+        "waitFor": "main >> role=button[name=\"Show summary\"]"
+      }
+    ]
+  },
+  {
     "name": "mail/summary-card",
     "target": "docs",
     "clip": {
@@ -532,7 +557,7 @@
         "waitFor": "main h2:has-text(\"Your order A-42 has shipped\")"
       },
       {
-        "click": "main >> role=button[name=\"Show summary cards\"]"
+        "click": "main >> role=button[name=\"Show summary\"]"
       },
       {
         "waitFor": "text=Track package"

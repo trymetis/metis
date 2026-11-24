@@ -49,7 +49,7 @@ export function DrivePreviewMarkdown({ blob, onFail }: { blob: Blob; onFail: () 
     <div className="h-full overflow-auto">
       <div
         ref={container}
-        className="drive-markdown mx-auto max-w-3xl px-8 py-6 text-[14px] leading-6 text-foreground"
+        className="markdown-body mx-auto max-w-3xl px-8 py-6 text-[14px] leading-6 text-foreground"
         // oxlint-disable-next-line react/no-danger --sanitized via sanitizeHtml in renderMarkdown
         dangerouslySetInnerHTML={{ __html: html }}
       />

@@ -11,7 +11,7 @@ import { useState } from "react";
 
 import { CopyButton } from "@/components/copy-button";
 import { Loading, useSystemData } from "@/components/dashboard/system-client";
-import { Mono, Note, Section, Sections } from "@/components/dashboard/system-ui";
+import { Note, Section, Sections } from "@/components/dashboard/system-ui";
 import { rpc } from "@/lib/orpc";
 import { formatBytes } from "@/lib/utils";
 import type { DashboardExport } from "@/server/schema";
@@ -23,18 +23,36 @@ const LOCATION_LABEL: Record<ExportLocationKind, string> = {
   s3: "In S3",
 };
 
-function when(value: string | null): string {
-  return value ? new Date(value).toLocaleString() : "Not recorded";
+function when(value: string | null): string | null {
+  return value ? new Date(value).toLocaleString() : null;
 }
 
-function Detail({ label, value, copy }: { label: string; value: string; copy?: boolean }) {
+function Detail({
+  label,
+  value,
+  note,
+  copy,
+}: {
+  label: string;
+  value: string | null;
+  note?: string;
+  copy?: boolean;
+}) {
   return (
-    <div className="flex items-center gap-3 py-1">
-      <span className="w-32 shrink-0 text-[12px] text-muted-foreground">{label}</span>
-      <span className="min-w-0 flex-1 truncate font-mono text-[12px]" title={value}>
-        {value}
-      </span>
-      {copy && <CopyButton value={value} label={`Copy ${label}`} className="size-6 shrink-0" />}
+    <div className="flex items-center gap-3 py-1 text-[12px]">
+      <dt className="w-32 shrink-0 text-muted-foreground">{label}</dt>
+      <dd className="flex min-w-0 flex-1 items-center gap-1.5">
+        <span
+          className={cn("min-w-0 truncate", value ? "text-foreground" : "text-faint")}
+          title={value ?? undefined}
+        >
+          {value ?? "Not recorded"}
+        </span>
+        {note && <span className="shrink-0 text-faint">{note}</span>}
+        {copy && value && (
+          <CopyButton value={value} label={`Copy ${label}`} className="size-6 shrink-0" />
+        )}
+      </dd>
     </div>
   );
 }
@@ -48,13 +66,14 @@ function ExportRow({ entry }: { entry: DashboardExport }) {
       onOpenChange={setOpen}
       className="border-b border-border last:border-b-0"
     >
-      <CollapsibleTrigger className="flex w-full items-center gap-3 px-1 py-2.5 text-left outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring/50">
+      <CollapsibleTrigger className="flex w-full items-center gap-3 rounded-md px-1 py-2.5 text-left outline-none hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring/50">
         <span className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="text-[13px] text-foreground">
-            {when(entry.createdAt)} · <Mono>{entry.appVersion}</Mono> · {formatBytes(entry.size)}
+            {new Date(entry.createdAt).toLocaleString()} · {entry.appVersion} ·{" "}
+            {formatBytes(entry.size)}
           </span>
           <span className="truncate text-[12px] text-faint">
-            <span className="font-mono">{entry.fileName}</span> · {where.join(", ")}
+            {entry.fileName} · {where.join(", ")}
           </span>
         </span>
         <ChevronRight
@@ -63,7 +82,7 @@ function ExportRow({ entry }: { entry: DashboardExport }) {
         />
       </CollapsibleTrigger>
       <CollapsibleContent>
-        <div className="mb-2 ml-1 border-l border-border pl-3">
+        <dl className="px-1 pb-3">
           <Detail label="SHA-256" value={entry.sha256} copy />
           <Detail label="Migration" value={entry.migration} copy />
           <Detail label="From" value={entry.instanceUrl} copy />
@@ -78,12 +97,13 @@ function ExportRow({ entry }: { entry: DashboardExport }) {
           {entry.recipients.map((recipient) => (
             <Detail
               key={recipient.fingerprint}
-              label={recipient.passphrase ? "Passphrase" : "Recipient"}
+              label="Recipient"
               value={recipient.fingerprint}
+              note={recipient.passphrase ? "passphrase key" : undefined}
               copy
             />
           ))}
-        </div>
+        </dl>
       </CollapsibleContent>
     </Collapsible>
   );

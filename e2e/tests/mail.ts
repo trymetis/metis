@@ -125,8 +125,12 @@ export function composer(page: Page): Locator {
   });
 }
 
+export function summaryCard(page: Page): Locator {
+  return page.getByRole("main").getByRole("region", { name: "Summary", exact: true });
+}
+
 export async function expandSummary(page: Page): Promise<void> {
-  await page.getByRole("main").getByRole("button", { name: "Show summary cards" }).click();
+  await summaryCard(page).getByRole("button", { name: "Show summary" }).click();
 }
 
 export async function openReply(page: Page): Promise<void> {

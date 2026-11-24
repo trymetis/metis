@@ -71,9 +71,12 @@ import {
   useSummaryPreviews,
 } from "@/mail/mail-cache";
 import { mailboxChipStyle } from "@/mail/mailbox-color";
+import type { SummaryCard } from "@/mail/summary-catalog";
 import { type MailListView, useMailStore } from "@/store/mail-store";
 import type { Email, MailFolder } from "@/types/mail";
 import { ALL_MAILBOXES_SLUG, mailPath } from "@/workspace/path";
+
+import { SummaryCardCompact, useSummaryUrlCleaner } from "./thread-summary";
 
 interface EmailListProps {
   folder: MailFolder;
@@ -307,7 +310,8 @@ export function EmailList({ folder, view }: EmailListProps) {
       })),
     [visibleThreads],
   );
-  const tldrs = useSummaryPreviews(scope, previewThreads, platformAi && aiEnabled);
+  const summaries = useSummaryPreviews(scope, previewThreads, platformAi && aiEnabled);
+  const cleanSummaryUrl = useSummaryUrlCleaner();
 
   // oxlint-disable-next-line react/incompatible-library -- TanStack Virtual is used as documented; the React Compiler is not enabled
   const virtualizer = useVirtualizer({
@@ -641,7 +645,8 @@ export function EmailList({ folder, view }: EmailListProps) {
                       email={group.latest}
                       threadCount={group.count}
                       labelInfo={labelInfo}
-                      tldr={tldrs[group.latest.threadId ?? group.latest.id]}
+                      summary={summaries[group.latest.threadId ?? group.latest.id]}
+                      cleanUrl={cleanSummaryUrl}
                       allMailboxes={scope.mailboxSlug === ALL_MAILBOXES_SLUG}
                       isSelected={selectedEmail?.id === group.latest.id}
                       isChecked={selectedIds.has(group.latest.id)}
@@ -695,7 +700,8 @@ interface EmailRowProps {
   email: Email;
   threadCount?: number;
   labelInfo?: { label: string; bg: string; fg: string };
-  tldr?: string;
+  summary?: SummaryCard;
+  cleanUrl?: (url: string) => string;
   allMailboxes: boolean;
   isSelected: boolean;
   isChecked: boolean;
@@ -708,7 +714,8 @@ function EmailRow({
   email,
   threadCount = 1,
   labelInfo,
-  tldr,
+  summary,
+  cleanUrl,
   allMailboxes,
   isSelected,
   isChecked,
@@ -740,8 +747,13 @@ function EmailRow({
       {...attributes}
       {...listeners}
       ref={setNodeRef}
-      onClick={() => onSelect(email)}
+      onClick={(e) => {
+        if (!(e.target instanceof Element) || !e.currentTarget.contains(e.target)) return;
+        if (e.target.closest("a, button")) return;
+        onSelect(email);
+      }}
       onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           onSelect(email);
@@ -821,9 +833,11 @@ function EmailRow({
         {email.hasAttachments && (
           <Paperclip className="size-3 shrink-0 text-faint" aria-label="Has attachments" />
         )}
-        <span className="min-w-0 flex-1 truncate text-[12px] text-faint">
-          {tldr ?? email.snippet}
-        </span>
+        {summary ? (
+          <SummaryCardCompact card={summary} cleanUrl={cleanUrl} />
+        ) : (
+          <span className="min-w-0 flex-1 truncate text-[12px] text-faint">{email.snippet}</span>
+        )}
         <span className="shrink-0 text-[11px] tabular-nums text-faint">
           {formatEmailDate(email.date)}
         </span>

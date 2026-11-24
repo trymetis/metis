@@ -18,6 +18,7 @@ import {
   rowLabel,
   scheduledRow,
   showTab,
+  summaryCard,
 } from "../mail";
 
 const SEEDED = [
@@ -72,7 +73,7 @@ test("opening a message shows its summary card and three smart replies", async (
   await openMail(page, "Rebrand kickoff");
   const main = page.getByRole("main");
   await expandSummary(page);
-  await expect(main.getByText("TL;DR", { exact: true })).toBeVisible();
+  await expect(summaryCard(page).getByText("TL;DR", { exact: true })).toBeVisible();
   await expect(main.getByRole("group", { name: "Smart replies" }).getByRole("button")).toHaveCount(
     3,
   );

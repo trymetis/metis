@@ -4,7 +4,7 @@ import { SEEDED_CONTACTS } from "@metis/e2e/lib/contacts";
 
 import { expect, test } from "../fixtures";
 import { mailPath, workspacePath } from "../harness";
-import { expandSummary, mailRow, openMail, rowLabel } from "../mail";
+import { expandSummary, mailRow, openMail, rowLabel, summaryCard } from "../mail";
 import { openSearch, typeQuery } from "../search";
 
 function contactList(page: import("@playwright/test").Page) {
@@ -46,7 +46,8 @@ test("the filter narrows the list and a contact card shows its fields", async ({
   await expect(card.getByRole("heading", { level: 1, name: "Raj Mehta" })).toBeVisible();
   await expect(card.getByText("raj@demo.trymetis.email (work)")).toBeVisible();
   await expect(card.getByText("+351 912 345 678 (cell)")).toBeVisible();
-  await expect(card.getByText("Rebrand lead · Fernhill Studio")).toBeVisible();
+  await expect(card.getByText("Rebrand lead", { exact: true })).toBeVisible();
+  await expect(card.getByText("Fernhill Studio", { exact: true })).toBeVisible();
   await expect(card.getByRole("button", { name: "raj@demo.trymetis.email (work)" })).toBeEnabled();
   await expect(card.getByRole("link", { name: "+351 912 345 678 (cell)" })).toHaveAttribute(
     "href",
@@ -140,13 +141,13 @@ test("a summary Contact card for a saved person offers Open contact and Download
   ).toBeVisible();
   await openMail(page, "Introducing Lena Hoffmann (Kaltwasser GmbH)");
   await expandSummary(page);
-  const main = page.getByRole("main");
-  await expect(main.getByText("Lena Hoffmann", { exact: true }).first()).toBeVisible();
-  await expect(main.getByRole("button", { name: "Save contact", exact: true })).toHaveCount(0);
+  const card = summaryCard(page);
+  await expect(card.getByText("Lena Hoffmann", { exact: true }).first()).toBeVisible();
+  await expect(card.getByRole("button", { name: "Save contact", exact: true })).toHaveCount(0);
   const download = page.waitForEvent("download");
-  await main.getByRole("button", { name: "Download contact card", exact: true }).first().click();
+  await card.getByRole("button", { name: "Download contact card", exact: true }).first().click();
   expect((await download).suggestedFilename()).toMatch(/\.vcf$/);
-  await main.getByRole("button", { name: "Open contact", exact: true }).first().click();
+  await card.getByRole("button", { name: "Open contact", exact: true }).first().click();
   await expect(page).toHaveURL(/\/p\/all\/all\/[^/]+$/);
   await expect(page.getByRole("article", { name: "Lena Hoffmann" })).toBeVisible();
 });
@@ -161,10 +162,10 @@ test("a summary Contact card for someone not saved offers Save contact", async (
   ).toBeVisible();
   await openMail(page, "Introducing Layla Haddad from Saffron & Sage");
   await expandSummary(page);
-  const main = page.getByRole("main");
-  await expect(main.getByRole("button", { name: "Save contact", exact: true })).toBeVisible();
+  const card = summaryCard(page);
+  await expect(card.getByRole("button", { name: "Save contact", exact: true })).toBeVisible();
   await expect(
-    main.getByRole("button", { name: "Download contact card", exact: true }),
+    card.getByRole("button", { name: "Download contact card", exact: true }),
   ).toBeVisible();
-  await expect(main.getByRole("button", { name: "Open contact", exact: true })).toHaveCount(0);
+  await expect(card.getByRole("button", { name: "Open contact", exact: true })).toHaveCount(0);
 });

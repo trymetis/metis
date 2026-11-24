@@ -4,7 +4,7 @@ import { MailX, Newspaper } from "lucide-react";
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { CardAction, CardShell } from "./card-parts";
+import { CardAction, CardShell, CompactShell } from "./card-parts";
 import { useSummaryActions } from "./summary-context";
 
 const UNSUBSCRIBE_LABELS = {
@@ -53,5 +53,34 @@ export function DigestCard({ props }: { props: SummaryCardProps<"Digest"> }) {
         ))}
       </ul>
     </CardShell>
+  );
+}
+
+export function DigestCompact({ props }: { props: SummaryCardProps<"Digest"> }) {
+  const unsubscribe = useSummaryActions()?.unsubscribe;
+  return (
+    <CompactShell>
+      <Newspaper aria-hidden className="size-3.5 shrink-0 text-primary" />
+      <span className="shrink-0 font-medium">{props.publication}</span>
+      <span className="shrink-0 text-[12px] text-faint">
+        {props.items.length} {props.items.length === 1 ? "story" : "stories"}
+      </span>
+      <span className="min-w-0 flex-1 truncate text-[12px] text-faint">
+        {props.items.map((item) => item.title).join(" · ")}
+      </span>
+      {unsubscribe?.available && (
+        <span className="ml-auto shrink-0">
+          <CardAction
+            icon={MailX}
+            disabled={
+              unsubscribe.busy || unsubscribe.status === "done" || unsubscribe.status === "manual"
+            }
+            onClick={unsubscribe.run}
+          >
+            {unsubscribe.status ? UNSUBSCRIBE_LABELS[unsubscribe.status] : "Unsubscribe"}
+          </CardAction>
+        </span>
+      )}
+    </CompactShell>
   );
 }

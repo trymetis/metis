@@ -623,12 +623,13 @@ test("a dispatch step that ends without a receipt can be closed by a person", as
 test("the seeded AI and agent runs completed every AI step", async () => {
   const { rpc, account } = await ana();
   const seededRun = async (name: string) => {
-    const { runs } = await rpc<{ runs: { id: string; workflowName: string }[] }>("workflows.runs", {
+    const workflow = await workflowNamed(rpc, account, name);
+    const { runs } = await rpc<{ runs: { id: string }[] }>("workflows.runs", {
       ...scope(account),
+      workflowIds: [workflow.id],
       limit: 100,
     });
-    const ids = runs.filter((run) => run.workflowName === name).map((run) => run.id);
-    for (const id of ids) {
+    for (const { id } of runs) {
       const run = await getRun(rpc, account, id);
       const detail = await rpc<{ run: { trigger: { source: string } } }>("workflows.getRun", {
         ...scope(account),

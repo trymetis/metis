@@ -47,14 +47,20 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [mail.md](mail
   - Below that, or on a refusal, nothing is written and the message is flagged in its mailbox's `classify-unsure:` cache hash (`markUnsure`, `UNSURE_TTL_SEC` from the hash's first flag), which stops it being asked again; flagged items are filtered out before any call, read in one `hmget` per mailbox.
   - Creating, renaming or deleting a custom label drops the mailbox's unsure hash (`forgetUnsure` in `createCustomLabel`, `updateCustomLabel` and `deleteCustomLabel`), because the new set of labels may fit a message the old one did not.
 - **A failed decision call leaves only its own message unlabeled**, asked again on the next render, with no LLM fallback; the other calls still write their labels, unsure keys and usage.
-- **Summaries, phishing results and smart replies are kept in the browser for the session** (`staleTime: Infinity` in `src/hooks/use-email-detail.ts`), since each is keyed by message; a rate-limited smart-replies call retries quietly after the wait.
+- **Summaries, phishing results and smart replies are kept in the browser for the session** (`staleTime: Infinity` in `src/hooks/use-email-detail.ts`), since each is keyed by message.
+  - A rate-limited smart-replies call retries quietly after the wait; a rate-limited summary or phishing check shows its wait message and retries on its own after it (`retryWhenRateLimited`, `waitingOnRateLimit`).
 - **A rate-limited `mail.labels.classify` batch is retried once its wait has passed** (`email-list.tsx`), and no other batch starts meanwhile; any other failure is not retried in that session.
 - **The LLM prompt and the decision options render the label names and descriptions from one table**, `LABEL_DESCRIPTIONS`.
 
 ### Summaries
 
-- **The model returns `{ tldr, cards }`, and `cards` never holds a Summary** (`summaryOutputSchemaFor`), so a mail gets at most one TL;DR by construction and a notification gets `tldr: null`.
-  - `cardsFromOutput` stores the TL;DR as the first card, so the stored and rendered shape stays one card list; `outputFromCards` turns the stored list back into the model's shape for a refine.
+- **A conversation gets one summary card or none: the model returns `{ card }`** (`summaryOutputSchemaFor`), the single type that holds everything the conversation is about, or a TL;DR when no single type can; an automated notification no type fits gets `card: null`.
+  - "Summary" names the whole family of cards, on screen (**Show summary**, **Hide summary**) and in code; "TL;DR" names only the fallback type (`Tldr`, its sentence in `text`), labelled **TL;DR** on screen. Every other kind is labelled by its own kind.
+  - Every type but Tldr holds one item; two or more items, even of one type, go to a Tldr, as does a conversation about several things.
+  - Tldr is always allowed, whatever the gate narrows the other types to.
+  - The system prompt describes only the types the request's schema allows (`systemFull` and `systemRefine` in `src/mail/summary-prompt.ts` take the gate's types), and every type when the gate is off or refuses, because a prompt describing types the schema rejects makes the model reason at length over the mismatch.
+  - The model-facing text never says "TL;DR card" for the family, because a family name that matches one type's name makes the model argue over which card it is asked for.
+  - `cardsFromOutput` and `outputFromCards` keep the stored shape a card list of at most one, which the reading pane, the list previews and the `summarizeThread` tool read.
 - **The server builds the json-render spec** (`buildSummarySpec`) and `summarySpecSchema` validates it, because json-render's `elements` map cannot be expressed in strict JSON Schema.
 - **The card registry is our own, on base-nova** (`@json-render/react`), because `@json-render/shadcn` pulls in Radix.
 - **Summary input is bounded so a huge or hostile email cannot reach the model whole.** The caps (HTML and text sizes, base64 and data-URI stripping, body caps, JSON-LD / microdata pruning, nested `message/rfc822` depth, per-attachment `maxBytes`) live in the input-bounding files in the code map.
@@ -62,11 +68,11 @@ See also [AGENTS.md](../AGENTS.md), [ai-agents.md](ai-agents.md), [mail.md](mail
 - **Every `url` / `*Url` a card returns, at any depth, is dropped unless it appears in the conversation's own links** (`allowedLinks`).
 - **Card actions reuse existing procedures and reading-pane handlers** through `SummaryActionsProvider`.
 - **An action sits next to what it acts on** (`card-parts.tsx`): a whole-card action goes in the `CardShell` header (`aside`), a per-value action in its `Detail`'s `action`, and both render compact (`CompactActions`); a universal action (copy, download, directions, call, email) is icon-only with a tooltip (`iconOnly`).
-- **The cards start collapsed to one line** (`SummaryPeek`): the TL;DR text and a chip per other card; the open/closed choice is a per-browser view preference (`useStoredItem`, `metis:mail-summary-expanded`).
+- **Every card file exports a compact component next to its full one, taking the same props** (`<Kind>Compact`, such as `ShipmentCompact`): one row written for that card, with its own actions, inside the shared `CompactShell` container (`card-parts.tsx`: a plain flex row, no background, border or chevron). The reading pane shows it with its own open button and the list row shows the same component (`SummaryCardCompact`); the full card's header carries the collapse button (`CardShell` reads `CollapseContext`); the open/closed choice is a per-browser view preference (`useStoredItem`, `metis:mail-summary-expanded`).
 - **"Add to calendar" carries the Meeting card's attendees**, passing the email addresses in `attendees` to `calendarEvents.create`.
 - **The Contact card saves to an address book or downloads a `.vcf`.** Save contact opens the address-book picker with the card's fields, or Open contact when `contacts.lookup` finds one of its emails; Download keeps the `.vcf`; the card schema is unchanged ([contacts.md](contacts.md)).
 - **Summary output is capped (`maxOutputTokens`)**, because without a cap an OpenAI-compatible endpoint such as OpenRouter reserves the model's full maximum against the account's credit.
-- **Bump `SUMMARY_FORMAT` when the card format changes**; it is the suffix of the cached `model` (`#cards-v<n>`), so old rows rebuild.
+- **Bump `SUMMARY_FORMAT` when the card format changes after a release**; it is the suffix of the cached `model` (`#cards-v<n>`), so old rows rebuild. Changes between two releases share one bump, since only released rows need rebuilding.
 - **A summary is built only from a complete conversation.** `loadConversation` lets a failed `getHeaders` fail the build, because the prompt's `Mailing headers:` block is what the summarizer and the gate read as the automated-mail signal.
 
 ## How it works

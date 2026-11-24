@@ -112,7 +112,7 @@ See also [AGENTS.md](../AGENTS.md), [deployment.md](deployment.md), [configurati
 
 - **Client.** `updates.ts` builds one connect-node transport over `nodeOptions.socketPath` with `httpVersion: "1.1"`; the socket path is boot config, so the client is a module constant. `toOrpcError` maps Connect codes to oRPC errors.
 - **Status.** `dashboard.system.updates` calls `GetUpgrade` and then `GetStatus`, settling each on its own, so the last record still shows while the registry is unreachable. A release is `newer` only when the running version is known.
-- **Releases.** Only newer releases are listed (all of them while the running version is unknown), each with Upgrade and its notes rendered with Streamdown.
+- **Releases.** Only newer releases are listed (all of them while the running version is unknown), each with Upgrade and its notes, parsed as CommonMark (`marked` with `gfm: false`) and sanitized once on the server (`src/dashboard/updates.ts` → `releaseNotesHtml`), so the page ships no Markdown parser.
 - **Undo.** The Running release card has the one Undo last upgrade button, with the snapshot time; with no snapshot support it says so instead.
 - **Auditing the undo.** `updatesStatus` calls `recordUndo`, which writes `instance.upgrade_undone` once per upgrade id after the restored release reports the undo as succeeded ([audit.md](audit.md)).
 - **Progress.** The page polls every `POLL_MS` while a record is running and treats failed polls as the app restarting.

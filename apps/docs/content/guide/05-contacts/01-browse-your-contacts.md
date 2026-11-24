@@ -97,14 +97,14 @@ Click a contact in the list. The list moves into a narrow column on the left, an
 
 The card shows:
 
-- **The picture and the name**, with their job title and organization under it, or else the name of the address book.
-- **Badges.** **Member** and their role, such as "Member · admin", when one of their email addresses belongs to a member of this workspace. Then the name of the address book.
+- **The picture and the name.** When the contact has no name, you see their email address, or "Unnamed".
+- **A badge** next to the name, with **Member** and their role, such as "Member · admin", when one of their email addresses belongs to a member of this workspace.
 - **Their details**, each only when it has a value:
   - **Email**. The main address says **Email (primary)**. A label such as "work" shows in parentheses, for example "ana@example.com (work)".
   - **Phone**, with its label in parentheses, for example "+351 912 345 678 (cell)".
   - **Address**, with its label in parentheses when it has one, such as **Address (home)**.
   - **Nickname**, **Organization**, **Department**, **Job title**, **Birthday**, **Website** and **Notes**.
-  - **Address book**, which shows which account the contact belongs to.
+  - **Address book**, which shows the address book and the account the contact belongs to.
 - **Recent mail with them** and **Upcoming events with them**, up to 5 of each. They show only when the contact has an email address. Click an item to open that message or event. When there is nothing to show, you see "No mail found." or "No upcoming events."
 
 To close the card on a computer, click **Close contact** (the X at the top right of the card). The card closes and the list fills the page again.

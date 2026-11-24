@@ -1,5 +1,6 @@
 "use client";
 
+import { closeHistory } from "@tiptap/pm/history";
 import { type Editor, Node } from "@tiptap/react";
 
 import { sanitizeSignatureHtml } from "@/lib/sanitize-html";
@@ -116,10 +117,22 @@ export function typedEnd(editor: Editor): number {
   return findSignature(editor)?.pos ?? editor.state.doc.content.size;
 }
 
-export function replaceTypedContent(editor: Editor, html: string): void {
+export function replaceAsOneStep(
+  editor: Editor,
+  range: { from: number; to: number },
+  html: string,
+): void {
   editor
     .chain()
     .focus()
-    .insertContentAt({ from: 0, to: typedEnd(editor) }, html)
+    .command(({ tr }) => {
+      closeHistory(tr);
+      return true;
+    })
+    .insertContentAt(range, html)
     .run();
+}
+
+export function replaceTypedContent(editor: Editor, html: string): void {
+  replaceAsOneStep(editor, { from: 0, to: typedEnd(editor) }, html);
 }

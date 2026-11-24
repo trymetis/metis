@@ -20,7 +20,7 @@ The menu has, in order:
 <img src="/images/contacts/person-menu.webp" alt="The sender's picture with its saved badge, their name and address, and their menu open: Open contact, Email, Invite to an event, Search everything with and Copy email" class="dark:hidden" />
 <img src="/images/contacts/person-menu-dark.webp" alt="The sender's picture with its saved badge, their name and address, and their menu open: Open contact, Email, Invite to an event, Search everything with and Copy email" class="hidden dark:block" />
 
-You can tell who is saved already. A saved sender's picture has a small round book badge, and a saved To or Cc person has a small book icon after their name.
+You can tell who is saved already. A saved sender's picture has a small round book badge, and a saved **To** or **Cc** person has a small book icon after their name.
 
 To save someone:
 
@@ -44,13 +44,15 @@ Both messages have a **Contacts settings** link that opens the workspace's conta
 
 ## Save a contact from the summary card
 
-When AI is on for a mailbox, a summary shows above each conversation. A message about a person can get a **Contact** card. If the summary is folded into one line, click the line to open its cards. See [AI help in mail](/guide/mail/ai-help#kinds-of-cards).
+When AI is on for a mailbox, a summary card can show above a conversation. A message about a person can get a **Contact** card. See [AI help in mail](/guide/mail/ai-help#kinds-of-cards).
+
+At first, the card shows as the compact card, one plain line. **Save contact** (or **Open contact**) and **Download contact card** are on the compact card. The compact card shows above the email when you open it, and in place of the first words on the email's row in the message list. To see the full card, open the email and click **Show summary** (the small down arrow at the right end of the compact card above the email). See [The compact card](/guide/mail/ai-help#the-compact-card).
 
 <img src="/images/contacts/summary-contact-card.webp" alt="A Contact summary card on an email with the Save contact button" class="dark:hidden" />
 <img src="/images/contacts/summary-contact-card-dark.webp" alt="A Contact summary card on an email with the Save contact button" class="hidden dark:block" />
 
 - **Save contact** opens the same **Save contact** dialog. The new contact gets everything the card found: the name, organization, job title, email addresses, phone numbers, addresses, website and note.
-- **Open contact** shows instead when someone already saved that email address in this workspace.
+- **Open contact** shows instead when the email address is already in one of the address books the workspace shows.
 - **Download contact card** (the download icon) saves the contact as a `.vcf` file you can import somewhere else.
 
 ## Where your saved contacts show up

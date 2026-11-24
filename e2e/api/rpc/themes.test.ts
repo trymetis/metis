@@ -184,7 +184,7 @@ test("several instance themes delete at once, and built-in themes never do", asy
   expect(onlyBuiltIn.code).toBe("NOT_FOUND");
 
   const made = await Promise.all(
-    [uniqueName(), uniqueName()].map((name) =>
+    [`${uniqueName()}-a`, `${uniqueName()}-b`].map((name) =>
       rpc<{ theme: Theme }>("dashboard.themes.save", { name, palette }).then((r) => r.theme),
     ),
   );

@@ -924,6 +924,7 @@ export async function pageWorkspaceRuns(opts: {
   let before = decodeCursor(opts.cursor);
   let more = true;
   for (let batch = 0; batch < PAGE_BATCHES && more && seen.length < opts.limit; batch += 1) {
+    // oxlint-disable-next-line eslint/no-await-in-loop -- each batch starts after the last row of the one before, so the batches cannot run at once
     const rows = await listRuns({
       workspaceId: opts.scope.workspaceId,
       workflowIds: opts.workflowIds,

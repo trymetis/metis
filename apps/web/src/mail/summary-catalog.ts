@@ -102,8 +102,8 @@ const expirySchema = {
 };
 
 export const summaryCardProps = {
-  Summary: z.object({
-    tldr: z.string().describe("1-2 sentence plain-language summary of the conversation"),
+  Tldr: z.object({
+    text: z.string().describe("1-2 sentence plain-language summary of the conversation"),
     keyPoints: z.array(z.string()).describe("Key facts and decisions, most important first"),
     actionItems: z
       .array(z.string())
@@ -302,7 +302,7 @@ export type SummaryCardType = keyof typeof summaryCardProps;
 export type SummaryCardProps<K extends SummaryCardType> = z.infer<(typeof summaryCardProps)[K]>;
 
 export const summaryCardSchema = z.discriminatedUnion("type", [
-  summaryCardProps.Summary.extend({ type: z.literal("Summary") }),
+  summaryCardProps.Tldr.extend({ type: z.literal("Tldr") }),
   summaryCardProps.Otp.extend({ type: z.literal("Otp") }),
   summaryCardProps.Meeting.extend({ type: z.literal("Meeting") }),
   summaryCardProps.Order.extend({ type: z.literal("Order") }),
@@ -325,50 +325,41 @@ export const summaryCardSchema = z.discriminatedUnion("type", [
 ]);
 export type SummaryCard = z.infer<typeof summaryCardSchema>;
 
-const tldrSchema = summaryCardProps.Summary.nullable().describe(
-  "The TL;DR of the conversation, or null when it needs none",
-);
-
 export function summaryOutputSchemaFor(types: readonly SummaryCardType[] | null) {
-  const detail = summaryCardSchema.options.filter(
+  const allowed = summaryCardSchema.options.filter(
     (option) =>
-      option.shape.type.value !== "Summary" &&
-      (types === null || types.includes(option.shape.type.value)),
+      option.shape.type.value === "Tldr" ||
+      types === null ||
+      types.includes(option.shape.type.value),
   );
-  if (!isNonEmpty(detail)) return z.object({ tldr: tldrSchema });
+  const [first, ...rest] = allowed;
+  const card = first && isNonEmpty(rest) ? z.discriminatedUnion("type", [first, ...rest]) : first;
+  if (!card) throw new Error("[summary] no card type is allowed");
   return z.object({
-    tldr: tldrSchema,
-    cards: z
-      .array(z.discriminatedUnion("type", detail))
-      .describe("The detail cards to show, most important first; never a Summary"),
+    card: card
+      .nullable()
+      .describe(
+        "The conversation's one summary card: a detail card when the conversation is about exactly one such item, otherwise a Tldr; null only for automated mail no type fits",
+      ),
   });
 }
 
 export interface SummaryOutput {
-  tldr: SummaryCardProps<"Summary"> | null;
-  cards?: SummaryCard[];
+  card: SummaryCard | null;
 }
 
 export function cardsFromOutput(output: SummaryOutput): SummaryCard[] {
-  const detail = (output.cards ?? []).filter((card) => card.type !== "Summary");
-  return output.tldr ? [{ type: "Summary", ...output.tldr }, ...detail] : detail;
+  return output.card ? [output.card] : [];
 }
 
 export function outputFromCards(cards: readonly SummaryCard[]): SummaryOutput {
-  const tldr = cards.find((card) => card.type === "Summary");
-  return {
-    tldr:
-      tldr?.type === "Summary"
-        ? { tldr: tldr.tldr, keyPoints: tldr.keyPoints, actionItems: tldr.actionItems }
-        : null,
-    cards: cards.filter((card) => card.type !== "Summary"),
-  };
+  return { card: cards[0] ?? null };
 }
 
 export const summaryCatalog = defineCatalog(schema, {
   components: {
     Stack: { props: z.object({}), slots: ["default"] },
-    Summary: { props: summaryCardProps.Summary },
+    Tldr: { props: summaryCardProps.Tldr },
     Otp: { props: summaryCardProps.Otp },
     Meeting: { props: summaryCardProps.Meeting },
     Order: { props: summaryCardProps.Order },

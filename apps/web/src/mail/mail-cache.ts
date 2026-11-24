@@ -12,6 +12,7 @@ import { useCallback, useMemo } from "react";
 
 import { orpc, rpc } from "@/lib/orpc";
 import { getQueryClient, refreshQueries, refreshQuery } from "@/lib/query-client";
+import type { SummaryCard } from "@/mail/summary-catalog";
 import type { MailboxScope, MailListState, SummaryPreviewThread } from "@/server/schema";
 import type { Email, MailFolder } from "@/types/mail";
 
@@ -509,13 +510,13 @@ const SUMMARY_PREVIEW_CHUNK = 100;
 export function refreshSummaryPreviews(): void {
   void refreshQueries(rpc.ai.summaryPreviews.key());
 }
-const NO_PREVIEWS: Record<string, string> = {};
+const NO_PREVIEWS: Record<string, SummaryCard> = {};
 
 export function useSummaryPreviews(
   scope: MailboxScope,
   threads: readonly SummaryPreviewThread[],
   enabled: boolean,
-): Record<string, string> {
+): Record<string, SummaryCard> {
   const chunks = useMemo(() => {
     const sorted = threads.toSorted((a, b) => a.threadId.localeCompare(b.threadId));
     const out: SummaryPreviewThread[][] = [];
@@ -525,9 +526,9 @@ export function useSummaryPreviews(
     return out;
   }, [threads]);
   const combine = useCallback(
-    (results: { data?: { tldrs: Record<string, string> } }[]) => {
+    (results: { data?: { cards: Record<string, SummaryCard> } }[]) => {
       if (!enabled || results.every((r) => !r.data)) return NO_PREVIEWS;
-      return Object.fromEntries(results.flatMap((r) => Object.entries(r.data?.tldrs ?? {})));
+      return Object.fromEntries(results.flatMap((r) => Object.entries(r.data?.cards ?? {})));
     },
     [enabled],
   );

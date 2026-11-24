@@ -17,16 +17,22 @@ import {
 } from "@metis/updater-proto/v1";
 import { ORPCError } from "@orpc/server";
 import { and, eq, sql } from "drizzle-orm";
+import { marked } from "marked";
 
 import { recordAuditEvent } from "@/audit";
 import { config } from "@/config";
 import { db } from "@/db";
 import { auditEvent } from "@/db/schema";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 import type { DashboardUpdates, DashboardUpgrade } from "@/server/schema";
 
 const CALL_OPTIONS: CallOptions = { timeoutMs: 15_000 };
 
 let client: Client<typeof UpdaterService> | null = null;
+
+function releaseNotesHtml(notes: string): string {
+  return sanitizeHtml(marked.parse(notes, { gfm: false, async: false }));
+}
 
 export function updatesEnabled(): boolean {
   return Boolean(config.updater.socketPath);
@@ -212,7 +218,7 @@ export async function updatesStatus(): Promise<DashboardUpdates> {
       current?.releases.map(({ version, notes }) => ({
         version,
         newer: currentVersion !== null && compareVersions(version, currentVersion) > 0,
-        notes: notes || null,
+        notesHtml: notes ? releaseNotesHtml(notes) : null,
       })) ?? [],
     snapshots: current?.snapshots ?? false,
     rollbackVersion: current?.rollbackVersion || null,

@@ -71,8 +71,18 @@ function upstream(
   name: string,
   url: string | undefined,
   key: string | undefined,
+  pin: { model?: string; provider?: string } = {},
 ): UpstreamTarget | null {
-  return url && key ? { name, url, key, concurrency: UPSTREAM_CONCURRENCY } : null;
+  return url && key
+    ? {
+        name,
+        url,
+        key,
+        concurrency: UPSTREAM_CONCURRENCY,
+        model: pin.model ?? null,
+        provider: pin.provider ?? null,
+      }
+    : null;
 }
 
 await preflight({ plan });
@@ -94,7 +104,10 @@ const recorder = await startRecorder({
   plan,
   forced: (id) => matches(id, force),
   maxNew,
-  llm: upstream("OpenRouter", env.llm.upstreamUrl, env.llm.upstreamKey),
+  llm: upstream("OpenRouter", env.llm.upstreamUrl, env.llm.upstreamKey, {
+    model: env.llm.upstreamModel,
+    provider: env.llm.upstreamProvider,
+  }),
   decision: upstream("TypeSafe", env.typesafe.upstreamUrl, env.typesafe.upstreamKey),
   journal,
   previous,

@@ -11,7 +11,7 @@ AI help needs AI to be turned on for your workspace and for the mailbox. Your wo
 
 ## Summary cards
 
-When you open a conversation, a summary shows above the message. While it loads, you see "Summarizing…". When a new message arrives in the conversation, the summary updates.
+When you open a conversation, its summary card shows above the message. While it loads, you see "Summarizing…". When a new message arrives in the conversation, the summary updates.
 
 - If a message has nothing worth summarizing, you see "No summary for this email".
 - If the summary could not be made, you see "Couldn't summarize this thread." with the reason under it.
@@ -20,45 +20,86 @@ When you open a conversation, a summary shows above the message. While it loads,
 - Everyone who can see the mailbox sees the same summaries.
 - Every link in a card is checked against the links in the message and cleaned of tracking. See [Privacy and safety when reading](/guide/mail/privacy-and-safety).
 
-### The summary line
+### One card for each conversation
 
-At first, the summary is folded into one tinted line. From left to right, the line shows:
+A conversation gets one summary card, or none. That card is either a **TL;DR** card or a card for the one thing the conversation is about. Every card other than the **TL;DR** holds one thing: one package, one code, one meeting, one bill, one booking, and so on.
 
-- a sparkle icon
-- the **TL;DR** text, cut short to fit the line
-- a small chip for each other card, such as **Package · Thu**
-- a down arrow
+- A conversation about two or more things usually gets a **TL;DR** card: a short summary, key points and **Action items**. This is also true for two packages or two bills.
+- A conversation with discussion, decisions or questions, or one that needs a reply from you, also usually gets a **TL;DR** card.
+- A conversation about one thing usually gets the card for that thing, such as a **Package** card or a **Bill** card.
+- An automated notification that no card fits gets no card. You see "No summary for this email".
 
-Click the line to open all the cards. To fold them again, click **Show less** (with an up arrow) above the cards.
+When new messages arrive, the card is usually updated:
+
+- If they are about the same thing, such as the same order or the same meeting, the card keeps its kind and shows the new details.
+- A verification code card shows only the latest code from a service.
+- If they bring in a second thing or another topic, the card becomes a **TL;DR** card for the whole conversation.
+
+Once a conversation has a summary card, its row in the message list shows the compact card in place of the first words of the message. See [The summary on a row](/guide/mail/read-your-mail#the-summary-on-a-row).
+
+### The compact card
+
+At first, the summary card above the message shows as the compact card: one plain line with the most useful details. What the compact card shows depends on the kind of card, and it has the card's own buttons, so you can often act without opening the full card.
+
+At the right end of the compact card is a small down arrow, **Show summary**. Point at it to see its name.
+
+<img
+  src="/images/mail/summary-line.webp"
+  alt="A Package card shown as a compact card above a message, with the Show summary arrow at its right end"
+  class="dark:hidden"
+/>
+<img
+  src="/images/mail/summary-line-dark.webp"
+  alt="A Package card shown as a compact card above a message, with the Show summary arrow at its right end"
+  class="hidden dark:block"
+/>
+
+- To open the full card, click **Show summary**. The full card takes the place of the compact card.
+- To go back to the compact card, click the up arrow, **Hide summary**, at the right end of the card's header.
+
+Clicking anywhere else on the compact card does not open the full card. Only the arrow does.
+
+Screen readers announce the summary above a message as a region named "Summary", so you can jump straight to it.
 
 <img
   src="/images/mail/summary-card.webp"
-  alt="The summary cards opened above a message, with a Package card"
+  alt="A Package summary card opened above a message"
   class="dark:hidden"
 />
 <img
   src="/images/mail/summary-card-dark.webp"
-  alt="The summary cards opened above a message, with a Package card"
+  alt="A Package summary card opened above a message"
   class="hidden dark:block"
 />
 
-Metis Suite remembers your choice in this browser. When you open the cards, every summary you see in this browser shows its cards open, in every mailbox and workspace. When you click **Show less**, every summary starts folded again. If you clear this site's data in your browser, summaries start folded.
+Metis Suite remembers your choice in this browser. When you open a card, the summary above every message you open in this browser shows the full card, in every mailbox and workspace. When you click **Hide summary**, every summary starts as the compact card again. Signing out does not change this. If you clear this site's data in your browser, summaries start as the compact card. For the summary on a row in the message list, see [The summary on a row](/guide/mail/read-your-mail#the-summary-on-a-row).
 
-When there is no **TL;DR**, the chips fill the line. Each chip names a card:
+What the compact card shows depends on the card. Items are listed from left to right. The items listed as "on the right" sit at the right end of the compact card.
 
-- **Code** followed by the code itself, for a verification code, so you can read the code without opening the cards
-- **Meeting**, **Order**, **Package**, **Bill**, **Contact**, **Transaction** and **Subscription**
-- **Link**, **Security**, **Document**, **Offer** and **Digest**
-- **Update**, for a notification from GitHub, GitLab, Bitbucket, Jira, Linear or a similar service
-- for a booking, its kind: **Flight**, **Hotel**, **Train**, **Bus**, **Car**, **Restaurant**, **Event** or **Other**
+| Card                                      | The compact card shows                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **TL;DR**                                 | A sparkle icon, the short summary (cut short to fit) and, when there are action items, how many, such as "2 to do". No buttons.                                                                                                                                                                                                                                                                                                                |
+| Verification code                         | A key icon, the service and the word "code" (such as "GitHub code") or "Verification code", the code, and **Copy code**. On the right, a badge such as "Expires in 5 minutes", or **Expired**, when the email says how long the code is valid. An expired code is struck through.                                                                                                                                                              |
+| Link                                      | What the link is for (**Password reset**, **Sign-in link**, **Verify email**, **Invitation**, **Confirmation** or **Link**), the service, and "for" with the account. On the right, the expiry badge and a button with the link's own text, such as "Reset password". The button does not show once the link has expired. When the link is only in the message, the compact card has no button. Click **Show summary** and use **Open email**. |
+| Security alert                            | A red shield, what happened and the service, the device, the place and the IP address. On the right, the time and **Wasn't you? Review activity**.                                                                                                                                                                                                                                                                                             |
+| **Meeting**                               | A video icon, the title (struck through when the meeting is cancelled), the time and, when the email gives one, the place. On the right, a **Cancelled** or **Updated** badge, or **On your calendar** when the meeting is on one of your calendars in this workspace. Then **Add to calendar** when the meeting is not on your calendar, and **Join** when it has an online link. Neither button shows on a cancelled meeting.                |
+| **Order**                                 | A bag icon, the shop, the order number with **Copy order number**, and how many items, such as "3 items". On the right, the total, the status and **View order**.                                                                                                                                                                                                                                                                              |
+| **Package**                               | A package icon, then when it arrives, such as "Arriving Thu, Nov 27 · 3:00 PM" or "Delivered Thu, Nov 27". With no date, it shows the shop's name, or "Package". Then the four delivery steps, the carrier, and the tracking number with **Copy tracking**. On the right, the status and **Track**.                                                                                                                                            |
+| Transaction                               | An icon for the kind of transaction, who the money went to or came from, the amount (with a minus sign for money paid, or a plus sign for money received or refunded), the account and bank, and "Balance" with the amount. On the right, the reference with **Copy reference**, a badge, and **View details** or **Review request**.                                                                                                          |
+| **Bill**                                  | A receipt icon, the payee, the amount, "due" and the date (hidden once the bill is paid), and the reference with **Copy reference**. On the right, **Overdue**, **Due**, **Paid** or **Autopay**, then, until the bill is paid, **Remind me** with a date and **Pay**.                                                                                                                                                                         |
+| **Subscription**                          | A repeat icon, the service and plan, the amount (with the old price struck through on a price change), and a date such as "Renews" or "Trial ends" with the day. On the right, the badge (such as **Renews soon** or **Payment failed**), **Remind me** with a date (only with **Renews soon**, **Trial ending** or **Price change**), and **Manage**.                                                                                         |
+| Booking (such as **Flight** or **Hotel**) | An icon for the kind of booking, the title, the time and the first detail, such as a seat. On the right, the confirmation code with **Copy confirmation**, and **Manage booking**.                                                                                                                                                                                                                                                             |
+| Shared document                           | An icon for the kind of document notice, the title, and "from" with the person and the service. On the right, the due date, a badge (such as **Signature requested** or **Overdue**), and **Open**, **Review and sign** or **View document**.                                                                                                                                                                                                  |
+| Offer                                     | A ticket icon, the deal, the discount, the shop, and the code with **Copy code**. On the right, **Until** and the end date, or **Expired**, and **Shop** while the offer has not expired.                                                                                                                                                                                                                                                      |
+| Digest                                    | A newspaper icon, the publication, how many stories, such as "4 stories", and the story titles. On the right, **Unsubscribe** when the sender offers it.                                                                                                                                                                                                                                                                                       |
+| GitHub, GitLab, Bitbucket, Jira or Linear | An icon for the kind of item (such as a pull request or an issue), the project and number, the title, and "by" with the person. On the right, the state and **Open on GitHub** (or the other platform's name). For a similar service, the button says **Open on Dev**.                                                                                                                                                                         |
+| **Contact**                               | A colored circle with the person's initials, the name, the job title and organization, the email address and the phone number. On the right, **Save contact** or **Open contact**, and **Download contact card**.                                                                                                                                                                                                                              |
 
-When a card has a date, its chip adds the short day of the week, for example **Package · Thu** or **Meeting · Mon**. That is the day the meeting starts, the package is expected (also after it arrives), the bill is due, a document must be signed, a subscription renews, its trial ends or its new price starts, or a booking begins.
+On a **Meeting** compact card, **On your calendar** shows only for a meeting with a set time that has not ended yet, never for an all-day meeting. While your calendars are being checked, the compact card shows **Add to calendar**, which changes to **On your calendar** if the meeting is found. The compact card has no **Going?** buttons, so open the full card to answer.
 
-### The TL;DR card
+On a **Package** compact card, the four delivery steps are **Shipped**, **In transit**, **Out for delivery** and **Delivered**. Point at a step to see its name. Steps that are done are filled in, and the current step has a ring around it. When the package is delivered, all four steps are filled in. A package that is **Ordered**, **Delayed**, **Exception** or **Returned** shows no steps. **Delayed**, **Exception** and **Returned** show in red.
 
-A conversation has at most one **TL;DR** card, and it always comes first. Automated notifications, such as a code, a delivery update or a receipt, usually get no **TL;DR**: only their own cards. A conversation that no other card fits gets a **TL;DR**.
-
-Once a conversation has a **TL;DR** card, its row in the message list shows the TL;DR in place of the first words of the message. See [The TL;DR on a row](/guide/mail/read-your-mail#the-tldr-on-a-row).
+On the compact card above the message, **Remind me** shows the day the message comes back, such as "Remind me Nov 27". It shows only while that day is still ahead.
 
 ### Kinds of cards
 
@@ -76,7 +117,7 @@ The card you get depends on the message.
 | Transaction                                                                 | A payment, refund, request or failed payment, with **When**, **Account**, **Balance** and **Reference**                                     | **View details** or **Review request**                                                                                            |
 | **Bill**                                                                    | The payee, amount, **Due** date and status, or **Overdue**                                                                                  | **Pay**, **Remind me**                                                                                                            |
 | **Subscription**                                                            | A renewal, trial ending, price change, failed payment or cancellation                                                                       | **Manage**, **Remind me**                                                                                                         |
-| Booking (named after its kind, such as **Flight** or **Hotel**)             | A flight, hotel, train, bus, car, restaurant or event, with its confirmation code, **When**, **Route**, **Where** and a ticket code         | **Copy confirmation**, **Manage booking**, **Directions**                                                                         |
+| Booking (named after its kind, such as **Flight** or **Hotel**)             | A flight, hotel, train, bus, car, restaurant or event, with its confirmation code, **When**, **Route**, **Where** and a ticket code         | **Copy confirmation**, **Manage booking**, **Directions**, **Copy ticket code**                                                   |
 | Shared document                                                             | A document shared with you, or waiting for your signature                                                                                   | **Open**, **Review and sign** or **View document**                                                                                |
 | Offer                                                                       | The deal, discount, terms, code and end date                                                                                                | **Copy code**, **Shop**                                                                                                           |
 | Digest                                                                      | The items in a newsletter, each with a short summary                                                                                        | **Unsubscribe**                                                                                                                   |
@@ -85,9 +126,9 @@ The card you get depends on the message.
 
 ### Where the buttons are
 
-Each card has a header with an icon and a name, such as **Package**, or the service the card is about, such as a shop or a bank. Badges, such as a status or an expiry date, and the buttons that act on the whole card sit on the right of the header. A button that acts on one detail sits right after that detail. For example, **Copy code** sits beside the code, and **View order** sits beside the order number.
+Each card has a header with an icon and a name, such as **Package**, or the service the card is about, such as a shop or a bank. Badges, such as a status or an expiry date, and the buttons that act on the whole card sit on the right of the header, before **Hide summary**. A button that acts on one detail sits right after that detail. For example, **Copy code** sits beside the code, and **View order** sits beside the order number.
 
-Some buttons are icons only: **Copy tracking**, **Copy confirmation**, **Copy email**, **Download contact card**, **Directions**, **Call**, **Email** and **Website**. Point at one to see its name.
+Some buttons are icons only: **Copy tracking**, **Copy confirmation**, **Copy email**, **Download contact card**, **Directions**, **Call**, **Email** and **Website**. On the compact card, **Copy code**, **Copy order number** and **Copy reference** are icons only too. Point at one to see its name.
 
 Card by card:
 
@@ -107,7 +148,7 @@ A few buttons need more explanation:
 - **Copy code** changes to "Copied" for about a second and a half. A copy icon changes to a check mark, and pointing at it shows "Copied". If copying fails, you see "Couldn't copy to the clipboard".
 - **Directions** opens a Google Maps search for the place in a new tab.
 - **Remind me** snoozes the message until the date on the button. A bill or subscription reminder is set for the day before, at 9 AM. A notice tells you when the message comes back, for example "This email comes back Thu, Nov 27 at 9:00 AM". The message returns to the folder it was in, the same way as with **Snooze**: from **Archive** it stays in **Archive**, from **Trash** it goes back to **Trash**, and from any other folder it comes back to your **Inbox**. See [Snooze and read later](/guide/mail/snooze-and-read-later).
-- On a contact card, **Save contact** saves the person to one of the workspace's address books. You pick which one. If someone already saved that email address in this workspace, the card shows **Open contact** instead. **Download contact card** saves the contact as a `.vcf` file. See [Save contacts from mail](/guide/contacts/save-contacts-from-mail).
+- On a contact card, **Save contact** saves the person to one of the workspace's address books. You pick which one. If the email address is already in one of the address books the workspace shows, the card shows **Open contact** instead. **Download contact card** saves the contact as a `.vcf` file. See [Save contacts from mail](/guide/contacts/save-contacts-from-mail).
 - On a meeting card, **Add to calendar** opens a list of calendars you can add events to. Each calendar shows its [account name](/guide/calendar/views-and-navigation#how-calendar-accounts-are-named) under it. The guests are invited. You see "Added to" and the calendar's name when it worked, or "Couldn't add the event". If there is no calendar you can add events to, the list says "No calendar you can write to in this workspace". If the meeting is already on your calendar, the card shows **On your calendar** and asks **Going?** with **Yes**, **Maybe** and **No**. If your answer cannot be sent, you see "Couldn't send your response".
 
 ## Smart replies
@@ -205,7 +246,7 @@ In the composer, **Rewrite** and **Stance** also need AI to be on for the worksp
 ## Draft an apology
 
 1. Open the message you want to answer.
-2. Click **Draft apology** in the toolbar.
+2. Click **Draft apology** (the heart and handshake icon) in the toolbar.
 3. In **What are you apologizing for?**, describe what happened, in up to 500 characters.
 4. Pick a **Tone**: **Brief**, **Warm** or **Formal**. **Warm** is picked first.
 5. Click **Draft reply**. While it works, the button says "Drafting…". The composer then opens with the apology as a reply.
@@ -225,7 +266,7 @@ If something goes wrong, the dialog shows the problem, such as "Too many request
 
 ## If you use AI help very often
 
-These AI tools each have their own limit of 30 a minute: summary cards, smart replies, the stance buttons, **Rewrite** in the composer, and **Draft reply** in the **Draft an apology** dialog. **Stance** in the composer counts toward the same limit as the stance buttons under a message.
+These AI tools each have their own limit, by default 30 a minute: summary cards, smart replies, the stance buttons, **Rewrite** in the composer, and **Draft reply** in the **Draft an apology** dialog. The person who runs your server can change these limits. **Stance** in the composer counts toward the same limit as the stance buttons under a message.
 
 [AI labels](/guide/mail/labels#how-messages-get-a-label) have a limit of their own too. When you scroll through a lot of mail very quickly, some labels can take up to a minute to appear.
 
@@ -234,7 +275,7 @@ Other limits:
 - The phishing check: see [Phishing warnings](/guide/mail/phishing-warnings#if-the-check-could-not-run).
 - The Mail AI panel: see [Limits and troubleshooting](/guide/assistant/limits-and-troubleshooting#a-reply-fails).
 
-When you reach a limit, the tool stops until the wait is over, at most 1 minute. Where a message shows, it says "Too many requests. Try again in 20 seconds.", or the time left. What you see depends on the tool:
+When you reach a limit, the tool stops until the wait is over, at most 1 minute with the default limits. Where a message shows, it says "Too many requests. Try again in 20 seconds.", or the time left. What you see depends on the tool:
 
 | Tool                       | What you see                                                                                                                                                    |
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |

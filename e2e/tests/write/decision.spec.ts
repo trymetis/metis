@@ -18,7 +18,7 @@ async function hitsDuring(path: string, run: () => Promise<void>): Promise<numbe
 
 async function retryFailedSteps(page: Page) {
   await page
-    .getByRole("banner")
+    .getByRole("alert")
     .getByRole("button", { name: "Retry failed steps", exact: true })
     .click();
   const confirm = page.getByRole("alertdialog", { name: "Retry this run?" });
@@ -156,7 +156,7 @@ export default function decisionSpecs() {
           }),
         ).toBeVisible();
         await expect(
-          page.getByRole("main").getByRole("button", { name: "Show summary cards" }),
+          page.getByRole("main").getByRole("button", { name: "Show summary" }),
         ).toHaveCount(0);
         expect(completions - smartReplies, `${subject}: summarizer calls`).toBe(0);
       }

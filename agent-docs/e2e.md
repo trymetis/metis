@@ -106,6 +106,11 @@ The `metis` CLI's own suite, which reuses this stack's fakes, certificates, test
   - Chats go through `src/mastra/chat-streams.ts`, classification through `classifyMessages`, smart replies through `generateSmartReplies`, assistant threads through `createAssistantThread`.
   - Only client-side behavior (the list's classify batches, the turn envelope a composer builds) is mirrored in `steps/`.
 - **Every upstream answer is in the journal before the app sees it.** `recorder.ts` appends and fsyncs each success to the journal; a crash, a kill or Ctrl-C loses at most the call in flight, and the next run serves journaled answers for free.
+- **The app names the LLM model by an alias, and the recorder pins the real model and provider upstream.**
+  - The fixture's `METIS_LLM_*_MODEL` is `metis/demo`, so recording keys, `ai_usage.model` and the dashboard's AI usage and LLM pages show that name, and the upstream model can change without changing a key.
+  - `recorder.ts` → `upstreamRequest` replaces `model` with `LLM_UPSTREAM_MODEL` and adds `provider: { order: [LLM_UPSTREAM_PROVIDER], allow_fallbacks: false }` to what it sends OpenRouter; the recorded request stays the app's.
+  - The provider is pinned because providers differ in whether the model sees the `json_schema`: one that only enforces it lets the model reason blindly and collapse summaries into an empty first branch, and OpenRouter's price routing moves between providers silently.
+  - An answer from another provider fails its scenario without a retry (`providerFailure`), and a 429 from the pinned one is retried, never routed elsewhere.
 - **Only successful answers are recorded.** A 4xx, a 5xx after retries, a mid-stream error or an empty body fails the scenario that asked; 401, 402 and 403 also stop every further call to that upstream for the run.
 - **A scenario that does not finish keeps its previous recordings and fragments.** Only a scenario that finished `ok` replaces its key set and its `record/` and `mastra/` fragments; recordings no manifest entry claims sit under `(unattributed)` until a run where every scenario finishes.
 - **Scenarios that touch the same external state declare it.**

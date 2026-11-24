@@ -92,7 +92,7 @@ export default function passkeySpecs() {
         await confirm.getByRole("button", { name: "Continue", exact: true }).click();
         const scan = page.getByRole("dialog", { name: "Scan the QR code" });
         await scan.getByText("Can't scan? Show manual key").click();
-        secret = (await scan.locator("details code").innerText()).replace(/\s+/g, "");
+        secret = (await scan.getByRole("code").innerText()).replace(/\s+/g, "");
         await enterCode(page, totp());
         await scan.getByRole("button", { name: "Verify and add", exact: true }).click();
         await expect(scan).toBeHidden();

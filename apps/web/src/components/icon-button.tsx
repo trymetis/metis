@@ -6,16 +6,17 @@ import type { ComponentProps } from "react";
 
 export function IconButton({
   label,
+  tooltip,
   variant = "ghost",
   size = "icon-sm",
   ...props
-}: Omit<ComponentProps<typeof Button>, "aria-label"> & { label: string }) {
+}: Omit<ComponentProps<typeof Button>, "aria-label"> & { label: string; tooltip?: string }) {
   return (
     <Tooltip>
       <TooltipTrigger
         render={<Button variant={variant} size={size} aria-label={label} {...props} />}
       />
-      <TooltipContent>{label}</TooltipContent>
+      <TooltipContent>{tooltip ?? label}</TooltipContent>
     </Tooltip>
   );
 }

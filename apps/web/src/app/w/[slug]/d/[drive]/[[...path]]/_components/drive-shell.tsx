@@ -86,7 +86,7 @@ export function DriveShell({ trail }: { trail: string[] }) {
   const agentAvailable = useAgentAvailable();
 
   const fileInput = useRef<HTMLInputElement>(null);
-  const { recents, remember } = useDriveRecents(workspaceSlug, scope.driveSlug);
+  const { recents, remember, forget } = useDriveRecents(workspaceSlug, scope.driveSlug);
   const { upload, progress } = useDriveUpload();
 
   const parentId = trail.at(-1) ?? null;
@@ -481,6 +481,7 @@ export function DriveShell({ trail }: { trail: string[] }) {
             }
             onClose={() => setPreviewEntry(null)}
             onDownload={download}
+            onMissing={() => forget(previewEntry.id)}
           />
         )}
 

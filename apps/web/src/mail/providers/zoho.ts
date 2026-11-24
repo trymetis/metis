@@ -738,12 +738,7 @@ async function getUnsubscribeInfo(
   session: ZohoSession,
   id: string,
 ): Promise<UnsubscribeInfo | null> {
-  let raw: string;
-  try {
-    raw = await getRaw(session, id);
-  } catch {
-    return null;
-  }
+  const raw = await getRaw(session, id);
 
   let mime = raw;
   try {

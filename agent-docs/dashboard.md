@@ -110,6 +110,7 @@ See also [AGENTS.md](../AGENTS.md), [auth.md](auth.md), [configuration.md](confi
 - **Deploy checks is a System nav entry with a count badge**, filled while the last run's warnings are unacknowledged and muted after, and absent at zero warnings; the sidebar reads `preflightQuery`, so acknowledging on the page updates it at once.
   - A collapsed section shows its first child's badge on itself (`nestedBadge`), so the count stays visible from every page.
 - **The Exports page is the owner's alone and only lists.** `dashboard.system.exports` runs on `dashboardOwner` (`src/server/middlewares/dashboard-session.ts`), which answers `NOT_FOUND` to admins and observers; the page 404s for them and the sidebar hides its entry.
+  - Each row lists its recipients the way `metis export inspect` does: a passphrase key is a **Recipient** with "passphrase key" beside its fingerprint ([export.md](export.md)).
   - Each export is a row of date, release and size over file name and where it went; the rest (SHA-256, migration, addresses, recipients) opens under it, each with a copy button.
 - **Themes is one table of the system and instance themes**: a palette strip, name, type and use count, with Edit and Delete on instance rows only.
   - Select all picks instance themes only, and `dashboard.themes.deleteMany` deletes them in one statement through the same instance owner filter, so a system id in the list is skipped, never deleted.

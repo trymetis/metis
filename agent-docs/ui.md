@@ -93,7 +93,9 @@ See also [AGENTS.md](../AGENTS.md), [shortcuts.md](shortcuts.md), [desktop.md](d
 - **An icon-only button gets its tooltip from `IconButton`** (`src/components/icon-button.tsx`), which also sets its `aria-label`.
 - **Every account picker shows an account as Settings does** (`AccountOption` in `src/components/account-option.tsx`): the address or name, then the provider, server and account address, leaving out a part the name already holds (a calendar named "Google Calendar · …" or after its server), so two accounts on one server still differ by address, so one address connected twice (Gmail API and IMAP) can be told apart; `providerLabelFor` maps any resource and provider to its label.
   - Compose **From**, the signatures preview, **Try on recent mail** and the workflow resource pickers use it; the workflow directory carries each entry's `provider` and `server` for this.
+- **Show-more sections use `@metis/ui`'s `Collapsible`, never a native `<details>`**, so they share its trigger, keyboard handling and look; the manual-key fallback beside a TOTP QR code is `ManualKey` (`src/components/manual-key.tsx`).
 - **An explanation of how something works sits behind an ⓘ (`InfoHint`, `src/components/info-hint.tsx`)**, which opens on click and on hover; status and error text, the consequence of an action and short data captions stay as visible text.
+  - The ⓘ sits beside a heading, never inside its `<h2>`, so the heading keeps its title as its accessible name.
   - Dashboard sections take it as `Section` → `hint`, config cards as `ConfigCard` → `hint`.
 - **Surface sidebars head their groups with `SidebarSection`** (`src/components/sidebar-section.tsx`): mail's Mailboxes and calendar's account groups, which pass `onToggle` to collapse.
 - **The rail starts with a gear that opens workspace settings; the workspaces are the tiles lower on the rail** (`WorkspaceRailSwitcher`).

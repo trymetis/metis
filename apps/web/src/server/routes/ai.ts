@@ -6,7 +6,7 @@ import { cacheAnalysis, getCachedAnalysis } from "@/mail/cache";
 import { draftApology, draftStanceReply, rewriteText } from "@/mail/compose-ai";
 import { type MailSession, policyForMailbox, scopeMessage } from "@/mail/session";
 import { generateSmartReplies } from "@/mail/smart-replies";
-import { cachedTldrs, summarizeThread } from "@/mail/thread-summary";
+import { cachedSummaryCards, summarizeThread } from "@/mail/thread-summary";
 import { getPhishingDetection, phishingDetectionEnabled } from "@/services/phishing-detection";
 import { RateLimitedError, rateLimit } from "@/services/rate-limit";
 import { RATE_LIMITS, type RateLimitRule } from "@/services/rate-limits";
@@ -165,7 +165,7 @@ export const aiRouter = {
   summaryPreviews: mailSession(summaryPreviewsInputSchema)
     .output(summaryPreviewsOutputSchema)
     .handler(async ({ input, context }) => ({
-      tldrs: await cachedTldrs(context.mail, input.threads),
+      cards: await cachedSummaryCards(context.mail, input.threads),
     })),
 
   rewriteText: mailSession(rewriteTextInputSchema)

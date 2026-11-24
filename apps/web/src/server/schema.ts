@@ -13,7 +13,7 @@ import {
   MAIL_PROVIDERS,
 } from "@/connections/types";
 import { SIGNATURE_HTML_MAX, SIGNATURE_NAME_MAX } from "@/mail/signature-markup";
-import { summarySpecSchema } from "@/mail/summary-catalog";
+import { summaryCardSchema, summarySpecSchema } from "@/mail/summary-catalog";
 import { MCP_PRESET_IDS } from "@/mcp/presets";
 import { MCP_TOOL_KEYS } from "@/mcp/tools";
 import { LOCAL_MAIL_STATES, SEARCH_KINDS } from "@/search/fields";
@@ -2347,7 +2347,7 @@ export const dashboardUpdatesOutputSchema = z.object({
   error: z.string().nullable(),
   currentVersion: z.string().nullable(),
   releases: z.array(
-    z.object({ version: z.string(), newer: z.boolean(), notes: z.string().nullable() }),
+    z.object({ version: z.string(), newer: z.boolean(), notesHtml: z.string().nullable() }),
   ),
   snapshots: z.boolean(),
   rollbackVersion: z.string().nullable(),
@@ -2536,7 +2536,7 @@ export const summaryPreviewsInputSchema = mailboxScopeSchema.extend({
 });
 
 export const summaryPreviewsOutputSchema = z.object({
-  tldrs: z.record(z.string(), z.string()),
+  cards: z.record(z.string(), summaryCardSchema),
 });
 
 export const assistantThreadSchema = z.object({

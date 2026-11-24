@@ -21,7 +21,7 @@ import {
   ZoomOut,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { DriveIcon } from "@/components/drive-icon";
 import { IconButton } from "@/components/icon-button";
@@ -95,6 +95,7 @@ export function DrivePreview({
   providerLabel,
   onClose,
   onDownload,
+  onMissing,
 }: {
   entry: DriveEntryRow;
   workspaceSlug: string;
@@ -102,8 +103,13 @@ export function DrivePreview({
   providerLabel: string | null;
   onClose: () => void;
   onDownload: (entry: DriveEntryRow) => void;
+  onMissing?: () => void;
 }) {
   const state = useDrivePreview(entry, workspaceSlug, driveSlug);
+  const missing = state.status === "failed" && state.missing === true;
+  useEffect(() => {
+    if (missing) onMissing?.();
+  }, [missing, onMissing]);
   const [failed, setFailed] = useState(false);
   const fail = useCallback(() => setFailed(true), []);
   const [pdf, setPdf] = useState<PdfControls | null>(null);

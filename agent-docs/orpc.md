@@ -46,7 +46,7 @@ See also [AGENTS.md](../AGENTS.md) (scope as explicit input), [auth.md](auth.md)
   - It maps a `BadRequestError` (`src/lib/errors/bad-request.ts`), thrown directly or as a cause, to `BAD_REQUEST` with its message. The account resolvers throw it for a missing choice ("Pick which calendar account / drive / mailbox …") and the calendar providers for an answer from someone not on the guest list, so the user, agents and MCP read the same text.
   - Every other error is logged and its message replaced by `sanitizeError`, so a raw provider or database message never reaches the client.
   - `sanitizeError` words a 403 as a permission problem only when the provider gives no error reason or a permission reason (`PERMISSION_REASONS`); a rate-limit reason reads as too many requests, and any other reason as a failed request, because Google answers some bad requests with 403.
-  - Each procedure a user triggers gets its wording in `OPERATIONS`, keyed by procedure path; one without an entry reads "do that".
+  - Each procedure a user triggers gets its wording in `OPERATIONS`, keyed by procedure path; one without an entry starts "That didn't go through" instead of naming the action.
   - Throw an authored code for any message the user should read.
 - **Every rate limit's default lives in one table, `src/services/rate-limits.ts`**: `RATE_LIMITS` for the app's own limits, `AUTH_RATE_LIMITS` (`default`, `twoFactor`, `paths`) for Better Auth.
   - A call site names its entry (`RATE_LIMITS.mailSend`); it never writes a scope, count or window inline.
@@ -93,7 +93,7 @@ See also [AGENTS.md](../AGENTS.md) (scope as explicit input), [auth.md](auth.md)
 - **A row is seeded only into a query that already has an observer and no data.** `useQuery` reads the cache on its first render and subscribes only after that render commits, so a component still hydrating sees a seed only when another component already subscribed to the same key, the same race as a fast server answer.
 - **Every seeded key is invalidated and fetched again**, so its stored copy shows only until the server answers, whatever its `staleTime`.
 - **The cache belongs to one user and one app version.** `startShellCache` compares both with its owner row and empties the cache on any mismatch, which covers a session that ended without sign-out (expiry, revocation, a ban).
-- **Every web sign-out path calls `clearLocalData`**, which clears the shell cache, the drive preview cache ([drive-preview.md](drive-preview.md)) and the drive Recent lists ([drive.md](drive.md)).
+- **Every web sign-out path calls `clearLocalData`**, which clears the shell cache, the drive preview cache ([drive-preview.md](drive-preview.md)), the drive Recent lists ([drive.md](drive.md)) and recent searches ([search.md](search.md)).
 
 ## How it works
 

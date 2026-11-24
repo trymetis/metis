@@ -58,6 +58,7 @@ import {
   Star,
   Tag as TagIcon,
   Trash2,
+  type LucideIcon,
 } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
@@ -105,7 +106,6 @@ import {
   useMutedThreadIds,
   useReadLaterIds,
 } from "@/mail/mail-cache";
-import { cleanUrl as cleanTrackedUrl } from "@/mail/render/pipeline";
 import type { RemoteImages } from "@/mail/render/types";
 import type {
   AnalysisResultOutput,
@@ -119,7 +119,7 @@ import type { Attachment } from "@/types/mail";
 import { ALL_DRIVES_SLUG, mailPath } from "@/workspace/path";
 
 import { MessageContent, RemoteImagesChip } from "./message-content";
-import { type SummaryActions, ThreadSummaryCards } from "./thread-summary";
+import { type SummaryActions, ThreadSummaryCards, useSummaryUrlCleaner } from "./thread-summary";
 import { TrackerBadge } from "./tracker-badge";
 
 const SKELETON_WIDTHS = [92, 78, 97, 64, 85];
@@ -310,11 +310,7 @@ export function EmailDetail() {
     : "block";
   const rendered = useRenderedEmail(privacy, body?.kind === "html" ? body.html : null, images);
   const hasBody = body?.kind === "html" || body?.kind === "text";
-  const linkRules = privacy.cleanLinks ? (privacy.rules?.links ?? null) : null;
-  const cleanSummaryUrl = useMemo(
-    () => (linkRules ? (url: string) => cleanTrackedUrl(url, linkRules) : undefined),
-    [linkRules],
-  );
+  const cleanSummaryUrl = useSummaryUrlCleaner();
   const {
     result: analysis,
     loading: analysisLoading,
@@ -686,10 +682,9 @@ export function EmailDetail() {
           <ChevronDown className="size-3.5" strokeWidth={2} />
         </IconToolBtn>
         {selectedEmail.folder === "drafts" ? (
-          <ToolBtn onClick={handleEditDraft}>
-            <Pencil className="size-3.25" strokeWidth={2} />
-            Edit draft
-          </ToolBtn>
+          <IconToolBtn label="Edit draft" onClick={handleEditDraft}>
+            <Pencil className="size-3.5" strokeWidth={2} />
+          </IconToolBtn>
         ) : (
           <>
             <IconToolBtn label="Reply" onClick={() => reply()}>
@@ -708,21 +703,7 @@ export function EmailDetail() {
 
         <div className="flex-1" />
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                variant="outline"
-                size="sm"
-                aria-label="Change label"
-                className="bg-transparent text-muted-foreground dark:bg-transparent"
-              >
-                <TagIcon className="size-3.25" strokeWidth={2} />
-                {activeLabelName}
-                <ChevronDown className="size-2.75" />
-              </Button>
-            }
-          />
+        <ToolDropdown icon={TagIcon} text={activeLabelName} label="Change label">
           <DropdownMenuContent align="end" className="w-56">
             <div className="px-2 py-1.5 text-[10px] uppercase tracking-[1.5px] text-faint">
               Built-in
@@ -752,7 +733,7 @@ export function EmailDetail() {
               </>
             )}
           </DropdownMenuContent>
-        </DropdownMenu>
+        </ToolDropdown>
 
         <IconToolBtn label={selectedEmail.isStarred ? "Starred" : "Star"} onClick={handleStar}>
           <Star
@@ -762,21 +743,32 @@ export function EmailDetail() {
             color={selectedEmail.isStarred ? "var(--brand)" : "currentColor"}
           />
         </IconToolBtn>
-        <ToolBtn onClick={handleToggleReadLater}>
+        <IconToolBtn
+          label={readLaterIds.has(selectedEmail.id) ? "Remove from Read later" : "Read later"}
+          onClick={handleToggleReadLater}
+        >
           {readLaterIds.has(selectedEmail.id) ? (
-            <>
-              <BookmarkCheck className="size-3.25" strokeWidth={2} />
-              Saved
-            </>
+            <BookmarkCheck className="size-3.5" strokeWidth={2} />
           ) : (
-            <>
-              <Bookmark className="size-3.25" strokeWidth={2} />
-              Read later
-            </>
+            <Bookmark className="size-3.5" strokeWidth={2} />
           )}
-        </ToolBtn>
+        </IconToolBtn>
         {(unsubMethods.length > 0 || unsubLimited) && (
-          <ToolBtn
+          <IconToolBtn
+            label={
+              unsubStatus === "done" || unsubStatus === "manual" ? "Unsubscribed" : "Unsubscribe"
+            }
+            tooltip={
+              unsubLimited
+                ? unsubLimited
+                : unsubStatus === "done"
+                  ? "You unsubscribed from this sender"
+                  : unsubStatus === "manual"
+                    ? "We opened their unsubscribe page. Finish it there."
+                    : unsubStatus === "failed"
+                      ? "Unsubscribe failed. Click to retry."
+                      : "Unsubscribe from this sender"
+            }
             onClick={handleUnsubscribe}
             disabled={
               Boolean(unsubLimited) ||
@@ -784,58 +776,29 @@ export function EmailDetail() {
               unsubStatus === "done" ||
               unsubStatus === "manual"
             }
-            title={
-              unsubLimited
-                ? unsubLimited
-                : unsubStatus === "done"
-                  ? "You unsubscribed from this sender"
-                  : unsubStatus === "manual"
-                    ? "We opened their unsubscribe page — finish it there"
-                    : unsubStatus === "failed"
-                      ? "Unsubscribe failed — click to retry"
-                      : "Unsubscribe from this sender"
-            }
           >
             {unsubBusy ? (
-              <Loader2 className="size-3.25 animate-spin" strokeWidth={2} />
+              <Loader2 className="size-3.5 animate-spin" strokeWidth={2} />
             ) : (
-              <MailX className="size-3.25" strokeWidth={2} />
+              <MailX className="size-3.5" strokeWidth={2} />
             )}
-            {unsubStatus === "done" || unsubStatus === "manual" ? "Unsubscribed" : "Unsubscribe"}
-          </ToolBtn>
+          </IconToolBtn>
         )}
         {selectedEmail.threadId && (
-          <ToolBtn onClick={handleToggleMute}>
+          <IconToolBtn
+            label={mutedThreadIds.has(selectedEmail.threadId) ? "Unmute" : "Mute"}
+            onClick={handleToggleMute}
+          >
             {mutedThreadIds.has(selectedEmail.threadId) ? (
-              <>
-                <Bell className="size-3.25" strokeWidth={2} />
-                Unmute
-              </>
+              <Bell className="size-3.5" strokeWidth={2} />
             ) : (
-              <>
-                <BellOff className="size-3.25" strokeWidth={2} />
-                Mute
-              </>
+              <BellOff className="size-3.5" strokeWidth={2} />
             )}
-          </ToolBtn>
+          </IconToolBtn>
         )}
 
         {selectedEmail.folder !== "trash" && (
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="outline"
-                  size="sm"
-                  aria-label="Snooze"
-                  className="bg-transparent text-muted-foreground dark:bg-transparent"
-                >
-                  <Clock className="size-3.25" strokeWidth={2} />
-                  Snooze
-                  <ChevronDown className="size-2.75" />
-                </Button>
-              }
-            />
+          <ToolDropdown icon={Clock} text="Snooze" label="Snooze">
             <DropdownMenuContent align="end" className="w-56">
               {SNOOZE_PRESETS.map((p) => (
                 <DropdownMenuItem key={p.label} onClick={() => handleSnooze(p.when())}>
@@ -849,13 +812,12 @@ export function EmailDetail() {
                 Pick date & time…
               </DropdownMenuItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </ToolDropdown>
         )}
         {selectedEmail.folder === "trash" ? (
-          <ToolBtn onClick={handleRestore}>
-            <ArchiveRestore className="size-3.25" strokeWidth={2} />
-            Restore
-          </ToolBtn>
+          <IconToolBtn label="Restore" onClick={handleRestore}>
+            <ArchiveRestore className="size-3.5" strokeWidth={2} />
+          </IconToolBtn>
         ) : (
           <IconToolBtn label="Archive" onClick={handleArchive}>
             <Archive className="size-3.5" strokeWidth={2} />
@@ -866,10 +828,9 @@ export function EmailDetail() {
         </IconToolBtn>
 
         {aiEnabled && selectedEmail.folder !== "drafts" && (
-          <ToolBtn onClick={() => setApologyOpen(true)}>
-            <HeartHandshake className="size-3.25" strokeWidth={2} />
-            Draft apology
-          </ToolBtn>
+          <IconToolBtn label="Draft apology" onClick={() => setApologyOpen(true)}>
+            <HeartHandshake className="size-3.5" strokeWidth={2} />
+          </IconToolBtn>
         )}
         <IconToolBtn
           label="Print"
@@ -887,7 +848,8 @@ export function EmailDetail() {
         >
           <Printer className="size-3.5" strokeWidth={2} />
         </IconToolBtn>
-        <ToolBtn
+        <IconToolBtn
+          label="View original"
           href={mailPath(
             scope.workspaceSlug,
             scope.mailboxSlug,
@@ -895,9 +857,8 @@ export function EmailDetail() {
             `?${new URLSearchParams({ id: selectedEmail.id })}`,
           )}
         >
-          <FileCode className="size-3.25" strokeWidth={2} />
-          View original
-        </ToolBtn>
+          <FileCode className="size-3.5" strokeWidth={2} />
+        </IconToolBtn>
       </div>
 
       {selectedEmail.folder === "trash" && (
@@ -1324,6 +1285,7 @@ export function EmailDetail() {
 
 function IconToolBtn({
   label,
+  tooltip,
   children,
   onClick,
   href,
@@ -1331,6 +1293,7 @@ function IconToolBtn({
   disabled,
 }: {
   label: string;
+  tooltip?: string;
   children: React.ReactNode;
   onClick?: () => void;
   href?: Route;
@@ -1366,10 +1329,12 @@ function IconToolBtn({
   return (
     <IconButton
       label={label}
+      tooltip={tooltip}
       variant="outline"
       size="icon-sm"
       onClick={onClick}
       disabled={disabled}
+      focusableWhenDisabled
       className={className}
     >
       {children}
@@ -1377,51 +1342,35 @@ function IconToolBtn({
   );
 }
 
-function ToolBtn({
+function ToolDropdown({
+  icon: Icon,
+  text,
+  label,
   children,
-  onClick,
-  href,
-  danger,
-  disabled,
-  title,
 }: {
+  icon: LucideIcon;
+  text: string;
+  label: string;
   children: React.ReactNode;
-  onClick?: () => void;
-  href?: Route;
-  danger?: boolean;
-  disabled?: boolean;
-  title?: string;
 }) {
-  const className = cn(
-    "bg-transparent text-muted-foreground dark:bg-transparent",
-    danger &&
-      "hover:border-destructive/20 hover:bg-destructive/10 hover:text-destructive-text dark:hover:bg-destructive/10",
-  );
-  if (href) {
-    return (
-      <Link
-        href={href}
-        prefetch={false}
-        target="_blank"
-        rel="noopener"
-        title={title}
-        className={cn(buttonVariants({ variant: "outline", size: "sm" }), className)}
-      >
-        {children}
-      </Link>
-    );
-  }
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={onClick}
-      disabled={disabled}
-      title={title}
-      className={className}
-    >
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            variant="outline"
+            size="sm"
+            aria-label={label}
+            className="bg-transparent text-muted-foreground dark:bg-transparent"
+          >
+            <Icon className="size-3.25" strokeWidth={2} />
+            {text}
+            <ChevronDown className="size-2.75" />
+          </Button>
+        }
+      />
       {children}
-    </Button>
+    </DropdownMenu>
   );
 }
 

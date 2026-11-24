@@ -12,7 +12,7 @@ import {
 import { useNow } from "@/hooks/use-now";
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { CardLink, CardShell, Detail, Details, Title } from "./card-parts";
+import { CardLink, CardShell, Detail, Details, Title, CompactShell } from "./card-parts";
 import { formatWhen, parseWhen } from "./format";
 
 type SharedDocumentProps = SummaryCardProps<"SharedDocument">;
@@ -70,5 +70,40 @@ export function SharedDocumentCard({ props }: { props: SharedDocumentProps }) {
         )}
       </Details>
     </CardShell>
+  );
+}
+
+export function SharedDocumentCompact({ props }: { props: SharedDocumentProps }) {
+  const kind = KINDS[props.kind];
+  const due = parseWhen(props.dueDate);
+  const now = useNow();
+  const overdue = due !== null && due < now;
+  const Icon = kind.icon;
+  return (
+    <CompactShell>
+      <Icon aria-hidden className="size-3.5 shrink-0 text-primary" />
+      <span className="min-w-0 truncate font-medium">{props.title}</span>
+      {(props.sharedBy || props.provider) && (
+        <span className="min-w-0 truncate text-[12px] text-faint">
+          {[props.sharedBy && `from ${props.sharedBy}`, props.provider].filter(Boolean).join(" · ")}
+        </span>
+      )}
+      <span className="ml-auto flex shrink-0 items-center gap-1.5">
+        {props.dueDate && (
+          <span className="flex items-center gap-1 text-[12px] text-faint">
+            <CalendarClock aria-hidden className="size-3" />
+            {formatWhen(props.dueDate)}
+          </span>
+        )}
+        <Badge variant={overdue ? "destructive" : "outline"}>
+          {overdue ? "Overdue" : kind.label}
+        </Badge>
+        {props.openUrl && (
+          <CardLink href={props.openUrl} intent="primary" icon={Icon}>
+            {kind.action}
+          </CardLink>
+        )}
+      </span>
+    </CompactShell>
   );
 }

@@ -67,7 +67,7 @@ See also [AGENTS.md](../AGENTS.md), [mail.md](mail.md), [calendar.md](calendar.m
   - Chats are the caller's own threads (`listAssistantThreads`); invites need an admin (`listWorkspaceInvites`); connections are the caller's own grants that back this workspace (`listWorkspaceConnectionsOf`).
 - **Search runs on every resource whatever its AI switch.** Only the "Ask the assistant" action checks the platform, workspace and resource switches (`ai` on each hit, [ai-agents.md](ai-agents.md)).
 - **Every result action calls an existing procedure, with that procedure's own checks.** `search.*` holds only the search procedures.
-- **Saved searches are personal**: `saved_search` is keyed user × workspace, capped at `MAX_SAVED_SEARCHES`. Recent searches stay in the viewer's browser storage.
+- **Saved searches are personal**: `saved_search` is keyed user × workspace, capped at `MAX_SAVED_SEARCHES`. Recent searches stay in the viewer's browser storage (`src/search/recent.ts`), keyed by workspace, and every web sign-out clears them (`clearRecentSearches`, called by `clearLocalData`).
 - **Role changes, removal and ownership transfer live once, in `useMemberAdmin`**, used by Settings → Members and the search dialog ([workspaces.md](workspaces.md) has the rules).
 - **A member has no page of their own.** A member result's preview and a `<@member:id>` chip's side panel both render `MemberDetails` (email, role, joined date, `MemberActivity`); the search actions are the person actions plus role and removal for admins.
 

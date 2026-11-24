@@ -4,7 +4,7 @@ import { ShoppingCart, TicketPercent } from "lucide-react";
 import { useNow } from "@/hooks/use-now";
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { CardLink, CardShell, CopyButton, Title } from "./card-parts";
+import { CardLink, CardShell, CopyButton, Title, CompactShell } from "./card-parts";
 import { formatWhen, parseWhen } from "./format";
 
 export function OfferCard({ props }: { props: SummaryCardProps<"Offer"> }) {
@@ -46,5 +46,41 @@ export function OfferCard({ props }: { props: SummaryCardProps<"Offer"> }) {
         </div>
       )}
     </CardShell>
+  );
+}
+
+export function OfferCompact({ props }: { props: SummaryCardProps<"Offer"> }) {
+  const expires = parseWhen(props.expiresAt);
+  const now = useNow();
+  const expired = expires !== null && expires < now;
+  return (
+    <CompactShell>
+      <TicketPercent aria-hidden className="size-3.5 shrink-0 text-primary" />
+      <span className="min-w-0 truncate font-medium">{props.headline}</span>
+      {props.discount && (
+        <span className="shrink-0 font-medium text-primary">{props.discount}</span>
+      )}
+      <span className="min-w-0 truncate text-[12px] text-faint">{props.merchant}</span>
+      {props.code && (
+        <>
+          <span className="shrink-0 rounded border border-dashed border-primary/50 px-1.5 font-mono text-[12px] tracking-[1px]">
+            {props.code}
+          </span>
+          <CopyButton text={props.code} label="Copy code" iconOnly />
+        </>
+      )}
+      <span className="ml-auto flex shrink-0 items-center gap-1.5">
+        {props.expiresAt && (
+          <Badge variant={expired ? "destructive" : "outline"}>
+            {expired ? "Expired" : `Until ${formatWhen(props.expiresAt)}`}
+          </Badge>
+        )}
+        {props.shopUrl && !expired && (
+          <CardLink href={props.shopUrl} icon={ShoppingCart}>
+            Shop
+          </CardLink>
+        )}
+      </span>
+    </CompactShell>
   );
 }

@@ -90,7 +90,7 @@ export default function setupTests() {
       await main.getByPlaceholder("Your password").fill(OWNER.password);
       await main.getByRole("button", { name: "Continue", exact: true }).click();
       await main.getByText("Can't scan? Show manual key").click();
-      const secret = (await main.locator("details code").innerText()).trim();
+      const secret = (await main.getByRole("code").innerText()).trim();
       expect(secret).toMatch(/^[A-Z2-7]+=*$/);
       owner.code = authenticator(secret);
 

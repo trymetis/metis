@@ -38,7 +38,7 @@ export type DrivePreviewState =
       url: string;
       truncated: boolean;
     }
-  | { status: "failed"; message: string | null };
+  | { status: "failed"; message: string | null; missing?: boolean };
 
 type Settled =
   | Exclude<DrivePreviewState, { status: "ready" | "loading" }>
@@ -134,7 +134,9 @@ async function loadPreview(
   } catch {
     return { status: "failed", message: null };
   }
-  if (!res.ok) return { status: "failed", message: await routeError(res) };
+  if (!res.ok) {
+    return { status: "failed", message: await routeError(res), missing: res.status === 404 };
+  }
   if (!res.body) return { status: "failed", message: null };
 
   const knownTooLong = entry.size !== null && entry.size > cap;

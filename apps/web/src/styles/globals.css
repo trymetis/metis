@@ -1,18 +1,20 @@
 @import "@metis/ui/globals.css";
 
-.drive-icon {
-  display: inline-block;
-  flex-shrink: 0;
-  height: 1rem;
-  width: 1rem;
-  background-image: var(--drive-icon-light);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
-}
+@layer components {
+  .drive-icon {
+    display: inline-block;
+    flex-shrink: 0;
+    height: 1rem;
+    width: 1rem;
+    background-image: var(--drive-icon-light);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+  }
 
-.dark .drive-icon {
-  background-image: var(--drive-icon-dark);
+  .dark .drive-icon {
+    background-image: var(--drive-icon-dark);
+  }
 }
 
 .chart-surface {
@@ -199,57 +201,57 @@
   padding-left: 0;
 }
 
-.drive-markdown > * + * {
+.markdown-body > * + * {
   margin-top: 0.8em;
 }
-.drive-markdown h1,
-.drive-markdown h2,
-.drive-markdown h3,
-.drive-markdown h4 {
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
   font-weight: 600;
   line-height: 1.25;
   margin-top: 1.4em;
 }
-.drive-markdown h1 {
+.markdown-body h1 {
   font-size: 1.6em;
 }
-.drive-markdown h2 {
+.markdown-body h2 {
   font-size: 1.3em;
 }
-.drive-markdown h3 {
+.markdown-body h3 {
   font-size: 1.1em;
 }
-.drive-markdown ul,
-.drive-markdown ol {
+.markdown-body ul,
+.markdown-body ol {
   padding-left: 1.5em;
 }
-.drive-markdown ul {
+.markdown-body ul {
   list-style: disc;
 }
-.drive-markdown ol {
+.markdown-body ol {
   list-style: decimal;
 }
-.drive-markdown li + li {
+.markdown-body li + li {
   margin-top: 0.2em;
 }
-.drive-markdown a {
+.markdown-body a {
   color: var(--brand-text);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-.drive-markdown blockquote {
+.markdown-body blockquote {
   padding-left: 1em;
   border-left: 2px solid var(--border);
   color: var(--text-secondary);
 }
-.drive-markdown code {
+.markdown-body code {
   font-family: var(--font-mono);
   background: var(--bg-hover);
   padding: 1px 6px;
   border-radius: 4px;
   font-size: 0.9em;
 }
-.drive-markdown pre {
+.markdown-body pre {
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -258,25 +260,25 @@
   font-family: var(--font-mono);
   font-size: 0.85em;
 }
-.drive-markdown pre code {
+.markdown-body pre code {
   background: none;
   padding: 0;
 }
-.drive-markdown table {
+.markdown-body table {
   border-collapse: collapse;
   display: block;
   overflow-x: auto;
 }
-.drive-markdown th,
-.drive-markdown td {
+.markdown-body th,
+.markdown-body td {
   border: 1px solid var(--border);
   padding: 4px 10px;
 }
-.drive-markdown hr {
+.markdown-body hr {
   border: 0;
   border-top: 1px solid var(--border);
 }
-.drive-markdown img {
+.markdown-body img {
   max-width: 100%;
   height: auto;
 }

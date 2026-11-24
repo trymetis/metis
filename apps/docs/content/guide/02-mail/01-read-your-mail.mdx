@@ -107,7 +107,7 @@ The second line shows:
 
 - up to two chips
 - a paperclip when the message has attachments
-- the first words of the message, or the conversation's **TL;DR**
+- the first words of the message, or the conversation's [summary card](/guide/mail/ai-help#the-compact-card), shown as the compact card
 - the date, at the right
 
 Unread messages are tinted and have a colored bar on the left. Messages in the same conversation are grouped into one row that shows the latest message.
@@ -122,16 +122,18 @@ A row shows at most two chips. When a message in **All inboxes** has a label, yo
 
 The paperclip shows when the latest message in the conversation has attachments. A conversation where only an earlier message has a file shows no paperclip. Pictures that sit inside the message text usually do not count as attachments.
 
-### The TL;DR on a row
+### The summary on a row
 
-When a conversation has a **TL;DR** [summary card](/guide/mail/ai-help#summary-cards), its row shows that TL;DR in place of the first words of the message. This needs AI to be turned on for the workspace and for the mailbox. In **All inboxes**, conversations from a mailbox with AI off show their first words.
+When a conversation has a [summary card](/guide/mail/ai-help#summary-cards), its row in the list shows the compact card in place of the first words of the message. It is the same as the [compact card](/guide/mail/ai-help#the-compact-card) above the message: for example a package's arrival day, delivery steps and **Track**, or a code with **Copy code**. This needs AI to be turned on for the workspace and for the mailbox. In **All inboxes**, conversations from a mailbox with AI off show their first words.
 
-- A row never makes a summary itself. A summary is made when someone opens the conversation, or when the Workspace Assistant or an AI app you connected summarizes it. Until then, the row shows the first words.
-- When you open the conversation, the row switches to the TL;DR as soon as the summary shows in the reading pane. You do not need to reload the page.
-- When the [Workspace Assistant](/guide/assistant/use-workspace-ai) or an [AI app you connected](/guide/assistant/connect-an-ai-client) makes the summary, the row shows the TL;DR by the next time you open a conversation that shows a summary or reload the page. It can show sooner: when new mail arrives in the list, when more rows load as you scroll, or when you come back to the list after more than 5 minutes.
-- When a newer message shows in the row, the row goes back to the first words of that message. It shows the TL;DR again once the conversation is summarized again.
+The buttons on the compact card work from the list, such as **Copy code**, **Track**, **Join**, **Add to calendar**, **View order**, **Pay** or **Save contact**. Clicking a button or a link does not open the message. Clicking anywhere else on the row opens it. A few things show only in the reading pane: **Remind me**, **Unsubscribe** on a digest and the **Show summary** arrow. **Open email** shows only in an opened Link card. The compact card on a row never opens into the full card. To see the full card, open the message and click **Show summary**.
+
+- A row never makes a summary itself. A summary is made when someone opens the conversation, or when Workspace AI or an AI app you connected summarizes it. Until then, the row shows the first words.
+- When you open the conversation, the row switches to the compact card as soon as the summary shows in the reading pane. You do not need to reload the page.
+- When [Workspace AI](/guide/assistant/use-workspace-ai) or an [AI app you connected](/guide/assistant/connect-an-ai-client) makes the summary, the row shows the compact card later. It shows when you reload the page, or the next time you open a conversation that shows a summary. It can show sooner: when new mail arrives in the list, when more rows load as you scroll, or when you come back to the list after more than 5 minutes.
+- When a newer message shows in the row, the row goes back to the first words of that message. It shows the compact card again once the conversation is summarized again.
 - Conversations with "No summary for this email" and conversations whose summary failed show the first words.
-- Automated notifications, such as a code or a delivery update, usually get no **TL;DR**. Their rows keep showing their first words.
+- If the person who runs your server changes the AI model used for summaries, rows show the first words again until the conversation is opened and summarized again. This can also happen after Metis Suite is updated.
 
 ### Check for new mail
 
@@ -163,7 +165,7 @@ The reading pane shows:
 - the sender's name and address
 - a recipients line, such as **To:** with the first two names. Click it to see the full **To** and **Cc** lists.
 - the date, with small chips under it when remote images were blocked or trackers were removed (see [Privacy and safety when reading](/guide/mail/privacy-and-safety))
-- the summary, folded into one line unless you opened its cards before, when AI is on (see [AI help in mail](/guide/mail/ai-help#summary-cards))
+- the conversation's summary card when AI is on, as the compact card, or as the full card if you left a summary card open in this browser (see [AI help in mail](/guide/mail/ai-help#summary-cards))
 - the earlier messages in the conversation, folded (see [Read a conversation](#read-a-conversation))
 - the message itself, then its attachments, then smart replies and the stance buttons (**Accept**, **Polite decline** and the rest) when AI is on
 

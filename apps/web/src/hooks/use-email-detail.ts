@@ -50,6 +50,11 @@ const retryWhenRateLimited = {
   retryDelay: (_count: number, err: unknown) => (rateLimitWait(err) ?? 1) * 1000,
 };
 
+function waitingOnRateLimit(query: { data: unknown; failureReason: Error | null }): Error | null {
+  const failure = query.failureReason;
+  return !query.data && failure && rateLimitWait(failure) !== null ? failure : null;
+}
+
 export function bodyFrom(data: { bodyHtml?: string; bodyText?: string }): MessageBody {
   if (data.bodyHtml) return { kind: "html", html: data.bodyHtml };
   if (data.bodyText) return { kind: "text", text: data.bodyText };
@@ -68,12 +73,14 @@ export function usePhishingAnalysis(emailId: string | undefined, enabled = true)
     rpc.ai.analyzePhishing.queryOptions({
       input: emailId && enabled ? { ...scope, id: emailId } : skipToken,
       staleTime: Infinity,
+      ...retryWhenRateLimited,
     }),
   );
+  const failure = query.error ?? waitingOnRateLimit(query);
   return {
     result: query.data ?? null,
-    loading: query.isFetching,
-    error: query.error ? query.error.message || "Analysis failed" : null,
+    loading: query.isFetching && !failure,
+    error: failure ? failure.message || "Analysis failed" : null,
   };
 }
 
@@ -250,8 +257,10 @@ export function useThreadSummary(email: Email | null, enabled = true) {
     rpc.ai.threadSummary.queryOptions({
       input: id && wanted ? { ...scope, messageId: id, threadId } : skipToken,
       staleTime: Infinity,
+      ...retryWhenRateLimited,
     }),
   );
+  const failure = query.error ?? waitingOnRateLimit(query);
 
   const aiOff = query.error instanceof ORPCError && query.error.code === "FORBIDDEN";
   const shown = wanted && !aiOff;
@@ -262,7 +271,7 @@ export function useThreadSummary(email: Email | null, enabled = true) {
 
   return {
     result: shown ? (query.data ?? null) : null,
-    loading: shown && query.isFetching,
-    error: shown && query.error ? query.error.message || "Try again in a moment." : null,
+    loading: shown && query.isFetching && !failure,
+    error: shown && failure ? failure.message || "Try again in a moment." : null,
   };
 }

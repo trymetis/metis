@@ -17,7 +17,15 @@ import {
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { CardLink, CardShell, CopyButton, Detail, Details, Title } from "./card-parts";
+import {
+  CardLink,
+  CardShell,
+  CopyButton,
+  Detail,
+  Details,
+  Title,
+  CompactShell,
+} from "./card-parts";
 import { directionsUrl, formatRange, humanize } from "./format";
 import { TicketBarcode } from "./ticket-barcode";
 
@@ -116,5 +124,34 @@ export function ReservationCard({ props }: { props: SummaryCardProps<"Reservatio
       </Details>
       {props.barcode && <TicketBarcode barcode={props.barcode} />}
     </CardShell>
+  );
+}
+
+export function ReservationCompact({ props }: { props: SummaryCardProps<"Reservation"> }) {
+  const Icon = RESERVATION_ICONS[props.kind];
+  const when = formatRange(props.start, props.end);
+  return (
+    <CompactShell>
+      <Icon aria-hidden className="size-3.5 shrink-0 text-primary" />
+      <span className="min-w-0 truncate font-medium">{props.title}</span>
+      {when && (
+        <span className="flex shrink-0 items-center gap-1 text-[12px] text-faint">
+          <Clock aria-hidden className="size-3" />
+          {when}
+        </span>
+      )}
+      {props.details[0] && (
+        <span className="min-w-0 truncate text-[12px] text-faint">{props.details[0]}</span>
+      )}
+      <span className="ml-auto flex shrink-0 items-center gap-1.5">
+        {props.confirmationCode && (
+          <>
+            <span className="font-mono text-[12px] font-medium">{props.confirmationCode}</span>
+            <CopyButton text={props.confirmationCode} label="Copy confirmation" iconOnly />
+          </>
+        )}
+        {props.manageUrl && <CardLink href={props.manageUrl}>Manage booking</CardLink>}
+      </span>
+    </CompactShell>
   );
 }

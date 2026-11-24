@@ -166,7 +166,7 @@ export function ContactCard() {
 
   return (
     <article className="flex h-full min-h-0 flex-col" aria-label={contact.name.display}>
-      <header className="flex items-start gap-4 border-b border-border px-6 py-5 max-md:px-4">
+      <header className="flex items-center gap-4 border-b border-border px-6 py-4 max-md:px-4">
         <Button
           variant="ghost"
           size="icon-sm"
@@ -180,20 +180,14 @@ export function ContactCard() {
           name={contact.name.display}
           email={email}
           photoUrl={contact.photoUrl}
-          className="size-14 text-lg"
+          className="size-10 text-sm"
         />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-[24px] font-medium tracking-tight text-foreground">
-            {contact.name.display || email || "Unnamed"}
-          </h1>
-          <p className="truncate text-[13px] text-faint">
-            {[contact.title, contact.organization].filter(Boolean).join(" · ") ||
-              contact.bookName ||
-              ""}
-          </p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <h1 className="truncate text-[24px] font-medium tracking-tight text-foreground">
+              {contact.name.display || email || "Unnamed"}
+            </h1>
             <MemberBadge contact={contact} />
-            {contact.bookName && <Badge variant="outline">{contact.bookName}</Badge>}
           </div>
         </div>
         <div className="-mr-2 flex shrink-0 items-center gap-0.5">
@@ -284,7 +278,9 @@ export function ContactCard() {
           <Field label="Notes">
             {contact.notes ? <span className="whitespace-pre-wrap">{contact.notes}</span> : null}
           </Field>
-          <Field label="Address book">{contact.accountName}</Field>
+          <Field label="Address book">
+            {[contact.bookName, contact.accountName].filter(Boolean).join(" · ")}
+          </Field>
         </dl>
 
         {email && (

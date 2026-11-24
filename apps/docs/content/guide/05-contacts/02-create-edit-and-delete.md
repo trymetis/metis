@@ -9,8 +9,10 @@ Every change you make here is saved in the address book at your provider. It sho
 
 1. In Contacts, click **New contact**, the button with a person and a plus, right beside the filter box. The **New contact** dialog opens.
 2. Fill in the contact's details. You need at least a name, an email address or an organization. All the fields are described [below](#the-contact-fields).
-3. Under **Address book**, pick where to save the contact. The list shows each address book you can write to, with its account's email address, such as "Contacts · you@example.com". It starts on the address book you are looking at, or on the account's main address book.
+3. Under **Address book**, pick where to save the contact. The list shows each address book you can write to, with its account's email address, such as "Contacts · you@example.com". It starts on the address book you are looking at, when you can write to it. Otherwise it starts on the first main address book in the list, which can belong to another account.
 4. Click **Save**.
+
+If your address books are still loading, the list is empty and "Loading address books…" shows under it. The list fills in by itself when they arrive. If you have no address book you can write to, you see "No address book you can add contacts to". In both cases, **Save** stays turned off.
 
 <img src="/images/contacts/new-contact-dialog.webp" alt="The New contact dialog with a display name and an email address filled in" class="dark:hidden" />
 <img src="/images/contacts/new-contact-dialog-dark.webp" alt="The New contact dialog with a display name and an email address filled in" class="hidden dark:block" />
@@ -56,7 +58,6 @@ The dialog shows a message in red:
 
 - "Give the contact a name, an email or an organization": fill in at least one of them.
 - "someone@example is not an email address": fix the address it names.
-- "Pick an address book": choose where to save the contact.
 - Your provider's message, or "Could not save the contact".
 
 ## Delete a contact

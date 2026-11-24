@@ -11,7 +11,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, ChevronRight, Circle, Loader2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Streamdown } from "streamdown";
 
 import { useDashboardRole } from "@/components/dashboard/dashboard-role";
 import { Loading } from "@/components/dashboard/system-client";
@@ -186,18 +185,18 @@ function ReleaseRow({
           )}
         </span>
       </div>
-      {release.notes && (
+      {release.notesHtml && (
         <Collapsible>
           <CollapsibleTrigger className="group mt-1 flex cursor-pointer items-center gap-1 text-[11px] text-faint hover:text-foreground">
             <ChevronRight className="h-3 w-3 transition-transform group-data-[panel-open]:rotate-90" />
             Release notes
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <div className="mt-2 rounded-md bg-muted p-3 text-[13px]">
-              <Streamdown mode="static" className="[&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
-                {release.notes}
-              </Streamdown>
-            </div>
+            <div
+              className="markdown-body mt-2 rounded-md bg-muted p-3 text-[13px] leading-5 text-foreground [&>*:first-child]:mt-0"
+              // oxlint-disable-next-line react/no-danger --rendered and sanitized on the server in releaseNotesHtml
+              dangerouslySetInnerHTML={{ __html: release.notesHtml }}
+            />
           </CollapsibleContent>
         </Collapsible>
       )}

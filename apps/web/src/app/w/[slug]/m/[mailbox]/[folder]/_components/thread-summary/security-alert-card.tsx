@@ -2,7 +2,7 @@ import { Clock, MapPin, MonitorSmartphone, Network, ShieldAlert } from "lucide-r
 
 import type { SummaryCardProps } from "@/mail/summary-catalog";
 
-import { CardLink, CardShell, Detail, Details, Title } from "./card-parts";
+import { CardLink, CardShell, Detail, Details, Title, CompactShell } from "./card-parts";
 import { formatWhen } from "./format";
 
 export function SecurityAlertCard({ props }: { props: SummaryCardProps<"SecurityAlert"> }) {
@@ -42,5 +42,39 @@ export function SecurityAlertCard({ props }: { props: SummaryCardProps<"Security
         )}
       </Details>
     </CardShell>
+  );
+}
+
+export function SecurityAlertCompact({ props }: { props: SummaryCardProps<"SecurityAlert"> }) {
+  return (
+    <CompactShell>
+      <ShieldAlert aria-hidden className="size-3.5 shrink-0 text-destructive-text" />
+      <span className="min-w-0 truncate font-medium">
+        {props.event}
+        <span className="font-normal text-muted-foreground"> · {props.service}</span>
+      </span>
+      {props.device && (
+        <span className="min-w-0 truncate text-[12px] text-faint">{props.device}</span>
+      )}
+      {props.location && (
+        <span className="flex shrink-0 items-center gap-1 text-[12px] text-faint">
+          <MapPin aria-hidden className="size-3" />
+          {props.location}
+        </span>
+      )}
+      {props.ipAddress && (
+        <span className="shrink-0 font-mono text-[11px] text-faint">{props.ipAddress}</span>
+      )}
+      <span className="ml-auto flex shrink-0 items-center gap-1.5">
+        {props.occurredAt && (
+          <span className="text-[12px] text-faint">{formatWhen(props.occurredAt)}</span>
+        )}
+        {props.reviewUrl && (
+          <CardLink href={props.reviewUrl} icon={ShieldAlert}>
+            Wasn't you? Review activity
+          </CardLink>
+        )}
+      </span>
+    </CompactShell>
   );
 }

@@ -25,14 +25,16 @@ import {
   unsubscribeMethods,
 } from "./unsubscribe";
 
-const SCAN_CACHE_SEC = 5 * 60;
+const METHODS_CACHE_SEC = 7 * 24 * 60 * 60;
 
-const cachedScanSchema = z.object({
-  senders: z.array(subscriptionSenderSchema.omit({ unsubscribedStatus: true })),
-  scanned: z.number(),
-});
+const cachedMethodsSchema = subscriptionSenderSchema.shape.methods;
 
-type CachedScan = z.infer<typeof cachedScanSchema>;
+type Methods = z.infer<typeof cachedMethodsSchema>;
+
+interface Scan {
+  senders: Omit<SubscriptionSender, "unsubscribedStatus">[];
+  scanned: number;
+}
 
 interface SenderGroup {
   senderEmail: string;
@@ -94,11 +96,15 @@ async function mapChunked<T, R>(
   return results;
 }
 
-async function readCachedScan(key: string): Promise<CachedScan | null> {
+function methodsKey(scope: string, messageId: string): string {
+  return `subscriptions-methods:${scope}:${messageId}`;
+}
+
+async function readCachedMethods(key: string): Promise<Methods | null> {
   const raw = await getCache().get(key);
   if (!raw) return null;
   try {
-    return cachedScanSchema.safeParse(JSON.parse(raw)).data ?? null;
+    return cachedMethodsSchema.safeParse(JSON.parse(raw)).data ?? null;
   } catch {
     return null;
   }
@@ -106,25 +112,39 @@ async function readCachedScan(key: string): Promise<CachedScan | null> {
 
 async function runScan(
   mail: Pick<MailScope, "adapter" | "mailboxes">,
+  scope: string,
   requestedScanLimit: number,
-): Promise<CachedScan> {
+): Promise<Scan> {
   const adapter = mail.adapter;
   const hasZoho = mail.mailboxes.some((m) => m.provider === "zoho");
   const scanLimit = hasZoho ? Math.min(requestedScanLimit, 50) : requestedScanLimit;
   const emails = await collectInbox(adapter, scanLimit);
   const groups = groupBySender(emails);
 
-  const concurrency = hasZoho ? 3 : 8;
-  const withInfo = await mapChunked(groups, concurrency, async (g) => {
-    const info = await adapter.getUnsubscribeInfo(g.latest.id).catch(() => null);
-    if (!info) return null;
-    const methods = unsubscribeMethods(parseUnsubscribeHeader(info));
-    if (methods.length === 0) return null;
-    return { group: g, methods };
-  });
+  const cached = await Promise.all(
+    groups.map((g) => readCachedMethods(methodsKey(scope, g.latest.id))),
+  );
+  const missing = groups.filter((_, i) => cached[i] === null);
+  const looked = new Map<string, Methods>();
+  if (missing.length > 0) {
+    await enforceRateLimit(scope, RATE_LIMITS.mailSubscriptionsScan, "scans");
+    const concurrency = hasZoho ? 3 : 8;
+    await mapChunked(missing, concurrency, async (g) => {
+      const info = await adapter.getUnsubscribeInfo(g.latest.id).catch(() => undefined);
+      if (info === undefined) return;
+      const methods = info ? unsubscribeMethods(parseUnsubscribeHeader(info)) : [];
+      looked.set(g.latest.id, methods);
+      await getCache().set(
+        methodsKey(scope, g.latest.id),
+        JSON.stringify(methods),
+        METHODS_CACHE_SEC,
+      );
+    });
+  }
 
-  const senders = withInfo
-    .filter((x): x is NonNullable<typeof x> => x !== null)
+  const senders = groups
+    .map((group, i) => ({ group, methods: cached[i] ?? looked.get(group.latest.id) ?? [] }))
+    .filter(({ methods }) => methods.length > 0)
     .map(({ group, methods }) => ({
       senderEmail: group.senderEmail,
       senderName: group.senderName,
@@ -145,14 +165,7 @@ export async function scanSubscriptions(
 ): Promise<{ senders: SubscriptionSender[]; scanned: number }> {
   const ids = mailboxIds(mail);
   const scope = ids.toSorted().join(",");
-  const key = `subscriptions-scan:${scope}:${requestedScanLimit}`;
-
-  let scan = await readCachedScan(key);
-  if (!scan) {
-    await enforceRateLimit(scope, RATE_LIMITS.mailSubscriptionsScan, "scans");
-    scan = await runScan(mail, requestedScanLimit);
-    await getCache().set(key, JSON.stringify(scan), SCAN_CACHE_SEC);
-  }
+  const scan = await runScan(mail, scope, requestedScanLimit);
 
   const unsubRows = await db
     .select()

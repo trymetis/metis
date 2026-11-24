@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { authClient } from "@/auth/client";
 import { extractTotpSecret } from "@/auth/two-factor-code";
 import { InfoHint } from "@/components/info-hint";
+import { ManualKey } from "@/components/manual-key";
 import { TotpConfirmDialog } from "@/components/totp-confirm-dialog";
 import { TwoFactorInput } from "@/components/two-factor-input";
 import { useTwoFactorCode } from "@/hooks/use-two-factor-code";
@@ -173,14 +174,7 @@ function AuthenticatorScanDialog({
               <div className="size-50 animate-pulse rounded bg-panel" />
             )}
           </div>
-          {manualSecret && (
-            <details className="self-stretch text-xs text-faint">
-              <summary className="cursor-pointer">Can't scan? Show manual key</summary>
-              <code className="mt-2 block break-all rounded bg-panel p-2 text-muted-foreground">
-                {manualSecret}
-              </code>
-            </details>
-          )}
+          {manualSecret && <ManualKey secret={manualSecret} />}
           <TwoFactorInput
             field={code.field}
             disabled={busy}

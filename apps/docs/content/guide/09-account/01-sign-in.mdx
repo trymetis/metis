@@ -157,7 +157,7 @@ Each sign-in action has a limit. When you reach it, the page shows a red line un
 | **Verify** on the **Two-factor authentication** page | 10 a minute | 1 minute     |
 | Opening the link in a sign-in email                  | 5 a minute  | 1 minute     |
 
-Opening the link in a sign-in email too often does not show a red line. Instead, a page titled **Too many requests** opens, with "Try again in" and the time left, for example "Try again in 42 seconds." By default, sign-in links can be opened 5 times a minute from the same network. The person who runs your server can change this. People who share a network, such as an office, share this limit. Wait for the time shown, then click the link again or reload the page. The link still works if it is less than 15 minutes old and you have not used it yet.
+Opening the link in a sign-in email too often does not show a red line. Instead, a page titled **Too many requests** opens, with "Try again in" and the time left, for example "Try again in 42 seconds." By default, sign-in links can be opened 5 times a minute from the same network. Your instance owner can change this. People who share a network, such as an office, share this limit. Wait for the time shown, then click the link again or reload the page. The link still works if it is less than 15 minutes old and you have not used it yet.
 
 For how the wait is shown, see [Usage limits](/guide/reference/usage-limits#what-the-message-says). For limits on resetting your password, see [Reset a forgotten password](/guide/account/change-or-reset-your-password#reset-a-forgotten-password).
 
@@ -189,6 +189,15 @@ To learn more about workspaces, see [Workspaces](/guide/workspaces).
 
 ## Sign out
 
-Open your account menu (the round button with your initials at the bottom of the left rail) and click **Sign out**. This ends your session in this browser only. It also clears the file previews Metis Suite saved in this browser.
+Open your account menu (the round button with your initials at the bottom of the left rail) and click **Sign out**. This ends your session in this browser only.
+
+Signing out also clears what Metis Suite kept in this browser, for every workspace:
+
+- your recent searches
+- your Drive **Recent** lists
+- the file previews it saved
+- the lists it keeps so the app opens faster (names and lists, never the contents of your messages)
+
+The same happens when you sign out this browser with **Also sign out this device** (see [Manage signed-in devices](/guide/account/signed-in-devices)), when you [delete your account](/guide/account/delete-your-account), and when you click **Use a different account** on the **Sign in to the Metis app** page.
 
 To sign out of other browsers too, see [Manage signed-in devices](/guide/account/signed-in-devices).

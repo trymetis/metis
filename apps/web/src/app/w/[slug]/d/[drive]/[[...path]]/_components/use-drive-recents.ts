@@ -48,5 +48,14 @@ export function useDriveRecents(workspaceSlug: string, driveSlug: string) {
     [key],
   );
 
-  return { recents, remember };
+  const forget = useCallback(
+    (id: string) => {
+      const current = parse(readStoredItem(key));
+      if (!current.some((item) => item.id === id)) return;
+      writeStoredItem(key, JSON.stringify(current.filter((item) => item.id !== id)));
+    },
+    [key],
+  );
+
+  return { recents, remember, forget };
 }

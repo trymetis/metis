@@ -95,7 +95,7 @@ export function buildPrompt(
   ];
 }
 
-export type DetailCardType = Exclude<SummaryCardType, "Summary">;
+export type DetailCardType = Exclude<SummaryCardType, "Tldr">;
 
 export const CARD_DEFINITIONS: Record<DetailCardType, string> = {
   Otp: "a verification, sign-in, one-time or security code",
@@ -127,7 +127,7 @@ const CARD_NOTES: Partial<Record<DetailCardType, string>> = {
   ActionLink:
     "confirms names the thing the link confirms, verifies, resets or accepts; account is the account, username, address or workspace it applies to; ifIgnored is what the email says happens when the link is not used (the request is cancelled, the invitation lapses, the account stays unverified). Each is null when the email does not say it.",
   Meeting: "status is cancelled when it was cancelled, updated when rescheduled.",
-  Shipment: "One card per package, at its latest state.",
+  Shipment: "One package, at its latest state.",
   Transaction: "Not an order receipt (Order) or a bill (Bill).",
   Reservation:
     "Fill barcode from a ticketToken, reservedTicket or wallet pass barcode when present.",
@@ -140,17 +140,26 @@ function cardLine(type: DetailCardType): string {
   return `- ${type}: ${CARD_DEFINITIONS[type]}.${note ? ` ${note}` : ""}`;
 }
 
-const CARD_RULES = [
-  "Each message comes with its headers, body text, its label, mailing headers for the latest message and, when present: schema.org structured data (JSON-LD or microdata) embedded by the sender, the email's links, and parsed attachments — calendar invites, contact cards, wallet passes, PDF text, forwarded emails — and images. Structured data and parsed attachments are authoritative for codes, numbers, IDs, amounts and dates; prefer them over the prose.",
-  "Mailing headers such as auto-submitted, precedence: bulk, list-id or list-unsubscribe mean the email is automated.",
-  "Card types:",
-  ...keysOf(CARD_DEFINITIONS).map(cardLine),
-  "- tldr: fill it only when the conversation has substance the cards do not capture — discussion, decisions, questions, requests, anything that needs a reply. An automated notification gets null. When no card applies, fill it. It is the conversation's only TL;DR; never put a Summary in cards.",
-  "Never invent values: use null when the email does not say. Copy URLs verbatim from the email's links. Write dates as ISO 8601 and resolve relative dates against the date of the message that mentions them.",
-  "The tldr is concrete and factual with no greetings or filler; keyPoints are most important first; actionItems list only outstanding tasks and who owns each.",
-  "Reply only with json matching the requested schema.",
-].join("\n");
+function cardRules(types: readonly DetailCardType[] | null): string {
+  return [
+    "Each message comes with its headers, body text, its label, mailing headers for the latest message and, when present: schema.org structured data (JSON-LD or microdata) embedded by the sender, the email's links, and parsed attachments — calendar invites, contact cards, wallet passes, PDF text, forwarded emails — and images. Structured data and parsed attachments are authoritative for codes, numbers, IDs, amounts and dates; prefer them over the prose.",
+    "Mailing headers such as auto-submitted, precedence: bulk, list-id or list-unsubscribe mean the email is automated.",
+    "Card types:",
+    ...keysOf(CARD_DEFINITIONS)
+      .filter((type) => types === null || types.includes(type))
+      .map(cardLine),
+    "- Tldr: the conversation as text, keyPoints and actionItems. It is the fallback type.",
+    "Return exactly one card. Every type but Tldr holds one item. Use it when the whole conversation is about exactly one such item (one package, one code, one meeting, one bill). When it is about two or more items, even of the same type, about several things, or has substance no type captures (discussion, decisions, questions, requests, anything that needs a reply), return a Tldr. An automated notification that no type fits gets null.",
+    "Never invent values: use null when the email does not say. Copy URLs verbatim from the email's links. Write dates as ISO 8601 and resolve relative dates against the date of the message that mentions them.",
+    "A Tldr's text is concrete and factual with no greetings or filler; keyPoints are most important first; actionItems list only outstanding tasks and who owns each.",
+    "Reply only with json matching the requested schema.",
+  ].join("\n");
+}
 
-export const SYSTEM_FULL = `You turn an email conversation into TL;DR cards shown above the email.\n\n${CARD_RULES}`;
+export function systemFull(types: readonly DetailCardType[] | null): string {
+  return `You turn an email conversation into the one summary card shown above the email.\n\n${cardRules(types)}`;
+}
 
-export const SYSTEM_REFINE = `You maintain the TL;DR cards shown above an email conversation. Given the current cards and the new message(s), return the full UPDATED set of cards. Update a card in place when a new message is about the same thing (same order number, tracking number, invite UID, confirmation code, bill reference, transaction reference, subscription, pull request or issue number, document, the same person's contact, or a newer code or link from the same service), add cards for new things, drop cards the new messages make obsolete, and rewrite the tldr to reflect the latest state. Do not merely append.\n\n${CARD_RULES}`;
+export function systemRefine(types: readonly DetailCardType[] | null): string {
+  return `You maintain the one summary card shown above an email conversation. Given the current card and the new message(s), return the one UPDATED card. When the new messages are about the same item (same order number, tracking number, invite UID, confirmation code, bill reference, transaction reference, subscription, pull request or issue number, document, the same person's contact, or a newer code or link from the same service), keep its type and update it in place. When they bring in a second item or another topic, return a Tldr of the whole conversation. Do not merely append.\n\n${cardRules(types)}`;
+}

@@ -64,7 +64,7 @@ export async function enrollTotp(page: Page, password: string): Promise<string> 
   await page.getByPlaceholder("Your password").fill(password);
   await page.getByRole("button", { name: "Continue" }).click();
   await page.getByText("Can't scan? Show manual key").click();
-  const secret = (await page.locator("details code").innerText()).replace(/\s+/g, "");
+  const secret = (await page.getByRole("code").innerText()).replace(/\s+/g, "");
   await page.getByRole("button", { name: "I've saved my backup codes, continue" }).click();
   await enterCode(page, new OTPAuth.TOTP({ secret: OTPAuth.Secret.fromBase32(secret) }).generate());
   await page.getByRole("button", { name: "Verify and enable" }).click();

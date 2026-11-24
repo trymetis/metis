@@ -54,9 +54,9 @@ Actions in search follow the same rules as everywhere else. For example, only th
 
 ## Subscriptions
 
-- Each time, search reads the newest 50 messages in each inbox.
-- New subscriptions can take up to 5 minutes to show in search. Searching again within that time shows the same list.
-- Searches use up the scan limit of each mailbox they read. See [Unsubscribe from mailing lists](/guide/mail/unsubscribe#limits).
+- Each time, search reads the newest 100 messages in each inbox, or the newest 50 in a Zoho Mail inbox.
+- New subscriptions show in search as soon as the mail is in your inbox.
+- Searches can use up the scan limit of each mailbox they read. See [Unsubscribe from mailing lists](/guide/mail/unsubscribe#limits).
 - Past the limit, the dialog shows, for example, "Some places could not be searched: subscription (Too many scans. Try again in 3 minutes.)". Wait for that time (at most 5 minutes), then search again.
 
 ## Chats and workflow runs

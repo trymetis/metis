@@ -277,7 +277,9 @@ export default function mailSpecs() {
     const toolbar = messageToolbar(page);
     const added = page.waitForResponse("**/rpc/mail/readLater/add");
     await toolbar.getByRole("button", { name: "Read later", exact: true }).click();
-    await expect(toolbar.getByRole("button", { name: "Saved", exact: true })).toBeVisible();
+    await expect(
+      toolbar.getByRole("button", { name: "Remove from Read later", exact: true }),
+    ).toBeVisible();
     expect((await added).ok()).toBe(true);
     await goToFolder(page, account, "read-later");
     await expect(page.getByRole("heading", { level: 1, name: "Read later" })).toBeVisible();
@@ -285,7 +287,7 @@ export default function mailSpecs() {
     await openMail(page, TARGET);
     await page.waitForLoadState("networkidle");
     const removed = page.waitForResponse("**/rpc/mail/readLater/remove");
-    await toolbar.getByRole("button", { name: "Saved", exact: true }).click();
+    await toolbar.getByRole("button", { name: "Remove from Read later", exact: true }).click();
     expect((await removed).ok()).toBe(true);
     await expect(mailRow(page, TARGET)).toHaveCount(0);
     const listed = page.waitForResponse("**/rpc/mail/readLater/list");
