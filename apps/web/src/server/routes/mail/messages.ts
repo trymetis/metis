@@ -257,6 +257,7 @@ export const messagesRouter = {
             workspaceId: mail.workspaceId,
             mailboxIds: mailboxIds(mail),
             adapter: mail.adapter,
+            throwWhenLimited: true,
           })
         ).map(({ email, name }) => ({ email, ...(name ? { name } : {}) })),
       };

@@ -36,6 +36,8 @@ The address book resource, per-book visibility, `ContactsAdapter` and its Google
 - **Zoho Contacts keeps its own region probe** against `contacts.zoho.<dc>/api/v1/accounts/self/categories`, because a contacts-only grant has no mail or calendar scope for the other probes.
 - **Route ids are packed refs, never stored.** `/w/[slug]/p/[addressbook]/[book]/[contact]` carries `packBookRef` and `packContactRef` (the reference-id packing in `src/ai/references.ts`), since book and contact ids can be URLs.
 - **`mail/` and `contacts/` never import each other.** Compose suggestions and search go through `src/people/`, which lists saved contacts first, then workspace members (search only), then people from mail history.
+  - Past `RATE_LIMITS.mailContacts`, compose shows no suggestions at all: `mail.messages.contacts` passes `throwWhenLimited`, and `useContactSuggestions` returns none while the failure is a 429, then retries after the wait.
+  - Search keeps its saved contacts and members past that limit and drops only people from mail, because its `suggestPeople` calls leave `throwWhenLimited` off.
 
 ## How it works
 

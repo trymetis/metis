@@ -19,9 +19,19 @@ Actions in search follow the same rules as everywhere else. For example, only th
 
 - **Mail** and **Files** show a first set of results and **Load more** for the rest.
 - Every other group except **Commands**, **Settings** and **Workspaces** shows at most 8 results, or 16 for **Calendars** and **Address books**. Add words or filters to find one that is not shown.
-- You can run at least 60 searches a minute. Each **Load more** counts as a search. Search also runs each time you pause while typing.
+- By default, you can run at least 60 searches a minute. The person who runs your server can change this limit. Each **Load more** counts as a search. Search also runs each time you pause while typing.
 - Past the limit, the dialog shows "Some places could not be searched:" followed by "Too many searches. Try again in 20 seconds.", or the time left. The message can show more than once, separated by dots. Wait for that time (at most 1 minute), then search again.
 - If you reach the limit while clicking **Load more**, the results you already have stay, and the same message shows. Wait for that time, then click **Load more** again.
+
+## Suggestions
+
+Some keys suggest values from your workspace after you type the colon: `mailbox:`, `calendar:`, `drive:`, `addressbook:`, `book:`, `sub-calendar:`, `label:`, `workflow:`, `from:`, `to:`, `cc:`, `attendee:`, `organizer:` and `email:`. The **In a resource** menu lists values from your workspace too. These suggestions have a limit, by default 240 a minute. The person who runs your server can change it. Opening **In a resource** very often can also reach this limit.
+
+- **While you type:** past the limit, a line at the top of the results says "Too many suggestions. Try again in 20 seconds.", or the time left. No values are suggested for that key, but you can still type the value yourself and search.
+- **After the wait:** the suggestions appear on their own and the line goes away. If they still cannot load after trying again 5 times, the line stays. Type the value again to try once more.
+- **In a resource:** past the limit, the same line shows at the top of the menu, and the menu lists only the groups it could load. It does not try again on its own. Wait for the time shown (at most 1 minute), then close the menu and open it again.
+
+For `from:`, `to:`, `cc:`, `attendee:`, `organizer:` and `email:`, people from your mail share the limit on address suggestions in the composer (by default 20 a minute, see [Compose and send](/guide/mail/compose-and-send#write-a-new-message)). **Contacts** results use the same limit. Past it, people from your mail are left out with no message. Saved contacts still show. After a minute, search again (or type the value again).
 
 ## Events
 

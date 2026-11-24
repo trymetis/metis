@@ -13,6 +13,7 @@ export const stepSchema = z.union([
   z.strictObject({ fill: z.string(), value: z.string() }),
   z.strictObject({ type: z.string(), text: z.string() }),
   z.strictObject({ totp: z.string() }),
+  z.strictObject({ password: z.string() }),
   z.strictObject({ press: z.string() }),
   z.strictObject({ drag: z.string(), to: z.string() }),
   z.strictObject({ waitFor: z.string() }),
@@ -92,6 +93,8 @@ export async function runStep(page: Page, step: Step, a: Account | undefined) {
   } else if ("totp" in step) {
     await page.locator(step.totp).first().click();
     await page.keyboard.type(await totp());
+  } else if ("password" in step) {
+    await page.locator(step.password).first().fill(seeded(a).password);
   } else if ("press" in step) await page.keyboard.press(step.press);
   else if ("drag" in step) await drag(page, step.drag, step.to);
   else if ("waitFor" in step)

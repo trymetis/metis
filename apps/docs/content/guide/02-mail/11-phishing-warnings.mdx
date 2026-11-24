@@ -6,7 +6,7 @@ description: Read the phishing check next to a message's subject and decide whet
 Phishing emails pretend to come from someone you trust so you click a link, open a file or share something private. Metis Suite can check each message you open and warn you.
 
 :::note
-Phishing warnings only appear when phishing detection is turned on for your Metis Suite instance and your workspace, and the mailbox's owner has turned it on for that mailbox in your workspace. Your workspace admin and the mailbox owner control these settings. See [Workspaces](/guide/workspaces).
+Phishing warnings only appear when phishing detection is turned on for your Metis Suite server and your workspace, and the mailbox's owner has turned it on for that mailbox in your workspace. A workspace owner or admin and the mailbox owner control these settings. See [Workspaces](/guide/workspaces).
 :::
 
 ## Read the check
@@ -25,11 +25,15 @@ When the check is not confident about its result, the card adds "we're not certa
 
 ## If the check could not run
 
-The card says "Couldn't check this email", with the reason under it.
+The shield turns grey and shows an exclamation mark. Point at it to open a card that says "Couldn't check this email", with the reason under it.
 
-If the reason is "Too many requests. Try again in 20 seconds." (or another time), you reached the limit of 30 checks a minute. Wait for the time shown (at most 1 minute), then open the message again or reload the page. The card does not try again on its own.
+If the reason is "Too many requests. Try again in 20 seconds." (or another time), you reached the limit of 30 checks a minute. The person who runs your server can change this limit. You do not need to do anything: after the wait (at most 1 minute with the default limit), the check tries again on its own. When it works, the result (**Safe**, **Suspicious** or **Phishing**) replaces the message.
 
-Opening a message that was already checked shows the earlier result.
+- The time in the message does not count down. It is the wait at the moment you reached the limit.
+- While the browser tab is in the background, the check waits. It tries again when you come back to the tab.
+- If it still has no result after trying again 5 times, the check stops trying, and the message stays. Open the message again or reload the page to try again.
+
+Opening a message that was already checked shows the earlier result, even when you are at the limit.
 
 ## Who sees the result
 

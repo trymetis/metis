@@ -15,7 +15,7 @@ const COPY: ConnectResourceCopy = {
   credentialsDescription:
     "Enter your login for this server. It is verified before anything is saved.",
   standaloneDescription:
-    "Access covers every calendar on that account — you choose which ones a workspace sees afterwards.",
+    "Access covers every calendar on that account. You choose which ones a workspace sees afterwards.",
   emptyAttachable: "Every calendar account you have is already here.",
   connectNew: "Connect a new account",
 };

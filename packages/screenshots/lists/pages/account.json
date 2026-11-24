@@ -354,7 +354,7 @@
         "click": "section:has(h2:text-is('Add another device')) button:has-text('Show QR code')"
       },
       {
-        "totp": "role=alertdialog >> input[autocomplete=\"one-time-code\"]"
+        "password": "role=alertdialog >> input[type=\"password\"]"
       },
       {
         "click": "role=alertdialog >> role=button[name=\"Show QR code\"]"

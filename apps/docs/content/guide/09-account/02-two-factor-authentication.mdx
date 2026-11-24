@@ -49,7 +49,9 @@ There are three ways to confirm it is you. Your account always has backup codes,
 - **Passkeys** are kept on your device or in your password manager. See [Add a passkey](#add-a-passkey).
 - **Backup codes** are one-time codes. You get them when you first set up two-factor authentication, whichever way you chose. They look like `abcde-12345`. Each one works only once.
 
-Metis Suite asks you to confirm it's you when you sign in. It also asks before some sensitive actions, such as changing your password, signing out your other browsers, showing the QR code for another device, deleting your account, or turning on AI or phishing detection. In every one of these places, you can use any way your account has: your authenticator app if you set one up, a passkey if you added one, or a backup code.
+Metis Suite asks you to confirm it's you when you sign in. It also asks before some sensitive actions, such as changing your password, signing out your other browsers, deleting your account, or turning on AI or phishing detection. In every one of these places, you can use any way your account has: your authenticator app if you set one up, a passkey if you added one, or a backup code.
+
+Three actions on the **Security** page ask for your account password instead: setting up an authenticator app, showing the QR code for another device, and making new backup codes. See [Confirm with your account password](#confirm-with-your-account-password).
 
 ### Switch between them
 
@@ -90,14 +92,31 @@ If a box that asks you to confirm a change shows an error after you enter a back
 
 This does not apply when you sign in. On the **Two-factor authentication** page, a wrong backup code stays in the box, so you can fix a typo.
 
+## Confirm with your account password
+
+Setting up an authenticator app, showing the QR code for another device and making new backup codes each open a box that asks for your **Account password**. You cannot use an authenticator code, a passkey or a backup code here.
+
+- The box has an **Account password** field, **Cancel** and a button to confirm, such as **Regenerate**.
+- The button to confirm is greyed out until you type a password. You can also press Enter.
+- While it works, the button says "Confirming…".
+- If something goes wrong, the message shows under the field. Your password stays in the field, so you can fix it.
+- **Cancel** closes the box and clears the field.
+
+| Message                                                                                                                            | What to do                                                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| "Invalid password"                                                                                                                 | The password was wrong. Check it and try again.                                                                        |
+| "Couldn't start authenticator setup", "Couldn't show the QR code. Try again.", "Could not regenerate codes" or "Could not confirm" | Click the button again.                                                                                                |
+| "Too many requests. Try again in 8 seconds."                                                                                       | You clicked too often (more than 3 times in 10 seconds). Wait for the time shown (at most 10 seconds), then try again. |
+
 ## Make new backup codes
 
 Make new backup codes if you used most of yours, or if you think someone else has seen them.
 
 1. Go to **Settings**, then **Security**.
-2. In the **Regenerate backup codes** card, type your **Account password**.
-3. Click **Regenerate**.
-4. A **Save these backup codes** card appears. Click **Download .txt** or **Copy**, and keep the codes somewhere safe.
+2. The **Regenerate backup codes** card says "Generates a fresh set of one-time codes. Your previous backup codes stop working immediately; your authenticator app and passkeys are not affected." Click **Regenerate**.
+3. The **Regenerate backup codes?** box says "Your current backup codes stop working straight away. Enter your account password to confirm it's you." Type your **Account password**.
+4. Click **Regenerate** in the box. The box closes.
+5. A **Save these backup codes** card appears. Click **Download .txt** or **Copy**, and keep the codes somewhere safe.
 
 Your old backup codes stop working right away. Your authenticator app and your passkeys keep working as before.
 
@@ -107,7 +126,7 @@ If you have no authenticator app, for example because you started with a passkey
 
 1. Go to **Settings**, then **Security**.
 2. In the **Authenticator app** card, click **Set up an authenticator**.
-3. The **Set up an authenticator app** box says "Confirm it's you, then scan the QR code with your authenticator app." Use your passkey or a backup code, then click **Continue**.
+3. The **Set up an authenticator app** box says "Enter your account password to confirm it's you, then scan the QR code with your authenticator app." Type your **Account password**, then click **Continue**.
 4. The **Scan the QR code** box opens. Open your authenticator app, add a new account, and scan the QR code. If you cannot scan it, click **Can't scan? Show manual key** and type the key into your app instead.
 5. Type the six-digit code your app shows into the boxes.
 6. Click **Verify and add**.
@@ -116,7 +135,7 @@ You see "Authenticator app added". If you see "Invalid code", wait for your app 
 
 If you close the **Scan the QR code** box before you click **Verify and add**, no authenticator app is added. Click **Set up an authenticator** to start again.
 
-You do not get new backup codes, and you do not need your password. Your passkeys and backup codes keep working.
+You do not get new backup codes. Your passkeys and backup codes keep working.
 
 ## Add another device
 
@@ -124,7 +143,7 @@ You can put the same Metis Suite entry on a second phone or in a second authenti
 
 1. Go to **Settings**, then **Security**.
 2. In the **Add another device** card, click **Show QR code**.
-3. The **Show your authenticator QR code** box says "Confirm it's you, then scan the code with your other device." Confirm with a code from your authenticator app, a passkey or a backup code. See [Switch between them](#switch-between-them).
+3. The **Show your authenticator QR code** box says "Enter your account password to confirm it's you, then scan the code with your other device." Type your **Account password**.
 4. Click **Show QR code** in the box. While it works, the button says "Confirming…".
 5. The **Scan with your other device** box opens. It says "Devices already set up keep working. Close this when you're done; the code is not shown again until you confirm it's you."
 
@@ -144,17 +163,9 @@ You can put the same Metis Suite entry on a second phone or in a second authenti
 
 The devices you already set up keep working. All of them show the same codes.
 
-When you close the box (with **Done**, the Escape key or a click outside it), the QR code is gone from the page. To see it again, click **Show QR code** and confirm it's you again. If you confirmed with a backup code, that code is used up.
+When you close the box (with **Done**, the Escape key or a click outside it), the QR code is gone from the page. To see it again, click **Show QR code** and enter your password again.
 
-If something goes wrong, the message shows in the **Show your authenticator QR code** box:
-
-| Message                                                               | What to do                                                                       |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| "Invalid authenticator or backup code"                                | The code was wrong. Wait for a new code in your app, or use another backup code. |
-| "Your passkey confirmation expired. Confirm with your passkey again." | Click **Confirm again**, use your passkey, then click **Show QR code** again.    |
-| "Couldn't show the QR code. Try again."                               | Click **Show QR code** again.                                                    |
-
-If you click **Show QR code** too often, you see a message such as "Too many requests. Try again in 8 seconds." See [If something goes wrong](#if-something-goes-wrong).
+If something goes wrong, the message shows in the **Show your authenticator QR code** box, under the password field. "Invalid password" means the password was wrong. For the other messages, see [Confirm with your account password](#confirm-with-your-account-password).
 
 ## Remove your authenticator app
 
@@ -291,7 +302,7 @@ If you lost a device but still have your backup codes or another way to confirm 
 **If you lost a passkey** (for example a laptop, a phone or a security key):
 
 - In the **Passkeys** card, remove the passkey that was on the lost device. See [Remove a passkey](#remove-a-passkey).
-- If it was your only way to confirm it's you, its bin is greyed out. [Add a passkey](#add-a-passkey) on a device you still have, or [set up an authenticator app](#set-up-an-authenticator-app), first. Use a backup code to confirm. Then remove the lost one.
+- If it was your only way to confirm it's you, its bin is greyed out. [Add a passkey](#add-a-passkey) on a device you still have (confirm with a backup code), or [set up an authenticator app](#set-up-an-authenticator-app) (confirm with your password), first. Then remove the lost one.
 
 If your only passkey is gone, a backup code is your way back in. If the passkey was **Synced**, your password manager may still have it on your other devices.
 

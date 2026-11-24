@@ -30,6 +30,7 @@ import { useWorkspacePath, useWorkspaceSlug } from "@/hooks/use-workspace-path";
 import { switchWorkspaceHref, useWorkspaces } from "@/hooks/use-workspaces";
 import { orpc, rpc } from "@/lib/orpc";
 import { refreshQuery } from "@/lib/query-client";
+import { rateLimitWait, retryWhenRateLimited } from "@/lib/rate-limit-message";
 import { matcherFor } from "@/search/match";
 import { readRecentSearches, writeRecentSearches } from "@/search/recent";
 import { caretContext } from "@/search/tokens";
@@ -185,9 +186,11 @@ export function SearchDialog() {
   const suggestQuery = useQuery(
     rpc.search.suggest.queryOptions({
       input: suggestFor ? { workspaceSlug, ...suggestFor } : skipToken,
+      ...retryWhenRateLimited,
     }),
   );
   const suggested = suggestQuery.data;
+  const suggestFailure = suggestQuery.error ?? suggestQuery.failureReason;
   const remote = useMemo(
     (): { key: string; prefix: string; values: SearchSuggestion[] } | null =>
       suggestFor && suggested ? { ...suggestFor, values: suggested.values } : null,
@@ -248,6 +251,15 @@ export function SearchDialog() {
   const remoteKey =
     context?.mode === "value" && REMOTE_SUGGEST_KEYS.has(context.key) ? context.key : null;
   const remotePrefix = context?.prefix ?? "";
+
+  const suggestLimit =
+    remoteKey &&
+    suggestFor?.key === remoteKey &&
+    !suggested &&
+    suggestFailure &&
+    rateLimitWait(suggestFailure) !== null
+      ? suggestFailure.message
+      : null;
 
   useEffect(() => {
     if (!remoteKey) return;
@@ -592,13 +604,20 @@ export function SearchDialog() {
   const [resources, setResources] = useState<
     { key: keyof typeof RESOURCE_GROUP_LABELS; values: SearchSuggestion[] }[]
   >([]);
+  const [resourcesLimit, setResourcesLimit] = useState<string | null>(null);
   const loadResources = () => {
+    setResourcesLimit(null);
     void Promise.all(
       (["mailbox", "calendar", "drive", "addressbook"] as const).map((key) =>
         orpc.search
           .suggest({ workspaceSlug, key, prefix: "" })
           .then((res) => ({ key, values: res.values }))
-          .catch(() => ({ key, values: [] })),
+          .catch((err: unknown) => {
+            if (rateLimitWait(err) !== null && err instanceof Error) {
+              setResourcesLimit(err.message);
+            }
+            return { key, values: [] };
+          }),
       ),
     ).then(setResources);
   };
@@ -769,6 +788,11 @@ export function SearchDialog() {
                 return false;
               }}
             >
+              {resourcesLimit && (
+                <p role="status" className="px-2 py-1.5 text-[12px] text-faint">
+                  {resourcesLimit}
+                </p>
+              )}
               {resources.map((group) =>
                 group.values.length === 0 ? null : (
                   <DropdownMenuGroup key={group.key}>
@@ -811,6 +835,11 @@ export function SearchDialog() {
               </CommandGroup>
             ) : (
               <>
+                {suggestLimit && (
+                  <p role="status" className="px-3 py-2 text-[12px] text-faint">
+                    {suggestLimit}
+                  </p>
+                )}
                 {groups.map((group) => (
                   <CommandGroup key={group.kind} heading={group.label}>
                     {group.items.map((item) => (

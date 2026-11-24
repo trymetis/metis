@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { isSerializableReferenceId, type ResolvedReference } from "@/ai/references";
 import { isCoarsePointer } from "@/hooks/use-is-mobile";
 import { orpc } from "@/lib/orpc";
+import { rateLimitWait } from "@/lib/rate-limit-message";
 
 import { ReferenceMenu, type ReferenceMenuState } from "./reference-menu";
 import {
@@ -63,6 +64,8 @@ export function ReferenceComposer({
     command: null,
   });
 
+  const limitedUntil = useRef(0);
+
   const scopeRef = useRef(references);
   useEffect(() => {
     scopeRef.current = references;
@@ -97,6 +100,10 @@ export function ReferenceComposer({
       clientRect?: (() => DOMRect | null) | null;
       command: (attrs: ReturnType<typeof toReferenceAttrs>) => void;
     }) => {
+      if (Date.now() < limitedUntil.current) {
+        close();
+        return;
+      }
       bridge.current = {
         open: true,
         items: props.items,
@@ -112,7 +119,7 @@ export function ReferenceComposer({
         getRect: props.clientRect ?? null,
       });
     },
-    [],
+    [close],
   );
 
   const pending = useRef<{
@@ -148,7 +155,9 @@ export function ReferenceComposer({
               .filter((item) => isSerializableReferenceId(item.id)),
           );
         } catch (err) {
-          console.error("[agent-references] suggest failed:", err);
+          const wait = rateLimitWait(err);
+          if (wait === null) console.error("[agent-references] suggest failed:", err);
+          else limitedUntil.current = Date.now() + wait * 1000;
           resolve([]);
         }
       }, SUGGEST_DEBOUNCE_MS);
@@ -196,6 +205,7 @@ export function ReferenceComposer({
     () => ({
       char: "@",
       allowSpaces: false,
+      allow: () => Date.now() >= limitedUntil.current,
       items: ({ query }) => fetchItems(query),
       render: () => ({
         onStart: openWith,

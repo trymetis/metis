@@ -15,7 +15,7 @@ const COPY: ConnectResourceCopy = {
   credentialsDescription:
     "Enter your login for this server. It is verified before anything is saved.",
   standaloneDescription:
-    "Access covers every file on that account — files are read and written straight from the provider.",
+    "Access covers every file on that account. Files are read and written straight from the provider.",
   emptyAttachable: "Every drive account you have is already here.",
   connectNew: "Connect a new account",
 };

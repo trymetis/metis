@@ -240,7 +240,7 @@ function ItemRow({
             {item.resolution.resolvedBy?.name ?? "a former member"}
             {item.resolution.outcome === "closed" &&
               item.resolution.reason &&
-              ` — ${copy.reasons[item.resolution.reason]}`}
+              ` (${copy.reasons[item.resolution.reason]})`}
             {item.resolution.note && `: ${item.resolution.note}`} ·{" "}
             {when(item.resolution.resolvedAt)}
           </p>
@@ -398,7 +398,7 @@ function CancelRunButton({ run, onDone }: { run: WorkflowRunDetail; onDone: () =
           <AlertDialogTitle>Cancel this run?</AlertDialogTitle>
           <AlertDialogDescription>
             {active
-              ? "This run is executing now. It stops before its next step, but a step already in progress — a send included — cannot be called back and may still complete. Nothing already done at the provider is undone."
+              ? "This run is executing now. It stops before its next step, but a step already in progress (a send included) cannot be called back and may still complete. Nothing already done at the provider is undone."
               : "This run has not started its next attempt yet, so none of its remaining steps will run."}{" "}
             The workflow stays enabled, and completed steps stay in the history.
           </AlertDialogDescription>
@@ -557,7 +557,7 @@ export function WorkflowRunDetailView({
       )}
       {stopping && (
         <p className="shrink-0 border-border-soft border-b bg-panel px-6 py-2 text-[12px] text-muted-foreground">
-          Cancelled while running — it stops before its next step. A step that was already in
+          Cancelled while running. It stops before its next step. A step that was already in
           progress may still finish; its outcome appears below once the worker lets go.
         </p>
       )}

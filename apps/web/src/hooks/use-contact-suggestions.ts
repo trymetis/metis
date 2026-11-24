@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { rpc } from "@/lib/orpc";
+import { rateLimitWait, retryWhenRateLimited } from "@/lib/rate-limit-message";
 
 import { useMailboxScope } from "./use-workspace-path";
 
@@ -21,7 +22,9 @@ export function useContactSuggestions(enabled: boolean): ContactSuggestion[] {
       input: scope,
       enabled: enabled && Boolean(scope.mailboxSlug),
       gcTime: KEEP_MS,
+      ...retryWhenRateLimited,
     }),
   );
+  if (rateLimitWait(query.failureReason) !== null) return NO_CONTACTS;
   return query.data?.contacts ?? NO_CONTACTS;
 }

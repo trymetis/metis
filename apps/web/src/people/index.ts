@@ -2,6 +2,7 @@ import "server-only";
 import { savedContactIndex } from "@/contacts/lookup";
 import type { MailAdapter } from "@/mail/adapter";
 import { suggestContacts } from "@/mail/contacts";
+import { RateLimitedError } from "@/services/rate-limit";
 
 export interface SavedContactRef {
   addressBookSlug: string;
@@ -53,6 +54,7 @@ export async function suggestPeople(opts: {
   mailboxIds: string[];
   adapter: MailAdapter | null;
   between?: PersonSuggestion[];
+  throwWhenLimited?: boolean;
 }): Promise<PersonSuggestion[]> {
   const [saved, history] = await Promise.all([
     savedPeople(opts.workspaceId),
@@ -62,6 +64,7 @@ export async function suggestPeople(opts: {
           mailboxIds: opts.mailboxIds,
           adapter: opts.adapter,
         }).catch((err: unknown) => {
+          if (opts.throwWhenLimited && err instanceof RateLimitedError) throw err;
           console.warn("[people] mail history unavailable", err);
           return [];
         })

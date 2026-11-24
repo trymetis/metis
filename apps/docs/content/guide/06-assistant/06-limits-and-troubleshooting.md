@@ -41,6 +41,7 @@ If one step in a reply fails but the rest work, that step shows the reason, or "
 - **Panel conversations disappear.** The Mail, Calendar, Drive and Contacts AI panels do not save conversations. Use [Workspace AI](/guide/assistant/use-workspace-ai) when you want to come back to a conversation.
 - **Mail AI will not send.** Mail AI cannot send email or save drafts. Ask Workspace AI instead.
 - **Drive AI cannot move a file to another drive.** It can only move files within the same drive.
+- **The `@` list can stop opening for a moment.** In the Workspace Assistant's message box, the `@` list has a limit, by default 240 a minute. You can reach it only by typing after `@` very often in a short time. The person who runs your server can change it. Past the limit, typing `@` opens no list, and no message says why. After the wait (at most 1 minute), delete the `@` and what you typed after it, then type `@` again to pick the item.
 - **Conversation titles are at most 80 characters.** A longer title is cut short when you save it, with no message. See [Rename a conversation](/guide/assistant/use-workspace-ai#rename-a-conversation).
 - **Deleted conversations cannot be brought back.** Deleting your account or the workspace also deletes its conversations.
 

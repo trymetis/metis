@@ -29,6 +29,7 @@ While you have unsaved changes, the dialog **Discard unsaved changes?** asks fir
 - **Back to workflows**.
 - **More workflow actions** (**...**), then **Runs**.
 - A section icon in the left rail: **Workspace settings**, **Mail**, **Calendar**, **Drive**, **Contacts**, **Workspace AI** (shown only when AI is on) or **Workflows**.
+- The **Details** icon (an arrow pointing out of a box). To see it, click a run in the **Runs** tab under the canvas. The icon is near the right end of the line that says "Showing run … on the canvas", just left of **Hide** (the **X**). With no unsaved changes, it opens the run's page straight away.
 
 The dialog says "This workflow has changes you have not saved. They are lost if you leave it now." Click **Keep editing** to stay, or **Discard** to leave without saving and go where you clicked.
 
@@ -40,7 +41,6 @@ These do not ask, so save before you use them:
 - The workspace switcher in the left rail.
 - Your account menu (your initials at the bottom of the left rail) and the pages it opens, such as the settings pages and **Dashboard**.
 - **Sign out** in the account menu. It signs you out first, so your changes are lost even if your browser then asks whether to leave the page.
-- The **Details** icon (an arrow pointing out of a box) on a run in the **Runs** tab under the canvas.
 
 ## Change the workflow settings
 

@@ -20,7 +20,7 @@ The e2e stack is a seeded environment that two suites drive: Vitest in `api/` fo
 
 ## 2. Small infrastructure
 
-- **Passkey flows beyond the first setup:** `tests/write/passkeys.spec.ts` drives one throwaway account with a Chrome virtual authenticator: passkey-first setup, a passkey sign-in, confirming **Set up an authenticator app** and **Confirm password change** with the passkey, and removing it with an authenticator code. Not covered:
+- **Passkey flows beyond the first setup:** `tests/write/passkeys.spec.ts` drives one throwaway account with a Chrome virtual authenticator: passkey-first setup, a passkey sign-in, confirming **Confirm password change** with the passkey, setting up an authenticator app with the account password, and removing it with an authenticator code. Not covered:
   - adding a passkey from the **Passkeys** card on an account that already has two-factor on, and an account with more than one passkey;
   - renaming a passkey;
   - switching **Ask me first with** (the spec only reads that it shows **Passkey**);

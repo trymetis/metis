@@ -95,7 +95,7 @@ The Workspace Assistant asks before every action in this table. The side panels 
 | Workflows | Run a workflow now               | Asks to run the workflow now, and warns that its steps may change or send mail, events or files                                                                                            |
 | Workflows | Cancel a run                     | Asks to cancel the run, and warns that a step already in progress can't be called back                                                                                                     |
 | Workflows | Retry a run                      | Asks to retry the failed steps, and notes that completed steps won't run again                                                                                                             |
-| Workspace | Remove a member                  | Asks to remove the member, and warns that "their mailboxes, calendars, drives and address books leave the workspace"                                                                       |
+| Workspace | Remove a member                  | Asks to remove the member, and warns: "Their mailboxes, calendars, drives and address books leave the workspace"                                                                           |
 | Workspace | Revoke an invitation             | "Approve revoking this workspace invite"                                                                                                                                                   |
 | Workspace | Change the theme                 | "Approve changing the workspace theme for everyone"                                                                                                                                        |
 | Workspace | Create a theme                   | "Approve creating the theme "Teal" and using it for everyone in the workspace" or, when you ask it not to use the theme, "Approve creating the theme "Teal" for the workspace"             |
@@ -111,7 +111,7 @@ The Workspace Assistant does these things straight away, because they are easy t
 - Read, search and summarize anything it is allowed to read
 - Mark as read or unread, star, archive and restore emails
 - Set or clear labels, create a new label, and rename or recolor a custom label
-- Create or update a draft (the assistant says "Saved a draft", and nothing is sent)
+- Create or update a draft (the assistant says "Saved a draft (nothing was sent)" or "Updated the draft (nothing was sent)")
 - Snooze, unsnooze or cancel a snooze
 - Mute or unmute a thread
 - Add to or remove from Read later

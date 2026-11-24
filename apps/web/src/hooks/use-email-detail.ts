@@ -5,7 +5,7 @@ import { skipToken, useQueries, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { rpc } from "@/lib/orpc";
-import { rateLimitWait } from "@/lib/rate-limit-message";
+import { rateLimitWait, retryWhenRateLimited } from "@/lib/rate-limit-message";
 import { refreshSummaryPreviews } from "@/mail/mail-cache";
 import { textToHtml } from "@/mail/text";
 import { useMailStore } from "@/store/mail-store";
@@ -42,13 +42,6 @@ const NO_METHODS: UnsubscribeMethod[] = [];
 const NO_ATTACHMENTS: Attachment[] = [];
 const NO_MESSAGES: ThreadMessage[] = [];
 const NO_REPLIES: SmartReply[] = [];
-
-const RATE_LIMIT_RETRIES = 5;
-
-const retryWhenRateLimited = {
-  retry: (count: number, err: unknown) => count < RATE_LIMIT_RETRIES && rateLimitWait(err) !== null,
-  retryDelay: (_count: number, err: unknown) => (rateLimitWait(err) ?? 1) * 1000,
-};
 
 function waitingOnRateLimit(query: { data: unknown; failureReason: Error | null }): Error | null {
   const failure = query.failureReason;

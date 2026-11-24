@@ -25,3 +25,10 @@ export function rateLimitWait(err: unknown): number | null {
     data && typeof data === "object" && "retryAfterSec" in data ? Number(data.retryAfterSec) : NaN;
   return Number.isFinite(sec) && sec > 0 ? sec : 1;
 }
+
+const RATE_LIMIT_RETRIES = 5;
+
+export const retryWhenRateLimited = {
+  retry: (count: number, err: unknown) => count < RATE_LIMIT_RETRIES && rateLimitWait(err) !== null,
+  retryDelay: (_count: number, err: unknown) => (rateLimitWait(err) ?? 1) * 1000,
+};

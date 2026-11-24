@@ -42,7 +42,7 @@ export const RATE_LIMITS = {
   rewriteText: { scope: "rewrite-text", limit: 30, windowSec: MINUTE },
   aiChat: { scope: "ai-chat", limit: 20, windowSec: MINUTE },
   aiWorkspaceChat: { scope: "ai-workspace-chat", limit: 20, windowSec: MINUTE },
-  agentReferenceSuggest: { scope: "agent-reference-suggest", limit: 120, windowSec: MINUTE },
+  agentReferenceSuggest: { scope: "agent-reference-suggest", limit: 240, windowSec: MINUTE },
 
   search: { scope: "search", limit: 240, windowSec: MINUTE },
   searchSuggest: { scope: "search-suggest", limit: 240, windowSec: MINUTE },

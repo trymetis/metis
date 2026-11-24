@@ -37,8 +37,9 @@ How the docs site (`apps/docs`) and the marketing site (`apps/www`) capture scre
 - **Screenshots come from the e2e stack without its edge-case seed**, so test calendars, mail and files never appear. `compose.yml` turns the edge-case seed off.
   - It seeds the runner cadence at its documented default of 60 seconds, because the fixture's 2-second test cadence would show on every runner screen, and starts the stand-ins without the cron ticks.
   - It adds the `claude-code` service (`metis-claude-code`), so `up:ss` builds and starts it and `bun run down` removes it with the rest of the stack.
-- **A page entry opens `path`, runs its steps and captures.** Steps use Playwright selectors: `click`, `dblclick`, `rightClick`, `fill`, `type`, `totp`, `press`, `hover`, `drag`, `waitFor`, `waitForHidden`, `wait`, `scroll`, `goto`, `follow`, `clearReadLater`.
+- **A page entry opens `path`, runs its steps and captures.** Steps use Playwright selectors: `click`, `dblclick`, `rightClick`, `fill`, `type`, `totp`, `password`, `press`, `hover`, `drag`, `waitFor`, `waitForHidden`, `wait`, `scroll`, `goto`, `follow`, `clearReadLater`.
   - `{ "totp": <code field> }` clicks the field and types a fresh code from the harness, for screens behind "Confirm it's you".
+  - `{ "password": <password field> }` fills the seeded account's password, for screens that confirm with the account password (authenticator setup, **Show QR code**, **Regenerate backup codes**).
   - `type` clicks its selector and types `text` key by key, for editors such as the search box that `fill` cannot drive.
   - `{ "drag": <from>, "to": <to> }` presses the mouse on one element and releases it on another in small moves, which is how a workflow step's output handle is wired to the next step; the palette adds steps unconnected.
   - `{ "waitForHidden": <selector> }` waits until a spinner or other transient element is gone, so a capture never shows a loading state.

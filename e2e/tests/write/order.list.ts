@@ -15,6 +15,7 @@ import passkeySpecs from "./passkeys.spec";
 import settingsSpecs from "./settings.spec";
 import shellCacheSpecs from "./shell-cache.spec";
 import signatureSpecs from "./signatures.spec";
+import suggestionLimitSpecs from "./suggestion-limits.spec";
 import updateSpecs from "./updates.spec";
 import workflowSpecs from "./workflows.spec";
 
@@ -36,3 +37,4 @@ test.describe("dashboard", dashboardSpecs);
 test.describe("updates", updateSpecs);
 test.describe("mail filters", mailFilterSpecs);
 test.describe("shell cache", shellCacheSpecs);
+test.describe("suggestion limits", suggestionLimitSpecs);

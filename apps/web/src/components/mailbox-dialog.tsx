@@ -15,7 +15,7 @@ const COPY: ConnectResourceCopy = {
   credentialsDescription:
     "Enter your login for this server. It is verified before anything is saved.",
   standaloneDescription:
-    "The mailbox is added to your account — you choose which workspaces use it afterwards.",
+    "The mailbox is added to your account. You choose which workspaces use it afterwards.",
   emptyAttachable: "Every mailbox on your account is already here.",
   connectNew: "Connect a new mailbox",
 };

@@ -210,14 +210,14 @@ export function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): Too
       return {
         icon: Mail,
         loading: "Saving draft...",
-        success: "Saved a draft — nothing was sent",
+        success: "Saved a draft (nothing was sent)",
       };
     }
     case "updateDraft": {
       return {
         icon: Mail,
         loading: "Updating draft...",
-        success: "Updated the draft — nothing was sent",
+        success: "Updated the draft (nothing was sent)",
       };
     }
     case "clearLabel": {
@@ -362,8 +362,8 @@ export function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): Too
         icon: Trash2,
         loading: "Deleting the contact...",
         approval: what
-          ? `Approve deleting ${what} — it can't be undone`
-          : "Approve deleting this contact — it can't be undone",
+          ? `Approve deleting ${what}. It can't be undone`
+          : "Approve deleting this contact. It can't be undone",
         success: "Deleted the contact",
       };
     }
@@ -402,8 +402,8 @@ export function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): Too
         icon: Trash2,
         loading: "Deleting...",
         approval: what
-          ? `Approve deleting ${what} — it can't be undone`
-          : "Approve deleting this item — it can't be undone",
+          ? `Approve deleting ${what}. It can't be undone`
+          : "Approve deleting this item. It can't be undone",
         success: "Deleted",
       };
     }
@@ -438,7 +438,7 @@ export function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): Too
       return {
         icon: RotateCcw,
         loading: "Retrying the scheduled email...",
-        approval: "Approve retrying this scheduled email — a send that went out won't repeat",
+        approval: "Approve retrying this scheduled email. A send that went out won't repeat",
         success: "Scheduled email retry handled",
       };
     }
@@ -540,7 +540,7 @@ export function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): Too
         icon: UserMinus,
         loading: "Removing the member...",
         approval:
-          "Approve removing this member — their mailboxes, calendars, drives and address books leave the workspace",
+          "Approve removing this member. Their mailboxes, calendars, drives and address books leave the workspace",
         success: "Removed the member",
       };
     }
@@ -607,7 +607,7 @@ export function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): Too
       return {
         icon: Trash2,
         loading: "Deleting the workflow...",
-        approval: "Approve deleting this workflow — it can't be undone",
+        approval: "Approve deleting this workflow. It can't be undone",
         success: "Deleted the workflow",
       };
     }
@@ -616,7 +616,7 @@ export function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): Too
         icon: CircleSlash,
         loading: "Cancelling the workflow run...",
         approval:
-          "Approve cancelling this workflow run — a step already in progress can't be called back",
+          "Approve cancelling this workflow run. A step already in progress can't be called back",
         success: "Workflow run cancellation recorded",
       };
     }
@@ -625,7 +625,7 @@ export function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): Too
         icon: RotateCcw,
         loading: "Retrying the workflow run...",
         approval:
-          "Approve retrying the failed steps of this workflow run — completed steps won't run again",
+          "Approve retrying the failed steps of this workflow run. Completed steps won't run again",
         success: "Workflow run retry handled",
       };
     }
@@ -634,7 +634,7 @@ export function toolCopy(part: AnyToolPart, mailboxEmails: MailboxEmailMap): Too
         icon: Wrench,
         loading: "Queueing the workflow run...",
         approval:
-          "Approve running this workflow now — its steps may change or send mail, events or files",
+          "Approve running this workflow now. Its steps may change or send mail, events or files",
         success: "Workflow run queued",
       };
     }

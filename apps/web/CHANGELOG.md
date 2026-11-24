@@ -37,6 +37,8 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 ### Changed
 
+- The assistant's `@` picker allows 240 lookups a minute instead of 120. Past that, `@` is typed as plain text and the picker stays closed until the wait passes.
+- Past the address suggestion limit, **To**, **Cc** and **Bcc** show no suggestions, so you type the full address. The suggestions come back on their own once the wait passes.
 - Searching subscriptions reads your latest 100 Inbox emails, like the **Subscriptions** page.
 - The mail list shows each message on two lines: sender and subject, then labels, a paperclip for attachments, a preview (the conversation's compact summary card once it has one) and the date. The Gmail, Outlook or Zoho tag shows only in All inboxes.
 - The mail list checks for new mail every 5 minutes instead of every minute, besides when you come back to the tab.
@@ -92,6 +94,7 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 
 ### Fixed
 
+- Search suggestions, and the **In a resource** menu in search, say how long to wait when you have asked for too many suggestions, instead of showing nothing.
 - A summary that could not be made says so, and that it tries again when you open the conversation after an hour or when a new message arrives, instead of "No summary for this email".
 - **Details** on a run in the workflow editor's **Runs** tab asks before leaving a workflow with unsaved changes, like **Back** and the app rail.
 - A summary or phishing check that hits its limit shows how long to wait and tries again on its own once that time has passed.

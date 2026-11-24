@@ -14,7 +14,9 @@ AI help needs AI to be turned on for your workspace and for the mailbox. Your wo
 When you open a conversation, its summary card shows above the message. While it loads, you see "Summarizing…". When a new message arrives in the conversation, the summary updates.
 
 - If a message has nothing worth summarizing, you see "No summary for this email".
-- If the summary could not be made, you see "Couldn't summarize this thread." with the reason under it.
+- If the summary could not be made, you see "Couldn't summarize this thread." and "It tries again when you open it after an hour, or when a new message arrives." The hour counts from when it failed. If you keep the message open, reload the page after the hour.
+- If something else went wrong, you see "Couldn't summarize this thread." with the reason under it.
+- If a conversation already has a card and the update fails, you keep seeing the earlier card, with no notice. It tries again when you open the conversation after an hour, or when a new message arrives. Until a new summary is made, its row in the message list shows the first words of the message instead of the compact card.
 - When AI is off for the mailbox, no summary shows.
 - Drafts have no summary.
 - Everyone who can see the mailbox sees the same summaries.
@@ -277,15 +279,22 @@ Other limits:
 
 When you reach a limit, the tool stops until the wait is over, at most 1 minute with the default limits. Where a message shows, it says "Too many requests. Try again in 20 seconds.", or the time left. What you see depends on the tool:
 
-| Tool                       | What you see                                                                                                                                                    |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Summary cards              | "Couldn't summarize this thread." with the message under it. The card does not try again on its own. After the wait, open the message again or reload the page. |
-| Smart replies              | No message. The small spinner keeps turning, and the suggestions show on their own after the wait.                                                              |
-| AI labels                  | No message. The list tries again on its own after the wait, and the labels appear.                                                                              |
-| Stance buttons             | A short message at the bottom of the screen. After the wait, pick the stance again.                                                                             |
-| **Stance** in the composer | A short message at the bottom of the screen. Your text stays as it was. After the wait, pick the stance again.                                                  |
-| **Rewrite**                | A short message at the bottom of the screen. Your text stays as it was. After the wait, select the text and pick the option again.                              |
-| **Draft reply**            | The message in the **Draft an apology** dialog. After the wait, click **Draft reply** again.                                                                    |
+| Tool                       | What you see                                                                                                                                                   |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Summary cards              | "Couldn't summarize this thread." with the message under it. After the wait, the card tries again on its own. When it works, the summary replaces the message. |
+| Smart replies              | No message. The small spinner keeps turning, and the suggestions show on their own after the wait.                                                             |
+| AI labels                  | No message. The list tries again on its own after the wait, and the labels appear.                                                                             |
+| Stance buttons             | A short message at the bottom of the screen. After the wait, pick the stance again.                                                                            |
+| **Stance** in the composer | A short message at the bottom of the screen. Your text stays as it was. After the wait, pick the stance again.                                                 |
+| **Rewrite**                | A short message at the bottom of the screen. Your text stays as it was. After the wait, select the text and pick the option again.                             |
+| **Draft reply**            | The message in the **Draft an apology** dialog. After the wait, click **Draft reply** again.                                                                   |
+
+A few details about the summary card at its limit:
+
+- The time in the message does not count down. It is the wait at the moment you reached the limit.
+- While the browser tab is in the background, the card waits. It tries again when you come back to the tab.
+- If it still has no summary after trying again 5 times, the card stops trying, and the message stays. Open the message again or reload the page to try again.
+- A summary that was already made shows straight away, even when you are at the limit.
 
 ## The Mail AI panel
 
