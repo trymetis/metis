@@ -9,8 +9,8 @@ The chord system shared by mail, calendar and drive, the app-wide keys, and the 
 | The chord primitive      | `src/hooks/use-chord.ts` → `useChord`, `isTypingTarget`                                                                                          |
 | Mail bindings (`m`)      | `src/hooks/use-keyboard-shortcuts.ts` → `useKeyboardShortcuts`, `MAIL_UNCHORDED`                                                                 |
 | Calendar bindings (`c`)  | `src/app/w/[slug]/c/[calendar]/_components/use-calendar-shortcuts.ts` → `useCalendarShortcuts`                                                   |
-| Drive bindings (`d`)     | `src/components/drive/use-drive-shortcuts.ts` → `useDriveShortcuts`, `DRIVE_UNCHORDED`                                                           |
-| Workflow bindings (`w`)  | `src/app/w/[slug]/workflow/_components/workflow-editor.tsx` → `WORKFLOW_CHORD_PREFIX`, `WORKFLOW_UNCHORDED`                                      |
+| Drive bindings (`d`)     | `src/app/w/[slug]/d/[drive]/[[...path]]/_components/use-drive-shortcuts.ts` → `useDriveShortcuts`, `DRIVE_UNCHORDED`                             |
+| Workflow bindings (`w`)  | `src/app/w/[slug]/workflow/[id]/_components/workflow-editor.tsx` → `WORKFLOW_CHORD_PREFIX`, `WORKFLOW_UNCHORDED`                                 |
 | Drive back/forward stack | `src/drive/navigation.tsx` → `DriveNavigationProvider` · mounted in `src/app/w/[slug]/d/layout.tsx`                                              |
 | Hint and help            | `src/components/chord-hint.tsx` → `ChordHint` · `src/components/shortcuts-help.tsx` → `ShortcutsHelp`                                            |
 | Workspace switch         | `src/hooks/use-workspaces.ts` → `useWorkspaceHotkeys` · mounted by `src/components/workspace-rail-switcher.tsx`                                  |

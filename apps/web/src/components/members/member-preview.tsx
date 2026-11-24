@@ -4,6 +4,7 @@ import { Button } from "@metis/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, X } from "lucide-react";
 
+import { PersonAvatar } from "@/components/person-avatar";
 import { rpc } from "@/lib/orpc";
 
 import { MemberDetails } from "./member-details";
@@ -29,9 +30,7 @@ export function MemberPreview({
       className="flex w-[min(36rem,45%)] min-w-80 shrink-0 flex-col border-l border-border bg-background max-md:fixed max-md:inset-0 max-md:z-50 max-md:w-full max-md:min-w-0 max-md:border-l-0"
     >
       <div className="flex items-center gap-3 border-b border-border px-4 py-2">
-        <div className="flex size-7 shrink-0 items-center justify-center rounded-full border border-border bg-linear-to-br from-active to-surface text-xs font-medium text-muted-foreground">
-          {name.slice(0, 1).toUpperCase()}
-        </div>
+        <PersonAvatar name={name} email={member?.email} className="size-7 text-xs" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-medium text-foreground" title={name}>
             {name}

@@ -19,7 +19,7 @@ const REFUSALS: Record<ResumeRefusal, string> = {
   completed: "This run completed — there is nothing to retry.",
   cancelled: "This run was cancelled, and a cancelled run cannot be resumed.",
   unsupported: "This kind of run cannot be retried.",
-  deleted: "This was deleted, so its runs can no longer be retried.",
+  deleted: "This workflow was deleted, so its runs can no longer be retried.",
   disabled: "This workflow is turned off. Turn it back on, then retry the run.",
   expired:
     "This run finished longer ago than step results are kept, and they have been discarded, so it can no longer be retried.",

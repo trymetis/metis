@@ -30,6 +30,27 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 - In Contacts, the list fills the page as a table (name, email, phone, organization, address book) until you open a contact, and **Close contact** returns to it. **New contact** is the button beside the filter.
 - On a contact, click an email address to write to it or a phone number to call it, and copy either with the button beside it. **Edit contact** sits at the top, with **Invite to event**, **Download** and **Delete contact** under **More actions**.
 - Contacts and email senders show two initials on a color picked from their address, so the same person has the same color everywhere.
+- An action waiting for your approval shows as a card above the message box, with **Approve** and **Decline** inside it. Press Ctrl/⌘ Enter to approve or Esc to decline; Enter alone no longer approves. With text in the message box, the send button reads **Decline with reason**.
+- The AI panels in Mail, Calendar, Drive and Contacts show what they work on in one line, such as the mailbox address or **All inboxes**. The button that opens them is in the same place and looks the same in every section, and in Mail it is named **Mail AI**.
+- In the Workspace Assistant, search, collapse and **New chat** (a pencil) share one row above the chats, and the search shows even before your first chat. Each chat has a menu to **Rename**, **Pin** or **Delete** it, and pinned chats stay at the top.
+- Search boxes in Mail, Drive, Contacts and the MCP tool lists share one look, with a button to clear the search.
+- The Calendar, Drive and Contacts AI panels have **Clear chat**, like Mail AI.
+- Drag files from Drive, or contacts from the list, onto the open AI panel to attach them, as you already can with emails and events. Files and contacts you send stay visible in the conversation, as emails and events do.
+- After Mail AI changes your mail, such as deleting, starring or labeling messages, the message list updates right away instead of at the next refresh.
+- **Workflows** opens a list of your workflows with search, each one's trigger, last run, when it was updated and an on/off switch. **Approvals** and **Runs** are at the top, and each workflow opens on its own page with its own address.
+- **New workflow** asks for a name and a template. The workflow is created turned off, and the template opens in the editor for you to finish and save.
+- **Runs** (previously **Activity**) filters by status and by one or more workflows, and loads older runs 50 at a time, with no limit on how far back. Each workflow has its own **Runs** page, under **More workflow actions** in the editor.
+- Leaving a workflow with unsaved changes through the left rail asks first, like the editor's back arrow.
+- A run's back arrow returns to the Runs page you opened it from.
+- In search, **Resume** and **Cancel** on a run are offered on the same runs as the run page (**Resume** now also on partial runs, **Cancel** on waiting runs) and show what actually happened, including when the run cannot be resumed. **Open the builder** is now **Open in the editor**.
+- Where AI is off for a mailbox, calendar, drive or address book, or for the workspace, its AI button and panel no longer appear, instead of a panel saying the assistant is turned off.
+- Workspace members, the member preview and your account button in the left rail show the same colored initials as contacts and mail senders.
+- In Calendar, with the AI panel open, the card of an event you drag follows the pointer from the start, as it does in Mail, Drive and Contacts.
+- In the workflow editor, a step's settings start with **Duplicate**, **Delete** and a menu with **Copy reference**, without the category and type tags. Steps that send or create something show a small dot on their card.
+- **Add step** searches as you type and shows the 10 best matches by name and description.
+- **Try on recent mail** opens as a **Preview** tab under the canvas, next to **Runs** and **Test run**, instead of a panel over the canvas.
+- A run's page shows its graph beside the step details. A strip under the title shows the trigger, start, duration and attempt; **More about this run** shows the scheduled time, merged missed runs, who started it, who it runs as and which revision ran, by whom and when. Any error sits in a red banner with **Retry failed steps**.
+- **Approve** and **Deny** on a waiting approval stay side by side.
 
 ## Releases
 

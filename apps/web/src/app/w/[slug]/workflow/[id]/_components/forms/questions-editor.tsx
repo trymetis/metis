@@ -3,13 +3,12 @@
 import { Button } from "@metis/ui/components/button";
 import { FieldDescription } from "@metis/ui/components/field";
 import { Plus } from "lucide-react";
-import { useState } from "react";
 
 import { nodeQuestions } from "@/workflow/decision";
 import { type Binding, literal } from "@/workflow/expr";
 import type { DecisionQuestion, GraphNode } from "@/workflow/schema";
 
-import { DecisionPreviewSheet } from "./decision-preview-sheet";
+import { useDockActions } from "../editor-context";
 import { jsonOf } from "./json";
 import { newQuestion, nextId, QUESTION_TYPE_OPTIONS, QuestionEditor } from "./question-editor";
 
@@ -21,7 +20,7 @@ export function QuestionsEditor({
   onChange: (next: Binding | undefined) => void;
 }) {
   const questions = nodeQuestions(node);
-  const [previewOpen, setPreviewOpen] = useState(false);
+  const { openPreview } = useDockActions();
   const set = (next: DecisionQuestion[]) => onChange(literal(jsonOf(next)));
 
   return (
@@ -72,13 +71,10 @@ export function QuestionsEditor({
       <Button
         variant="outline"
         disabled={questions.length === 0}
-        onClick={() => setPreviewOpen(true)}
+        onClick={() => openPreview(node.id)}
       >
         Try on recent mail
       </Button>
-      {previewOpen && (
-        <DecisionPreviewSheet open={previewOpen} onOpenChange={setPreviewOpen} node={node} />
-      )}
     </div>
   );
 }

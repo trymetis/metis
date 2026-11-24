@@ -1,5 +1,6 @@
 import { test } from "../fixtures";
 import accountSpecs from "./accounts.spec";
+import assistantSpecs from "./assistant.spec";
 import calendarSpecs from "./calendar.spec";
 import contactSpecs from "./contacts.spec";
 import dashboardSpecs from "./dashboard.spec";
@@ -26,6 +27,7 @@ test.describe("calendar", calendarSpecs);
 test.describe("contacts", contactSpecs);
 test.describe("mail", mailSpecs);
 test.describe("accounts", accountSpecs);
+test.describe("assistant", assistantSpecs);
 test.describe("members", memberSpecs);
 test.describe("settings", settingsSpecs);
 test.describe("passkeys", passkeySpecs);

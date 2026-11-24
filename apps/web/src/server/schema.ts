@@ -2521,6 +2521,7 @@ export const assistantThreadSchema = z.object({
   id: z.string(),
   title: z.string(),
   updatedAt: z.string(),
+  pinned: z.boolean(),
 });
 
 export const listAssistantThreadsOutputSchema = z.object({
@@ -2543,6 +2544,11 @@ export const assistantThreadIdInputSchema = workspaceScopeSchema.extend({
 export const renameAssistantThreadInputSchema = workspaceScopeSchema.extend({
   threadId: z.string().min(1),
   title: z.string().min(1),
+});
+
+export const pinAssistantThreadInputSchema = workspaceScopeSchema.extend({
+  threadId: z.string().min(1),
+  pinned: z.boolean(),
 });
 
 export const chatTriggerSchema = z.enum(["submit-message", "regenerate-message"]);
@@ -2985,9 +2991,16 @@ export const workflowDirectorySchema = z.object({
   members: z.array(z.object({ userId: z.string(), name: z.string(), email: z.string() })),
 });
 
+export const workflowLastRunSchema = z.object({
+  workflowId: z.string(),
+  status: runStatusSchema,
+  at: z.string(),
+});
+
 export const listWorkflowsOutputSchema = z.object({
   workflows: z.array(workflowSchema),
   directory: workflowDirectorySchema,
+  lastRuns: z.array(workflowLastRunSchema),
 });
 
 export const workflowOutputSchema = z.object({
@@ -3026,11 +3039,15 @@ export const workflowRunSchema = z.object({
 
 export const listWorkflowRunsInputSchema = workspaceScopeSchema.extend({
   workflowId: z.string().optional(),
+  workflowIds: z.array(z.string()).max(100).optional(),
+  statuses: z.array(runStatusSchema).optional(),
+  cursor: z.string().optional(),
   limit: z.number().int().min(1).max(100).default(50),
 });
 
 export const listWorkflowRunsOutputSchema = z.object({
   runs: z.array(workflowRunSchema),
+  nextCursor: z.string().nullable(),
 });
 
 export const sendCloseReasonSchema = z.enum(SEND_CLOSE_REASONS);
@@ -3722,6 +3739,7 @@ export const localSearchHitSchema = z.discriminatedUnion("kind", [
     workflowName: z.string(),
     status: runStatusSchema,
     error: z.string().nullable(),
+    upgraded: z.boolean(),
   }),
   z.object({
     kind: z.literal("mailbox"),

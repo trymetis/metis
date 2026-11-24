@@ -59,6 +59,6 @@ test("without a session, app pages redirect to sign-in and the API answers 401",
     { maxRedirects: 0 },
   );
   expect(download.status()).toBe(401);
-  const chat = await request.post("/api/ai/chat", { data: {} });
+  const chat = await request.post("/api/ai/chat/mail", { data: {} });
   expect(chat.status()).toBe(401);
 });

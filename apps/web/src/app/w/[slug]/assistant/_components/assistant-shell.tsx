@@ -11,6 +11,13 @@ import {
   AlertDialogTitle,
 } from "@metis/ui/components/alert-dialog";
 import { Button } from "@metis/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@metis/ui/components/dropdown-menu";
 import { Input } from "@metis/ui/components/input";
 import {
   ResizableHandle,
@@ -20,13 +27,26 @@ import {
 import { cn } from "@metis/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNowStrict } from "date-fns";
-import { PanelLeftClose, PanelLeftOpen, Plus, Sparkles, Trash2 } from "lucide-react";
+import {
+  MoreHorizontal,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Pencil,
+  Pin,
+  PinOff,
+  Sparkles,
+  SquarePen,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { usePanelRef } from "react-resizable-panels";
+import { toast } from "sonner";
 
+import { IconButton } from "@/components/icon-button";
 import { MobileAsideTrigger, ResponsiveAside } from "@/components/mobile-aside";
+import { SearchInput } from "@/components/search-input";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useSavedLayout } from "@/hooks/use-saved-layout";
 import { useWorkspaceSlug } from "@/hooks/use-workspace-path";
@@ -38,6 +58,7 @@ interface ThreadRow {
   id: string;
   title: string;
   updatedAt: string;
+  pinned: boolean;
 }
 
 interface AssistantShellProps {
@@ -77,6 +98,7 @@ export function AssistantShell({
   const [panelCollapsed, setCollapsed] = useState(false);
   const collapsed = panelCollapsed && !isMobile;
   const [pendingDelete, setPendingDelete] = useState<ThreadRow | null>(null);
+  const [renaming, setRenaming] = useState<{ id: string; title: string } | null>(null);
   const railRef = usePanelRef();
   const { groupRef, onLayoutChanged } = useSavedLayout("metis-assistant-shell-layout");
 
@@ -104,9 +126,35 @@ export function AssistantShell({
       });
     } catch (err) {
       console.error("[assistant] failed to delete thread:", err);
+      toast.error("Could not delete the conversation");
     }
     if (id === activeId) {
       router.push(assistantPath(workspaceSlug));
+    }
+    await refreshThreads();
+  }
+
+  async function saveRename() {
+    if (!renaming) return;
+    const { id, title } = renaming;
+    setRenaming(null);
+    const next = title.trim();
+    if (!next || next === threads.find((t) => t.id === id)?.title) return;
+    try {
+      await orpc.assistant.renameThread({ workspaceSlug, threadId: id, title: next });
+    } catch (err) {
+      console.error("[assistant] failed to rename thread:", err);
+      toast.error("Could not rename the conversation");
+    }
+    await refreshThreads();
+  }
+
+  async function setPinned(id: string, pinned: boolean) {
+    try {
+      await orpc.assistant.pinThread({ workspaceSlug, threadId: id, pinned });
+    } catch (err) {
+      console.error("[assistant] failed to pin thread:", err);
+      toast.error(pinned ? "Could not pin the conversation" : "Could not unpin the conversation");
     }
     await refreshThreads();
   }
@@ -137,45 +185,32 @@ export function AssistantShell({
 
   const rail = (
     <aside className="flex h-full w-full flex-col overflow-hidden border-border border-r bg-panel">
-      <div className="flex items-center gap-1 border-border-soft border-b px-2 py-2.5">
-        {!collapsed && (
-          <span className="flex-1 font-medium text-base text-foreground">Workspace Assistant</span>
+      <div
+        className={cn(
+          "flex items-center gap-1 border-border-soft border-b px-2 py-2",
+          collapsed && "flex-col",
         )}
-        <Button
-          aria-label={collapsed ? "Expand" : "Collapse"}
+      >
+        <IconButton
+          label={collapsed ? "Expand" : "Collapse"}
           className="max-md:hidden"
           onClick={toggleCollapsed}
-          size="icon-sm"
-          variant="ghost"
         >
           {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
-        </Button>
-      </div>
-
-      <div className="p-2">
-        <Button
-          className={cn("w-full", collapsed && "px-0")}
-          nativeButton={false}
-          render={<Link href={newChatHref} />}
-          variant="outline"
-        >
-          <Plus className="size-4" data-icon={collapsed ? undefined : "inline-start"} />
-          {!collapsed && "New chat"}
-        </Button>
-      </div>
-
-      {!collapsed && threads.length > 0 && (
-        <div className="px-2 pb-2">
-          <Input
-            aria-label="Search conversations"
-            className="h-8 text-[13px]"
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search conversations"
-            type="search"
+        </IconButton>
+        {!collapsed && (
+          <SearchInput
+            label="Filter chats"
+            placeholder="Filter chats"
             value={query}
+            onValueChange={setQuery}
+            className="min-w-0 flex-1"
           />
-        </div>
-      )}
+        )}
+        <IconButton label="New chat" nativeButton={false} render={<Link href={newChatHref} />}>
+          <SquarePen className="size-4" />
+        </IconButton>
+      </div>
 
       {!collapsed && (
         <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-2">
@@ -185,33 +220,80 @@ export function AssistantShell({
             <p className="px-2 py-3 text-faint text-xs">No conversations match “{query.trim()}”</p>
           ) : (
             <ul className="flex flex-col gap-0.5">
-              {visibleThreads.map((t) => (
-                <li className="group/thread relative" key={t.id}>
-                  <Link
-                    className={cn(
-                      "block rounded-md px-2.5 py-2 pr-8 transition-colors hover:bg-hover",
-                      t.id === activeId && "bg-active",
-                    )}
-                    href={assistantPath(workspaceSlug, t.id)}
-                  >
-                    <span className="block truncate text-foreground text-sm">{t.title}</span>
-                    <span className="text-[11px] text-faint">
-                      {formatDistanceToNowStrict(new Date(t.updatedAt), {
-                        addSuffix: true,
-                      })}
-                    </span>
-                  </Link>
-                  <Button
-                    aria-label="Delete conversation"
-                    className="-translate-y-1/2 absolute top-1/2 right-1 opacity-0 transition-opacity group-hover/thread:opacity-100 pointer-coarse:opacity-100"
-                    onClick={() => setPendingDelete(t)}
-                    size="icon-sm"
-                    variant="ghost"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                </li>
-              ))}
+              {visibleThreads.map((t) =>
+                renaming?.id === t.id ? (
+                  <li key={t.id}>
+                    <Input
+                      aria-label="Chat title"
+                      autoFocus
+                      className="h-8 text-sm"
+                      value={renaming.title}
+                      onChange={(e) => setRenaming({ id: t.id, title: e.target.value })}
+                      onBlur={() => void saveRename()}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          void saveRename();
+                        } else if (e.key === "Escape") {
+                          e.preventDefault();
+                          setRenaming(null);
+                        }
+                      }}
+                    />
+                  </li>
+                ) : (
+                  <li className="group/thread relative" key={t.id}>
+                    <Link
+                      className={cn(
+                        "block rounded-md px-2.5 py-2 pr-8 transition-colors hover:bg-hover",
+                        t.id === activeId && "bg-active",
+                      )}
+                      href={assistantPath(workspaceSlug, t.id)}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        {t.pinned && (
+                          <Pin aria-label="Pinned" className="size-3 shrink-0 text-faint" />
+                        )}
+                        <span className="truncate text-foreground text-sm">{t.title}</span>
+                      </span>
+                      <span className="text-[11px] text-faint">
+                        {formatDistanceToNowStrict(new Date(t.updatedAt), {
+                          addSuffix: true,
+                        })}
+                      </span>
+                    </Link>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button
+                            aria-label={`Actions for ${t.title}`}
+                            className="-translate-y-1/2 absolute top-1/2 right-1 opacity-0 transition-opacity group-hover/thread:opacity-100 focus-visible:opacity-100 aria-expanded:opacity-100 pointer-coarse:opacity-100"
+                            size="icon-sm"
+                            variant="ghost"
+                          >
+                            <MoreHorizontal className="size-4" />
+                          </Button>
+                        }
+                      />
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem onClick={() => setRenaming({ id: t.id, title: t.title })}>
+                          <Pencil />
+                          Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => void setPinned(t.id, !t.pinned)}>
+                          {t.pinned ? <PinOff /> : <Pin />}
+                          {t.pinned ? "Unpin" : "Pin"}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem variant="destructive" onClick={() => setPendingDelete(t)}>
+                          <Trash2 />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </li>
+                ),
+              )}
             </ul>
           )}
         </div>

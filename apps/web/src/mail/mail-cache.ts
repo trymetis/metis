@@ -289,6 +289,19 @@ export async function refreshMailListHead(scope: MailboxScope, folder: MailFolde
   });
 }
 
+export async function refetchMailLists() {
+  const client = getQueryClient();
+  await Promise.all(
+    [
+      rpc.mail.messages.list.key({ type: "infinite" }),
+      rpc.mail.messages.listInState.key({ type: "infinite" }),
+      rpc.mail.labels.listEmails.key({ type: "infinite" }),
+    ].map((queryKey) =>
+      client.refetchQueries({ queryKey, type: "active" }, { cancelRefetch: false }),
+    ),
+  );
+}
+
 function mapCachedEmails(map: (emails: Email[]) => Email[]) {
   const client = getQueryClient();
   for (const pagedKey of [

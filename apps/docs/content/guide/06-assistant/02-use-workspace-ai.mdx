@@ -47,7 +47,7 @@ The suggestions show only in a new chat, before you send your first message. Aft
 Type **@** in the message box to refer to one exact item. This tells the assistant exactly which email, event, file or contact you mean, so it does not have to guess.
 
 1. Type **@** and then a few letters of the name. For example, type `@brief` to find a file called "brief.txt".
-2. A list of matches appears under headings such as **Mailboxes**, **Calendars**, **Drives**, **People**, **Emails**, **Events**, **Labels**, **Folders**, **Files**, **Address books** and **Contacts**. Use the **Up** and **Down** arrow keys to move, and **Enter** to pick one. Press **Escape** to close the list.
+2. A list of matches appears under headings such as **Mailboxes**, **Calendars**, **Drives**, **People**, **Emails**, **Events**, **Labels**, **Folders**, **Files**, **Address books** and **Contacts**. Use the **Up** and **Down** arrow keys to move, and **Enter** to pick one. Press **Esc** to close the list.
 3. The item appears as a chip in your message. Finish your question and send it.
 
 <img
@@ -69,7 +69,7 @@ Good to know:
 - Address books in the list show the address book's name, with its [account name](/guide/contacts/browse-your-contacts#how-accounts-are-named) next to it.
 - **Contacts** shows saved contacts once you type at least 3 letters. Each one shows the contact's name, with their email address next to it, or the address book's name when the contact has no email address.
 - A reference is a hint, not a limit. The assistant can still read anything else it is allowed to read.
-- In a sent message, you can click a **file** chip to preview the file beside the chat, a **contact** chip to open the contact, or a member's chip to open a preview beside the chat. The preview shows the member's email address, role and join date, with **Recent mail with them** and **Upcoming events with them**. Click **Close preview** to close it. Other chips are not clickable.
+- In a sent message, you can click a **file** chip to preview the file beside the chat, a **contact** chip to open the contact, or a member's chip to open a preview beside the chat. The preview shows the member's initials in a colored circle, their email address, role and join date, with **Recent mail with them** and **Upcoming events with them**. Click **Close preview** to close it. Other chips are not clickable.
 - If an item no longer exists or is no longer in the workspace, its chip shows as dimmed text.
 
 ### Start from search
@@ -80,12 +80,15 @@ You can also start a message about one item from workspace search. Find an email
 
 ## Find a past conversation
 
-Your conversations are listed on the left, newest first. Each one shows a title and how long ago it was used. The first title is your first message. Shortly after, the assistant replaces it with a short title of a few words.
+Your conversations are listed on the left. [Pinned](#pin-a-conversation) conversations come first. The rest follow, newest first. Each one shows a title and how long ago it was used. Renaming, pinning or unpinning a conversation counts as using it. The first title is your first message. Shortly after, the assistant replaces it with a short title of a few words.
+
+Above the list is one row with, from left to right, **Collapse**, the **Filter chats** box and **New chat** (the pencil icon).
 
 - **Open a conversation:** click it. The whole conversation appears again, and you can keep asking questions.
 - **Start a new conversation:** click **New chat**.
-- **Search:** type in **Search conversations** to filter the list by title. [Workspace search](/guide/search/search-your-workspace) finds your conversations too, by title and by what was said in your 40 most recent ones.
-- **Make more room:** drag the edge of the list to resize it, or use **Collapse** and **Expand**. On a phone, tap the sidebar button (**Open sidebar**) to open the list.
+- **Filter the list:** type in **Filter chats**. The list keeps the conversations whose title holds what you typed. Capital letters do not matter. Click the X (**Clear search**) to empty the box. If nothing matches, the list says "No conversations match “invoice”" (with what you typed). Before your first conversation, it says "No conversations yet".
+- **Search what was said:** [workspace search](/guide/search/search-your-workspace) finds your conversations too, by title and by what was said in your 40 most recent ones.
+- **Make more room:** drag the edge of the list to resize it, or click **Collapse**. A collapsed list shows only **Expand** and **New chat**. On a phone, there is no **Collapse** button. Tap the sidebar button (**Open sidebar**) to open the list.
 
 <img
   src="/images/assistant/stored-conversation.webp"
@@ -100,20 +103,45 @@ Your conversations are listed on the left, newest first. Each one shows a title 
 
 Your conversations are private. Other people in the workspace cannot see them, and you see only your own.
 
-## Delete a conversation
+## Manage a conversation from the list
 
-1. Point at the conversation in the list and click the trash icon (**Delete conversation**).
-2. In **Delete this conversation?**, click **Delete**.
+Each conversation in the list has a "…" button. It shows when you point at the conversation or move to it with the keyboard. On a touch screen, it always shows. The button opens a menu with **Rename**, **Pin** (or **Unpin**) and **Delete**.
 
-The conversation and its history are deleted for good. This cannot be undone.
+### Rename a conversation
 
-## Rename a conversation
+1. Click the "…" button next to the conversation and pick **Rename**.
+2. The title turns into a text box. Type the new title.
+3. Press **Enter**, or click anywhere else, to save. Press **Esc** to keep the old title.
 
-You cannot rename a conversation from the list. Use workspace search instead:
+A title can be up to 80 characters. A longer title is cut to its first 80 characters when you save it. If you save an empty title or the same title, nothing changes.
+
+A renamed conversation moves to the top of the pinned conversations, or of the others if it is not pinned. If the title cannot be saved, you see "Could not rename the conversation". Try again.
+
+You can also rename a conversation from workspace search:
 
 1. Open [search](/guide/search/search-your-workspace) and type part of the conversation's title. Click **Chats** to see only conversations.
 2. Open the list of actions for the conversation and pick **Rename**.
 3. Type the new title and click **Rename**.
+
+### Pin a conversation
+
+Pin a conversation to keep it at the top of the list.
+
+1. Click the "…" button next to the conversation and pick **Pin**.
+2. The conversation moves to the top of the list, with a small pin icon before its title.
+
+Pinned conversations stay above all the others. The most recently used pinned conversation comes first. To unpin a conversation, click its "…" button and pick **Unpin**. It moves to the top of the other conversations.
+
+If pinning or unpinning fails, you see "Could not pin the conversation" or "Could not unpin the conversation". Try again.
+
+### Delete a conversation
+
+1. Click the "…" button next to the conversation and pick **Delete**.
+2. **Delete this conversation?** opens. It says that the conversation and its history are permanently deleted, and that this can't be undone. Click **Delete**, or **Cancel** to keep it.
+
+The conversation and its history are deleted for good. If it was the conversation you had open, a new chat opens. If it cannot be deleted, you see "Could not delete the conversation". Try again.
+
+You can also delete a conversation from [workspace search](/guide/search/results-and-actions).
 
 ## If something goes wrong
 

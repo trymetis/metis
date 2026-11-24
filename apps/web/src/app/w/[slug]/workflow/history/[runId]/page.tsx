@@ -1,8 +1,10 @@
-import { WorkflowRunDetailView } from "@/components/workflow-history/workflow-run-detail";
+import { redirect } from "next/navigation";
 
-export default async function WorkflowRunPage({
+import { workflowRunPath } from "@/workspace/path";
+
+export default async function WorkflowHistoryRunPage({
   params,
 }: PageProps<"/w/[slug]/workflow/history/[runId]">) {
-  const { runId } = await params;
-  return <WorkflowRunDetailView runId={runId} />;
+  const { slug, runId } = await params;
+  redirect(workflowRunPath(slug, runId));
 }

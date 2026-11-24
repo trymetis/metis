@@ -12,6 +12,7 @@ Mail, calendar, drive and the workflow editor each have their own shortcuts. Mos
 - **Mail, calendar, drive and workflow shortcuts pause while you type.** They do nothing while you are typing in a field, such as a search box or the composer. Mail shortcuts (every **m** shortcut and **j**, **n**, **k** and **p**) also do nothing while the composer is open, even when the cursor is not in a field. **Esc** still closes the composer. Switching workspaces with **Alt** and a number still works.
 - **Press ? for help.** In mail, calendar, drive and the workflow editor, **?** shows or hides the **Keyboard shortcuts** dialog for that section. Press **Esc** or click **Close** to close it.
 - **Press Ctrl + K to search.** Workspace search also finds commands such as **Compose mail** and settings pages, so you can run them by typing their name. See [Search](#search).
+- **AI panel shortcuts need AI.** **m** then **a**, **c** then **a** and **d** then **a** work only where the section's AI button shows. When AI is off there, the shortcut does nothing, and neither the **Keyboard shortcuts** dialog nor the hint lists it. See [When a panel is turned off](/guide/assistant/use-the-side-panels#when-a-panel-is-turned-off).
 - **Contacts has no shortcuts of its own.** To get there from the keyboard, open search and run **Go to contacts**.
 
 <img src="/images/workspaces/keyboard-shortcuts-help.webp" alt="The Keyboard shortcuts dialog in mail" class="dark:hidden" />
@@ -130,12 +131,12 @@ These work in the workflow editor. See [Workflows](/guide/workflows).
 
 Press **w**, then:
 
-| Keys             | Action                                                                                                                                                        |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **w** then **a** | Open the **Add step** window                                                                                                                                  |
-| **w** then **l** | Tidy up the layout                                                                                                                                            |
-| **w** then **t** | Open the **Test run** tab                                                                                                                                     |
-| **w** then **r** | Run the saved workflow now. If its **Run by hand** trigger asks for inputs, this opens the inputs dialog first. It does nothing for a workflow not yet saved. |
+| Keys             | Action                                                                                                          |
+| ---------------- | --------------------------------------------------------------------------------------------------------------- |
+| **w** then **a** | Open the **Add step** window                                                                                    |
+| **w** then **l** | Tidy up the layout                                                                                              |
+| **w** then **t** | Open the **Test run** tab                                                                                       |
+| **w** then **r** | Run the saved workflow now. If its **Run by hand** trigger asks for inputs, this opens the inputs dialog first. |
 
 Without a prefix:
 

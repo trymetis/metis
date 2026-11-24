@@ -11,22 +11,32 @@ import {
 } from "../workflow";
 
 export default function workflowSpecs() {
-  test("build, save, toggle and delete a workflow", async ({ page, rpc, account }, testInfo) => {
+  test("create a workflow from a template, save it, turn it on from the list and delete it", async ({
+    page,
+    rpc,
+    account,
+  }, testInfo) => {
     const name = uniqueName(testInfo);
-    const list = page.getByRole("complementary").filter({
-      has: page.getByRole("button", { name: "New workflow", exact: true }),
-    });
+    const list = page.getByRole("list", { name: "Workflows" });
+    const row = list.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
     const canvas = page.getByRole("application");
     const inspector = page.getByRole("region", { name: "Inspector" });
     const workflowName = page.getByRole("textbox", { name: "Workflow name" });
     await page.goto(workspacePath(account, "/workflow"));
-    await list.getByRole("button", { name: "New workflow", exact: true }).click();
-    await page
-      .getByRole("menu", { name: "New workflow" })
-      .getByRole("menuitem", { name: "Label mail from a sender", exact: true })
-      .click();
+    await page.getByRole("button", { name: "New workflow", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "New workflow" });
+    await dialog.getByRole("textbox", { name: "Name" }).fill(name);
+    await dialog.getByRole("combobox", { name: "Template" }).click();
+    await page.getByRole("option", { name: "Label mail from a sender", exact: true }).click();
     try {
-      await workflowName.fill(name);
+      await dialog.getByRole("button", { name: "Create workflow", exact: true }).click();
+      await expect(page).toHaveURL(/\/workflow\/[^/?]+$/);
+      await expect(workflowName).toHaveValue(name);
+      await expect(page.getByText("Unsaved changes", { exact: true })).toBeVisible();
+      const created = await workflowNamed(rpc, account, name);
+      expect(created.enabled).toBe(false);
+      expect(created.graph.nodes.map((n: { step: string }) => n.step)).toEqual(["trigger.manual"]);
+
       await canvas.getByRole("group", { name: "If", exact: true }).click();
       await inspector
         .getByRole("textbox", { name: "Condition" })
@@ -34,28 +44,22 @@ export default function workflowSpecs() {
       await canvas.getByRole("group", { name: "Label", exact: true }).click();
       await inspector.getByRole("combobox", { name: "Label" }).click();
       await page.getByRole("option", { name: "Work", exact: true }).click();
-      await page.getByRole("button", { name: "Create workflow", exact: true }).click();
-      await expect(page.getByRole("button", { name: "Save", exact: true })).toBeVisible();
-      await expect(workflowName).toHaveValue(name);
-      await expect(list.getByRole("button", { name, exact: true })).toBeVisible();
-      expect((await workflowNamed(rpc, account, name)).enabled).toBe(true);
-
-      await page.getByRole("switch", { name: "Enabled", exact: true }).click();
-      await expect(page.getByText("Disabled", { exact: true })).toBeVisible();
-      await expect(page.getByText("Unsaved changes", { exact: true })).toBeVisible();
       await page.getByRole("button", { name: "Save", exact: true }).click();
       await expect(page.getByText("Saved", { exact: true })).toBeVisible();
-      await expect.poll(async () => (await workflowNamed(rpc, account, name)).enabled).toBe(false);
 
+      await page.getByRole("button", { name: "Back to workflows", exact: true }).click();
+      await row.getByRole("switch", { name: `Turn ${name} on` }).click();
+      await expect.poll(async () => (await workflowNamed(rpc, account, name)).enabled).toBe(true);
+
+      await row.getByRole("link").first().click();
       await page.getByRole("button", { name: "More workflow actions", exact: true }).click();
       await page.getByRole("menuitem", { name: "Delete workflow", exact: true }).click();
       await page
         .getByRole("alertdialog", { name: "Delete this workflow?" })
         .getByRole("button", { name: "Delete", exact: true })
         .click();
-      await expect(
-        list.getByRole("button").filter({ has: page.getByText(name, { exact: true }) }),
-      ).toHaveCount(0);
+      await expect(list).toBeVisible();
+      await expect(row).toHaveCount(0);
       await expect
         .poll(() =>
           workflowNamed(rpc, account, name).then(
@@ -138,7 +142,7 @@ export default function workflowSpecs() {
       },
     });
     try {
-      await page.goto(workspacePath(account, `/workflow?id=${workflow.id}`));
+      await page.goto(workspacePath(account, `/workflow/${workflow.id}`));
       await expect(page.getByRole("textbox", { name: "Workflow name" })).toHaveValue(name);
 
       await page.getByRole("button", { name: "Run now", exact: true }).click();
@@ -200,7 +204,7 @@ export default function workflowSpecs() {
       }
       expect(nodeOf(join, "label").reached).toBe(true);
 
-      await page.goto(workspacePath(account, `/workflow/history/${append.id}`));
+      await page.goto(workspacePath(account, `/workflow/runs/${append.id}`));
       await expect(
         page.getByRole("heading", {
           level: 1,
@@ -265,9 +269,16 @@ export default function workflowSpecs() {
         id: workflow.id,
       });
       await waitForRun(rpc, account, runId);
-      await page.goto(workspacePath(account, `/workflow/history/${runId}`));
-      const steps = page.getByRole("list").filter({ has: page.getByText("Create a file") });
-      await steps.getByRole("button", { name: "Resolve", exact: true }).first().click();
+      await page.goto(workspacePath(account, `/workflow/runs/${runId}`));
+      await page
+        .getByRole("complementary", { name: "Run details" })
+        .getByRole("button", { name: "Create a file" })
+        .click();
+      await page
+        .getByRole("region", { name: "Selected step" })
+        .getByRole("button", { name: "Resolve", exact: true })
+        .first()
+        .click();
       const dialog = page.getByRole("dialog", { name: "Resolve an unconfirmed upload" });
       await expect(dialog.getByText("Found in the drive", { exact: true })).toBeVisible();
       await dialog.getByRole("button", { name: "Close without retrying", exact: true }).click();

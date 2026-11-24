@@ -4,17 +4,18 @@ import { Button } from "@metis/ui/components/button";
 import { cn } from "@metis/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNowStrict } from "date-fns";
-import { ExternalLink, FlaskConical, Loader2 } from "lucide-react";
+import { ExternalLink, FlaskConical, Loader2, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
 
+import { IconButton } from "@/components/icon-button";
 import { runOverlay } from "@/components/workflow-graph/overlay";
 import { StatusIcon, statusLabel } from "@/components/workflow-history/run-status";
 import { RunWaits } from "@/components/workflow-history/run-waits";
 import { useWorkspaceScope } from "@/hooks/use-workspace-path";
 import { rpc } from "@/lib/orpc";
 import type { WorkflowRun } from "@/server/schema";
-import { workflowPath } from "@/workspace/path";
+import { workflowRunPath } from "@/workspace/path";
 
 import { useEditorEnv, useOverlay } from "./editor-context";
 
@@ -107,17 +108,17 @@ export function RunsPanel({
                 <FlaskConical /> Replay in a test
               </Button>
             )}
-            <Button
-              size="xs"
-              variant="ghost"
+            <IconButton
+              label="Details"
+              size="icon-xs"
               nativeButton={false}
-              render={<Link href={workflowPath(scope.workspaceSlug, `history/${run.id}`)} />}
+              render={<Link href={workflowRunPath(scope.workspaceSlug, run.id, true)} />}
             >
-              <ExternalLink /> Details
-            </Button>
-            <Button size="xs" variant="ghost" onClick={() => onSelectRun(null)}>
-              Hide
-            </Button>
+              <ExternalLink className="size-3.5" />
+            </IconButton>
+            <IconButton label="Hide" size="icon-xs" onClick={() => onSelectRun(null)}>
+              <X className="size-3.5" />
+            </IconButton>
           </span>
         </div>
       )}

@@ -23,12 +23,10 @@ import { ScrollArea } from "@metis/ui/components/scroll-area";
 import { cn } from "@metis/ui/lib/utils";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
-  Bot,
   Check,
   ChevronDown,
   Loader2,
   MailOpen,
-  Search,
   Star,
   Tag as TagIcon,
   Trash2,
@@ -37,9 +35,11 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { AgentToggle } from "@/components/agent/agent-toggle";
 import { MobileAsideTrigger } from "@/components/mobile-aside";
 import { usePlatformPolicy } from "@/components/platform-policy-context";
 import { useScopePolicy } from "@/components/scope-policy-context";
+import { SearchInput } from "@/components/search-input";
 import { useCustomLabels } from "@/hooks/use-custom-labels";
 import { usePollingRefresh } from "@/hooks/use-polling-refresh";
 import { useMailboxScope } from "@/hooks/use-workspace-path";
@@ -369,51 +369,25 @@ export function EmailList({ folder, view }: EmailListProps) {
           <h1 className="mr-auto text-[22px] font-medium leading-tight tracking-tight text-foreground">
             {folderLabel}
           </h1>
-          {platformAi && (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setAgentOpen(!agentOpen)}
-              aria-label="Toggle AI agent"
-              aria-pressed={agentOpen}
-              title="AI Agent"
-              className={cn(
-                "shrink-0",
-                agentOpen && "border-primary/40 bg-brand-soft text-primary",
-              )}
-            >
-              <Bot className="size-4" strokeWidth={1.8} />
-            </Button>
+          {platformAi && aiEnabled && (
+            <AgentToggle
+              label="Mail AI"
+              open={agentOpen}
+              onToggle={() => setAgentOpen(!agentOpen)}
+            />
           )}
         </div>
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-faint" />
-          <input
-            type="text"
-            placeholder="Search messages…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") runSearch(searchQuery);
-            }}
-            className="w-full rounded-md border py-1.75 pl-8 pr-8 text-[13px] outline-none transition-colors focus:border-[rgba(200,146,42,0.4)] bg-panel border-border text-foreground"
-            aria-label="Search emails"
-          />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              onClick={() => {
-                setSearchQuery("");
-                runSearch("");
-              }}
-              aria-label="Clear search"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-faint"
-            >
-              <X />
-            </Button>
-          )}
-        </div>
+        <SearchInput
+          label="Search emails"
+          placeholder="Search messages…"
+          value={searchQuery}
+          onValueChange={setSearchQuery}
+          onClear={() => runSearch("")}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") runSearch(searchQuery);
+          }}
+          className="bg-panel"
+        />
       </div>
 
       {urlLabel && (

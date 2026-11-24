@@ -35,6 +35,7 @@ import {
   endpointsOf,
   getCursors,
   getWait,
+  latestRuns,
   listDefinitions,
   listMemberIdentities,
   listOpenApprovals,
@@ -47,6 +48,8 @@ import {
   loadRunScope,
   type ResourceLinks,
   type RunCancelResult,
+  type RunCursor,
+  type RunHistoryRow,
   reviseDefinition,
   saveDefinition,
   setDefinitionEnabled,
@@ -509,12 +512,13 @@ export async function toggleUserWorkflow(
   workflowId: string,
   enabled: boolean,
   by: AuditActor,
-): Promise<boolean> {
+): Promise<true | string> {
+  const missing = `No workflow "${workflowId}" in this workspace`;
   const existing = await ownWorkflow(scope, workflowId);
-  if (!existing) return false;
+  if (!existing) return missing;
   if (enabled) {
     const invalid = await checkGraph(existing.graph, scope);
-    if (invalid) return false;
+    if (invalid) return `Fix this workflow before turning it on: ${invalid}`;
   }
   const changed = await setDefinitionEnabled(workflowId, enabled);
   if (changed && existing.definition.enabled !== enabled) {
@@ -525,7 +529,7 @@ export async function toggleUserWorkflow(
       existing,
     );
   }
-  return changed;
+  return changed || missing;
 }
 
 export async function deleteUserWorkflow(
@@ -887,31 +891,85 @@ export async function listWorkspaceRuns(opts: {
   workflowId?: string;
   limit: number;
 }): Promise<WorkflowRunSummary[]> {
-  const rows = await listRuns({
-    workspaceId: opts.scope.workspaceId,
-    workflowId: opts.workflowId,
-    kind: "user",
+  const page = await pageWorkspaceRuns({
+    scope: opts.scope,
+    workflowIds: opts.workflowId ? [opts.workflowId] : undefined,
     limit: opts.limit,
   });
+  return page.runs;
+}
+
+const PAGE_BATCHES = 5;
+
+function encodeCursor(cursor: RunCursor): string {
+  return `${cursor.createdAt.getTime()}:${cursor.id}`;
+}
+
+function decodeCursor(raw: string | undefined): RunCursor | undefined {
+  if (!raw) return undefined;
+  const split = raw.indexOf(":");
+  const ms = Number(raw.slice(0, split));
+  if (split < 1 || !Number.isFinite(ms)) return undefined;
+  return { createdAt: new Date(ms), id: raw.slice(split + 1) };
+}
+
+export async function pageWorkspaceRuns(opts: {
+  scope: WorkspaceScope;
+  workflowIds?: readonly string[];
+  statuses?: readonly RunStatus[];
+  cursor?: string;
+  limit: number;
+}): Promise<{ runs: WorkflowRunSummary[]; nextCursor: string | null }> {
+  const seen: RunHistoryRow[] = [];
+  let before = decodeCursor(opts.cursor);
+  let more = true;
+  for (let batch = 0; batch < PAGE_BATCHES && more && seen.length < opts.limit; batch += 1) {
+    const rows = await listRuns({
+      workspaceId: opts.scope.workspaceId,
+      workflowIds: opts.workflowIds,
+      statuses: opts.statuses,
+      kind: "user",
+      before,
+      limit: opts.limit,
+    });
+    more = rows.length === opts.limit;
+    for (const [index, row] of rows.entries()) {
+      before = { createdAt: row.createdAt, id: row.id };
+      if (canSee(opts.scope, row.principalUserId, row.graph)) seen.push(row);
+      if (seen.length === opts.limit) {
+        more = more || index < rows.length - 1;
+        break;
+      }
+    }
+  }
   const visible = visibleAddresses(opts.scope);
+  const runs = seen.map((row) => ({
+    id: row.id,
+    workflowId: row.workflowId,
+    workflowName: row.workflowName,
+    status: row.status,
+    dueAt: row.dueAt.toISOString(),
+    startedAt: row.startedAt?.toISOString() ?? null,
+    finishedAt: row.finishedAt?.toISOString() ?? null,
+    attempts: row.attempts,
+    error: maskAddresses(row.error, visible),
+    upgraded: row.upgraded,
+    steps: (row.summary ?? []).map((line) => ({
+      ...line,
+      detail: maskAddresses(line.detail, visible) ?? undefined,
+    })),
+  }));
+  return { runs, nextCursor: more && before ? encodeCursor(before) : null };
+}
+
+export async function latestWorkspaceRuns(
+  scope: WorkspaceScope,
+  workflowIds: readonly string[],
+): Promise<{ workflowId: string; status: RunStatus; at: string }[]> {
+  const rows = await latestRuns(workflowIds);
   return rows
-    .filter((row) => canSee(opts.scope, row.principalUserId, row.graph))
-    .map((row) => ({
-      id: row.id,
-      workflowId: row.workflowId,
-      workflowName: row.workflowName,
-      status: row.status,
-      dueAt: row.dueAt.toISOString(),
-      startedAt: row.startedAt?.toISOString() ?? null,
-      finishedAt: row.finishedAt?.toISOString() ?? null,
-      attempts: row.attempts,
-      error: maskAddresses(row.error, visible),
-      upgraded: row.upgraded,
-      steps: (row.summary ?? []).map((line) => ({
-        ...line,
-        detail: maskAddresses(line.detail, visible) ?? undefined,
-      })),
-    }));
+    .filter((row) => canSee(scope, row.principalUserId, row.graph))
+    .map((row) => ({ workflowId: row.workflowId, status: row.status, at: row.at.toISOString() }));
 }
 
 export async function listPendingApprovals(scope: WorkspaceScope): Promise<PendingApproval[]> {

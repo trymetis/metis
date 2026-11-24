@@ -39,7 +39,7 @@ The workflow cannot be saved until every expression is correct.
 | `run`             | The run: `run.id`, `run.workflow` and `run.startedAt`.                                                                                                                              |
 | `now`             | The current date and time.                                                                                                                                                          |
 
-The step id shows in the Inspector when you select a step. See [Use the editor](/guide/workflows/use-the-editor#settings-every-step-has).
+To get a step's reference, select the step, click **More step actions** (**...**) at the top of the Inspector, then click **Copy reference**. It copies `steps.` and the step's id, ready to paste into an expression. You can also pick an earlier step's value with the **{ }** button instead. See [Use the editor](/guide/workflows/use-the-editor#settings-every-step-has).
 
 ## Write a condition
 

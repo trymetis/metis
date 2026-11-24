@@ -108,10 +108,10 @@
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
-        "waitFor": "role=main >> role=button[name=\"Toggle AI agent\"]"
+        "waitFor": "role=main >> role=button[name=\"Mail AI\"]"
       },
       {
-        "click": "role=main >> role=button[name=\"Toggle AI agent\"]"
+        "click": "role=main >> role=button[name=\"Mail AI\"]"
       },
       {
         "waitFor": "role=textbox[name=\"Ask about your emails…\"]"

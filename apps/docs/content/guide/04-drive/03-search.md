@@ -11,7 +11,7 @@ The search box in the toolbar finds files and folders by name across the whole d
 2. Type part of the name. Results appear a moment after you stop typing.
 3. Double-click a result to open it. Opening a folder from the results clears the search.
 
-To go back to the folder you were in, clear the search box.
+To go back to the folder you were in, click the X in the search box (**Clear search**), or delete the text.
 
 <img src="/images/drive/search.webp" alt='Search results for "welcome" in a drive' class="dark:hidden" />
 <img src="/images/drive/search-dark.webp" alt='Search results for "welcome" in a drive' class="hidden dark:block" />
@@ -22,15 +22,15 @@ In [All drives](/guide/drive/all-drives), the same box searches every drive in t
 
 ## When some results may be missing
 
-Sometimes Metis cannot search all of a drive. Then a notice appears above the file list:
+Sometimes Metis Suite cannot search all of a drive. Then a notice appears above the file list:
 
 "Couldn't search all of Team Drive, so some results may be missing."
 
-The notice names each drive that could not be fully searched (here, a drive called Team Drive). Results that Metis could check still appear, and so do results from the other drives. To search again, click **Try again** in the notice.
+The notice names each drive that could not be fully searched (here, a drive called Team Drive). Results that Metis Suite could check still appear, and so do results from the other drives. To search again, click **Try again** in the notice.
 
 This can happen in two cases:
 
-- On a drive with a [folder restriction](/guide/drive/folder-restrictions), Metis checks that each result is in a folder this workspace can see. If the drive does not answer during that check, for example because it is busy or does not respond in time, those results are left out.
+- On a drive with a [folder restriction](/guide/drive/folder-restrictions), results are left out when the drive is busy or does not respond in time.
 - In [All drives](/guide/drive/all-drives), one drive's search fails completely.
 
 ## What search can find
@@ -38,16 +38,16 @@ This can happen in two cases:
 - Search never shows folders or files that a [folder restriction](/guide/drive/folder-restrictions) hides from this workspace.
 - How far search looks depends on the drive type:
 
-| Drive type                 | How search works                                                                                               |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Google Drive               | Uses Google Drive's own search.                                                                                |
-| OneDrive                   | Uses OneDrive's own search.                                                                                    |
-| S3 storage                 | Matches part of the file name.                                                                                 |
-| WebDAV, FTP, FTPS and SFTP | Looks through the folders one by one, up to a limit. A file buried very deep in many folders may not be found. |
+| Drive type                 | How search works                                                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Google Drive               | Uses Google Drive's own search.                                                                                          |
+| OneDrive                   | Uses OneDrive's own search.                                                                                              |
+| S3 storage                 | Matches part of the file name.                                                                                           |
+| WebDAV, FTP, FTPS and SFTP | Looks at up to 200 folders, up to 12 folders deep, and shows at most 200 results. A file buried deeper may not be found. |
 
 If search does not find a file on a WebDAV, FTP, FTPS or SFTP drive, browse to it through its folders instead.
 
-On S3, WebDAV, FTP, FTPS and SFTP drives, search can be up to 30 seconds behind the drive. For example, a file added, renamed or deleted outside Metis may take that long to show in search. Opening its folder always shows what is there now.
+On S3, WebDAV, FTP, FTPS and SFTP drives, search can be up to 30 seconds behind the drive. For example, a file added, renamed or deleted outside Metis Suite may take that long to show in search. Opening its folder always shows what is there now.
 
 ## Search with filters
 

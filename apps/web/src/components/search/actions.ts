@@ -69,8 +69,8 @@ import {
   drivePath,
   mailPath,
   workflowEditPath,
-  workflowPath,
   workflowRunPath,
+  workflowRunsPath,
   workspaceSettingsPath,
 } from "@/workspace/path";
 
@@ -139,6 +139,19 @@ async function attempt(ctx: ActionContext, fn: () => Promise<unknown>, done: str
   try {
     await fn();
     toast.success(done);
+    ctx.refresh();
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : "That did not work");
+  }
+}
+
+async function attemptRunChange(
+  ctx: ActionContext,
+  fn: () => Promise<{ message: string; tone: "success" | "info" | "error" }>,
+) {
+  try {
+    const { message, tone } = await fn();
+    toast[tone](message);
     ctx.refresh();
   } catch (err) {
     toast.error(err instanceof Error ? err.message : "That did not work");
@@ -756,7 +769,7 @@ function localActions(ctx: ActionContext, hit: LocalSearchHit): SearchAction[] {
 
     case "workflow":
       return [
-        go(workflowEditPath(ws, hit.workflowId), "Open the builder"),
+        go(workflowEditPath(ws, hit.workflowId), "Open in the editor"),
         act(
           "toggle",
           hit.enabled ? "Turn off" : "Turn on",
@@ -786,47 +799,52 @@ function localActions(ctx: ActionContext, hit: LocalSearchHit): SearchAction[] {
             ),
           { keepOpen: true },
         ),
-        go(workflowPath(ws, "history"), "Open history", History),
+        go(workflowRunsPath(ws, hit.workflowId), "Open its runs", History),
       ];
 
     case "run": {
       const actions = [go(workflowRunPath(ws, hit.runId), "Open the run")];
-      if (hit.status === "blocked" || hit.status === "failed") {
+      if (
+        !hit.upgraded &&
+        (hit.status === "blocked" || hit.status === "failed" || hit.status === "partial")
+      ) {
         actions.push(
           act(
             "resume",
             "Resume",
             Play,
             () =>
-              attempt(
-                ctx,
-                () =>
-                  orpc.workflows.resumeRun({
-                    workspaceSlug: ws,
-                    runId: hit.runId,
-                  }),
-                "Run resumed",
-              ),
+              attemptRunChange(ctx, async () => {
+                const result = await orpc.workflows.resumeRun({
+                  workspaceSlug: ws,
+                  runId: hit.runId,
+                });
+                return {
+                  message: result.message,
+                  tone: result.state === "resumed" ? "success" : "error",
+                };
+              }),
             { keepOpen: true },
           ),
         );
       }
-      if (hit.status === "pending" || hit.status === "running" || hit.status === "blocked") {
+      if (hit.status === "pending" || hit.status === "running" || hit.status === "waiting") {
         actions.push(
           act(
             "cancel",
             "Cancel",
             Ban,
             () =>
-              attempt(
-                ctx,
-                () =>
-                  orpc.workflows.cancelRun({
-                    workspaceSlug: ws,
-                    runId: hit.runId,
-                  }),
-                "Run cancelled",
-              ),
+              attemptRunChange(ctx, async () => {
+                const result = await orpc.workflows.cancelRun({
+                  workspaceSlug: ws,
+                  runId: hit.runId,
+                });
+                return {
+                  message: result.message,
+                  tone: result.state === "finished" ? "info" : "success",
+                };
+              }),
             { destructive: true, keepOpen: true },
           ),
         );

@@ -16,7 +16,7 @@ From top to bottom, the rail shows:
 5. **Workflows**.
 6. **Your workspace tiles**, one for each workspace you belong to. The current workspace is highlighted and has a bar on its left.
 7. **New workspace**, the dashed **+** tile.
-8. **Your account menu**, your initials in a circle.
+8. **Your account menu**, your initials in a colored circle.
 9. A link to the source code, with the version number of Metis Suite.
 
 Hover over a workspace tile to see the workspace's name and your role in it.

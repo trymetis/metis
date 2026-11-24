@@ -12,7 +12,6 @@ import {
 } from "@metis/ui/components/alert-dialog";
 import { Badge } from "@metis/ui/components/badge";
 import { Button } from "@metis/ui/components/button";
-import { ScrollArea } from "@metis/ui/components/scroll-area";
 import { cn } from "@metis/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistanceStrict } from "date-fns";
@@ -28,7 +27,7 @@ import { orpc, rpc } from "@/lib/orpc";
 import { refreshQuery } from "@/lib/query-client";
 import type { WorkflowRunDetail } from "@/server/schema";
 import { nodeOutputs, nodeTitle, type StepOutput, stepLabel } from "@/workflow/steps";
-import { workflowPath } from "@/workspace/path";
+import { workflowRunsPath } from "@/workspace/path";
 
 import { JsonBlock } from "./json-block";
 import { ResolveDispatchDialog, resolveCopyFor } from "./resolve-dispatch-dialog";
@@ -58,6 +57,11 @@ const SOURCE_LABELS: Record<WorkflowRunDetail["trigger"]["source"], string> = {
   call: "Called by another workflow",
 };
 
+function runStatusLabel(status: string): string {
+  const label = statusLabel(status);
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
 function when(iso: string | null): string {
   return iso ? format(new Date(iso), "PPp") : "—";
 }
@@ -67,12 +71,85 @@ function took(start: string | null, end: string | null): string | null {
   return formatDistanceStrict(new Date(start), new Date(end));
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <dt className="text-[11px] text-faint uppercase tracking-wide">{label}</dt>
-      <dd className="text-[13px] text-foreground">{children}</dd>
+    <div className="min-w-0 border-border-soft px-6 py-2 not-last:border-r">
+      <dt className="text-[11px] text-faint">{label}</dt>
+      <dd className="truncate text-[13px] text-foreground">{children}</dd>
     </div>
+  );
+}
+
+function RunFacts({ run }: { run: WorkflowRunDetail }) {
+  const { trigger } = run;
+  const duration = took(run.startedAt, run.finishedAt);
+  return (
+    <dl
+      aria-label="Run facts"
+      className="flex shrink-0 flex-wrap border-border-soft border-b max-sm:[&>div]:basis-1/2"
+    >
+      <Fact label="Trigger">
+        {trigger.step && trigger.step !== "trigger.manual"
+          ? `${SOURCE_LABELS[trigger.source]} · ${stepLabel(trigger.step)}`
+          : SOURCE_LABELS[trigger.source]}
+      </Fact>
+      {run.startedAt ? (
+        <Fact label="Started">{when(run.startedAt)}</Fact>
+      ) : (
+        <Fact label="Due">{when(run.dueAt)}</Fact>
+      )}
+      {duration && <Fact label="Took">{duration}</Fact>}
+      {run.attempts > 1 && <Fact label="Attempt">{run.attempts}</Fact>}
+    </dl>
+  );
+}
+
+function Detail({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <>
+      <dt className="text-faint">{label}</dt>
+      <dd className="min-w-0 break-words text-foreground">{children}</dd>
+    </>
+  );
+}
+
+function person(who: WorkflowRunDetail["principal"]): string {
+  return who ? `${who.name} (${who.email})` : "A former member";
+}
+
+function RunMoreDetails({ run }: { run: WorkflowRunDetail }) {
+  const { trigger } = run;
+  const scheduled = trigger.source === "schedule" || trigger.source === "once";
+  return (
+    <section aria-label="More about this run" className="flex flex-col gap-2">
+      <h2 className="font-medium text-[13px] text-muted-foreground">More about this run</h2>
+      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-[12px]">
+        {scheduled && (
+          <Detail label="Scheduled for">{when(trigger.firedFor ?? trigger.scheduledFor)}</Detail>
+        )}
+        {trigger.missed > 0 && (
+          <Detail label="Missed runs">{trigger.missed} merged into this one</Detail>
+        )}
+        {trigger.source === "manual" && (
+          <Detail label="Started by">{person(trigger.requestedBy)}</Detail>
+        )}
+        <Detail label="Runs as">{person(run.principal)}</Detail>
+        <Detail label="Revision">
+          {run.revision} · saved by {run.revisionAuthor?.name ?? "a former member"},{" "}
+          {when(run.revisionCreatedAt)}
+          {run.currentRevision === null ? (
+            <span className="block text-brand-text">Workflow deleted since</span>
+          ) : (
+            run.currentRevision !== run.revision && (
+              <span className="block text-brand-text">Edited since</span>
+            )
+          )}
+        </Detail>
+        <Detail label="Run ID">
+          <span className="font-mono text-[11px]">{run.id}</span>
+        </Detail>
+      </dl>
+    </section>
   );
 }
 
@@ -200,6 +277,7 @@ function NodeCard({
   onResolved,
   selected = false,
   onClose,
+  onPick,
 }: {
   node: RunNode;
   graph: WorkflowRunDetail["graph"];
@@ -207,6 +285,7 @@ function NodeCard({
   onResolved: () => Promise<void>;
   selected?: boolean;
   onClose?: () => void;
+  onPick?: () => void;
 }) {
   const { status, label } = stepState(node);
   const graphNode = graph.nodes.find((entry) => entry.id === node.nodeId);
@@ -222,9 +301,19 @@ function NodeCard({
     >
       <div className="flex items-center gap-2">
         <StatusIcon status={status} />
-        <span className="min-w-0 truncate text-[13px] font-medium text-foreground">
-          {graphNode ? nodeTitle(graphNode) : stepLabel(node.step)}
-        </span>
+        {onPick ? (
+          <button
+            type="button"
+            onClick={onPick}
+            className="min-w-0 truncate text-left text-[13px] font-medium text-foreground hover:underline"
+          >
+            {graphNode ? nodeTitle(graphNode) : stepLabel(node.step)}
+          </button>
+        ) : (
+          <span className="min-w-0 truncate text-[13px] font-medium text-foreground">
+            {graphNode ? nodeTitle(graphNode) : stepLabel(node.step)}
+          </span>
+        )}
         {graphNode?.title && (
           <span className="shrink-0 text-[12px] text-muted-foreground">{stepLabel(node.step)}</span>
         )}
@@ -250,7 +339,7 @@ function NodeCard({
           ))}
         </div>
       )}
-      {node.items.length > 0 && (
+      {!onPick && node.items.length > 0 && (
         <ul className="mt-2 divide-y divide-border-soft border-border-soft border-t">
           {node.items.map((item) => (
             <ItemRow
@@ -383,7 +472,13 @@ function RetryRunButton({ run, onDone }: { run: WorkflowRunDetail; onDone: () =>
   );
 }
 
-export function WorkflowRunDetailView({ runId }: { runId: string }) {
+export function WorkflowRunDetailView({
+  runId,
+  fromWorkflow,
+}: {
+  runId: string;
+  fromWorkflow: boolean;
+}) {
   const scope = useWorkspaceScope();
   const query = useQuery(rpc.workflows.getRun.queryOptions({ input: { ...scope, runId } }));
   const run: WorkflowRunDetail | null = query.data?.run ?? null;
@@ -412,36 +507,53 @@ export function WorkflowRunDetailView({ runId }: { runId: string }) {
   const selected = run?.nodes.find((node) => node.nodeId === selectedId);
 
   const trigger = run?.trigger;
-  const edited = run && run.currentRevision !== null && run.currentRevision !== run.revision;
 
   return (
     <div className="flex h-full flex-col">
       <header className="flex shrink-0 items-center gap-3 border-border-soft border-b px-6 py-4">
         <Button
-          aria-label="Back to workflow activity"
+          aria-label="Back to runs"
           nativeButton={false}
-          render={<Link href={workflowPath(scope.workspaceSlug, "history")} />}
+          render={
+            <Link
+              href={workflowRunsPath(
+                scope.workspaceSlug,
+                fromWorkflow && run ? run.workflowId : undefined,
+              )}
+            />
+          }
           size="icon-sm"
           variant="ghost"
         >
           <ArrowLeft className="size-4" />
         </Button>
-        {run && <StatusIcon status={stopping ? "running" : run.status} className="size-5" />}
-        <div className="min-w-0 flex-1">
-          <h1 className="truncate font-medium text-foreground text-lg">
-            {run?.workflowName ?? "Workflow run"}
-          </h1>
-          {run && (
-            <p className="text-faint text-xs">
-              {stopping ? "stopping" : run.status} · run {run.id}
-            </p>
-          )}
-        </div>
+        <h1 className="min-w-0 truncate font-medium text-foreground text-lg">
+          {run?.workflowName ?? "Workflow run"}
+        </h1>
+        {run && (
+          <Badge variant="outline" data-run-status="" className="shrink-0 gap-1">
+            <StatusIcon status={stopping ? "running" : run.status} className="size-3" />
+            {stopping ? "Stopping" : runStatusLabel(run.status)}
+          </Badge>
+        )}
+        <span className="flex-1" />
         {run && cancellable && <CancelRunButton run={run} onDone={load} />}
-        {run && RESUMABLE.has(run.status) && !run.upgraded && (
+        {run && !run.error && RESUMABLE.has(run.status) && !run.upgraded && (
           <RetryRunButton run={run} onDone={load} />
         )}
       </header>
+      {run && <RunFacts run={run} />}
+      {run?.error && (
+        <div
+          role="alert"
+          className="flex shrink-0 items-center gap-3 border-destructive/25 border-b bg-destructive/8 px-6 py-2"
+        >
+          <p className="min-w-0 flex-1 break-words font-mono text-[12px] text-destructive-text">
+            {run.error}
+          </p>
+          {RESUMABLE.has(run.status) && !run.upgraded && <RetryRunButton run={run} onDone={load} />}
+        </div>
+      )}
       {stopping && (
         <p className="shrink-0 border-border-soft border-b bg-panel px-6 py-2 text-[12px] text-muted-foreground">
           Cancelled while running — it stops before its next step. A step that was already in
@@ -455,122 +567,55 @@ export function WorkflowRunDetailView({ runId }: { runId: string }) {
         </p>
       )}
 
-      <ScrollArea className="min-h-0 flex-1">
-        <div className="mx-auto flex max-w-3xl flex-col gap-6 px-6 py-6">
-          {loading ? (
-            <div className="flex justify-center py-10">
-              <Loader2 className="size-5 animate-spin opacity-50" />
-            </div>
-          ) : missing || !run || !trigger ? (
-            <p className="py-10 text-center text-[13px] text-faint">
-              This run does not exist or is not visible to you.
+      {loading ? (
+        <div className="flex justify-center py-10">
+          <Loader2 className="size-5 animate-spin opacity-50" />
+        </div>
+      ) : missing || !run || !trigger ? (
+        <p className="py-10 text-center text-[13px] text-faint">
+          This run does not exist or is not visible to you.
+        </p>
+      ) : (
+        <div className="flex min-h-0 flex-1 max-lg:flex-col max-lg:overflow-y-auto">
+          <section aria-label="Graph" className="flex min-w-0 flex-1 flex-col gap-2 p-4 lg:min-h-0">
+            <p className="text-[11px] text-faint">
+              Revision {run.revision} as it ran · select a step for its detail
             </p>
-          ) : (
-            <>
-              <dl className="grid grid-cols-1 gap-4 rounded-xl border border-border bg-surface px-4 py-4 sm:grid-cols-2">
-                <Field label="Trigger">
-                  {SOURCE_LABELS[trigger.source]}
-                  {trigger.step && trigger.step !== "trigger.manual" && (
-                    <span className="text-muted-foreground"> · {stepLabel(trigger.step)}</span>
-                  )}
-                  <p className="text-[12px] text-faint">
-                    {trigger.firedFor
-                      ? `for ${when(trigger.firedFor)}`
-                      : `queued for ${when(trigger.scheduledFor)}`}
-                    {trigger.missed > 0 && ` · ${trigger.missed} missed instant(s) coalesced`}
-                  </p>
-                  {trigger.source === "manual" && (
-                    <p className="text-[12px] text-faint">
-                      requested by{" "}
-                      {trigger.requestedBy
-                        ? `${trigger.requestedBy.name} (${trigger.requestedBy.email})`
-                        : "a former member"}
-                    </p>
-                  )}
-                </Field>
-                <Field label="Revision">
-                  Revision {run.revision}
-                  <p className="text-[12px] text-faint">
-                    saved {when(run.revisionCreatedAt)}
-                    {run.revisionAuthor && ` by ${run.revisionAuthor.name}`}
-                    {run.currentRevision === null
-                      ? " · workflow deleted since"
-                      : edited
-                        ? ` · edited since (now revision ${run.currentRevision})`
-                        : " · current"}
-                  </p>
-                </Field>
-                <Field label="Runs as">
-                  {run.principal ? (
-                    <>
-                      {run.principal.name}
-                      <p className="font-mono text-[12px] text-faint">{run.principal.email}</p>
-                    </>
-                  ) : (
-                    "A former member"
-                  )}
-                </Field>
-                <Field label="Timing">
-                  {run.startedAt ? when(run.startedAt) : "Not started"}
-                  <p className="text-[12px] text-faint">
-                    {run.finishedAt
-                      ? `finished ${when(run.finishedAt)} · took ${took(run.startedAt, run.finishedAt) ?? "—"}`
-                      : `due ${when(run.dueAt)}`}
-                    {run.attempts > 1 && ` · attempt ${run.attempts}`}
-                  </p>
-                </Field>
-                {run.error && (
-                  <Field label="Error">
-                    <span className="break-words font-mono text-[12px] text-destructive-text">
-                      {run.error}
-                    </span>
-                  </Field>
-                )}
-              </dl>
-
-              {run.waits.length > 0 && (
-                <section className="flex flex-col gap-2">
-                  <h2 className="font-medium text-[13px] text-muted-foreground">Waits</h2>
-                  <div className="rounded-xl border border-border bg-surface px-4 py-1">
-                    <RunWaits run={run} />
-                  </div>
-                </section>
-              )}
-
-              {(trigger.event !== undefined || run.output !== undefined) && (
-                <section className="flex flex-col gap-2">
-                  <JsonBlock label="Trigger event" value={trigger.event} />
-                  <JsonBlock label="Run output" value={run.output} />
-                </section>
-              )}
-
+            <div className="min-h-0 flex-1">
+              <WorkflowRunGraph
+                run={run}
+                directory={directory}
+                selectedId={selectedId}
+                onSelect={setSelectedId}
+                fill
+              />
+            </div>
+          </section>
+          <aside
+            aria-label="Run details"
+            className="flex flex-col gap-4 border-border-soft p-4 max-lg:border-t lg:w-95 lg:shrink-0 lg:overflow-y-auto lg:border-l"
+          >
+            <RunMoreDetails run={run} />
+            {run.waits.length > 0 && (
               <section className="flex flex-col gap-2">
-                <div className="flex items-baseline justify-between gap-3">
-                  <h2 className="font-medium text-[13px] text-muted-foreground">Graph</h2>
-                  <p className="text-[11px] text-faint">
-                    Revision {run.revision} as it ran · select a step for its detail
-                  </p>
+                <h2 className="font-medium text-[13px] text-muted-foreground">Waits</h2>
+                <div className="rounded-xl border border-border bg-surface px-4 py-1">
+                  <RunWaits run={run} />
                 </div>
-                <WorkflowRunGraph
-                  run={run}
-                  directory={directory}
-                  selectedId={selectedId}
-                  onSelect={setSelectedId}
-                />
-                {selected && (
-                  <section aria-label="Selected step" aria-live="polite">
-                    <NodeCard
-                      node={selected}
-                      graph={run.graph}
-                      runId={run.id}
-                      onResolved={load}
-                      selected
-                      onClose={() => setSelectedId(null)}
-                    />
-                  </section>
-                )}
               </section>
-
+            )}
+            {selected ? (
+              <section aria-label="Selected step" aria-live="polite">
+                <NodeCard
+                  node={selected}
+                  graph={run.graph}
+                  runId={run.id}
+                  onResolved={load}
+                  selected
+                  onClose={() => setSelectedId(null)}
+                />
+              </section>
+            ) : (
               <section className="flex flex-col gap-2">
                 <h2 className="font-medium text-[13px] text-muted-foreground">Steps</h2>
                 <ol className="flex flex-col gap-2">
@@ -581,14 +626,21 @@ export function WorkflowRunDetailView({ runId }: { runId: string }) {
                       graph={run.graph}
                       runId={run.id}
                       onResolved={load}
+                      onPick={() => setSelectedId(node.nodeId)}
                     />
                   ))}
                 </ol>
               </section>
-            </>
-          )}
+            )}
+            {(trigger.event !== undefined || run.output !== undefined) && (
+              <section className="flex flex-col gap-2">
+                <JsonBlock label="Trigger event" value={trigger.event} />
+                <JsonBlock label="Run output" value={run.output} />
+              </section>
+            )}
+          </aside>
         </div>
-      </ScrollArea>
+      )}
     </div>
   );
 }

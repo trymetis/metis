@@ -3,9 +3,11 @@ title: Cancel and retry runs
 description: Stop a run that is waiting or running, run the failed or blocked steps of a run again, and resolve steps whose outcome is unconfirmed.
 ---
 
-You can stop a run before it finishes, retry a run that failed or was blocked, and resolve a step whose outcome is unconfirmed. All three start from the run's details page. Anyone who can see a run can cancel it, retry it and resolve its steps.
+You can stop a run before it finishes, retry a run that failed or was blocked, and resolve a step whose outcome is unconfirmed. All three can be done from the run's details page. Anyone who can see a run can cancel it, retry it and resolve its steps.
 
-To open a run, click **Workflows** in the left rail, click **Activity** at the bottom of the list, then click the run. You can also open a workflow, click a run in the **Runs** tab under the canvas, and click **Details**.
+You can also cancel or retry a run from [workspace search](/guide/search/results-and-actions#workflows-and-workflow-runs): pick **Cancel** or **Resume** on a result in the **Workflow runs** group. They show on the same runs as **Cancel run** and **Retry failed steps** below, and give the same messages and the same refusals. They do not open a dialog to confirm, and the search window stays open.
+
+To open a run, click **Workflows** in the left rail, click **Runs** at the top right, then click the run. You can also open a workflow, click a run in the **Runs** tab under the canvas, and click the **Details** icon (an arrow pointing out of a box) at the right end of the line above the list.
 
 ## Cancel a run
 
@@ -27,9 +29,9 @@ To stop a workflow from running again, turn it off. See [Manage workflows](/guid
 
 ## Retry a run
 
-**Retry failed steps** appears at the top right of a run whose status is **failed**, **partial** or **blocked**.
+**Retry failed steps** appears on a run whose status is **failed**, **partial** or **blocked**. When the run has an error, a red band under the header shows it, and **Retry failed steps** sits at the right end of that band. Otherwise, it is at the top right.
 
-1. Fix the cause first. The run's **Error** and the step rows say what went wrong, for example "AI is turned off for this mailbox".
+1. Fix the cause first. The red error band and the step rows say what went wrong, for example "AI is turned off for this mailbox".
 2. Open the run and click **Retry failed steps**.
 3. The dialog **Retry this run?** opens. Click **Retry failed steps** to confirm, or **Not now** to go back.
 
@@ -72,8 +74,8 @@ Anyone who can see the run can resolve its steps. The AI assistant cannot do it 
 
 ### Open the step
 
-1. Click **Workflows** in the left rail, click **Activity** at the bottom of the list, then click the run.
-2. Under **Steps**, find the step that shows "needs review". The row of the item that needs review has a **Resolve** button.
+1. Click **Workflows** in the left rail, click **Runs** at the top right, then click the run.
+2. Under **Steps**, on the right of the graph, find the step that shows "needs review". Click the step in the graph, or click its name under **Steps**. Its card shows one row for each item, and the row of the item that needs review has a **Resolve** button.
 3. Click **Resolve**. A dialog opens. Its title says what kind of step it is:
 
 | Step                                                                                            | Dialog title                      |

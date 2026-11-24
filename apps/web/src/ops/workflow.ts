@@ -293,15 +293,13 @@ export async function toggleWorkflow(args: {
   workflowId: string;
   enabled: boolean;
 }): Promise<Output<typeof toggleWorkflowOutput>> {
-  const found = await toggleUserWorkflow(
+  const toggled = await toggleUserWorkflow(
     await workspaceScope(args.ctx),
     args.workflowId,
     args.enabled,
     auditedBy(args.ctx),
   );
-  if (!found) {
-    return { error: `No workflow "${args.workflowId}" in this workspace` };
-  }
+  if (toggled !== true) return { error: toggled };
   return { success: true, workflowId: args.workflowId, enabled: args.enabled };
 }
 

@@ -28,7 +28,12 @@ async function retryFailedSteps(page: Page) {
 
 async function openTriage(page: Page, account: Account) {
   await page.goto(workspacePath(account, "/workflow"));
-  await page.getByRole("complementary").getByRole("button", { name: TRIAGE, exact: true }).click();
+  await page
+    .getByRole("list", { name: "Workflows" })
+    .getByRole("link")
+    .filter({ hasText: TRIAGE })
+    .first()
+    .click();
   await expect(page.getByRole("textbox", { name: "Workflow name" })).toHaveValue(TRIAGE);
 }
 
@@ -53,7 +58,7 @@ export default function decisionSpecs() {
       for (const item of nodeOf(run, "act").items) {
         expect(todo.has(item.itemKey), item.itemKey).toBe(item.decision?.handle === "yes");
       }
-      await page.goto(workspacePath(account, `/workflow/history/${run.id}`));
+      await page.goto(workspacePath(account, `/workflow/runs/${run.id}`));
       await expect(page.getByText("Path taken")).toBeVisible();
     } finally {
       await restoreLabels(rpc, account, before);
@@ -69,7 +74,7 @@ export default function decisionSpecs() {
     const inspector = page.getByRole("region", { name: "Inspector" });
     await canvas.getByRole("group", { name: "Ask", exact: true }).click();
     await inspector.getByRole("button", { name: "Try on recent mail", exact: true }).click();
-    const sheet = page.getByRole("dialog", { name: "Try on recent mail" });
+    const sheet = page.getByRole("region", { name: "Try on recent mail" });
     await sheet.getByRole("button", { name: "Ask", exact: true }).click();
     const kickoff = sheet
       .locator("div:has(> span)")
@@ -177,7 +182,7 @@ export default function decisionSpecs() {
       await setMailboxAi(rpc, account, true);
     }
     try {
-      await page.goto(workspacePath(account, `/workflow/history/${runId}`));
+      await page.goto(workspacePath(account, `/workflow/runs/${runId}`));
       await retryFailedSteps(page);
       const done = await waitForRun(rpc, account, runId);
       expect(done.status).toBe("completed");
@@ -206,10 +211,10 @@ export default function decisionSpecs() {
         .getByRole("group")
         .filter({ hasText: "Sensitive actions ask for approval" })
         .getByRole("textbox");
-      await ask(page, composer, "workspace-chat", APPROVAL_CHAT.turn);
+      await ask(page, composer, "workspace", APPROVAL_CHAT.turn);
       expect(await failure(page)).toBeNull();
 
-      const continued = chatResponse(page, "workspace-chat");
+      const continued = chatResponse(page, "workspace");
       await page
         .getByRole("region", { name: "Approval needed" })
         .getByRole("button", { name: "Approve", exact: true })

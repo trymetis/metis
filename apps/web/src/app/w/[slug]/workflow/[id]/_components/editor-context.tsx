@@ -55,6 +55,18 @@ export const DiagnosticsContext = createContext<Diagnostics>({
 });
 export const OverlayContext = createContext<OverlayState | null>(null);
 
+export interface DockActions {
+  openPreview: (nodeId: string) => void;
+}
+
+export const DockActionsContext = createContext<DockActions | null>(null);
+
+export function useDockActions(): DockActions {
+  const actions = useContext(DockActionsContext);
+  if (!actions) throw new Error("useDockActions must be used inside the workflow editor");
+  return actions;
+}
+
 export function useEditorEnv(): EditorEnv {
   const env = useContext(EditorEnvContext);
   if (!env) throw new Error("useEditorEnv must be used inside the workflow editor");
@@ -69,19 +81,6 @@ export function useOverlay(): OverlayState {
   const overlay = useContext(OverlayContext);
   if (!overlay) throw new Error("useOverlay must be used inside the workflow editor");
   return overlay;
-}
-
-export function directoryResources(
-  directory: WorkflowDirectory,
-  timezone?: string,
-): GraphResources {
-  return {
-    mailbox: directory.mailboxes.map((m) => ({ id: m.id, label: m.email })),
-    calendar: directory.calendars.map((c) => ({ id: c.id, label: c.email })),
-    drive: directory.drives.map((d) => ({ id: d.id, label: d.name })),
-    addressbook: directory.addressBooks.map((a) => ({ id: a.id, label: a.name })),
-    timezone,
-  };
 }
 
 function resourceIds(

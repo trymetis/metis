@@ -5,7 +5,7 @@ description: See who changed roles, removed members, sent, accepted, declined or
 
 The **Activity** page of a workspace lists security-relevant changes made in it: who changed what, and when. Only the workspace's owner and admins can see it.
 
-This page is part of the workspace's settings. It is not the **Activity** page of **Workflows**, which shows workflow runs.
+This page is part of the workspace's settings.
 
 ## Open the Activity page
 

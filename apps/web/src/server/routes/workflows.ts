@@ -12,10 +12,11 @@ import {
   getWorkspaceRun,
   getWorkspaceWorkflow,
   inspectWorkspaceDispatch,
+  latestWorkspaceRuns,
   listPendingApprovals,
   listWorkflowRevisions,
-  listWorkspaceRuns,
   listWorkspaceWorkflows,
+  pageWorkspaceRuns,
   requestWorkflowRun,
   resolveWorkspaceDispatch,
   resumeWorkspaceRun,
@@ -99,6 +100,10 @@ export const workflowsRouter = {
       ]);
       return {
         workflows,
+        lastRuns: await latestWorkspaceRuns(
+          scope,
+          workflows.map((w) => w.id),
+        ),
         directory: {
           mailboxes: scope.directory.map((m) => ({
             id: m.mailboxId,
@@ -169,15 +174,13 @@ export const workflowsRouter = {
     .output(toggleWorkflowOutputSchema)
     .handler(async ({ input, context }) => {
       const scope = await workflowScopeFor(context.appUser);
-      if (
-        !(await toggleUserWorkflow(
-          scope,
-          input.id,
-          input.enabled,
-          appActor(context.appUser, context.headers),
-        ))
-      )
-        throw notFound();
+      const toggled = await toggleUserWorkflow(
+        scope,
+        input.id,
+        input.enabled,
+        appActor(context.appUser, context.headers),
+      );
+      if (toggled !== true) throw new ORPCError("BAD_REQUEST", { message: toggled });
       return { success: true as const };
     }),
 
@@ -207,9 +210,13 @@ export const workflowsRouter = {
     .output(listWorkflowRunsOutputSchema)
     .handler(async ({ input, context }) => {
       const scope = await workflowScopeFor(context.appUser);
-      return {
-        runs: await listWorkspaceRuns({ scope, workflowId: input.workflowId, limit: input.limit }),
-      };
+      return pageWorkspaceRuns({
+        scope,
+        workflowIds: input.workflowIds ?? (input.workflowId ? [input.workflowId] : undefined),
+        statuses: input.statuses,
+        cursor: input.cursor,
+        limit: input.limit,
+      });
     }),
 
   getRun: workspaceSession(getWorkflowRunInputSchema)

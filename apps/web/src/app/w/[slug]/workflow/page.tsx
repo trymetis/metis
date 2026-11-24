@@ -2,9 +2,9 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getAppUser, isWorkspaceUser } from "@/auth/session";
-import { decisionEnabled } from "@/config/runtime";
+import { workflowEditPath } from "@/workspace/path";
 
-import { WorkflowBuilder } from "./_components/workflow-builder";
+import { WorkflowList } from "./_components/workflow-list";
 
 export default async function WorkflowPage({
   params,
@@ -14,12 +14,7 @@ export default async function WorkflowPage({
   const { id } = await searchParams;
   const appUser = await getAppUser(await headers(), slug);
   if (!isWorkspaceUser(appUser)) redirect("/");
+  if (typeof id === "string") redirect(workflowEditPath(slug, id));
 
-  return (
-    <WorkflowBuilder
-      key={typeof id === "string" ? id : "workflows"}
-      allowDecisionSteps={decisionEnabled("workflowNode")}
-      initialWorkflowId={typeof id === "string" ? id : null}
-    />
-  );
+  return <WorkflowList />;
 }

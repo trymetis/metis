@@ -14,6 +14,7 @@ import { Loader2, Trash2 } from "lucide-react";
 
 import { useMemberAdmin } from "@/components/members/member-admin";
 import { PageHeader } from "@/components/page-header";
+import { PersonAvatar } from "@/components/person-avatar";
 import { useWorkspaceAccess } from "@/components/workspace-access";
 import { useWorkspaceSlug } from "@/hooks/use-workspace-path";
 import { useWorkspaces } from "@/hooks/use-workspaces";
@@ -88,9 +89,7 @@ export default function WorkspaceMembersPage() {
                 key={m.memberId}
                 className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface px-4 py-3"
               >
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-linear-to-br from-active to-surface text-xs font-medium text-muted-foreground">
-                  {(m.name || m.email).slice(0, 1).toUpperCase()}
-                </div>
+                <PersonAvatar name={m.name} email={m.email} className="size-8 text-xs" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground">
                     {m.name || m.email}

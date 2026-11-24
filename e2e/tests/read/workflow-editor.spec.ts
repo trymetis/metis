@@ -7,10 +7,13 @@ import { workspacePath } from "../harness";
 const REBRAND = "Label rebrand mail";
 const NEWSLETTER = "Morning newsletter sweep";
 
-function sidebar(page: Page) {
-  return page.getByRole("complementary").filter({
-    has: page.getByRole("button", { name: "New workflow", exact: true }),
-  });
+const TEMPLATES = {
+  "Label mail from a sender": "labelSender",
+  "Two mailboxes, one shared action": "append",
+} as const;
+
+function workflowList(page: Page) {
+  return page.getByRole("list", { name: "Workflows" });
 }
 
 function canvas(page: Page) {
@@ -25,31 +28,27 @@ function inspector(page: Page) {
   return page.getByRole("region", { name: "Inspector" });
 }
 
-async function fromTemplate(page: Page, template: string) {
-  await sidebar(page).getByRole("button", { name: "New workflow", exact: true }).click();
-  await page
-    .getByRole("menu", { name: "New workflow" })
-    .getByRole("menuitem", { name: template, exact: true })
-    .click();
-  await expect(page.getByRole("button", { name: "Create workflow", exact: true })).toBeVisible();
+async function openSeeded(page: Page, name: string) {
+  await workflowList(page).getByRole("link").filter({ hasText: name }).first().click();
+  await expect(page.getByRole("textbox", { name: "Workflow name" })).toHaveValue(name);
+  await expect(canvas(page)).toBeVisible();
 }
 
-async function openSeeded(page: Page, name: string) {
-  await sidebar(page)
-    .getByRole("button")
-    .filter({ has: page.getByText(name, { exact: true }) })
-    .click();
-  await expect(page.getByRole("textbox", { name: "Workflow name" })).toHaveValue(name);
+async function fromTemplate(page: Page, template: keyof typeof TEMPLATES) {
+  await openSeeded(page, REBRAND);
+  await page.goto(`${page.url()}?template=${TEMPLATES[template]}`);
+  await expect(page.getByText("Unsaved changes", { exact: true })).toBeVisible();
 }
 
 test.beforeEach(async ({ page, account }) => {
   await page.goto(workspacePath(account, "/workflow"));
-  await expect(canvas(page)).toBeVisible();
+  await expect(workflowList(page)).toBeVisible();
 });
 
 test("the palette starts closed and floats over the canvas from its corner icon", async ({
   page,
 }) => {
+  await openSeeded(page, REBRAND);
   await expect(page.getByRole("listbox")).toBeHidden();
   await expect(
     page.getByRole("banner").getByRole("button", { name: "Show steps", exact: true }),
@@ -81,6 +80,7 @@ test("the palette starts closed and floats over the canvas from its corner icon"
 });
 
 test("the palette groups steps by category and filters them by search", async ({ page }) => {
+  await openSeeded(page, REBRAND);
   await page.getByRole("button", { name: "Show steps", exact: true }).click();
   const palette = page.getByRole("listbox");
   for (const heading of [
@@ -334,20 +334,24 @@ test("leaving a workflow with unsaved changes asks first", async ({ page }) => {
   await name.fill(`${REBRAND} (edited)`);
   await expect(page.getByText("Unsaved changes", { exact: true })).toBeVisible();
 
-  const leave = () =>
-    sidebar(page)
-      .getByRole("button")
-      .filter({ has: page.getByText(NEWSLETTER, { exact: true }) })
-      .click();
+  const leave = () => page.getByRole("button", { name: "Back to workflows", exact: true }).click();
   const confirm = page.getByRole("alertdialog", { name: "Discard unsaved changes?" });
 
   await leave();
   await confirm.getByRole("button", { name: "Keep editing", exact: true }).click();
   await expect(name).toHaveValue(`${REBRAND} (edited)`);
 
+  await page
+    .getByRole("navigation", { name: "App navigation" })
+    .getByRole("link", { name: "Mail" })
+    .click();
+  await confirm.getByRole("button", { name: "Keep editing", exact: true }).click();
+  await expect(name).toHaveValue(`${REBRAND} (edited)`);
+
   await leave();
   await confirm.getByRole("button", { name: "Discard", exact: true }).click();
-  await expect(name).toHaveValue(NEWSLETTER);
+  await expect(workflowList(page)).toBeVisible();
+  await openSeeded(page, NEWSLETTER);
   await expect(page.getByText("Saved", { exact: true })).toBeVisible();
 });
 
@@ -398,6 +402,7 @@ test("the runs dock lists the seeded run and draws it on the canvas", async ({ p
 });
 
 test("the keyboard shortcuts dialog lists the workflow keys", async ({ page }) => {
+  await openSeeded(page, REBRAND);
   await page.getByRole("button", { name: "More workflow actions", exact: true }).click();
   await page.getByRole("menuitem", { name: "Keyboard shortcuts" }).click();
   const help = page.getByRole("dialog");

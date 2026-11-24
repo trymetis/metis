@@ -1,5 +1,10 @@
-import { WorkflowHistoryView } from "./_components/workflow-history";
+import { redirect } from "next/navigation";
 
-export default function WorkflowHistoryPage() {
-  return <WorkflowHistoryView />;
+import { workflowRunsPath } from "@/workspace/path";
+
+export default async function WorkflowHistoryPage({
+  params,
+}: PageProps<"/w/[slug]/workflow/history">) {
+  const { slug } = await params;
+  redirect(workflowRunsPath(slug));
 }

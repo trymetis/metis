@@ -3,22 +3,17 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { expect, type Locator, type Page, type Response } from "@playwright/test";
 import { z } from "zod";
 
-export type ChatEndpoint =
-  | "chat"
-  | "calendar-chat"
-  | "drive-chat"
-  | "contacts-chat"
-  | "workspace-chat";
+export type ChatEndpoint = "mail" | "calendar" | "drive" | "contacts" | "workspace";
 
 const CHAT_LIMIT = 15;
 const CHAT_WINDOW_MS = 60_000;
 const CHAT_MARGIN_MS = 1_000;
 const RATE_SCOPE: Record<ChatEndpoint, string> = {
-  chat: "ai-chat",
-  "calendar-chat": "ai-chat",
-  "drive-chat": "ai-chat",
-  "contacts-chat": "ai-chat",
-  "workspace-chat": "ai-workspace-chat",
+  mail: "ai-chat",
+  calendar: "ai-chat",
+  drive: "ai-chat",
+  contacts: "ai-chat",
+  workspace: "ai-workspace-chat",
 };
 const PACING = new URL("../test-results/.chat-pacing.json", import.meta.url);
 
@@ -54,7 +49,8 @@ export function problem(page: Page): Locator {
 export function chatResponse(page: Page, endpoint: ChatEndpoint): Promise<Response> {
   return page.waitForResponse(
     (res) =>
-      res.request().method() === "POST" && new URL(res.url()).pathname === `/api/ai/${endpoint}`,
+      res.request().method() === "POST" &&
+      new URL(res.url()).pathname === `/api/ai/chat/${endpoint}`,
     { timeout: 120_000 },
   );
 }
@@ -99,4 +95,14 @@ export async function converse(
     const reported = await failure(page);
     if (reported) throw new Error(`turn "${turn}": ${reported}`);
   }
+}
+
+export async function dragOnto(page: Page, from: Locator, to: Locator): Promise<void> {
+  const start = await from.boundingBox();
+  const end = await to.boundingBox();
+  if (!start || !end) throw new Error("drag source or target is not visible");
+  await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, { steps: 12 });
+  await page.mouse.up();
 }

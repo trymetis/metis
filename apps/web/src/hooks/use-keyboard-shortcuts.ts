@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 
+import { useAgentAvailable } from "@/components/agent/use-agent-available";
 import { orpc } from "@/lib/orpc";
 import { useComposeStore } from "@/store/compose-store";
 import { useMailStore } from "@/store/mail-store";
@@ -28,6 +29,7 @@ export function useKeyboardShortcuts() {
   const { selectedEmail, setSelectedEmail, setAgentOpen, agentOpen, updateEmail, removeEmail } =
     useMailStore();
   const openCompose = useComposeStore((s) => s.open);
+  const agentAvailable = useAgentAvailable();
   const { reply } = useReplyActions(selectedEmail);
 
   const bindings = useMemo<ChordBindings>(() => {
@@ -105,7 +107,7 @@ export function useKeyboardShortcuts() {
             ?.focus();
         },
       },
-      a: { label: "Agent", run: () => setAgentOpen(!agentOpen) },
+      ...(agentAvailable ? { a: { label: "Agent", run: () => setAgentOpen(!agentOpen) } } : {}),
     };
     return Object.fromEntries(
       Object.entries(all).map(([key, binding]) => [
@@ -124,6 +126,7 @@ export function useKeyboardShortcuts() {
     scope,
     selectedEmail,
     agentOpen,
+    agentAvailable,
     openCompose,
     reply,
     setAgentOpen,

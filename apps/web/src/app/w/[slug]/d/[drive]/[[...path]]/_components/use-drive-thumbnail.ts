@@ -2,12 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { driveDownloadUrl } from "@/components/drive-preview/use-drive-preview";
 import { previewKind } from "@/drive/preview";
 import { openPreviewCacheWriter, previewCacheKey, readCachedPreview } from "@/drive/preview-cache";
 import { useWorkspaceSlug } from "@/hooks/use-workspace-path";
 import type { DriveEntryRow } from "@/server/schema";
-
-import { driveDownloadUrl } from "../drive-preview/use-drive-preview";
 
 const MAX_SOURCE_BYTES = 10 * 1024 * 1024;
 const THUMB_PX = 256;

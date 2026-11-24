@@ -5,7 +5,7 @@ import { type Account, rpc } from "./app.ts";
 
 export const stepSchema = z.union([
   z.strictObject({ goto: z.string() }),
-  z.strictObject({ follow: z.string() }),
+  z.strictObject({ follow: z.string(), query: z.string().optional() }),
   z.strictObject({ click: z.string(), nth: z.number().optional() }),
   z.strictObject({ dblclick: z.string() }),
   z.strictObject({ rightClick: z.string() }),
@@ -72,7 +72,9 @@ export async function runStep(page: Page, step: Step, a: Account | undefined) {
   else if ("follow" in step) {
     const href = await page.locator(step.follow).first().getAttribute("href");
     if (!href) throw new Error(`${step.follow} has no href`);
-    await page.goto(new URL(href, page.url()).href);
+    const url = new URL(href, page.url());
+    if (step.query) url.search = step.query;
+    await page.goto(url.href);
   } else if ("click" in step)
     await page
       .locator(step.click)

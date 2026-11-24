@@ -10,7 +10,7 @@ An **If** step needs a rule you can write as a condition. When the rule is harde
 
 ## Before you start
 
-- **Your server has to offer decision steps.** If **Ask** and **Branch** are not under **AI** in the step palette or in the **Add step** window, your administrator has not turned them on. To open the palette, click the **Show steps** icon in the top-left corner of the canvas. A workflow that still has them shows "Ask and Branch steps are turned off on this instance".
+- **Your server has to offer decision steps.** If **Ask** and **Branch** are not under **AI** in the step palette, and the **Add step** window does not list them when you search, your administrator has not turned them on. To open the palette, click the **Show steps** icon in the top-left corner of the canvas. A workflow that still has them shows "Ask and Branch steps are turned off on this instance".
 - **AI has to be on for everything the step reads.** AI must be allowed in the workspace and turned on for every mailbox, calendar, drive and address book that the Ask step or the steps before it read. If it is not, the Ask step shows "Turn AI on for every mailbox, calendar, drive and address book this step reads", and the workflow cannot be saved. See [Workspaces](/guide/workspaces) for the AI switches.
 - **Decision steps cannot run before a message is sent.** You cannot use them after **Before mail is sent**. If you try, the step shows "Ask cannot run before a message is sent" (or "Branch cannot run before a message is sent").
 
@@ -107,23 +107,37 @@ Each question needs its own **Branch** step to act on the answer. An Ask output 
 
 Before you save, you can see how the model answers your questions on real mail. Nothing in the mailbox changes.
 
-1. Click the Ask step, then click **Try on recent mail** at the bottom of the Inspector. The button is greyed out until the step has a question.
-2. A panel opens on the left side of the page. Pick a mailbox and click **Ask**. Only mailboxes with AI turned on are listed. If there are none, the panel says "No mailbox in this workspace has AI turned on."
-3. The panel lists up to 10 of the newest messages in that mailbox's inbox. Under each subject and sender, it shows each question's answer and how sure the model was, for example "Q1: Yes 92%", and, for each connected Branch step, the path the message would take. "Refused" means the model declined to answer.
-4. Click **Close** (the **X**) to close the panel.
+1. Click the Ask step, then click **Try on recent mail** under the questions in the Inspector. The button is greyed out until the step has a question.
+2. The dock under the canvas opens on the **Preview** tab, next to **Runs** and **Test run**. The tab says "Asks this step's questions about the newest messages in a mailbox. Nothing is changed. Move a Branch step's thresholds and the routes below update without asking again."
+3. The first mailbox with AI turned on is already picked. Pick another mailbox from the list next to **Ask** if you like, then click **Ask**. Only mailboxes with AI turned on are listed. If there are none, the tab says "No mailbox in this workspace has AI turned on."
+4. The tab lists up to 10 of the newest messages in that mailbox's inbox. Under each subject (or "(no subject)") and sender, it shows a line for each question. For a **Yes/No** question, it shows how likely the answer is Yes, for example "Q1: Yes 92%". A low number, such as "Yes 8%", means No. For **Pick one** and **Rate**, it shows the most likely answer and how sure the model was. For each connected Branch step, the line adds "→" and the path the message would take. "Refused" means the model declined to answer.
 
 <img
   src="/images/workflows/try-on-recent-mail.webp"
-  alt="The Try on recent mail panel on the left, listing recent messages with each answer and its path, beside the canvas and the Inspector"
+  alt="The Preview tab under the canvas, listing recent messages with each answer and its path"
   class="dark:hidden"
 />
 <img
   src="/images/workflows/try-on-recent-mail-dark.webp"
-  alt="The Try on recent mail panel on the left, listing recent messages with each answer and its path, beside the canvas and the Inspector"
+  alt="The Preview tab under the canvas, listing recent messages with each answer and its path"
   class="hidden dark:block"
 />
 
-The panel does not block the canvas or the Inspector. Move a Branch step's sliders while it is open, and the paths in the panel update without asking the model again. You can try this up to 10 times a minute. After that, the panel says "Too many requests. Please slow down."
+The **Preview** tab shows only after you click **Try on recent mail**, and it stays while you keep the editor open. It has no close button. To hide it, click the **Collapse** icon (a down arrow) at the right end of the dock, or click another tab.
+
+The tab does not block the canvas or the Inspector. Move a Branch step's sliders while it is open, and the paths in the tab update without asking the model again.
+
+If you click **Try on recent mail** on another Ask step, the tab switches to that step and clears the old results. If you remove the Ask step, the tab says "That Ask step was removed. Click Try on recent mail on another Ask step."
+
+When something goes wrong, the tab shows the reason in red, for example:
+
+- "AI is turned off for this mailbox"
+- "Add a question to this Ask step first"
+- "Ask and Branch steps are turned off on this instance"
+- "That mailbox is not in this workspace"
+- "That didn't go through. Try again.", when something else went wrong
+
+You can try this up to 10 times a minute. After that, the tab says "Too many requests. Please slow down."
 
 ## What happens when AI is not available
 

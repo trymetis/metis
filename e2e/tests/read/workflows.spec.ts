@@ -65,32 +65,39 @@ const NOT_RUN_BY_HAND = new Set([
 ]);
 const RUN_ONCE = SEEDED.filter((name) => !NOT_RUN_BY_HAND.has(name));
 
-function sidebarPanel(page: import("@playwright/test").Page) {
-  return page.getByRole("complementary").filter({
-    has: page.getByRole("button", { name: "New workflow", exact: true }),
-  });
+function workflowList(page: import("@playwright/test").Page) {
+  return page.getByRole("list", { name: "Workflows" });
 }
 
-function sidebar(page: import("@playwright/test").Page) {
-  return sidebarPanel(page).getByRole("list");
+function row(page: import("@playwright/test").Page, name: string) {
+  return workflowList(page)
+    .getByRole("listitem")
+    .filter({ has: page.getByText(name, { exact: true }) });
 }
 
 test("the seeded workflows are listed", async ({ page, account }) => {
   await page.goto(workspacePath(account, "/workflow"));
-  for (const name of SEEDED) {
-    await expect(
-      sidebar(page)
-        .getByRole("button")
-        .filter({ has: page.getByText(name, { exact: true }) }),
-    ).toBeVisible();
-  }
+  for (const name of SEEDED) await expect(row(page, name)).toBeVisible();
   await expect(
-    sidebar(page).getByRole("button", {
-      name: `${LATE_ARRIVAL_WORKFLOW} off`,
-      exact: true,
+    row(page, LATE_ARRIVAL_WORKFLOW).getByRole("switch", {
+      name: `Turn ${LATE_ARRIVAL_WORKFLOW} on`,
     }),
-  ).toBeVisible();
-  await expect(sidebar(page).getByRole("listitem")).toHaveCount(SEEDED.length);
+  ).not.toBeChecked();
+  await expect(workflowList(page).getByRole("listitem")).toHaveCount(SEEDED.length);
+});
+
+test("the workflows list searches by name and opens a workflow at its own address", async ({
+  page,
+  account,
+}) => {
+  await page.goto(workspacePath(account, "/workflow"));
+  await page.getByRole("textbox", { name: "Search workflows" }).fill("rebrand");
+  await expect(workflowList(page).getByRole("listitem")).toHaveCount(1);
+  await row(page, "Label rebrand mail").getByRole("link").first().click();
+  await expect(page).toHaveURL(/\/workflow\/[^/?]+$/);
+  await expect(page.getByRole("textbox", { name: "Workflow name" })).toHaveValue(
+    "Label rebrand mail",
+  );
 });
 
 test("the seeded history has one run per manual and schedule workflow, with taken edges and item outputs", async ({
@@ -121,8 +128,8 @@ test("the seeded history has one run per manual and schedule workflow, with take
     ).toHaveLength(0);
   }
 
-  await page.goto(workspacePath(account, "/workflow/history"));
-  await expect(page.getByRole("heading", { level: 1, name: "Workflow activity" })).toBeVisible();
+  await page.goto(workspacePath(account, "/workflow/runs"));
+  await expect(page.getByRole("heading", { level: 1, name: "Runs" })).toBeVisible();
   const runLink = (name: string) =>
     page
       .getByRole("listitem")
@@ -152,38 +159,54 @@ test("the seeded history has one run per manual and schedule workflow, with take
   }
 });
 
+test("a workflow's Runs page lists only its runs, and the status chips filter them", async ({
+  page,
+  account,
+}) => {
+  await page.goto(workspacePath(account, "/workflow"));
+  await row(page, "Label rebrand mail").getByRole("link").first().click();
+  await page.getByRole("button", { name: "More workflow actions", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Runs", exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Runs" })).toBeVisible();
+  const runs = page.getByRole("listitem").getByRole("link");
+  await expect(runs.first()).toBeVisible();
+  await expect(runs.filter({ hasNotText: "Label rebrand mail" })).toHaveCount(0);
+
+  const chips = page.getByRole("group", { name: "Status" });
+  await chips.getByRole("button", { name: "Cancelled", exact: true }).click();
+  await expect(page.getByText("No runs match these filters.")).toBeVisible();
+  await chips.getByRole("button", { name: "Completed", exact: true }).click();
+  await expect(runs.first()).toContainText("completed");
+});
+
 test("a bad graph shows its validation error and is not saved", async ({ page, account }) => {
-  const creates: string[] = [];
+  const updates: string[] = [];
   page.on("request", (req) => {
-    if (new URL(req.url()).pathname === "/rpc/workflows/create") creates.push(req.url());
+    if (new URL(req.url()).pathname === "/rpc/workflows/update") updates.push(req.url());
   });
   await page.goto(workspacePath(account, "/workflow"));
-  await sidebarPanel(page).getByRole("button", { name: "New workflow", exact: true }).click();
-  await page
-    .getByRole("menu", { name: "New workflow" })
-    .getByRole("menuitem", { name: "Label mail from a sender", exact: true })
-    .click();
-  await page.getByRole("textbox", { name: "Workflow name" }).fill("Invalid on purpose");
+  await row(page, "Label rebrand mail").getByRole("link").first().click();
+  await expect(page.getByRole("textbox", { name: "Workflow name" })).toHaveValue(
+    "Label rebrand mail",
+  );
   const trigger = page
     .getByRole("application")
     .getByRole("group")
     .filter({ has: page.getByText("Mail arrives", { exact: true }) });
   await trigger.getByRole("button", { name: "Remove step" }).click();
   await expect(trigger).toHaveCount(0);
-  await page.getByRole("button", { name: "Create workflow", exact: true }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(
     page
       .getByRole("region", { name: "Inspector" })
       .getByText("Add a trigger to start this workflow"),
   ).toBeVisible();
-  expect(creates).toEqual([]);
-  await page.reload();
-  await expect(sidebar(page).getByRole("listitem")).toHaveCount(SEEDED.length);
-  await expect(sidebar(page).getByRole("button", { name: "Invalid on purpose" })).toHaveCount(0);
+  expect(updates).toEqual([]);
 });
 
 test("the step palette offers Ask and Branch", async ({ page, account }) => {
   await page.goto(workspacePath(account, "/workflow"));
+  await row(page, "Label rebrand mail").getByRole("link").first().click();
   await page.getByRole("button", { name: "Show steps", exact: true }).click();
   const step = (name: string) =>
     page.getByRole("option").filter({ has: page.getByText(name, { exact: true }) });

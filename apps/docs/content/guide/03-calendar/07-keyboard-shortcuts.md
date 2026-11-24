@@ -7,6 +7,8 @@ Most calendar shortcuts are two keys pressed one after the other: first <kbd>c</
 
 Shortcuts do not work while you are typing in a box, such as an event title.
 
+<kbd>c</kbd> then <kbd>a</kbd> works only when the **Calendar AI** button shows. Otherwise, the help and the hint do not list it. See [When the assistant is turned off](/guide/calendar/calendar-ai#when-the-assistant-is-turned-off).
+
 ## Press c, then
 
 | Keys                      | What it does                                             |

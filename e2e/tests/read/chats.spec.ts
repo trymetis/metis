@@ -9,7 +9,7 @@ import {
 import type { Page } from "@playwright/test";
 
 import { calendarAgent, chooseView } from "../calendar";
-import { chatResponse, conversation, converse, failure, paceChat, settle } from "../chat";
+import { chatResponse, conversation, converse, dragOnto, failure, paceChat, settle } from "../chat";
 import { expect, type Rpc, test } from "../fixtures";
 import { type Account, calendarPath, drivePath, mailPath, workspacePath } from "../harness";
 import { mailAgent } from "../mail";
@@ -34,7 +34,7 @@ async function deleteOpenThread(page: Page, rpc: Rpc, account: Account) {
 
 test("the mail chat replays its scripted turns", async ({ page, account }) => {
   await page.goto(mailPath(account, MAIL_CHAT.folder));
-  await page.getByRole("main").getByRole("button", { name: "Toggle AI agent" }).click();
+  await page.getByRole("main").getByRole("button", { name: "Mail AI" }).click();
   const agent = mailAgent(page);
   await agent.getByRole("button", { name: "Attach an email" }).click();
   await page
@@ -45,7 +45,7 @@ test("the mail chat replays its scripted turns", async ({ page, account }) => {
   await converse(
     page,
     agent.getByRole("textbox", { name: "Ask about your emails…" }),
-    "chat",
+    "mail",
     MAIL_CHAT.turns,
   );
 });
@@ -60,9 +60,11 @@ test("the calendar chat replays its scripted turns", async ({ page, account }) =
     calendarAgent(page).getByRole("textbox", {
       name: "Ask about your calendar…",
     }),
-    "calendar-chat",
+    "calendar",
     CALENDAR_CHAT.turns,
   );
+  await page.getByRole("button", { name: "Clear chat" }).click();
+  await expect(conversation(page).getByText("Ask about this calendar")).toBeVisible();
 });
 
 test("the drive chats replay their scripted turns", async ({ page, account }) => {
@@ -76,7 +78,7 @@ test("the drive chats replay their scripted turns", async ({ page, account }) =>
       await converse(
         page,
         page.getByRole("group").getByRole("textbox", { name: "Ask about these files…" }),
-        "drive-chat",
+        "drive",
         kind === DRIVE_CHAT.conversationDrive ? DRIVE_CHAT.turns : DRIVE_CHAT.turns.slice(0, 1),
       );
     });
@@ -89,9 +91,26 @@ test("the contacts chat replays its scripted turns", async ({ page, account }) =
   await converse(
     page,
     page.getByRole("textbox", { name: "Ask about your contacts…" }),
-    "contacts-chat",
+    "contacts",
     CONTACTS_CHAT.turns,
   );
+});
+
+test("a drive file dragged onto Drive AI is attached", async ({ page, account }) => {
+  const kind = Object.keys(account.driveSlugs)[0] ?? "";
+  await page.goto(drivePath(account, kind));
+  await page.getByRole("button", { name: "Drive AI", exact: true }).click();
+  const entry = page.locator("[data-entry-open]").first();
+  await dragOnto(page, entry, page.getByRole("textbox", { name: "Ask about these files…" }));
+  await expect(page.getByText("1 attached")).toBeVisible();
+});
+
+test("a contact dragged onto Contacts AI is attached", async ({ page, account }) => {
+  await page.goto(workspacePath(account, "/p/all/all"));
+  await page.getByRole("banner").getByRole("button", { name: "Contacts AI" }).click();
+  const row = page.getByRole("list", { name: "Contacts" }).getByRole("button").first();
+  await dragOnto(page, row, page.getByRole("textbox", { name: "Ask about your contacts…" }));
+  await expect(page.getByText("1 attached")).toBeVisible();
 });
 
 test("contact, member and address-book chips are sent, and open what they name", async ({
@@ -109,8 +128,8 @@ test("contact, member and address-book chips are sent, and open what they name",
     await expect(picker).toBeHidden();
   }
   await expect(input).toContainText("Raj Mehta");
-  await paceChat("workspace-chat");
-  const response = chatResponse(page, "workspace-chat");
+  await paceChat("workspace");
+  const response = chatResponse(page, "workspace");
   await page.keyboard.type(REFERENCE_CHAT.question);
   await page.keyboard.press("Enter");
   const res = await response;
@@ -143,7 +162,7 @@ test("contact, member and address-book chips are sent, and open what they name",
 test("the workspace chat replays its scripted turns", async ({ page, rpc, account }) => {
   await page.goto(workspacePath(account, "/assistant"));
   try {
-    await converse(page, composer(page), "workspace-chat", WORKSPACE_CHATS.live);
+    await converse(page, composer(page), "workspace", WORKSPACE_CHATS.live);
   } finally {
     await deleteOpenThread(page, rpc, account);
   }
@@ -153,8 +172,8 @@ test("the suggestion chips replay", async ({ page, rpc, account }) => {
   for (const [chip] of WORKSPACE_CHATS.liveChips) {
     await test.step(chip, async () => {
       await page.goto(workspacePath(account, "/assistant"));
-      await paceChat("workspace-chat");
-      const response = chatResponse(page, "workspace-chat");
+      await paceChat("workspace");
+      const response = chatResponse(page, "workspace");
       await conversation(page).getByRole("button", { name: chip, exact: true }).click();
       const res = await response;
       expect(res.status()).toBe(200);

@@ -586,7 +586,7 @@
         "waitFor": "main h2:has-text(\"Rebrand kickoff\")"
       },
       {
-        "click": "role=button[name=\"Toggle AI agent\"]"
+        "click": "role=button[name=\"Mail AI\"]"
       },
       {
         "waitFor": "role=textbox[name=\"Ask about your emails…\"]"

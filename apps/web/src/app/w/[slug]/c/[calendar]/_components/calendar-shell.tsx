@@ -18,11 +18,9 @@ import { z } from "zod";
 
 import { AGENT_DROP_ID } from "@/ai/turn";
 import { eventEnd, eventStart } from "@/calendar/layout";
-import { AgentDisabled } from "@/components/agent/agent-disabled";
+import { useAgentAvailable } from "@/components/agent/use-agent-available";
 import { ChordHint } from "@/components/chord-hint";
 import { ResponsiveAside } from "@/components/mobile-aside";
-import { usePlatformPolicy } from "@/components/platform-policy-context";
-import { useScopePolicy } from "@/components/scope-policy-context";
 import { ShortcutsHelp } from "@/components/shortcuts-help";
 import { useWorkspacePath, useWorkspaceScope } from "@/hooks/use-workspace-path";
 import { orpc } from "@/lib/orpc";
@@ -75,13 +73,11 @@ function ViewSurface() {
 
 function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAgent: () => void }) {
   const scope = useWorkspaceScope();
-  const workspaceSlug = scope.workspaceSlug;
-  const platformAi = usePlatformPolicy().ai;
-  const policy = useScopePolicy();
+  const agentAvailable = useAgentAvailable();
   const calendarSlug = useWorkspacePath().calendarSlug ?? "all";
   const { refresh, errors, accountName } = useCalendar();
   const { armed, bindings, helpOpen, setHelpOpen } = useCalendarShortcuts({
-    onToggleAgent,
+    onToggleAgent: agentAvailable ? onToggleAgent : undefined,
   });
 
   const sensors = useSensors(
@@ -159,7 +155,7 @@ function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAge
         <CalendarHeader
           agentOpen={agentOpen}
           onToggleAgent={onToggleAgent}
-          showAgentToggle={platformAi}
+          showAgentToggle={agentAvailable}
         />
 
         {errors.length > 0 && (
@@ -173,19 +169,9 @@ function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAge
         <ViewSurface />
       </div>
 
-      {agentOpen && (
+      {agentOpen && agentAvailable && (
         <div className="w-95 shrink-0 max-md:fixed max-md:inset-0 max-md:z-50 max-md:w-full max-md:bg-background">
-          {policy.ai ? (
-            <CalendarAgentPanel onClose={onToggleAgent} />
-          ) : (
-            <AgentDisabled
-              onClose={onToggleAgent}
-              reason={policy.workspaceAi ? "resource" : "workspace"}
-              resource="calendar"
-              scopeLabel="this calendar"
-              workspaceSlug={workspaceSlug}
-            />
-          )}
+          <CalendarAgentPanel onClose={onToggleAgent} />
         </div>
       )}
 
@@ -201,12 +187,12 @@ function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAge
       <ChordHint prefix={CALENDAR_CHORD_PREFIX} bindings={bindings} visible={armed} />
 
       <DragOverlay dropAnimation={null}>
-        {dragging && overAgent && (
+        {dragging && (overAgent || (agentOpen && agentAvailable)) && (
           <div className="flex max-w-70 items-center gap-1.5 rounded-md border border-border bg-surface px-2 py-1.5 shadow-lg">
             <CalendarDays className="size-3 shrink-0 text-faint" strokeWidth={1.75} />
             <span className="min-w-0 truncate text-[12px] text-foreground">{dragging.title}</span>
             <span className="shrink-0 text-[11px] text-faint">
-              {dragging.allDay ? "All day" : format(parseISO(dragging.start), "HH:mm")}
+              {format(parseISO(dragging.start), "HH:mm")}
             </span>
           </div>
         )}

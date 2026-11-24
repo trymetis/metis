@@ -32,7 +32,7 @@ In a test run, the approval step does not wait. It reports "would ask for approv
 Requests appear in the app, under **Approvals**.
 
 1. Click **Workflows** in the left rail.
-2. Click **Approvals** at the bottom of the workflow list. A number on the button shows how many requests are waiting for you.
+2. Click **Approvals** at the top right of the **Workflows** page, next to **Runs**. A number on the button shows how many requests are waiting for you.
 3. The **Approvals** panel opens: "Workflow runs waiting for your decision." Each request shows:
    - the workflow's name, which opens the run;
    - how long ago it was asked;

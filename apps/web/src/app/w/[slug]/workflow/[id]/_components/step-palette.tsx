@@ -11,6 +11,7 @@ import {
   CommandList,
 } from "@metis/ui/components/command";
 import { cn } from "@metis/ui/lib/utils";
+import { defaultFilter } from "cmdk";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useState } from "react";
 
@@ -35,29 +36,40 @@ function usePaletteGroups() {
   })).filter((group) => group.steps.length > 0);
 }
 
+function itemValue(def: StepDef): string {
+  return `${def.label} ${CATEGORY_LABELS[def.category]} ${def.description}`;
+}
+
 function StepItem({
   def,
   onPick,
   draggable,
+  compact = false,
 }: {
   def: StepDef;
   onPick: (step: string) => void;
   draggable: boolean;
+  compact?: boolean;
 }) {
   return (
     <CommandItem
-      value={`${def.label} ${CATEGORY_LABELS[def.category]} ${def.description}`}
+      value={itemValue(def)}
       onSelect={() => onPick(def.key)}
       draggable={draggable}
       onDragStart={(event: React.DragEvent) => {
         event.dataTransfer.setData(STEP_DRAG_TYPE, def.key);
         event.dataTransfer.effectAllowed = "copy";
       }}
-      className={cn("items-start gap-2.5 py-2", draggable && "cursor-grab active:cursor-grabbing")}
+      className={cn(
+        "gap-2.5",
+        compact ? "items-center py-1.5" : "items-start py-2",
+        draggable && "cursor-grab active:cursor-grabbing",
+      )}
     >
       <span
         className={cn(
-          "mt-0.5 grid size-6 shrink-0 place-items-center rounded-md",
+          "grid size-6 shrink-0 place-items-center rounded-md",
+          !compact && "mt-0.5",
           CATEGORY_BADGE[def.category],
         )}
       >
@@ -65,9 +77,11 @@ function StepItem({
       </span>
       <span className="flex min-w-0 flex-col">
         <span className="truncate text-[13px] text-foreground">{def.label}</span>
-        <span className="line-clamp-2 text-[11px] text-muted-foreground leading-snug">
-          {def.description}
-        </span>
+        {!compact && (
+          <span className="line-clamp-2 text-[11px] text-muted-foreground leading-snug">
+            {def.description}
+          </span>
+        )}
       </span>
     </CommandItem>
   );
@@ -137,6 +151,26 @@ export function FloatingPalette() {
   );
 }
 
+const QUICK_ADD_LIMIT = 10;
+const TITLE_WEIGHT = 3;
+
+function rankSteps(steps: readonly StepDef[], query: string): StepDef[] {
+  const search = query.trim();
+  if (!search) return [];
+  return steps
+    .map((def) => ({
+      def,
+      score: Math.max(
+        defaultFilter(def.label, search) * TITLE_WEIGHT,
+        defaultFilter(def.description, search),
+      ),
+    }))
+    .filter((entry) => entry.score > 0)
+    .toSorted((a, b) => b.score - a.score)
+    .slice(0, QUICK_ADD_LIMIT)
+    .map((entry) => entry.def);
+}
+
 export function QuickAdd({
   open,
   onOpenChange,
@@ -145,26 +179,45 @@ export function QuickAdd({
   onOpenChange: (open: boolean) => void;
 }) {
   const addStep = useAddStep();
+  const steps = usePaletteGroups().flatMap((group) => group.steps);
+  const [query, setQuery] = useState("");
+  const [active, setActive] = useState("");
+  const matches = rankSteps(steps, query);
+  const values = matches.map(itemValue);
+  const highlighted = values.includes(active) ? active : (values[0] ?? "");
   return (
     <CommandDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(next) => {
+        onOpenChange(next);
+        if (!next) setQuery("");
+      }}
       title="Add step"
       description="Search every step you can add to this workflow"
     >
-      <Command
-        filter={(value, search) => (value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0)}
-      >
-        <CommandInput placeholder="Add a step…" />
-        <div className="max-h-[60vh] overflow-y-auto">
-          <StepList
-            draggable={false}
-            onPick={(step) => {
-              addStep(step);
-              onOpenChange(false);
-            }}
-          />
-        </div>
+      <Command shouldFilter={false} value={highlighted} onValueChange={setActive}>
+        <CommandInput placeholder="Add a step…" value={query} onValueChange={setQuery} />
+        <CommandList>
+          {!query.trim() ? (
+            <p className="px-3 py-6 text-center text-[13px] text-faint">Type to search steps</p>
+          ) : matches.length === 0 ? (
+            <p className="px-3 py-6 text-center text-[13px] text-faint">No step matches.</p>
+          ) : (
+            matches.map((def) => (
+              <StepItem
+                key={def.key}
+                def={def}
+                compact
+                draggable={false}
+                onPick={(step) => {
+                  addStep(step);
+                  onOpenChange(false);
+                  setQuery("");
+                }}
+              />
+            ))
+          )}
+        </CommandList>
       </Command>
     </CommandDialog>
   );

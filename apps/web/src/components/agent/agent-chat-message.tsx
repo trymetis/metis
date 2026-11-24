@@ -1,7 +1,7 @@
 "use client";
 
 import { isToolUIPart, type UIMessage } from "ai";
-import { CalendarDays, Mail } from "lucide-react";
+import { CalendarDays, File, Mail, UserRound } from "lucide-react";
 
 import { hasReferences } from "@/ai/references";
 import { TURN_PART_TYPE, turnEnvelopeSchema } from "@/ai/turn";
@@ -30,6 +30,22 @@ function turnChips(data: unknown) {
         id: e.id,
         title: e.title,
         subtitle: e.calendarName,
+      })),
+    };
+  }
+  if (envelope?.kind === "drive" && envelope.files.length > 0) {
+    return {
+      icon: File,
+      chips: envelope.files.map((f) => ({ id: f.id, title: f.name })),
+    };
+  }
+  if (envelope?.kind === "contacts" && envelope.contacts.length > 0) {
+    return {
+      icon: UserRound,
+      chips: envelope.contacts.map((c) => ({
+        id: `${c.addressBookId}:${c.bookId}:${c.contactId}`,
+        title: c.name || c.email || "Contact",
+        subtitle: c.email ?? c.bookName,
       })),
     };
   }

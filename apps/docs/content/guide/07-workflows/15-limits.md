@@ -7,52 +7,52 @@ This page lists the limits a workflow has to fit, how long run data is kept, and
 
 ## Sizes
 
-| Item                                             | Limit                                                         |
-| ------------------------------------------------ | ------------------------------------------------------------- |
-| Workflow name                                    | 80 characters                                                 |
-| Step name                                        | 60 characters                                                 |
-| Steps in one workflow                            | 100                                                           |
-| Connections in one workflow                      | 200                                                           |
-| Expression                                       | 2,000 characters                                              |
-| Text with `{{ }}` values                         | 20,000 characters                                             |
-| Declared fields (inputs, body fields, AI fields) | 30, with names up to 40 characters and descriptions up to 300 |
-| **Set fields** values                            | 30                                                            |
-| **Switch** cases                                 | 20, with names up to 40 characters                            |
-| **Classify** categories                          | 2 to 20, with names up to 40 characters                       |
-| Inputs on a **Merge** or **Wait for all** step   | 16                                                            |
-| **Loop**                                         | 100 entries                                                   |
-| **Download a file**                              | Files up to 10 MB                                             |
-| **Read a file**                                  | The first 20,000 characters                                   |
-| **Agent**                                        | 1 to 20 tool calls, 1 to 30 minutes                           |
-| **List a folder** and **Search mail**            | Up to 100 messages                                            |
-| **List events**                                  | Up to 250 events                                              |
-| Drive **List a folder**                          | Up to 500 files                                               |
-| **Search files**                                 | Up to 200 files                                               |
-| **Ask** questions                                | 20 in one step, 500 characters each                           |
-| **Pick one** answer name                         | 40 characters                                                 |
-| "When it applies" note                           | 200 characters                                                |
-| Text sent to the model by **Ask**                | The first 8,000 characters of a long body                     |
-| **Try on recent mail**                           | 10 newest inbox messages, up to 10 tries a minute             |
-| Webhook required headers                         | 10                                                            |
-| Webhook body                                     | 256 KB                                                        |
-| Webhook requests                                 | 120 a minute for each webhook                                 |
-| Approval note                                    | 500 characters                                                |
-| **Runs at the same time**                        | 1 to 20                                                       |
-| Rate limit period                                | 1 to 10080 minutes                                            |
-| Test runs                                        | Up to 10 a minute                                             |
-| Items to pick from in a test run                 | The 15 newest                                                 |
-| Pinned sample                                    | 64 KB                                                         |
-| Runs in the editor's **Runs** tab                | The latest 20                                                 |
-| Runs shown under **Activity**                    | The latest 100                                                |
-| Undo                                             | The last 100 changes                                          |
-| Automatic retries                                | A few attempts, with a growing wait between them              |
+| Item                                             | Limit                                                                              |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| Workflow name                                    | 1 to 80 characters                                                                 |
+| Step name                                        | 60 characters                                                                      |
+| Steps in one workflow                            | 100                                                                                |
+| Connections in one workflow                      | 200                                                                                |
+| Expression                                       | 2,000 characters                                                                   |
+| Text with `{{ }}` values                         | 20,000 characters                                                                  |
+| Declared fields (inputs, body fields, AI fields) | 30, with names up to 40 characters and descriptions up to 300                      |
+| **Set fields** values                            | 30                                                                                 |
+| **Switch** cases                                 | 20, with names up to 40 characters                                                 |
+| **Classify** categories                          | 2 to 20, with names up to 40 characters                                            |
+| Inputs on a **Merge** or **Wait for all** step   | 16                                                                                 |
+| **Loop**                                         | 100 entries                                                                        |
+| **Download a file**                              | Files up to 10 MB                                                                  |
+| **Read a file**                                  | The first 20,000 characters                                                        |
+| **Agent**                                        | 1 to 20 tool calls, 1 to 30 minutes                                                |
+| **List a folder** and **Search mail**            | Up to 100 messages                                                                 |
+| **List events**                                  | Up to 250 events                                                                   |
+| Drive **List a folder**                          | Up to 500 files                                                                    |
+| **Search files**                                 | Up to 200 files                                                                    |
+| **Ask** questions                                | 20 in one step, 500 characters each                                                |
+| **Pick one** answer name                         | 40 characters                                                                      |
+| "When it applies" note                           | 200 characters                                                                     |
+| Text sent to the model by **Ask**                | The first 8,000 characters of a long body                                          |
+| **Try on recent mail**                           | 10 newest inbox messages, up to 10 tries a minute                                  |
+| Webhook required headers                         | 10                                                                                 |
+| Webhook body                                     | 256 KB                                                                             |
+| Webhook requests                                 | 120 a minute for each webhook                                                      |
+| Approval note                                    | 500 characters                                                                     |
+| **Runs at the same time**                        | 1 to 20                                                                            |
+| Rate limit period                                | 1 to 10080 minutes                                                                 |
+| Test runs                                        | Up to 10 a minute                                                                  |
+| Items to pick from in a test run                 | The 15 newest                                                                      |
+| Pinned sample                                    | 64 KB                                                                              |
+| Runs in the editor's **Runs** tab                | The latest 20                                                                      |
+| Runs on the **Runs** page                        | Up to 50 at a time. **Load older runs** shows up to 50 more, with no overall limit |
+| Undo                                             | The last 100 changes                                                               |
+| Automatic retries                                | A few attempts, with a growing wait between them                                   |
 
 ## How long run data is kept
 
 Your server keeps two kinds of run data, each for a time your administrator sets:
 
 - **Step data**: each step's input and output, the trigger event and the run's output. It is kept for 7 days by default. After that, the run still shows its steps and statuses, but not the data, and the run can no longer be retried. Your administrator can also choose to clear it as soon as each run ends.
-- **Run history**: the runs themselves. They are kept for 90 days by default, then removed from **Activity**. A run is kept past this limit while a step in it still has an unconfirmed outcome that nobody has resolved. This applies to steps that send mail, create an event, answer an invitation or write a file. See [Resolve a step with an unconfirmed outcome](/guide/workflows/cancel-and-retry-runs#resolve-a-step-with-an-unconfirmed-outcome).
+- **Run history**: the runs themselves. They are kept for 90 days by default, then removed from the **Runs** page. A run is kept past this limit while a step in it still has an unconfirmed outcome that nobody has resolved. This applies to steps that send mail, create an event, answer an invitation or write a file. See [Resolve a step with an unconfirmed outcome](/guide/workflows/cancel-and-retry-runs#resolve-a-step-with-an-unconfirmed-outcome).
 
 A daily clean-up removes the old data. It does not appear on the Workflows page.
 
@@ -72,7 +72,7 @@ A daily clean-up removes the old data. It does not appear on the Workflows page.
 
 The editor checks the workflow after every change. A problem shows in red at the bottom of the step's card and in the Inspector, and the top bar shows a red button such as **1 problem**. Click the button to select the first step with a problem. Problems that belong to the whole workflow, such as a missing trigger, show in the Inspector when no step is selected.
 
-A workflow with problems cannot be saved. When you click **Save** or **Create workflow**, you see "Fix the problem in this workflow before saving" or, for example, "Fix the 2 problems in this workflow before saving", and the first step with a problem is selected. A workflow without a name shows "Give your workflow a name".
+A workflow with problems cannot be saved. When you click **Save**, you see "Fix the problem in this workflow before saving" or, for example, "Fix the 2 problems in this workflow before saving", and the first step with a problem is selected. A workflow without a name shows "Give your workflow a name".
 
 ### The workflow's shape
 
@@ -135,6 +135,8 @@ A workflow can hold up to 100 steps and 200 connections. If yours needs more, sp
 
 ## Other limits
 
+- **A new workflow needs a name.** In the **New workflow** dialog, **Create workflow** stays greyed out until you type one. The **Name** field stops at 80 characters, so a longer name cannot be typed. The name field in the editor's top bar stops at 80 characters too.
+- **Turning on from the list needs a workflow without problems.** If the saved version has a problem, the switch in the list is refused with "Fix this workflow before turning it on:" followed by the problem. Open the workflow, fix it, then turn it on and save. See [Turn a workflow off or on](/guide/workflows/manage-workflows#turn-a-workflow-off-or-on).
 - **Watching is not instant.** Triggers that watch mail, calendars and drives start shortly after the change, not at the same moment.
 - **What is already there is skipped.** When a watching trigger starts, the mail, events or files already there do not start runs.
 - **Drive triggers watch one folder.** Files in folders inside it are not watched.

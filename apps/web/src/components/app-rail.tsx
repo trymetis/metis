@@ -39,9 +39,10 @@ import { usePathname } from "next/navigation";
 import { signOut } from "@/auth/client";
 import { clearLocalData } from "@/auth/local-data";
 import { isNativeUserAgent, NATIVE_SETTINGS_PATH } from "@/auth/native-link";
+import { PersonAvatar } from "@/components/person-avatar";
+import { guardedLeave } from "@/hooks/leave-guard";
 import { useHydrated } from "@/hooks/use-stored-item";
 import { useWorkspacePath, useWorkspaceSlug } from "@/hooks/use-workspace-path";
-import { getInitials } from "@/lib/utils";
 import type { SourceInfo } from "@/source-info";
 import { useSearchStore } from "@/store/search-store";
 import {
@@ -182,9 +183,14 @@ export function AppRail({ user, hasDashboard, source }: AppRailProps) {
                       variant="ghost"
                       size="icon"
                       aria-label={user.name}
-                      className="mt-1 size-8 shrink-0 cursor-pointer rounded-full border border-border bg-linear-to-br from-active to-surface font-medium text-muted-foreground text-xs tracking-wider"
+                      className="mt-1 size-8 shrink-0 cursor-pointer rounded-full p-0"
                     >
-                      {getInitials(user.name).slice(0, 2)}
+                      <PersonAvatar
+                        name={user.name}
+                        email={user.email}
+                        photoUrl={user.image}
+                        className="size-8 text-xs"
+                      />
                     </Button>
                   }
                 />
@@ -285,6 +291,9 @@ function IconLink({
           <Link
             href={href}
             aria-label={label}
+            onClick={(event) => {
+              if (guardedLeave(href)) event.preventDefault();
+            }}
             className={cn(
               "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-md transition-colors",
               active

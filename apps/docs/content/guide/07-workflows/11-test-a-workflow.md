@@ -3,7 +3,7 @@ title: Test a workflow
 description: Try a workflow on real data without changing anything, pin a sample event, and replay an earlier run.
 ---
 
-A test run goes through the workflow as it is on your screen, saved or not. It changes nothing: steps that change something only report what they would do. Testing does not count as a change to the workflow, and it does not appear under **Activity**.
+A test run goes through the workflow as it is on your screen, saved or not. It changes nothing: steps that change something only report what they would do. Testing does not count as a change to the workflow, and it does not appear on the **Runs** page.
 
 The **Test run** tab says: "Runs this version of the workflow, saved or not, and changes nothing: steps that change something report what they would do. AI steps still call the model."
 
@@ -53,7 +53,7 @@ Some triggers have no recent items to pick from. To test them, save an event as 
 1. Run a test, for example with **An event I paste**.
 2. Click **Pin this event** next to the result. A message says "Pinned as this trigger's sample".
 
-Pinning works once the workflow is saved. A sample can be up to 64 KB. A larger one is refused with "That sample is larger than 64 KB".
+A sample can be up to 64 KB. A larger one is refused with "That sample is larger than 64 KB".
 
 Click the trigger to see its sample in the Inspector: "A pinned sample event is used by test runs." Click **Pinned event** to see it, or **Unpin** to remove it.
 

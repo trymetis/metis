@@ -167,12 +167,20 @@ export function workflowPath(workspaceSlug: string, rest = ""): Route {
   return route(rest ? `/w/${workspaceSlug}/workflow/${rest}` : `/w/${workspaceSlug}/workflow`);
 }
 
-export function workflowRunPath(workspaceSlug: string, runId: string): Route {
-  return workflowPath(workspaceSlug, `history/${encodeURIComponent(runId)}`);
+export function workflowRunPath(workspaceSlug: string, runId: string, fromWorkflow = false): Route {
+  const path = `runs/${encodeURIComponent(runId)}`;
+  return workflowPath(workspaceSlug, fromWorkflow ? `${path}?from=workflow` : path);
+}
+
+export function workflowRunsPath(workspaceSlug: string, workflowId?: string): Route {
+  return workflowPath(
+    workspaceSlug,
+    workflowId ? `${encodeURIComponent(workflowId)}/runs` : "runs",
+  );
 }
 
 export function workflowEditPath(workspaceSlug: string, workflowId: string): Route {
-  return route(`/w/${workspaceSlug}/workflow?id=${encodeURIComponent(workflowId)}`);
+  return workflowPath(workspaceSlug, encodeURIComponent(workflowId));
 }
 
 export function workspaceSettingsPath(

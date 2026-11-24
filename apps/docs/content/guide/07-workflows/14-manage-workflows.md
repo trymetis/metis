@@ -24,9 +24,23 @@ See [Use the editor](/guide/workflows/use-the-editor) for how to add, connect an
 
 ### Unsaved changes
 
-If you open another workflow, pick a template, or click **Back to mail** while you have unsaved changes, the dialog **Discard unsaved changes?** asks first: "This workflow has changes you have not saved. They are lost if you leave it now." Click **Keep editing** to stay, or **Discard** to leave without saving.
+While you have unsaved changes, the dialog **Discard unsaved changes?** asks first when you click one of these:
 
-If you reload or close the browser tab, your browser asks whether to leave the page. Other links, such as the left rail, do not ask, so save before you use them.
+- **Back to workflows**.
+- **More workflow actions** (**...**), then **Runs**.
+- A section icon in the left rail: **Workspace settings**, **Mail**, **Calendar**, **Drive**, **Contacts**, **Workspace AI** (shown only when AI is on) or **Workflows**.
+
+The dialog says "This workflow has changes you have not saved. They are lost if you leave it now." Click **Keep editing** to stay, or **Discard** to leave without saving and go where you clicked.
+
+If you reload or close the browser tab, your browser asks whether to leave the page.
+
+These do not ask, so save before you use them:
+
+- **Search** in the left rail, and any result you open from search.
+- The workspace switcher in the left rail.
+- Your account menu (your initials at the bottom of the left rail) and the pages it opens, such as the settings pages and **Dashboard**.
+- **Sign out** in the account menu. It signs you out first, so your changes are lost even if your browser then asks whether to leave the page.
+- The **Details** icon (an arrow pointing out of a box) on a run in the **Runs** tab under the canvas.
 
 ## Change the workflow settings
 
@@ -58,10 +72,12 @@ Click **Save** to keep your changes.
 
 Each time you save a workflow, Metis Suite keeps that version as a revision. You can look back at what each save changed.
 
-1. Open a saved workflow.
-2. Click **More workflow actions** (**...**) at the right of the top bar, then click **Revisions**. A new workflow that was never saved does not have this item.
+1. Open the workflow.
+2. Click **More workflow actions** (**...**) at the right of the top bar, then click **Revisions**.
 3. The **Revisions** panel opens: "Each save makes a revision. Pick one to see what it changed from the one before."
 4. Click a revision in the list to see its changes below the list.
+
+Creating a workflow makes its first revision, "Revision 1", with only the **Run by hand** trigger. Your first **Save** in the editor makes "Revision 2".
 
 The list shows the latest 20 revisions, newest first. Each one is named, for example "Revision 3", with the date and time of the save and the name of the person who saved it, for example "· Ana Lopez". The name is left out when Metis Suite does not know who saved the revision, or when that person is no longer a member of the workspace. When the editor has changes you have not saved, an **Unsaved changes** entry comes first. It shows what you changed since the last save.
 
@@ -78,16 +94,24 @@ Revisions are for reading only. You cannot go back to an older revision from thi
 
 ## Turn a workflow off or on
 
+There are two ways to turn a workflow off or on.
+
+**From the list.** Click **Workflows** in the left rail, then click the switch at the end of the workflow's row. It takes effect at once, with no **Save**.
+
+**From the editor.**
+
 1. Open the workflow.
 2. Click the switch next to the name. It changes between **Enabled** and **Disabled**, and the top bar shows "Unsaved changes".
-3. Click **Save**. The switch only takes effect when you save.
+3. Click **Save**. The editor's switch only takes effect when you save.
 
-A disabled workflow has a grey icon and "off" after its name in the list.
+A workflow that is off has a grey icon in the list, and its switch is off.
+
+A workflow can be turned on from the list only when its saved version has no problems. Otherwise you see "Fix this workflow before turning it on:" followed by the problem. Open the workflow, fix the problem, then turn it on and click **Save**. If the switch fails for another reason, a message says why, and the switch stays as it was.
 
 While a workflow is off:
 
 - Its triggers do not start runs: it does not watch mail, calendars or drives, does not run on its schedule, does not run when you send mail, and its webhook answers that it is not accepting events.
-- Runs waiting to start, and runs that are waiting at a step, are cancelled when you save.
+- Runs waiting to start, and runs that are waiting at a step, are cancelled when you turn it off.
 - Other workflows that call it are blocked with "The called workflow is turned off".
 - Its run history stays.
 
@@ -105,7 +129,7 @@ When your server moved to the new workflow engine, it converted existing workflo
 Only workspace owners and admins can delete workflows. Other members see **Delete workflow** too, but get the message "Only an admin can delete workflows".
 
 1. Open the workflow.
-2. Click **More workflow actions** (**...**) at the right of the top bar, then click **Delete workflow**. It is there once the workflow is saved.
+2. Click **More workflow actions** (**...**) at the right of the top bar, then click **Delete workflow**.
 3. The dialog **Delete this workflow?** names the workflow and explains what happens. Click **Delete** to confirm, or **Cancel** to keep it.
 
 <img src="/images/workflows/delete-dialog.webp" alt="The Delete this workflow? dialog with its Cancel and Delete buttons" class="dark:hidden" />
@@ -113,9 +137,9 @@ Only workspace owners and admins can delete workflows. Other members see **Delet
 
 After you delete a workflow:
 
-- It leaves the list and stops running. The editor opens the first workflow left in the list, or a new **Start from a manual trigger** template if there is none.
+- It leaves the list and stops running. You return to the **Workflows** page.
 - Its queued and waiting runs are cancelled. A run already in progress finishes its current step.
-- Its run history stays under **Activity**, but its runs can no longer be retried. The step inputs and outputs of its runs are cleared.
+- Its run history stays on the **Runs** page, but its runs can no longer be retried. The step inputs and outputs of its runs are cleared.
 - Its webhook address stops working.
 
 Deleting cannot be undone. To keep a workflow without it running, turn it off instead.

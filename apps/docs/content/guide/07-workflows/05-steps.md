@@ -1,13 +1,13 @@
 ---
 title: Steps
-description: Every step you can add to a workflow, what it does and the settings it has, plus the templates in the New workflow menu.
+description: Every step you can add to a workflow, what it does and the settings it has, plus the templates in the New workflow dialog.
 ---
 
 This page lists every step you can add, grouped the way the step palette groups them. For triggers, see [Triggers](/guide/workflows/triggers). To add, connect and remove steps, see [Use the editor](/guide/workflows/use-the-editor).
 
 Most settings can be a fixed value or an expression that uses values from earlier steps. Settings such as **Message**, **Event** and **File** start as `item`, which means "the item that reached this step". See [Expressions](/guide/workflows/expressions).
 
-Steps that send or create something are marked **Sends or creates** below and in the Inspector. Metis Suite never repeats them. If it cannot tell whether one went through, for example because the provider did not answer, the step is marked "Needs review" instead, so nothing is sent or created twice.
+Steps that send or create something are marked **Sends or creates** below. On the canvas, their card has a small dot on the corner of the step's icon. Point at it to see "Sends or creates". Metis Suite never repeats them. If it cannot tell whether one went through, for example because the provider did not answer, the step is marked "Needs review" instead, so nothing is sent or created twice.
 
 Fields that take email addresses accept several, separated by commas, for example `ada@example.com, team@example.com`.
 
@@ -209,7 +209,7 @@ When a step's recipients or target come from an AI step, the workflow needs an *
 
 ## Templates
 
-The **New workflow** menu starts you from a ready-made set of steps, laid out from left to right:
+When you click **New workflow** on the **Workflows** page, the **Template** list in the dialog starts you from a ready-made set of steps, laid out from left to right:
 
 | Template                                      | Steps                                                                                                                                                                                                   |
 | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -224,6 +224,10 @@ The **New workflow** menu starts you from a ready-made set of steps, laid out fr
 | **Two mailboxes, one shared action**          | **On a schedule**, **List a folder** in two mailboxes, **Merge**, and **Label**.                                                                                                                        |
 | **Two mailboxes, act once both are read**     | The same, with **Wait for all** instead of **Merge**.                                                                                                                                                   |
 
-A template fills in your workspace's first mailbox, calendar or drive, and your browser's time zone. If the workspace has only one mailbox, the two-mailbox templates use it for both branches. A template opens with no name, enabled, and not saved. Some templates leave a setting for you to fill in, so the editor shows a problem until you do. Change any step before you save.
+A template fills in your workspace's first mailbox, calendar or drive, and your browser's time zone. If the workspace has only one mailbox, the two-mailbox templates use it for both branches. **Start from a manual trigger** is picked to start with.
 
-If the workflow you have open has unsaved changes, picking a template first asks "Discard unsaved changes?". See [Manage workflows](/guide/workflows/manage-workflows#unsaved-changes).
+**Create workflow** saves the workflow at once, turned off, with the name you typed and only a **Run by hand** trigger. The editor then opens. With **Start from a manual trigger**, the top bar already says "Saved". With any other template, the template's steps are on the canvas as unsaved changes: the top bar says "Unsaved changes" and the switch says **Disabled**. Some templates leave a setting for you to fill in, so the editor shows a problem until you do. Change any step, then click **Save**.
+
+If you leave without saving and click **Discard**, the workflow stays in the list, turned off, with only its **Run by hand** trigger.
+
+To use another template, create a new workflow with it.

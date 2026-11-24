@@ -15,7 +15,7 @@ import Link from "next/link";
 import { ApprovalActions } from "@/components/workflow-history/approval-actions";
 import { useWorkspaceScope } from "@/hooks/use-workspace-path";
 import { rpc } from "@/lib/orpc";
-import { workflowPath } from "@/workspace/path";
+import { workflowRunPath } from "@/workspace/path";
 
 export function ApprovalsSheet({
   open,
@@ -54,7 +54,7 @@ export function ApprovalsSheet({
               >
                 <div className="flex items-baseline gap-2">
                   <Link
-                    href={workflowPath(scope.workspaceSlug, `history/${approval.runId}`)}
+                    href={workflowRunPath(scope.workspaceSlug, approval.runId)}
                     className="min-w-0 flex-1 truncate font-medium text-[13px] hover:underline"
                     onClick={() => onOpenChange(false)}
                   >

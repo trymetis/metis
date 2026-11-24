@@ -28,7 +28,7 @@ export function useDriveShortcuts({
   onViewChange: (view: DriveView) => void;
   onRoot: () => void;
   onAllDrives: () => void;
-  onToggleAgent: () => void;
+  onToggleAgent?: () => void;
   onPreview: () => void;
 }) {
   const { back, forward } = useDriveNavigation();
@@ -50,7 +50,7 @@ export function useDriveShortcuts({
       r: { label: "Drive root", run: onRoot },
       h: { label: "All drives", run: onAllDrives },
       p: { label: "Preview", run: onPreview },
-      a: { label: "Agent", run: onToggleAgent },
+      ...(onToggleAgent ? { a: { label: "Agent", run: onToggleAgent } } : {}),
     }),
     [onNewFolder, onUpload, onViewChange, onRoot, onAllDrives, onToggleAgent, onPreview],
   );

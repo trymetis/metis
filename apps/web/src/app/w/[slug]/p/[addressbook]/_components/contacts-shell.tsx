@@ -1,13 +1,12 @@
 "use client";
 
-import { Button } from "@metis/ui/components/button";
 import { cn } from "@metis/ui/lib/utils";
-import { Bot } from "lucide-react";
+import { UserRound } from "lucide-react";
 import { useCallback, useState } from "react";
 
-import { AgentDisabled } from "@/components/agent/agent-disabled";
-import { usePlatformPolicy } from "@/components/platform-policy-context";
-import { useScopePolicy } from "@/components/scope-policy-context";
+import { AgentDragContext } from "@/components/agent/agent-drag-context";
+import { AgentToggle } from "@/components/agent/agent-toggle";
+import { useAgentAvailable } from "@/components/agent/use-agent-available";
 
 import { ContactCard } from "./contact-card";
 import { ContactDialog } from "./contact-dialog";
@@ -17,9 +16,8 @@ import { ContactsColumnHeader } from "./contacts-column-header";
 import { ContactsProvider, useContacts } from "./contacts-context";
 
 function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAgent: () => void }) {
-  const platformAi = usePlatformPolicy().ai;
-  const policy = useScopePolicy();
-  const { scope, selected, selectedLoading, selectedError, errors, book, bookName } = useContacts();
+  const agentAvailable = useAgentAvailable();
+  const { selected, selectedLoading, selectedError, errors, book, bookName } = useContacts();
   const hasSelection = selected !== null || selectedLoading;
 
   return (
@@ -29,17 +27,13 @@ function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAge
           <h1 className="min-w-0 truncate text-[20px] font-medium tracking-tight text-foreground">
             {book ? bookName(book) : "All contacts"}
           </h1>
-          {platformAi && (
-            <Button
-              variant={agentOpen ? "secondary" : "ghost"}
-              size="icon"
+          {agentAvailable && (
+            <AgentToggle
+              label="Contacts AI"
+              open={agentOpen}
+              onToggle={onToggleAgent}
               className="ml-auto"
-              aria-label="Contacts AI"
-              aria-pressed={agentOpen}
-              onClick={onToggleAgent}
-            >
-              <Bot className="h-4 w-4" />
-            </Button>
+            />
           )}
         </header>
 
@@ -65,7 +59,7 @@ function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAge
             )}
           >
             <ContactsColumnHeader wide={!hasSelection} />
-            <ContactList wide={!hasSelection} />
+            <ContactList wide={!hasSelection} dragToAgent={agentOpen && agentAvailable} />
           </div>
           {hasSelection && (
             <div className="min-w-0 flex-1">
@@ -75,19 +69,9 @@ function Surface({ agentOpen, onToggleAgent }: { agentOpen: boolean; onToggleAge
         </div>
       </div>
 
-      {agentOpen && (
+      {agentOpen && agentAvailable && (
         <div className="w-95 shrink-0 border-l border-border max-md:fixed max-md:inset-0 max-md:z-50 max-md:w-full max-md:bg-background">
-          {policy.ai ? (
-            <ContactsAgentPanel onClose={onToggleAgent} />
-          ) : (
-            <AgentDisabled
-              onClose={onToggleAgent}
-              reason={policy.workspaceAi ? "resource" : "workspace"}
-              resource="addressbook"
-              scopeLabel="this address book"
-              workspaceSlug={scope.workspaceSlug}
-            />
-          )}
+          <ContactsAgentPanel onClose={onToggleAgent} />
         </div>
       )}
 
@@ -102,9 +86,11 @@ export function ContactsShell() {
 
   return (
     <ContactsProvider>
-      <div className="flex h-full min-h-0">
-        <Surface agentOpen={agentOpen} onToggleAgent={toggleAgent} />
-      </div>
+      <AgentDragContext icon={UserRound}>
+        <div className="flex h-full min-h-0">
+          <Surface agentOpen={agentOpen} onToggleAgent={toggleAgent} />
+        </div>
+      </AgentDragContext>
     </ContactsProvider>
   );
 }

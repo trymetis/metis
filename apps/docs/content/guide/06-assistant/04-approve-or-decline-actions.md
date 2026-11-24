@@ -17,8 +17,7 @@ When the assistant wants to take a sensitive action, an approval box appears joi
   - A list of emails or other records shows as a count, such as "3 items".
   - A list of addresses or words shows its first 3 entries, then "+2 more" (or however many are left).
   - Long values are cut short with "…". IDs are not shown.
-- The hint "Or type a message below to decline with a reason." It does not show on touch screens.
-- Two buttons: **Decline** and **Approve**. When you point at them, they show "Decline (Esc)" and "Approve (Enter)".
+- Two buttons: **Decline** and **Approve**. When you point at them, they show "Decline (Esc)" and "Approve (Ctrl/⌘ Enter)".
 
 <img src="/images/assistant/approval-card.webp" alt="An assistant chat with the approval box above the message box, showing what will run and the Decline and Approve buttons" class="dark:hidden" />
 <img src="/images/assistant/approval-card-dark.webp" alt="An assistant chat with the approval box above the message box, showing what will run and the Decline and Approve buttons" class="hidden dark:block" />
@@ -27,11 +26,18 @@ Only one approval waits at a time. If the assistant plans several actions that e
 
 ## Answer an approval
 
-- **Approve:** click **Approve**, or press **Enter**.
-- **Decline:** click **Decline**, or press **Escape**.
-- **Decline with a reason:** type your reason in the message box and send it. This declines the approval and gives the assistant your text as the reason. It is not sent as a new chat message.
+- **Approve:** click **Approve**. Or, while the message box is empty, press **Ctrl** + **Enter** (**⌘** + **Enter** on a Mac).
+- **Decline:** click **Decline**. Or, while the message box is empty, press **Esc**.
+- **Decline with a reason:** type your reason in the message box. The send button changes to **Decline with reason**. Click it, or press **Enter**. This declines the approval and gives the assistant your text as the reason. It is not sent as a new chat message.
 
-**Enter** and **Escape** work from anywhere on the page, but not while you are typing in a text box or an editor.
+Good to know about the keys:
+
+- **Enter** alone never approves. In an empty message box it does nothing.
+- When you are typing in the message box and it holds text, **Ctrl** + **Enter** (**⌘** + **Enter**) sends that text, so it declines with your text as the reason. This works the same in every chat.
+- While you are typing in the message box and it holds text, **Esc** does nothing. If you click elsewhere first, **Esc** still declines, and **Ctrl** + **Enter** (**⌘** + **Enter**) does nothing.
+- When the message box is empty, the keys also work when you are not typing anywhere, for example after you click in the conversation.
+- The keys do not answer the approval while you are typing in another text box, such as the workspace search window.
+- On a phone or tablet, **Enter** in the message box starts a new line, so tap the button instead.
 
 After you answer, the assistant carries on by itself.
 

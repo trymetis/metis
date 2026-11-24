@@ -12,7 +12,7 @@ You can reach the **Members** page in two ways:
 - Click **Workspace settings** (the gear at the top of the left rail), then click **Members** in the list on the left, under **General**.
 - Open [search](/guide/search/search-your-workspace) and pick the command **Go to members**.
 
-The page is titled **Members** and says "Everyone in" followed by the workspace's name. Each row shows the member's first letter, their name, and their email address followed by "joined" and the date they joined.
+The page is titled **Members** and says "Everyone in" followed by the workspace's name. Each row shows a colored circle with the member's [initials](/guide/contacts/browse-your-contacts#read-the-list), their name, and their email address followed by "joined" and the date they joined.
 
 <img
   src="/images/workspaces/members-page.webp"

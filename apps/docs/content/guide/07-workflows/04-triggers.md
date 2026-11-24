@@ -188,7 +188,7 @@ Its only setting is **Only from**: pick one mailbox, or leave it empty for every
 
 Only **If**, **Switch**, **Filter**, **Stop** and **Add a Bcc** can follow it, and it must be the workflow's only trigger. Use it to add a BCC address to outgoing mail. See [Add a BCC to outgoing mail](/guide/workflows/add-a-bcc-to-outgoing-mail).
 
-These checks happen as part of sending, so they do not appear under **Activity**.
+These checks happen as part of sending, so they do not appear on the **Runs** page.
 
 ## How watching triggers work
 

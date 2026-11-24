@@ -11,17 +11,24 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@metis/ui/components/alert-dialog";
-import { Badge } from "@metis/ui/components/badge";
 import { Button } from "@metis/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@metis/ui/components/dropdown-menu";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@metis/ui/components/field";
 import { Input } from "@metis/ui/components/input";
 import { ScrollArea } from "@metis/ui/components/scroll-area";
 import { Separator } from "@metis/ui/components/separator";
 import { Switch } from "@metis/ui/components/switch";
 import { cn } from "@metis/ui/lib/utils";
-import { CircleAlert, Copy, MousePointerClick, Trash2 } from "lucide-react";
+import { Braces, CircleAlert, Copy, MoreHorizontal, MousePointerClick, Trash2 } from "lucide-react";
 import { type FocusEvent, useState } from "react";
+import { toast } from "sonner";
 
+import { IconButton } from "@/components/icon-button";
 import { CATEGORY_BADGE, NodeIcon } from "@/components/workflow-graph/node-meta";
 import { JsonBlock } from "@/components/workflow-history/json-block";
 import { StatusIcon, statusLabel } from "@/components/workflow-history/run-status";
@@ -35,7 +42,7 @@ import {
   type OnError,
   type WorkflowGraph,
 } from "@/workflow/schema";
-import { CATEGORY_LABELS, nodeOutputs, nodeTitle, stepDef } from "@/workflow/steps";
+import { nodeOutputs, nodeTitle, stepDef } from "@/workflow/steps";
 
 import { useDiagnostics, useOverlay } from "./editor-context";
 import { staleEdges, useEditor, useEditorStore } from "./editor-store";
@@ -174,6 +181,15 @@ function BranchQuestion({ node }: { node: GraphNode }) {
   );
 }
 
+async function copyReference(id: string) {
+  try {
+    await navigator.clipboard.writeText(`steps.${id}`);
+    toast.success("Reference copied");
+  } catch {
+    toast.error("Could not copy");
+  }
+}
+
 function StepInspector({ node }: { node: GraphNode }) {
   const store = useEditorStore();
   const graph = useEditor((s) => s.graph);
@@ -219,28 +235,43 @@ function StepInspector({ node }: { node: GraphNode }) {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-2">
         <span
           className={cn(
-            "grid size-8 shrink-0 place-items-center rounded-md",
+            "grid size-6 shrink-0 place-items-center rounded-md",
             CATEGORY_BADGE[def.category],
           )}
         >
-          <NodeIcon step={node.step} className="size-4" />
+          <NodeIcon step={node.step} className="size-3.5" />
         </span>
-        <div className="flex min-w-0 flex-col gap-1">
-          <h2 className="truncate font-medium text-[15px]">{nodeTitle(node)}</h2>
-          <div className="flex flex-wrap gap-1">
-            <Badge variant="secondary">{CATEGORY_LABELS[def.category]}</Badge>
-            {node.title && <Badge variant="outline">{def.label}</Badge>}
-            {def.effect === "dispatch" && <Badge variant="outline">Sends or creates</Badge>}
-            <Badge variant="ghost" className="font-mono">
-              {node.id}
-            </Badge>
-          </div>
+        <h2 className="min-w-0 flex-1 truncate font-medium text-[15px]">{nodeTitle(node)}</h2>
+        <div className="-mr-2 flex shrink-0 items-center gap-0.5">
+          <IconButton
+            label="Duplicate"
+            onClick={() => store.getState().paste([node], [], PASTE_OFFSET)}
+          >
+            <Copy className="size-4" />
+          </IconButton>
+          <IconButton label="Delete" onClick={() => store.getState().removeNodes([node.id])}>
+            <Trash2 className="size-4" />
+          </IconButton>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button variant="ghost" size="icon-sm" aria-label="More step actions">
+                  <MoreHorizontal className="size-4" />
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => void copyReference(node.id)}>
+                <Braces />
+                Copy reference
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
-      <p className="text-[13px] text-muted-foreground">{def.description}</p>
 
       <Problems
         problems={problems.filter(
@@ -312,21 +343,6 @@ function StepInspector({ node }: { node: GraphNode }) {
       {def.trigger && <TriggerDetails node={node} />}
 
       <StepResults node={node} />
-
-      <Separator />
-
-      <div className="flex flex-wrap gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => store.getState().paste([node], [], PASTE_OFFSET)}
-        >
-          <Copy /> Duplicate
-        </Button>
-        <Button size="sm" variant="ghost" onClick={() => store.getState().removeNodes([node.id])}>
-          <Trash2 /> Delete
-        </Button>
-      </div>
 
       <AlertDialog
         open={pending !== null}

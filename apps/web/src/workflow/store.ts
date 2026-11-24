@@ -2433,18 +2433,35 @@ export interface RunHistoryRow {
   principalUserId: string | null;
   graph: WorkflowGraph;
   upgraded: boolean;
+  createdAt: Date;
+}
+
+export interface RunCursor {
+  createdAt: Date;
+  id: string;
 }
 
 export async function listRuns(opts: {
   workspaceId?: string;
-  workflowId?: string;
+  workflowIds?: readonly string[];
+  statuses?: readonly RunStatus[];
   kind?: WorkflowKind;
+  before?: RunCursor;
   limit: number;
 }): Promise<RunHistoryRow[]> {
   const where = [];
   if (opts.workspaceId) where.push(eq(workflowRun.workspaceId, opts.workspaceId));
-  if (opts.workflowId) where.push(eq(workflowRun.workflowId, opts.workflowId));
+  if (opts.workflowIds?.length) where.push(inArray(workflowRun.workflowId, [...opts.workflowIds]));
+  if (opts.statuses?.length) where.push(inArray(workflowRun.status, [...opts.statuses]));
   if (opts.kind) where.push(eq(workflowRun.kind, opts.kind));
+  if (opts.before) {
+    where.push(
+      or(
+        lt(workflowRun.createdAt, opts.before.createdAt),
+        and(eq(workflowRun.createdAt, opts.before.createdAt), lt(workflowRun.id, opts.before.id)),
+      ),
+    );
+  }
   return db
     .select({
       id: workflowRun.id,
@@ -2461,13 +2478,52 @@ export async function listRuns(opts: {
       principalUserId: workflow.principalUserId,
       graph: workflowRevision.graph,
       upgraded: workflowRun.upgraded,
+      createdAt: workflowRun.createdAt,
     })
     .from(workflowRun)
     .innerJoin(workflow, eq(workflow.id, workflowRun.workflowId))
     .innerJoin(workflowRevision, eq(workflowRevision.id, workflowRun.revisionId))
     .where(where.length > 0 ? and(...where) : undefined)
-    .orderBy(desc(workflowRun.createdAt))
+    .orderBy(desc(workflowRun.createdAt), desc(workflowRun.id))
     .limit(opts.limit);
+}
+
+export async function latestRuns(workflowIds: readonly string[]): Promise<
+  {
+    workflowId: string;
+    status: RunStatus;
+    at: Date;
+    principalUserId: string | null;
+    graph: WorkflowGraph;
+  }[]
+> {
+  const rows = await Promise.all(
+    workflowIds.map((workflowId) =>
+      db
+        .select({
+          workflowId: workflowRun.workflowId,
+          status: workflowRun.status,
+          dueAt: workflowRun.dueAt,
+          startedAt: workflowRun.startedAt,
+          finishedAt: workflowRun.finishedAt,
+          principalUserId: workflow.principalUserId,
+          graph: workflowRevision.graph,
+        })
+        .from(workflowRun)
+        .innerJoin(workflow, eq(workflow.id, workflowRun.workflowId))
+        .innerJoin(workflowRevision, eq(workflowRevision.id, workflowRun.revisionId))
+        .where(eq(workflowRun.workflowId, workflowId))
+        .orderBy(desc(workflowRun.createdAt))
+        .limit(1),
+    ),
+  );
+  return rows.flat().map((row) => ({
+    workflowId: row.workflowId,
+    status: row.status,
+    at: row.finishedAt ?? row.startedAt ?? row.dueAt,
+    principalUserId: row.principalUserId,
+    graph: row.graph,
+  }));
 }
 
 export interface RunDetailRow {

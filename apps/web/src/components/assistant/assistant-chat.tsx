@@ -13,8 +13,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { WORKSPACE_REFERENCE_TYPES } from "@/ai/references";
 import { TURN_PART_TYPE, type WorkspaceTurnEnvelope, workspaceTurn } from "@/ai/turn";
-import { AgentApprovalBar } from "@/components/agent/agent-approval-bar";
 import { AgentChatMessage } from "@/components/agent/agent-chat-message";
+import { AgentComposer } from "@/components/agent/agent-composer";
 import { pendingApproval } from "@/components/agent/agent-tool-call";
 import { ReferenceComposer } from "@/components/agent/references/reference-composer";
 import { AgentReferenceProvider } from "@/components/agent/references/reference-provider";
@@ -23,12 +23,6 @@ import {
   ConversationContent,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-import {
-  PromptInput,
-  PromptInputBody,
-  PromptInputFooter,
-  PromptInputSubmit,
-} from "@/components/ai-elements/prompt-input";
 import { Suggestion } from "@/components/ai-elements/suggestion";
 import { DrivePreview } from "@/components/drive-preview/drive-preview";
 import { downloadDriveFile } from "@/components/drive-preview/use-drive-preview";
@@ -69,7 +63,7 @@ export function AssistantChat({
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
-        api: "/api/ai/workspace-chat",
+        api: "/api/ai/chat/workspace",
         body: threadId ? { workspaceSlug, threadId } : { workspaceSlug },
       }),
     [workspaceSlug, threadId],
@@ -179,35 +173,22 @@ export function AssistantChat({
 
           <div className="border-border-soft border-t px-6 py-4">
             <div className="mx-auto w-full max-w-3xl">
-              <AgentApprovalBar onApproval={addToolApprovalResponse} pending={pending} />
-              <PromptInput
-                className={pending ? "[&_[data-slot=input-group]]:rounded-t-none" : undefined}
-                onSubmit={(message) => {
-                  const text = message.text.trim();
-                  if (!text) return;
-                  if (pending) {
-                    addToolApprovalResponse({
-                      id: pending.approval.id,
-                      approved: false,
-                      reason: text,
-                    });
-                    return;
-                  }
-                  void sendText(text);
-                }}
-              >
-                <PromptInputBody>
-                  <ReferenceComposer
-                    label="Ask across your workspace"
-                    placeholder="Ask across your workspace…  @ to reference"
-                    initialReferences={draftReferences}
-                  />
-                </PromptInputBody>
-                <PromptInputFooter>
+              <AgentComposer
+                pending={pending}
+                onApproval={addToolApprovalResponse}
+                onSend={(text) => void sendText(text)}
+                status={status}
+                onStop={stop}
+                footer={
                   <span className="text-[11px] text-faint">Sensitive actions ask for approval</span>
-                  <PromptInputSubmit onStop={stop} status={status} />
-                </PromptInputFooter>
-              </PromptInput>
+                }
+              >
+                <ReferenceComposer
+                  label="Ask across your workspace"
+                  placeholder="Ask across your workspace…  @ to reference"
+                  initialReferences={draftReferences}
+                />
+              </AgentComposer>
             </div>
           </div>
         </div>

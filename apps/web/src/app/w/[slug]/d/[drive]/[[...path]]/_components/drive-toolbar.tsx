@@ -9,10 +9,11 @@ import {
   BreadcrumbSeparator,
 } from "@metis/ui/components/breadcrumb";
 import { Button } from "@metis/ui/components/button";
-import { Input } from "@metis/ui/components/input";
-import { Bot, FolderPlus, LayoutGrid, List, Search, Upload } from "lucide-react";
+import { FolderPlus, LayoutGrid, List, Upload } from "lucide-react";
 
+import { AgentToggle } from "@/components/agent/agent-toggle";
 import { MobileAsideTrigger } from "@/components/mobile-aside";
+import { SearchInput } from "@/components/search-input";
 
 import type { DriveView } from "./drive-entries";
 
@@ -79,16 +80,13 @@ export function DriveToolbar({
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-faint" />
-        <Input
-          type="text"
-          value={query}
-          onChange={(e) => onQueryChange(e.target.value)}
-          placeholder="Search this drive"
-          className="h-8 w-56 pl-7 text-[12px]"
-        />
-      </div>
+      <SearchInput
+        label="Search this drive"
+        placeholder="Search this drive"
+        value={query}
+        onValueChange={onQueryChange}
+        className="w-56"
+      />
 
       <Button
         variant="outline"
@@ -110,14 +108,7 @@ export function DriveToolbar({
       </Button>
 
       {showAgentToggle && (
-        <Button
-          variant={agentOpen ? "secondary" : "ghost"}
-          size="icon-sm"
-          aria-label="Drive AI"
-          onClick={onToggleAgent}
-        >
-          <Bot className="h-4 w-4" />
-        </Button>
+        <AgentToggle label="Drive AI" open={agentOpen} onToggle={onToggleAgent} />
       )}
     </div>
   );

@@ -16,6 +16,7 @@ import {
 import { Mail } from "lucide-react";
 import { useState } from "react";
 
+import { useAgentAvailable } from "@/components/agent/use-agent-available";
 import { ChordHint } from "@/components/chord-hint";
 import { ResponsiveAside } from "@/components/mobile-aside";
 import { ShortcutsHelp } from "@/components/shortcuts-help";
@@ -30,8 +31,8 @@ import { useComposeStore } from "@/store/compose-store";
 import { useMailStore } from "@/store/mail-store";
 import type { Email } from "@/types/mail";
 
-import { AgentPanel } from "./agent-panel";
 import { ComposeDialog } from "./compose-dialog";
+import { MailAgentPanel } from "./mail-agent-panel";
 import { Sidebar } from "./sidebar";
 
 interface MailShellProps {
@@ -40,7 +41,8 @@ interface MailShellProps {
 
 export function MailShell({ children }: MailShellProps) {
   const { armed, bindings, helpOpen, setHelpOpen } = useKeyboardShortcuts();
-  const { agentOpen } = useMailStore();
+  const agentAvailable = useAgentAvailable();
+  const agentOpen = useMailStore((s) => s.agentOpen) && agentAvailable;
   const composeOpen = useComposeStore((s) => s.session !== null);
   const { groupRef, onLayoutChanged } = useSavedLayout(
     "metis-suite-shell-layout",
@@ -71,7 +73,7 @@ export function MailShell({ children }: MailShellProps) {
             <main className="flex h-full min-w-0 flex-1 overflow-hidden">{children}</main>
             {agentOpen && (
               <div className="fixed inset-0 z-50 bg-background">
-                <AgentPanel />
+                <MailAgentPanel />
               </div>
             )}
           </>
@@ -105,7 +107,7 @@ export function MailShell({ children }: MailShellProps) {
                   maxSize={560}
                   groupResizeBehavior="preserve-pixel-size"
                 >
-                  <AgentPanel />
+                  <MailAgentPanel />
                 </ResizablePanel>
               </>
             )}

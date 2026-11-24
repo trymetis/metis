@@ -104,7 +104,7 @@ function withoutNodes(graph: WorkflowGraph, ids: ReadonlySet<string>): WorkflowG
   };
 }
 
-export function createEditorStore(initial: Snapshot): EditorStore {
+export function createEditorStore(saved: Snapshot, opening: Snapshot = saved): EditorStore {
   return createStore<EditorState & EditorActions>()((set, get) => {
     const commit = (next: Snapshot) => {
       const state = get();
@@ -135,11 +135,11 @@ export function createEditorStore(initial: Snapshot): EditorStore {
     };
 
     return {
-      ...initial,
+      ...opening,
       selected: [],
       past: [],
       future: [],
-      saved: initial,
+      saved,
       gesture: { depth: 0, start: null },
 
       update: (fn) => commit(fn(snapshotOf(get()))),

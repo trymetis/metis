@@ -9,7 +9,7 @@ import { useEffect } from "react";
 
 import { StatusIcon } from "@/components/workflow-history/run-status";
 import type { GraphNode, StepStatus } from "@/workflow/schema";
-import { type CardLine, nodeTitle, stepCategory, stepLabel } from "@/workflow/steps";
+import { type CardLine, nodeTitle, stepCategory, stepDef, stepLabel } from "@/workflow/steps";
 
 import { CATEGORY_BADGE, NodeIcon, PORT_HANDLE, type PortTone } from "./node-meta";
 
@@ -142,11 +142,19 @@ export function NodeCard({
       <div className="flex items-center gap-2 border-border-soft border-b px-3 py-2">
         <span
           className={cn(
-            "grid size-6 shrink-0 place-items-center rounded-md",
+            "relative grid size-6 shrink-0 place-items-center rounded-md",
             CATEGORY_BADGE[stepCategory(node.step)],
           )}
         >
           <NodeIcon step={node.step} className="size-3.5" />
+          {stepDef(node.step)?.effect === "dispatch" && (
+            <span
+              role="img"
+              aria-label="Sends or creates"
+              title="Sends or creates"
+              className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-primary ring-2 ring-surface"
+            />
+          )}
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium text-[13px] leading-tight">{title}</p>

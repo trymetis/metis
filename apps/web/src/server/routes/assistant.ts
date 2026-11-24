@@ -18,6 +18,7 @@ import {
   createAssistantThreadOutputSchema,
   listAssistantThreadsOutputSchema,
   okOutputSchema,
+  pinAssistantThreadInputSchema,
   renameAssistantThreadInputSchema,
   workspaceScopeSchema,
 } from "../schema";
@@ -51,8 +52,11 @@ export const assistantRouter = {
           id: t.id,
           title: assistantThreadTitle(t),
           updatedAt: toIso(t.updatedAt),
+          pinned: typeof t.metadata?.pinnedAt === "string",
         }))
-        .toSorted((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+        .toSorted(
+          (a, b) => Number(b.pinned) - Number(a.pinned) || b.updatedAt.localeCompare(a.updatedAt),
+        );
 
       return { threads };
     }),
@@ -100,6 +104,25 @@ export const assistantRouter = {
         id: input.threadId,
         title: input.title.trim().slice(0, 80),
         metadata: thread.metadata ?? {},
+      });
+      return { success: true as const };
+    }),
+
+  pinThread: workspaceSession(pinAssistantThreadInputSchema)
+    .output(okOutputSchema)
+    .handler(async ({ input, context }) => {
+      const { appUser } = context;
+      if (!appUser.workspaceId) {
+        throw new ORPCError("BAD_REQUEST", { message: "No active workspace" });
+      }
+      const thread = await requireOwnedThread(input.threadId, appUser.userId, appUser.workspaceId);
+      await workspaceMemory.updateThread({
+        id: input.threadId,
+        title: thread.title ?? "",
+        metadata: {
+          ...thread.metadata,
+          pinnedAt: input.pinned ? new Date().toISOString() : null,
+        },
       });
       return { success: true as const };
     }),

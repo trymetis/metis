@@ -38,12 +38,14 @@ import { cn } from "@metis/ui/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { ReactFlowProvider } from "@xyflow/react";
 import {
+  ArrowLeft,
   ChevronDown,
   ChevronUp,
   CircleAlert,
   FlaskConical,
   History,
   Keyboard,
+  ListOrdered,
   Loader2,
   MoreHorizontal,
   PanelRightClose,
@@ -55,15 +57,16 @@ import {
   Trash2,
   Undo2,
 } from "lucide-react";
+import type { Route } from "next";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePanelRef } from "react-resizable-panels";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { ChordHint } from "@/components/chord-hint";
-import { MobileAsideTrigger } from "@/components/mobile-aside";
 import { ShortcutsHelp, type ShortcutRow } from "@/components/shortcuts-help";
 import type { GraphOverlay } from "@/components/workflow-graph/overlay";
+import { browserTimezone, directoryResources } from "@/components/workflow-graph/resources";
 import { type ChordBindings, isTypingTarget, useChord } from "@/hooks/use-chord";
 import { useIsMobile } from "@/hooks/use-is-mobile";
 import { useSavedLayout } from "@/hooks/use-saved-layout";
@@ -72,11 +75,13 @@ import { orpc, rpc } from "@/lib/orpc";
 import type { WorkflowDirectory, WorkflowOutput } from "@/server/schema";
 import { type GraphTemplate, templateGraph } from "@/workflow/graph";
 import { edgeSchema, nodeSchema } from "@/workflow/schema";
+import { workflowPath, workflowRunsPath } from "@/workspace/path";
 
+import { DecisionPreviewPanel } from "./decision-preview-panel";
 import {
   DiagnosticsContext,
+  DockActionsContext,
   diagnose,
-  directoryResources,
   type EditorEnv,
   EditorEnvContext,
   type EditorWorkflowRef,
@@ -126,15 +131,7 @@ const clipboardSchema = z.object({
 type Clipboard = Omit<z.infer<typeof clipboardSchema>, "tag">;
 let memoryClipboard: Clipboard | null = null;
 
-type DockTab = "runs" | "test";
-
-function browserTimezone(): string | undefined {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone;
-  } catch {
-    return undefined;
-  }
-}
+type DockTab = "runs" | "test" | "preview";
 
 function togglePanel(ref: ReturnType<typeof usePanelRef>) {
   const panel = ref.current;
@@ -147,11 +144,12 @@ interface WorkflowEditorProps {
   directory: WorkflowDirectory;
   allowDecisionSteps: boolean;
   workflows: readonly EditorWorkflowRef[];
-  workflow: WorkflowOutput | null;
-  template: GraphTemplate;
+  workflow: WorkflowOutput;
+  template: GraphTemplate | null;
   onSaved: (workflow: WorkflowOutput) => void;
   onDeleted: (id: string) => void;
   onDirtyChange: (dirty: boolean) => void;
+  onNavigate: (href: Route) => void;
 }
 
 function IconButton({
@@ -228,6 +226,7 @@ function EditorShell({
   onSaved,
   onDeleted,
   onDirtyChange,
+  onNavigate,
 }: WorkflowEditorProps) {
   const scope = useWorkspaceScope();
   const queryClient = useQueryClient();
@@ -246,12 +245,12 @@ function EditorShell({
 
   const env = useMemo<EditorEnv>(
     () => ({
-      workflowId: workflow?.id ?? null,
+      workflowId: workflow.id,
       workflow,
       directory,
       resources: directoryResources(directory, browserTimezone()),
       allowDecisionSteps,
-      sources: new Map((workflow?.sources ?? []).map((s) => [s.triggerNodeId, s])),
+      sources: new Map(workflow.sources.map((s) => [s.triggerNodeId, s])),
       workflows,
     }),
     [workflow, directory, allowDecisionSteps, workflows],
@@ -285,6 +284,7 @@ function EditorShell({
   const [dockTab, setDockTab] = useState<DockTab>("runs");
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
   const [replay, setReplay] = useState<ReplayTarget | null>(null);
+  const [previewNodeId, setPreviewNodeId] = useState<string | null>(null);
   const [inputsOpen, setInputsOpen] = useState(false);
   const [runInputs, setRunInputs] = useState<InputValues>({});
   const [inspectorOpen, setInspectorOpen] = useState(true);
@@ -310,6 +310,15 @@ function EditorShell({
       if (panel?.isCollapsed()) panel.expand();
     },
     [dockRef],
+  );
+  const dockActions = useMemo(
+    () => ({
+      openPreview: (nodeId: string) => {
+        setPreviewNodeId(nodeId);
+        openDock("preview");
+      },
+    }),
+    [openDock],
   );
 
   const focusFirstProblem = useCallback(() => {
@@ -343,9 +352,7 @@ function EditorShell({
         ...scope,
         workflow: { name: snapshot.name.trim(), enabled: snapshot.enabled, graph: snapshot.graph },
       };
-      const result = workflow
-        ? await orpc.workflows.update({ id: workflow.id, ...body })
-        : await orpc.workflows.create(body);
+      const result = await orpc.workflows.update({ id: workflow.id, ...body });
       if (result.workflow) {
         store.getState().markSaved(snapshot);
         onSaved(result.workflow);
@@ -357,15 +364,14 @@ function EditorShell({
     }
   }, [store, diagnostics, focusFirstProblem, scope, workflow, onSaved]);
 
-  const manualTrigger = workflow?.graph.nodes.find((n) => n.step === "trigger.manual");
-  const runnable = !!workflow?.graph.nodes.some(
+  const manualTrigger = workflow.graph.nodes.find((n) => n.step === "trigger.manual");
+  const runnable = workflow.graph.nodes.some(
     (n) => n.step === "trigger.manual" || n.step === "trigger.schedule",
   );
   const manualFields = triggerInputs(manualTrigger);
 
   const queueRun = useCallback(
     async (inputs?: InputValues) => {
-      if (!workflow) return;
       setRunning(true);
       try {
         const result = await orpc.workflows.run({
@@ -392,7 +398,6 @@ function EditorShell({
   }, [manualFields.length, queueRun]);
 
   async function doDelete() {
-    if (!workflow) return;
     setConfirmDelete(false);
     try {
       await orpc.workflows.delete({ ...scope, id: workflow.id });
@@ -452,8 +457,6 @@ function EditorShell({
     <span className="flex items-center gap-1.5 text-muted-foreground">
       <Loader2 className="size-3 animate-spin" /> Saving
     </span>
-  ) : !workflow ? (
-    <span className="text-muted-foreground">Not saved yet</span>
   ) : dirty ? (
     <span className="flex items-center gap-1.5 text-brand-text">
       <span className="size-1.5 rounded-full bg-brand-text" /> Unsaved changes
@@ -464,7 +467,12 @@ function EditorShell({
 
   const topBar = (
     <div className="flex shrink-0 flex-wrap items-center gap-2 border-border border-b bg-panel px-2 py-1.5">
-      <MobileAsideTrigger className="size-8 shrink-0" />
+      <IconButton
+        label="Back to workflows"
+        onClick={() => onNavigate(workflowPath(scope.workspaceSlug))}
+      >
+        <ArrowLeft />
+      </IconButton>
       <input
         value={name}
         onChange={(e) => store.getState().setName(e.target.value)}
@@ -472,6 +480,7 @@ function EditorShell({
         onBlur={() => store.getState().endGesture()}
         placeholder="Untitled workflow"
         aria-label="Workflow name"
+        maxLength={80}
         className="w-44 min-w-0 rounded-md border border-transparent bg-transparent px-2 py-1 font-medium text-[14px] text-foreground outline-none hover:border-border focus:border-primary/40 sm:w-60"
       />
       <label className="flex items-center gap-2 text-[12px] text-muted-foreground">
@@ -522,7 +531,7 @@ function EditorShell({
         <Button variant="outline" size="sm" onClick={() => openDock("test")}>
           <FlaskConical /> Test
         </Button>
-        {workflow && runnable && (
+        {runnable && (
           <Button variant="outline" size="sm" onClick={runNow} disabled={running}>
             {running ? <Loader2 className="animate-spin" /> : <Play />}
             Run now
@@ -530,7 +539,7 @@ function EditorShell({
         )}
         <Button size="sm" onClick={save} disabled={saving}>
           {saving ? <Loader2 className="animate-spin" /> : <Save />}
-          {workflow ? "Save" : "Create workflow"}
+          Save
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger
@@ -543,16 +552,17 @@ function EditorShell({
             <DropdownMenuItem onClick={() => setHelpOpen(true)}>
               <Keyboard /> Keyboard shortcuts
             </DropdownMenuItem>
-            {workflow && (
-              <DropdownMenuItem onClick={() => setRevisionsOpen(true)}>
-                <History /> Revisions
-              </DropdownMenuItem>
-            )}
-            {workflow && (
-              <DropdownMenuItem variant="destructive" onClick={() => setConfirmDelete(true)}>
-                <Trash2 /> Delete workflow
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem
+              onClick={() => onNavigate(workflowRunsPath(scope.workspaceSlug, workflow.id))}
+            >
+              <ListOrdered /> Runs
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setRevisionsOpen(true)}>
+              <History /> Revisions
+            </DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" onClick={() => setConfirmDelete(true)}>
+              <Trash2 /> Delete workflow
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         {!isMobile && (
@@ -581,6 +591,11 @@ function EditorShell({
           <TabsTrigger value="test" onClick={() => openDock("test")}>
             Test run
           </TabsTrigger>
+          {previewNodeId && (
+            <TabsTrigger value="preview" onClick={() => openDock("preview")}>
+              Preview
+            </TabsTrigger>
+          )}
         </TabsList>
         {overlayState.source && (
           <span className="ml-auto flex items-center gap-1 text-[12px] text-muted-foreground">
@@ -609,7 +624,7 @@ function EditorShell({
         <RunsPanel
           selectedRunId={selectedRunId}
           onSelectRun={setSelectedRunId}
-          revision={workflow?.revision ?? null}
+          revision={workflow.revision}
           onReplay={(runId) => {
             setReplay({ runId, fromNodeId: null });
             openDock("test");
@@ -619,6 +634,15 @@ function EditorShell({
       <TabsContent value="test" keepMounted className={cn("min-h-0 flex-1", !dockOpen && "hidden")}>
         <TestPanel replay={replay} onReplayChange={setReplay} />
       </TabsContent>
+      {previewNodeId && (
+        <TabsContent
+          value="preview"
+          keepMounted
+          className={cn("min-h-0 flex-1", !dockOpen && "hidden")}
+        >
+          <DecisionPreviewPanel key={previewNodeId} nodeId={previewNodeId} />
+        </TabsContent>
+      )}
     </Tabs>
   );
 
@@ -655,120 +679,120 @@ function EditorShell({
     <EditorEnvContext value={env}>
       <DiagnosticsContext value={diagnostics}>
         <OverlayContext value={overlay}>
-          <CanvasElementContext value={canvasRef}>
-            <div className="flex h-full min-h-0 flex-col">
-              {topBar}
-              <div className="min-h-0 flex-1">
-                {isMobile ? (
-                  center
-                ) : (
-                  <ResizablePanelGroup
-                    id="metis-workflow-editor-columns"
-                    groupRef={columns.groupRef}
-                    onLayoutChanged={columns.onLayoutChanged}
-                  >
-                    <ResizablePanel id="center" minSize={320}>
-                      {center}
-                    </ResizablePanel>
-                    <ResizableHandle />
-                    <ResizablePanel
-                      id="inspector"
-                      panelRef={inspectorRef}
-                      collapsible
-                      defaultSize={340}
-                      minSize={280}
-                      maxSize={520}
-                      onResize={(size) => setInspectorOpen(size.inPixels > 0)}
+          <DockActionsContext value={dockActions}>
+            <CanvasElementContext value={canvasRef}>
+              <div className="flex h-full min-h-0 flex-col">
+                {topBar}
+                <div className="min-h-0 flex-1">
+                  {isMobile ? (
+                    center
+                  ) : (
+                    <ResizablePanelGroup
+                      id="metis-workflow-editor-columns"
+                      groupRef={columns.groupRef}
+                      onLayoutChanged={columns.onLayoutChanged}
                     >
-                      <div className="h-full border-border border-l">
-                        <Inspector />
-                      </div>
-                    </ResizablePanel>
-                  </ResizablePanelGroup>
-                )}
+                      <ResizablePanel id="center" minSize={320}>
+                        {center}
+                      </ResizablePanel>
+                      <ResizableHandle />
+                      <ResizablePanel
+                        id="inspector"
+                        panelRef={inspectorRef}
+                        collapsible
+                        defaultSize={340}
+                        minSize={280}
+                        maxSize={520}
+                        onResize={(size) => setInspectorOpen(size.inPixels > 0)}
+                      >
+                        <div className="h-full border-border border-l">
+                          <Inspector />
+                        </div>
+                      </ResizablePanel>
+                    </ResizablePanelGroup>
+                  )}
+                </div>
               </div>
-            </div>
 
-            {isMobile && (
-              <Sheet
-                open={selectedCount > 0}
-                onOpenChange={(open) => {
-                  if (!open) store.getState().select([]);
-                }}
-              >
-                <SheetContent side="bottom" className="h-[70vh] p-0">
-                  <SheetTitle className="sr-only">Step settings</SheetTitle>
-                  <Inspector />
-                </SheetContent>
-              </Sheet>
-            )}
+              {isMobile && (
+                <Sheet
+                  open={selectedCount > 0}
+                  onOpenChange={(open) => {
+                    if (!open) store.getState().select([]);
+                  }}
+                >
+                  <SheetContent side="bottom" className="h-[70vh] p-0">
+                    <SheetTitle className="sr-only">Step settings</SheetTitle>
+                    <Inspector />
+                  </SheetContent>
+                </Sheet>
+              )}
 
-            <QuickAdd open={quickAdd} onOpenChange={setQuickAdd} />
-            <Dialog open={inputsOpen} onOpenChange={setInputsOpen}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Run {workflow?.name ?? "this workflow"}</DialogTitle>
-                  <DialogDescription>Fill in the inputs this run starts with.</DialogDescription>
-                </DialogHeader>
-                <InputsForm fields={manualFields} value={runInputs} onChange={setRunInputs} />
-                <DialogFooter>
-                  <Button
-                    disabled={running}
-                    onClick={() => {
-                      setInputsOpen(false);
-                      void queueRun(runInputs);
-                    }}
-                  >
-                    {running ? <Loader2 className="animate-spin" /> : <Play />}
-                    Run now
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-            {workflow && (
+              <QuickAdd open={quickAdd} onOpenChange={setQuickAdd} />
+              <Dialog open={inputsOpen} onOpenChange={setInputsOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Run {workflow.name}</DialogTitle>
+                    <DialogDescription>Fill in the inputs this run starts with.</DialogDescription>
+                  </DialogHeader>
+                  <InputsForm fields={manualFields} value={runInputs} onChange={setRunInputs} />
+                  <DialogFooter>
+                    <Button
+                      disabled={running}
+                      onClick={() => {
+                        setInputsOpen(false);
+                        void queueRun(runInputs);
+                      }}
+                    >
+                      {running ? <Loader2 className="animate-spin" /> : <Play />}
+                      Run now
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
               <RevisionsSheet
                 workflowId={workflow.id}
                 current={graph}
                 open={revisionsOpen}
                 onOpenChange={setRevisionsOpen}
               />
-            )}
-            <ShortcutsHelp
-              open={helpOpen}
-              onOpenChange={setHelpOpen}
-              prefix={WORKFLOW_CHORD_PREFIX}
-              bindings={bindings}
-              unchorded={WORKFLOW_UNCHORDED}
-            />
-            <ChordHint prefix={WORKFLOW_CHORD_PREFIX} bindings={bindings} visible={armed} />
+              <ShortcutsHelp
+                open={helpOpen}
+                onOpenChange={setHelpOpen}
+                prefix={WORKFLOW_CHORD_PREFIX}
+                bindings={bindings}
+                unchorded={WORKFLOW_UNCHORDED}
+              />
+              <ChordHint prefix={WORKFLOW_CHORD_PREFIX} bindings={bindings} visible={armed} />
 
-            <AlertDialog
-              open={confirmDelete}
-              onOpenChange={(open) => {
-                if (!open) setConfirmDelete(false);
-              }}
-            >
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete this workflow?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    {workflow
-                      ? `"${workflow.name}" stops running. Its queued and waiting runs are cancelled, and its run history stays but can no longer be retried. A run already in progress finishes its current step.`
-                      : ""}
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={doDelete}
-                    className="bg-destructive text-white hover:bg-destructive/90"
-                  >
-                    Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </CanvasElementContext>
+              <AlertDialog
+                open={confirmDelete}
+                onOpenChange={(open) => {
+                  if (!open) setConfirmDelete(false);
+                }}
+              >
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete this workflow?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {workflow
+                        ? `"${workflow.name}" stops running. Its queued and waiting runs are cancelled, and its run history stays but can no longer be retried. A run already in progress finishes its current step.`
+                        : ""}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={doDelete}
+                      className="bg-destructive text-white hover:bg-destructive/90"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </CanvasElementContext>
+          </DockActionsContext>
         </OverlayContext>
       </DiagnosticsContext>
     </EditorEnvContext>
@@ -776,15 +800,25 @@ function EditorShell({
 }
 
 export function WorkflowEditor(props: WorkflowEditorProps) {
-  const [store] = useState(() =>
-    createEditorStore({
-      name: props.workflow?.name ?? "",
-      enabled: props.workflow?.enabled ?? true,
-      graph:
-        props.workflow?.graph ??
-        templateGraph(props.template, directoryResources(props.directory, browserTimezone())),
-    }),
-  );
+  const [store] = useState(() => {
+    const saved = {
+      name: props.workflow.name,
+      enabled: props.workflow.enabled,
+      graph: props.workflow.graph,
+    };
+    return createEditorStore(
+      saved,
+      props.template
+        ? {
+            ...saved,
+            graph: templateGraph(
+              props.template,
+              directoryResources(props.directory, browserTimezone()),
+            ),
+          }
+        : undefined,
+    );
+  });
   return (
     <ReactFlowProvider>
       <EditorStoreContext value={store}>

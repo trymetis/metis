@@ -79,7 +79,7 @@ A contact with no name shows its email address instead, or "Unnamed".
 
 ## Filter the list
 
-Type in the box above the list (it says "Filter by name, email or phone"). The list keeps only the contacts that match every word you type. The filter looks at the name, nickname, organization, job title, email addresses and phone numbers.
+Type in the box above the list (it says "Filter by name, email or phone"). The list keeps only the contacts that match every word you type. The filter looks at the name, nickname, organization, job title, email addresses and phone numbers. To show every contact again, click the X in the box (**Clear search**).
 
 <img src="/images/contacts/filter.webp" alt="The contact list filtered by an organization name" class="dark:hidden" />
 <img src="/images/contacts/filter-dark.webp" alt="The contact list filtered by an organization name" class="hidden dark:block" />

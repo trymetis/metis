@@ -1,14 +1,16 @@
 "use client";
 
-import { Input } from "@metis/ui/components/input";
+import { useDraggable } from "@dnd-kit/core";
 import { cn } from "@metis/ui/lib/utils";
-import { Loader2, Search, UserPlus } from "lucide-react";
+import { Loader2, UserPlus } from "lucide-react";
 
 import { IconButton } from "@/components/icon-button";
 import { PersonAvatar } from "@/components/person-avatar";
+import { SearchInput } from "@/components/search-input";
 import { primaryEmail } from "@/contacts/fields";
 import type { ContactDto } from "@/server/schema";
 
+import { CONTACT_DRAG } from "./contacts-agent-panel";
 import { useContacts } from "./contacts-context";
 
 const COLUMNS_WITH_BOOK =
@@ -27,15 +29,22 @@ function ContactRow({
   showBook,
   active,
   onOpen,
+  dragToAgent,
 }: {
   contact: ContactDto;
   wide: boolean;
   showBook: boolean;
   active: boolean;
   onOpen: () => void;
+  dragToAgent: boolean;
 }) {
   const email = primaryEmail(contact);
   const name = contact.name.display || email || "Unnamed";
+  const { listeners, setNodeRef, isDragging } = useDraggable({
+    id: `contact:${contact.accountId}:${contact.bookId}:${contact.id}`,
+    data: { type: CONTACT_DRAG, contact, label: name },
+    disabled: !dragToAgent,
+  });
   const secondary = [
     email ?? contact.phones[0]?.value ?? contact.organization,
     showBook ? contact.bookName : null,
@@ -45,11 +54,14 @@ function ContactRow({
 
   return (
     <button
+      ref={setNodeRef}
+      {...listeners}
       type="button"
       onClick={onOpen}
       aria-current={active ? "true" : undefined}
       className={cn(
         "flex w-full items-center gap-3 border-b border-border-soft px-3 py-2.5 text-left transition-colors",
+        isDragging && "opacity-40",
         wide && cn("md:grid md:gap-4 md:px-4 md:py-2", showBook ? COLUMNS_WITH_BOOK : COLUMNS),
         active ? "bg-brand-soft" : "hover:bg-hover",
       )}
@@ -80,7 +92,7 @@ function ContactRow({
   );
 }
 
-export function ContactList({ wide }: { wide: boolean }) {
+export function ContactList({ wide, dragToAgent }: { wide: boolean; dragToAgent: boolean }) {
   const { contacts, loading, query, setQuery, selected, openContact, book, setEditor } =
     useContacts();
   const showBook = book === null;
@@ -88,16 +100,13 @@ export function ContactList({ wide }: { wide: boolean }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center gap-2 border-b border-border px-3 py-2">
-        <div className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-faint" />
-          <Input
-            aria-label="Filter contacts"
-            placeholder="Filter by name, email or phone"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="pl-8 text-[13px]"
-          />
-        </div>
+        <SearchInput
+          label="Filter contacts"
+          placeholder="Filter by name, email or phone"
+          value={query}
+          onValueChange={setQuery}
+          className="min-w-0 flex-1"
+        />
         <IconButton
           label="New contact"
           variant="default"
@@ -146,6 +155,7 @@ export function ContactList({ wide }: { wide: boolean }) {
                   selected.accountId === contact.accountId
                 }
                 onOpen={() => openContact(contact)}
+                dragToAgent={dragToAgent}
               />
             </li>
           ))}

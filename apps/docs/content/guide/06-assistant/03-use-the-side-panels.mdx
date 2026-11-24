@@ -9,20 +9,48 @@ Panel conversations are not saved. When you close the panel or leave the page, t
 
 All four panels work the same way:
 
+- The robot button that opens a panel sits at the right end of the section's header (in Mail, the row with the folder title). It shows only when AI is on for the workspace and for the mailbox, calendar, drive or address book you are viewing. On a view that combines several, such as **All inboxes** or **All drives**, it shows when at least one of them has AI on. See [When a panel is turned off](#when-a-panel-is-turned-off).
+- The button stays highlighted while the panel is open. Click it again to close the panel.
+- The panel's header shows the name of what the panel works on. A long name is cut short.
 - Type in the box at the bottom and press **Enter** to send.
 - Click a suggestion to send it as your question. Suggestions show only in a new chat.
 - Click the X (**Close assistant**) to close the panel.
+- Click the eraser icon (**Clear chat**), left of **Close assistant**, to start over. It shows once you have sent a message. See [Start over](#start-over).
 - Sensitive actions ask for your approval first. See [Approve or decline actions](/guide/assistant/approve-or-decline-actions).
+- You can send up to 20 messages a minute across the four panels. If a panel says it hit a problem and the details include "Too many requests. Please slow down.", wait a minute and click **Retry**. See [Limits and troubleshooting](/guide/assistant/limits-and-troubleshooting).
+
+## Attach items
+
+Attaching an item tells the panel which email, event, file or contact you are asking about. Each panel section below lists the ways to attach in that panel. These work the same in all four:
+
+- **Drag an item onto the panel.** As you drag, a small card with the item's name follows the pointer. In Calendar, the card also shows the event's start time. You can drag only events that have a start and end time, in Day or Week view. A dashed box with a paperclip and "Drop to attach" shows above the message box. When you are over the panel, the box is highlighted and the panel gets a colored outline. Let go to attach the item. In Mail, Drive and Contacts, you cannot drag with the keyboard; use the paperclip instead. On a phone the panel fills the screen, so you cannot drag onto it.
+- **Pick from a list.** Click the paperclip at the bottom of the message box, then type to search and pick an item. The list shows up to 50 items and leaves out the ones already attached. Typing searches only those 50. To find another item, narrow the list or folder first, or drag the item onto the panel. When there is nothing left to attach, the paperclip is turned off. If what you type matches nothing, the list says so, for example "Nothing in this folder" or "No contacts in view".
+
+Attached items show as chips above the message box, with a count such as "2 attached". After three chips, the rest are shown as "+2 more" (or however many there are). Click it to see them all.
+
+- An item you attached by dragging or picking stays attached while you browse.
+- Attaching an item that is already attached does not add it twice.
+- Click the X on a chip to remove it, or **Clear** to remove them all.
+
+Attachments go with your next message only. After you send, the chips above the message box are cleared. The items you sent stay visible with your message in the conversation, in every panel.
+
+## Start over
+
+Click the eraser icon (**Clear chat**) in the panel's header to start a new conversation. It shows once you have sent a message.
+
+- Any reply still coming in stops.
+- Every message and every attached chip is removed.
+- The panel shows its empty state again, with the suggestions.
+
+There is no confirmation, and a cleared chat cannot be brought back. The email, event or contact you have open is not attached again until you open another one, or close it and open it again.
 
 ## Mail AI
 
 Mail AI works with the mailbox you have open.
 
 1. Open a mailbox folder, such as your inbox.
-2. Click the robot button next to the folder title (**Toggle AI agent**), or press **m** and then **a**.
-3. The panel opens with the heading **Mail AI**, and "This mailbox" under it.
-
-Once you have sent a message, click the eraser icon (**Clear chat**) to start over.
+2. Click the robot button (**Mail AI**) at the right end of the row with the folder title, or press **m** and then **a**.
+3. The panel opens. Its header shows the mailbox's email address, or "All inboxes" when you are in **All inboxes**.
 
 <img
   src="/images/assistant/mail-ai-panel.webp"
@@ -39,11 +67,9 @@ Once you have sent a message, click the eraser icon (**Clear chat**) to start ov
 
 Attaching an email tells Mail AI which message you are asking about. There are three ways:
 
-- **Open an email.** The email you have open is attached on its own, shown with a dashed outline. Click the pin icon (**Keep attached while you browse**) to keep it attached when you open another email.
-- **Drag emails** from the list onto the panel. The panel shows "Drop to attach".
+- **Open an email.** The email you have open is attached on its own, shown with a dashed outline. Point at the chip and click the pin icon (**Keep attached while you browse**) to keep it attached when you open another email.
+- **Drag emails** from the list onto the panel.
 - **Pick from a list.** Click the paperclip (**Attach an email**), then search and pick an email from the ones already loaded in the list.
-
-Attached emails show as chips above the message box, with a count such as "2 attached". Click the X on a chip to remove it, or **Clear** to remove them all. Attachments go with your next message only. After you send, the tray is empty again, but the chips stay visible in the conversation.
 
 ### What to ask
 
@@ -63,6 +89,8 @@ Without an email attached, the suggestions are:
 
 Mail AI can list and search emails, read them, star or unstar them, and set labels that already exist. It can move emails to the trash after you approve. When phishing detection is on for the mailbox in this workspace, it can also check an email for phishing. When it is off, the check reports that phishing detection is turned off for this mailbox. If your Metis Suite server has no phishing detection, Mail AI cannot check for phishing.
 
+The message list refreshes after each reply, so you see any change straight away. See [The Mail AI panel](/guide/mail/ai-help#the-mail-ai-panel).
+
 :::note
 Mail AI cannot send email or save drafts. When you ask it to draft a reply, it writes the text in the chat for you to copy. To have the assistant send or save drafts, use [Workspace AI](/guide/assistant/use-workspace-ai).
 :::
@@ -73,7 +101,7 @@ Calendar AI works with the calendar you have open, or with all your calendars on
 
 1. Open a calendar.
 2. Click the robot button in the calendar header (**Calendar AI**), or press **c** and then **a**.
-3. The panel opens with the heading **Calendar AI**, and either "This calendar" or "All calendars" under it.
+3. The panel opens. Its header shows the calendar account's [name](/guide/calendar/views-and-navigation#how-calendar-accounts-are-named), such as "Google Calendar · you@example.com", or "All calendars" on the all-calendars view.
 
 <img
   src="/images/assistant/calendar-ai-panel.webp"
@@ -88,8 +116,8 @@ Calendar AI works with the calendar you have open, or with all your calendars on
 
 To attach an event:
 
-- **Select it.** The event you have selected is attached on its own.
-- **Drag it** from the calendar onto the panel.
+- **Select it.** The event you have selected is attached on its own, shown with a dashed outline. Point at the chip and click the pin icon (**Keep attached while you browse**) to keep it attached when you select another event.
+- **Drag it** from the calendar onto the panel, in Day or Week view. Events in the **All day** row cannot be dragged.
 - **Pick from a list.** Click the paperclip (**Attach an event**) and choose from the events in view.
 
 The suggestions are:
@@ -107,7 +135,7 @@ Drive AI works with the drive you have open, or with all your drives on the **Al
 
 1. Open a drive.
 2. Click the robot button in the toolbar (**Drive AI**), or press **d** and then **a**.
-3. The panel opens with the heading **Drive AI**, and either "This drive" or "All drives" under it. On a phone, it fills the screen.
+3. The panel opens. Its header shows the drive's [name](/guide/drive/browse-your-files#how-drives-are-named), or "All drives" on the **All drives** view. On a phone, it fills the screen.
 
 <img
   src="/images/assistant/drive-ai-panel.webp"
@@ -120,7 +148,12 @@ Drive AI works with the drive you have open, or with all your drives on the **Al
   class="hidden dark:block"
 />
 
-To attach a file, click the paperclip (**Attach a file**) and pick a file from the current folder. Drive AI does not attach files on its own, and you cannot drag files onto it. Click a file chip to open the file.
+Drive AI does not attach files on its own. To attach a file or a folder:
+
+- **Drag it** from the file list or grid onto the panel. You can drag files only while the panel is open.
+- **Pick from a list.** Click the paperclip (**Attach a file**) and choose from the files and folders in the current folder.
+
+During a search, you drag and pick from the search results instead. In the **Attach a file** list, a file shows its size and a folder shows "Folder". Click a file chip to open the file, or a folder chip to go into the folder. This works only while the item is in the list on screen.
 
 The suggestions are:
 
@@ -137,7 +170,7 @@ Contacts AI works with the address book account you picked in the **Switch addre
 
 1. Open Contacts.
 2. Click the robot button in the Contacts header (**Contacts AI**). Contacts AI has no keyboard shortcut.
-3. The panel opens with the heading **Contacts AI**, and either "This address book" or "All address books" under it.
+3. The panel opens. Its header shows the address book account's [name](/guide/contacts/browse-your-contacts#how-accounts-are-named), or "All address books" when you picked **All address books**.
 
 <img
   src="/images/contacts/contacts-ai-panel.webp"
@@ -152,7 +185,8 @@ Contacts AI works with the address book account you picked in the **Switch addre
 
 To attach a contact:
 
-- **Open it.** The contact you have open is attached on its own, shown with a dashed outline. Click the pin icon (**Keep attached while you browse**) to keep it attached when you open another contact.
+- **Open it.** The contact you have open is attached on its own, shown with a dashed outline. Point at the chip and click the pin icon (**Keep attached while you browse**) to keep it attached when you open another contact.
+- **Drag it** from the contact list onto the panel. You can drag contacts only while the panel is open.
 - **Pick from a list.** Click the paperclip (**Attach a contact**) and choose from the contacts in the list.
 
 Click a contact chip to open that contact.
@@ -168,4 +202,13 @@ Contacts AI can list your address books and groups, search contacts and read a c
 
 ## When a panel is turned off
 
-If the panel shows **Assistant turned off**, AI is off for this workspace or for this mailbox, calendar, drive or address book. The panel shows a button that takes you to the right settings. See [How AI works in Metis Suite](/guide/assistant/how-ai-works) for who can turn it on.
+A panel is there only when AI is on. If AI is off for the workspace, or for the mailbox, calendar, drive or address book you are viewing:
+
+- The robot button does not show.
+- The panel does not show either, even if you had it open before.
+- The keyboard shortcut (such as **m** then **a**) does nothing, and the section's **Keyboard shortcuts** help does not list it.
+- You cannot drag items to attach them.
+
+The button also does not show when AI is not set up on your Metis Suite server.
+
+To turn AI on, ask an owner or admin of the workspace, or the person who connected the mailbox, calendar, drive or address book. See [How AI works in Metis Suite](/guide/assistant/how-ai-works).

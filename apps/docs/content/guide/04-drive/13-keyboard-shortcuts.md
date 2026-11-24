@@ -7,6 +7,8 @@ Most Drive shortcuts are two keys pressed one after the other: first <kbd>d</kbd
 
 Shortcuts do not work while you are typing in a box, such as the search box.
 
+<kbd>d</kbd> then <kbd>a</kbd> works only when the **Drive AI** button shows. Otherwise, the help and the hint do not list it. See [When Drive AI is turned off](/guide/drive/drive-ai#when-drive-ai-is-turned-off).
+
 ## Drive shortcuts
 
 | Keys                           | What it does                                    |

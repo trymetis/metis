@@ -44,19 +44,21 @@ export function ApprovalActions({ waitId, onDone }: { waitId: string; onDone?: (
         placeholder="Note (optional)"
         className="h-8 min-w-40 flex-1 text-[13px]"
       />
-      <Button size="sm" disabled={busy !== null} onClick={() => void decide("approved")}>
-        {busy === "approved" ? <Loader2 className="animate-spin" /> : <Check />}
-        Approve
-      </Button>
-      <Button
-        size="sm"
-        variant="outline"
-        disabled={busy !== null}
-        onClick={() => void decide("denied")}
-      >
-        {busy === "denied" ? <Loader2 className="animate-spin" /> : <X />}
-        Deny
-      </Button>
+      <div className="flex shrink-0 items-center gap-2">
+        <Button size="sm" disabled={busy !== null} onClick={() => void decide("approved")}>
+          {busy === "approved" ? <Loader2 className="animate-spin" /> : <Check />}
+          Approve
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={busy !== null}
+          onClick={() => void decide("denied")}
+        >
+          {busy === "denied" ? <Loader2 className="animate-spin" /> : <X />}
+          Deny
+        </Button>
+      </div>
     </div>
   );
 }

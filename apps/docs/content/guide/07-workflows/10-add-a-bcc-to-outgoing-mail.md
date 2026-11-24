@@ -10,19 +10,20 @@ Use this to keep a copy of your sent mail in an archive mailbox, or to copy a te
 ## Build the workflow
 
 1. Click **Workflows** in the left rail.
-2. Click **New workflow** and pick **Start from a manual trigger**. Remove its **Run by hand** trigger: point at the card and click **Remove step** (the **X**).
-3. If the step palette is closed, click the **Show steps** icon in the top-left corner of the canvas to open it. From its **Triggers** category, click or drag **Before mail is sent** onto the canvas. You can also press **w** then **a** and search for it.
-4. With the trigger selected, choose under **Only from** in the Inspector: one mailbox, so the copy is only added to mail sent from that address, or leave it empty for every mailbox.
-5. From the **Mail** category of the step palette, add **Add a Bcc**.
-6. With **Add a Bcc** selected, enter the address to copy under **Address** in the Inspector, for example `archive@example.com`.
+2. Click **New workflow**. In the dialog, type a name under **Name**, such as `Bcc the archive`. Leave **Template** set to **Start from a manual trigger**, and click **Create workflow**.
+3. The editor opens. Remove the workflow's **Run by hand** trigger: point at the card and click **Remove step** (the **X**).
+4. If the step palette is closed, click the **Show steps** icon in the top-left corner of the canvas to open it. From its **Triggers** category, click or drag **Before mail is sent** onto the canvas. You can also press **w** then **a** and search for it.
+5. With the trigger selected, choose under **Only from** in the Inspector: one mailbox, so the copy is only added to mail sent from that address, or leave it empty for every mailbox.
+6. From the **Mail** category of the step palette, add **Add a Bcc**.
+7. With **Add a Bcc** selected, enter the address to copy under **Address** in the Inspector, for example `archive@example.com`.
 
    <img src="/images/workflows/bcc-steps.webp" alt="The Before mail is sent and Add a Bcc cards on the canvas, with archive@example.com as the Bcc address" class="dark:hidden" />
    <img src="/images/workflows/bcc-steps-dark.webp" alt="The Before mail is sent and Add a Bcc cards on the canvas, with archive@example.com as the Bcc address" class="hidden dark:block" />
 
    Until you connect them, the **Add a Bcc** card shows a problem, such as "Connect this step to a trigger".
 
-7. Drag from the output on the right of **Before mail is sent** to the input on the left of **Add a Bcc**.
-8. Name the workflow in the top bar, check that the switch says **Enabled**, and click **Create workflow**.
+8. Drag from the output on the right of **Before mail is sent** to the input on the left of **Add a Bcc**.
+9. A new workflow starts turned off. Click the switch next to the name so that it says **Enabled**, then click **Save**.
 
 From now on, every message anyone in the workspace sends from the chosen mailboxes in the mail app, including scheduled messages, gets the extra BCC address.
 
@@ -53,6 +54,6 @@ The message being sent has these fields: `to`, `cc`, `bcc`, `subject`, `body` (t
 - **Several workflows can add addresses.** If more than one enabled workflow applies to a message, each one adds its address.
 - **The sender is told.** After someone clicks **Send** or schedules a message, the notice adds the addresses a workflow added, for example "A workflow added Bcc: archive@example.com". The notice then stays on screen for 10 seconds.
 - **Changes are recorded.** Creating, editing, turning on or off and deleting a workflow that starts with **Before mail is sent** is recorded, and the row says the workflow "can add a Bcc to mail members send". Workspace owners and admins see it on the workspace [Activity](/guide/workspaces/workspace-activity) page.
-- **No runs in the history.** These workflows run as part of sending, so they do not appear under **Activity**.
+- **No runs in the history.** These workflows run as part of sending, so they do not appear on the **Runs** page.
 - **Turned off means no copy.** A disabled workflow adds nothing.
 - **Check the address yourself.** The step adds the address exactly as you typed it, so check it carefully.

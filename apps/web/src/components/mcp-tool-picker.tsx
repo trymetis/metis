@@ -6,11 +6,11 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@metis/ui/components/collapsible";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@metis/ui/components/input-group";
 import { cn } from "@metis/ui/lib/utils";
-import { ChevronRight, Search, ShieldAlert, ShieldCheck } from "lucide-react";
+import { ChevronRight, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 
+import { SearchInput } from "@/components/search-input";
 import { isSensitiveTool, type McpToolKey, type McpToolPrefs, type mcpToolsFor } from "@/mcp/tools";
 
 type McpTool = ReturnType<typeof mcpToolsFor>[number];
@@ -129,19 +129,12 @@ function McpToolTier({
         </CollapsibleTrigger>
       </div>
       <CollapsibleContent className="space-y-4 border-t border-border px-3 py-3">
-        <InputGroup>
-          <InputGroupAddon>
-            <Search className="size-3.5 text-faint" />
-          </InputGroupAddon>
-          <InputGroupInput
-            className="text-[13px]"
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={`Search ${tier.title.toLowerCase()} tools`}
-            aria-label={`Search ${tier.title.toLowerCase()} tools`}
-          />
-        </InputGroup>
+        <SearchInput
+          label={`Search ${tier.title.toLowerCase()} tools`}
+          placeholder={`Search ${tier.title.toLowerCase()} tools`}
+          value={query}
+          onValueChange={setQuery}
+        />
         {groups.length === 0 && (
           <p className="px-1.5 text-[12px] text-faint">
             No {tier.title.toLowerCase()} tool matches &ldquo;{query.trim()}

@@ -15,7 +15,7 @@ export const CALENDAR_UNCHORDED: [string[], string][] = [
   [["k", "p"], "Previous period"],
 ];
 
-export function useCalendarShortcuts({ onToggleAgent }: { onToggleAgent: () => void }) {
+export function useCalendarShortcuts({ onToggleAgent }: { onToggleAgent?: () => void }) {
   const { view, setView, date, setDate, setDraft, refresh } = useCalendar();
 
   const bindings = useMemo<ChordBindings>(
@@ -38,7 +38,7 @@ export function useCalendarShortcuts({ onToggleAgent }: { onToggleAgent: () => v
         },
       },
       r: { label: "Refresh", run: () => void refresh() },
-      a: { label: "Agent", run: onToggleAgent },
+      ...(onToggleAgent ? { a: { label: "Agent", run: onToggleAgent } } : {}),
     }),
     [setView, setDate, setDraft, refresh, onToggleAgent],
   );

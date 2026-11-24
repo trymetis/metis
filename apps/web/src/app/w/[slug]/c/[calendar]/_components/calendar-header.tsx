@@ -8,9 +8,10 @@ import {
   DropdownMenuTrigger,
 } from "@metis/ui/components/dropdown-menu";
 import { cn } from "@metis/ui/lib/utils";
-import { Bot, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 import { CALENDAR_VIEWS, type CalendarViewKey, navigateDate, rangeLabel } from "@/calendar/layout";
+import { AgentToggle } from "@/components/agent/agent-toggle";
 import { MobileAsideTrigger } from "@/components/mobile-aside";
 
 import { useCalendar } from "./calendar-context";
@@ -73,17 +74,6 @@ export function CalendarHeader({
       </h1>
 
       <div className="ml-auto flex items-center gap-2">
-        {showAgentToggle && (
-          <Button
-            variant={agentOpen ? "secondary" : "ghost"}
-            size="icon-sm"
-            aria-label="Calendar AI"
-            onClick={onToggleAgent}
-          >
-            <Bot className="size-4" />
-          </Button>
-        )}
-
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
@@ -106,6 +96,9 @@ export function CalendarHeader({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+        {showAgentToggle && (
+          <AgentToggle label="Calendar AI" open={agentOpen} onToggle={onToggleAgent} />
+        )}
       </div>
     </header>
   );

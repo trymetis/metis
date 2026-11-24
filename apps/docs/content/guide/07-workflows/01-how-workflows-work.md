@@ -7,32 +7,55 @@ A workflow automates work you would otherwise do by hand in your mail, calendars
 
 ## Where to find workflows
 
-Click **Workflows** in the left rail. You need at least one mailbox in the workspace to open this page. The Workflows page has a sidebar and an editor.
+Click **Workflows** in the left rail. You need at least one mailbox in the workspace to open this page. The **Workflows** page lists every workflow you can see.
 
-The **sidebar** on the left lists every workflow you can see:
+<img src="/images/workflows/workflows-page.webp" alt="The Workflows page listing workflows, each with its trigger summary, its last run, when it was updated and its on and off switch" class="dark:hidden" />
+<img src="/images/workflows/workflows-page-dark.webp" alt="The Workflows page listing workflows, each with its trigger summary, its last run, when it was updated and its on and off switch" class="hidden dark:block" />
 
-- An enabled workflow has a coloured icon. A disabled one has a grey icon and the word "off" after its name.
-- At the top are the back arrow (**Back to mail**) and the **New workflow** menu of templates.
-- At the bottom are **Approvals**, which lists the requests waiting for your answer, and **Activity**, which opens the history of every run. **Approvals** shows a number when something is waiting for you.
+At the top of the page:
 
-The **editor** shows the workflow you picked. It has five parts:
+- The back arrow, **Back to mail**, returns to your mail.
+- **Approvals** lists the requests waiting for your answer. It shows a number when something is waiting for you. See [Ask for approval](/guide/workflows/approvals).
+- **Runs** opens the history of every run in the workspace. See [Run a workflow and check its history](/guide/workflows/run-and-check-history#see-every-run).
+- **Search workflows** filters the list by name as you type. Capital letters do not matter. If nothing matches, the list says "No workflow matches that search."
+- **New workflow** creates a workflow. See [Build your first workflow](/guide/workflows/build-your-first-workflow).
 
-- **The top bar** holds the workflow's name, the **Enabled** switch, the save status and the buttons **Test**, **Run now** and **Save**.
+If you have no workflows yet, the list says "No workflows yet." If the list cannot load, you see "Could not load your workflows", or a message from your server that says what went wrong.
+
+Each row shows:
+
+- An icon. It is coloured when the workflow is on, and grey when it is off.
+- The workflow's name. Under it is a short summary of its triggers: the trigger's name, a dot and the first line of its card, for example "Mail arrives · Watching ana@example.com". Several triggers are separated by commas.
+- The last run: an icon for its status and how long ago it ran, for example "5 minutes ago". Point at it to see its status, such as "Last run completed". Click it to open the runs of that workflow. If the workflow has no run you can open, the row says "Never run".
+- When the workflow was last changed, for example "Updated 3 days ago".
+- A switch that turns the workflow on or off at once. See [Turn a workflow off or on](/guide/workflows/manage-workflows#turn-a-workflow-off-or-on).
+
+On a narrow screen, the list hides the last run and the **Updated** time. On a medium screen, it hides only the **Updated** time.
+
+Click a workflow's name or its trigger summary to open it in the editor.
+
+## The editor
+
+The editor opens on its own page. It has five parts:
+
+- **The top bar** holds **Back to workflows**, the workflow's name, the **Enabled** switch and the save status. On the right are **Undo**, **Redo**, **Test**, **Run now**, **Save**, **More workflow actions** (**...**) and **Hide the inspector**. The **More workflow actions** menu has **Tidy up the layout**, **Keyboard shortcuts**, **Runs**, **Revisions** and **Delete workflow**.
 - **The step palette** lists every step you can add. It starts closed, as a small icon named **Show steps** in the top-left corner of the canvas. Click the icon to open the palette. It floats over the left side of the canvas.
 - **The canvas** in the middle shows the workflow as connected steps. This is where you build and change it.
 - **The Inspector** on the right shows the settings of the step you select. When no step is selected, it shows a summary of the workflow and its **Workflow settings**.
-- **The dock** under the canvas has two tabs, **Runs** and **Test run**. Click **Expand** at its right end to open it, and **Collapse** to close it again.
+- **The dock** under the canvas has two tabs, **Runs** and **Test run**. A third tab, **Preview**, appears after you click **Try on recent mail** on an Ask step. See [Let AI decide with Ask and Branch](/guide/workflows/ask-and-branch#try-your-questions-on-recent-mail). Click **Expand** at the dock's right end to open it, and **Collapse** to close it again.
 
-<img src="/images/workflows/workflows-page.webp" alt="The Workflows page with the list of workflows, the open step palette over the canvas, a workflow on the canvas and the Inspector" class="dark:hidden" />
-<img src="/images/workflows/workflows-page-dark.webp" alt="The Workflows page with the list of workflows, the open step palette over the canvas, a workflow on the canvas and the Inspector" class="hidden dark:block" />
+<img src="/images/workflows/workflow-canvas.webp" alt="A saved workflow open in the editor, with its name, the Enabled switch, Saved, and the Test, Run now and Save buttons in the top bar" class="dark:hidden" />
+<img src="/images/workflows/workflow-canvas-dark.webp" alt="A saved workflow open in the editor, with its name, the Enabled switch, Saved, and the Test, Run now and Save buttons in the top bar" class="hidden dark:block" />
 
-The palette opens with the **Show steps** icon and closes with the **Hide steps** icon, which takes its place beside the search box at the top of the open palette. Each time you open a workflow, the palette starts closed. It also closes when you save a new workflow for the first time. The palette lies on top of the canvas, so the canvas keeps its full width.
+The palette opens with the **Show steps** icon and closes with the **Hide steps** icon, which takes its place beside the search box at the top of the open palette. Each time you open a workflow, the palette starts closed. The palette lies on top of the canvas, so the canvas keeps its full width.
 
 You can drag the edges of the Inspector and the dock to resize them. Use **Hide the inspector** to make more room for the canvas. This browser remembers the sizes of the Inspector and the dock.
 
-The page opens the first workflow in the list. If you have none, it opens the **Start from a manual trigger** template, not yet saved.
+Click **Back to workflows** to return to the list. If you have unsaved changes, you are asked first. See [Manage workflows](/guide/workflows/manage-workflows#unsaved-changes).
 
-On a phone, the sidebar opens as a drawer named **Workflows**, and there is no palette. Tap **Add step** (the **+** button) in the top bar to add a step. Tap a step to open its settings at the bottom of the screen.
+If the workflow does not exist, or you cannot see it, the editor says "This workflow does not exist, or you cannot see it." Click **Back to workflows** to return to the list.
+
+On a phone, there is no palette. Tap **Add step** (the **+** button) in the top bar to add a step. Tap a step to open its settings at the bottom of the screen.
 
 ## A workflow is a chain of steps
 
@@ -71,11 +94,11 @@ The trigger decides when a workflow runs. There are triggers for:
 
 See [Triggers](/guide/workflows/triggers) for the details of each one.
 
-Runs happen in the background on your server. You do not need to keep Metis Suite open. Each run is recorded, and you can see what every step did under **Activity**. See [Run a workflow and check its history](/guide/workflows/run-and-check-history).
+Runs happen in the background on your server. You do not need to keep Metis Suite open. Each run is recorded, and you can see what every step did on the **Runs** page. See [Run a workflow and check its history](/guide/workflows/run-and-check-history).
 
 ## Who a workflow runs as
 
-A workflow runs as the person who created it. It can only reach the mailboxes, calendars, drives and address books that person can reach in the workspace. Run details show this person under **Runs as**. Editing a workflow does not change who it runs as. A workflow that another workflow calls runs as its own creator.
+A workflow runs as the person who created it. It can only reach the mailboxes, calendars, drives and address books that person can reach in the workspace. On the run's page, the **Runs as** row under **More about this run** shows this person's name and email address. See [More about this run](/guide/workflows/run-and-check-history#more-about-this-run). Editing a workflow does not change who it runs as. A workflow that another workflow calls runs as its own creator.
 
 If the person who created a workflow leaves the workspace, the workflow can no longer run. Its runs are blocked, and the run details say why, for example "The workflow's owner is no longer in this workspace".
 
@@ -113,6 +136,6 @@ Approval also comes in when you ask the Workspace Assistant to change your workf
 
 ## Other features that run in the background
 
-**Schedule send** and **Snooze** in the mail app also run in the background on your server. They are not listed on the Workflows page, and their runs do not appear under **Activity**. You manage them from your mailbox. See [Mail](/guide/mail).
+**Schedule send** and **Snooze** in the mail app also run in the background on your server. They are not listed on the Workflows page, and their runs do not appear on the **Runs** page. You manage them from your mailbox. See [Mail](/guide/mail).
 
 Your server also runs a daily clean-up that removes old workflow data. It is not listed on the Workflows page either. See [Limits](/guide/workflows/limits#how-long-run-data-is-kept).

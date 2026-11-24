@@ -42,7 +42,7 @@ The last tile, **New workspace**, creates a new workspace.
 
 ### Your account menu
 
-Near the bottom of the rail is a round button with your initials. Click it to open your account menu.
+Near the bottom of the rail is a colored circle with your [initials](/guide/contacts/browse-your-contacts#read-the-list). Click it to open your account menu.
 
 <img src="/images/get-started/user-menu.webp" alt="The account menu open, showing your name, email and the menu items" class="dark:hidden" />
 <img src="/images/get-started/user-menu-dark.webp" alt="The account menu open, showing your name, email and the menu items" class="hidden dark:block" />

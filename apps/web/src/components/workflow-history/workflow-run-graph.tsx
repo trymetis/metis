@@ -76,11 +76,13 @@ export function WorkflowRunGraph({
   directory,
   selectedId,
   onSelect,
+  fill = false,
 }: {
   run: WorkflowRunDetail;
   directory: CardDirectory;
   selectedId: string | null;
   onSelect: (nodeId: string | null) => void;
+  fill?: boolean;
 }) {
   const overlay = useMemo(() => runOverlay(run), [run]);
   const built = useMemo(
@@ -108,8 +110,13 @@ export function WorkflowRunGraph({
   );
 
   return (
-    <div className="flex flex-col gap-2">
-      <div className="h-[360px] overflow-hidden rounded-xl border border-border sm:h-[440px]">
+    <div className={cn("flex flex-col gap-2", fill && "h-full min-h-0")}>
+      <div
+        className={cn(
+          "overflow-hidden rounded-xl border border-border",
+          fill ? "min-h-[360px] flex-1" : "h-[360px] sm:h-[440px]",
+        )}
+      >
         <ReactFlow
           onKeyDown={(event) => {
             if (

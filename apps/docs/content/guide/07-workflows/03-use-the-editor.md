@@ -10,12 +10,23 @@ This page explains how to work with steps in the workflow editor. To see what ea
 There are two ways to add a step:
 
 - **From the step palette**, which floats over the left side of the canvas. If the palette is closed, click the **Show steps** icon in the top-left corner of the canvas to open it. Under the search box, the palette says "Drag a step onto the canvas, or click it". Click a step to add it to the canvas, or drag it onto the canvas and drop it where you want it. Type in **Search steps** to filter the list. If nothing fits, the palette says "No step matches." Click **Hide steps** to close the palette.
-- **From the Add step window.** Press **w** then **a** (or tap **Add step** on a phone). Type to search, then press **Enter** to add the highlighted step, or click a step.
+- **From the Add step window.** Press **w** then **a** (or tap **Add step** on a phone). Type in the search box, "Add a step…", then press **Enter** to add the highlighted step, or click a step. The window then closes.
 
-<img src="/images/workflows/add-step-menu.webp" alt="The Add step window with its search box and steps grouped by category" class="dark:hidden" />
-<img src="/images/workflows/add-step-menu-dark.webp" alt="The Add step window with its search box and steps grouped by category" class="hidden dark:block" />
+<img src="/images/workflows/add-step-menu.webp" alt="The Add step window with a search typed and matching steps listed one per line" class="dark:hidden" />
+<img src="/images/workflows/add-step-menu-dark.webp" alt="The Add step window with a search typed and matching steps listed one per line" class="hidden dark:block" />
 
-The palette groups the steps under **Triggers**, **Mail**, **Calendar**, **Drive**, **Logic**, **Waits and flow** and **AI**. Each entry shows the step's name and a short description.
+The palette groups the steps under **Triggers**, **Mail**, **Calendar**, **Drive**, **Logic**, **Waits and flow** and **AI**. Each entry in the palette shows the step's name and a short description.
+
+The **Add step** window works differently:
+
+- It lists no steps until you type. While the search box is empty, it says "Type to search steps".
+- It shows up to 10 steps whose name or description matches what you typed. A match in the name comes first.
+- The letters you type match in order, even with letters between them. For example, `lbl` finds **Label**.
+- Each result is one line with the step's icon and name. There are no descriptions and no category headings.
+- The first result is highlighted at the start, so **Enter** adds it.
+- If nothing matches, it says "No step matches."
+
+Both list the same steps. **Ask** and **Branch** show only when your server offers them. See [Let AI decide with Ask and Branch](/guide/workflows/ask-and-branch#before-you-start).
 
 The new step is selected, and its settings open in the Inspector on the right.
 
@@ -26,9 +37,9 @@ Each step shows as a card. The card gives a short summary of the step's settings
 - **Move a step:** drag its card. Steps snap to a grid.
 - **Connect two steps:** drag from an output on the right side of one card to an input on the left side of the next. Items flow in that direction. Each input and output has a label. It names the kind of item it carries, such as "Mail", "Event", "File" or "Anything", or the path it stands for, such as **Yes** or **No**.
 - **Select several steps:** hold Shift, Ctrl or Cmd and click each one. Click an empty part of the canvas to clear the selection.
-- **Remove a step:** point at its card and click **Remove step** (the **X**), or click **Delete** in the Inspector. You can also select steps and press Delete or Backspace.
+- **Remove a step:** point at its card and click **Remove step** (the **X**), or click the **Delete** icon at the top of the Inspector. You can also select steps and press Delete or Backspace.
 - **Remove a connection:** click the line and press Delete or Backspace.
-- **Copy steps:** select them and press Ctrl + C (Cmd + C on a Mac), then Ctrl + V to paste. The connections between the copied steps come along. You can paste into another workflow too. Ctrl + D, or **Duplicate** in the Inspector, makes a copy in one go. Pasted steps get new step ids.
+- **Copy steps:** select them and press Ctrl + C (Cmd + C on a Mac), then Ctrl + V to paste. The connections between the copied steps come along. You can paste into another workflow too. Ctrl + D, or the **Duplicate** icon at the top of the Inspector, makes a copy in one go. Pasted steps get new step ids.
 - **Undo a change:** click **Undo** in the top bar, or press Ctrl + Z. **Redo** brings it back. The editor keeps the last 100 changes. Typing in one field, or one drag, counts as one change.
 - **Move around:** drag the empty canvas to pan. The row of buttons in the top-right corner of the canvas zooms in and out (**Zoom In**, **Zoom Out**), fits the whole workflow in view (**Fit View**), tidies it (**Tidy up the layout**) and hides or shows the small map (**Hide the minimap** or **Show the minimap**). The small map sits in the bottom-right corner.
 
@@ -50,9 +61,13 @@ To bring two or more branches back together, use **Merge** or **Wait for all**. 
 
 ## Settings every step has
 
-Click a step to see its settings in the Inspector. At the top, the Inspector shows the step's icon, its name, its category and a short description. Steps that send or create something, such as **Send mail** or **Create an event**, also show a "Sends or creates" badge.
+Click a step to see its settings in the Inspector. At the top, the Inspector shows the step's icon and its name. On the right are three icon buttons: **Duplicate** and **Delete**, which show their names when you point at them, and **More step actions** (**...**).
 
-The Inspector also shows the step's id, a short code such as `s1a2b3c4d`. Expressions in later steps use this id to read the step's result. See [Expressions](/guide/workflows/expressions#what-an-expression-can-read).
+- **Duplicate** makes a copy of the step, placed a little down and to the right.
+- **Delete** removes the step.
+- **More step actions** (**...**) opens a menu with **Copy reference**. It copies the reference that expressions in later steps use to read this step's result, such as `steps.s1a2b3c4d`. A message says "Reference copied", or "Could not copy" if it did not work. See [Expressions](/guide/workflows/expressions#what-an-expression-can-read).
+
+Steps that send or create something, such as **Send mail** or **Create an event**, have a small dot on the corner of the icon on their card. Point at the dot to see "Sends or creates". Steps that only change something have no dot. The same dot shows on the graph of a run. See [Steps](/guide/workflows/steps) for which steps send or create.
 
 Above the step's own settings, every step has:
 
@@ -67,8 +82,6 @@ Above the step's own settings, every step has:
 | **Pass the item on unchanged**        | The item goes on to the next step as if the step had not run. The card shows "On error: continue".                                  |
 
 On steps that send or create something, a failure always shows "Needs review", and a blocked step always holds the run, whatever this setting says.
-
-At the bottom of the Inspector are **Duplicate** and **Delete**.
 
 Condition settings (**Condition** on **If**, **Keep when** on **Filter** and **Only when** on triggers) open as rows of a field, a comparison and a value. Click **Edit as expression** to type the condition instead. See [Build a condition from rows](/guide/workflows/expressions#build-a-condition-from-rows).
 
@@ -86,7 +99,7 @@ A workflow with problems cannot be saved. See [Limits](/guide/workflows/limits#p
 
 ## Save your changes
 
-Changes on the canvas are not saved until you click **Save** (or **Create workflow** for a new one), or press Ctrl + S (Cmd + S on a Mac). The top bar shows the save status next to the **Enabled** switch: "Not saved yet", "Unsaved changes", "Saving" or "Saved".
+Changes on the canvas are not saved until you click **Save**, or press Ctrl + S (Cmd + S on a Mac). The top bar shows the save status next to the **Enabled** switch: "Unsaved changes", "Saving" or "Saved".
 
 If something is wrong, the save stops with a message:
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useDraggable } from "@dnd-kit/core";
 import { Button } from "@metis/ui/components/button";
 import {
   ContextMenu,
@@ -39,6 +40,7 @@ import { DriveIcon } from "@/components/drive-icon";
 import { formatBytes } from "@/lib/utils";
 import type { DriveEntryRow } from "@/server/schema";
 
+import { DRIVE_ENTRY_DRAG } from "./drive-agent-panel";
 import { useDriveThumbnail } from "./use-drive-thumbnail";
 
 export type DriveView = "list" | "grid";
@@ -228,13 +230,20 @@ function EntryItem({
   actions,
   selected,
   onSelect,
+  dragToAgent,
 }: {
   entry: DriveEntryRow;
   view: DriveView;
   actions: EntryActions;
   selected: boolean;
   onSelect: () => void;
+  dragToAgent: boolean;
 }) {
+  const { listeners, setNodeRef, isDragging } = useDraggable({
+    id: `drive-entry:${entry.driveId}:${entry.id}`,
+    data: { type: DRIVE_ENTRY_DRAG, entry, label: entry.name },
+    disabled: !dragToAgent,
+  });
   const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     if (event.key !== "Enter") return;
     event.preventDefault();
@@ -255,12 +264,14 @@ function EntryItem({
         className={entryVariants({ view })}
       >
         <button
+          ref={setNodeRef}
           type="button"
           data-entry-open=""
           title={entry.name}
           aria-pressed={selected}
           onPointerDown={(event) => {
             touchTap.current = event.pointerType === "touch";
+            listeners?.onPointerDown?.(event);
           }}
           onClick={() => {
             if (touchTap.current) {
@@ -272,7 +283,7 @@ function EntryItem({
           }}
           onDoubleClick={() => actions.onOpen(entry)}
           onKeyDown={onKeyDown}
-          className={openButtonVariants({ view })}
+          className={cn(openButtonVariants({ view }), isDragging && "opacity-40")}
         >
           <span ref={thumbnailRef} className={iconFrameVariants({ view })}>
             {thumbnailUrl ? (
@@ -363,12 +374,14 @@ export function DriveEntries({
   selectedId,
   onSelectedChange,
   actions,
+  dragToAgent,
 }: {
   entries: DriveEntryRow[];
   view: DriveView;
   selectedId: string | null;
   onSelectedChange: (id: string | null) => void;
   actions: EntryActions;
+  dragToAgent: boolean;
 }) {
   const ordered = useMemo(() => foldersFirst(entries), [entries]);
   const selected = ordered.some((entry) => entry.id === selectedId) ? selectedId : null;
@@ -419,6 +432,7 @@ export function DriveEntries({
           actions={actions}
           selected={entry.id === selected}
           onSelect={() => onSelectedChange(entry.id)}
+          dragToAgent={dragToAgent}
         />
       ))}
     </div>

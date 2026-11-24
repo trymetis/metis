@@ -298,6 +298,7 @@ async function runs(ctx: LocalSearchContext) {
       workflowName: r.workflowName,
       status: r.status,
       error: r.error,
+      upgraded: r.upgraded,
     },
     doc: {
       type: "run",

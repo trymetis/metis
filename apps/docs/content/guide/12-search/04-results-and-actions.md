@@ -127,14 +127,30 @@ A saved contact with no email address has only **Open contact** and, if it has a
 
 For a workflow, the preview shows **State** (on or off), **Last run** and **Changed**.
 
-| Action                      | What it does                       |
-| --------------------------- | ---------------------------------- |
-| **Open the builder**        | Opens the workflow in the builder. |
-| **Turn on** or **Turn off** | Turns the workflow on or off.      |
-| **Run now**                 | Starts a run.                      |
-| **Open history**            | Opens the workflow history.        |
+| Action                      | What it does                                                                                                        |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Open in the editor**      | Opens the workflow in the editor.                                                                                   |
+| **Turn on** or **Turn off** | Turns the workflow on or off at once. The search window stays open, and a message says "Turned on" or "Turned off". |
+| **Run now**                 | Starts a run. The search window stays open, and a message says "Run queued".                                        |
+| **Open its runs**           | Opens the list of this workflow's runs.                                                                             |
 
-For a workflow run, the preview shows **Status**, **Started** and any **Error**. The actions are **Open the run**, **Resume** (for a blocked or failed run) and **Cancel** (for a pending, running or blocked run).
+If **Turn on**, **Turn off** or **Run now** does not work, a message says why, or says "That did not work". For example, a workflow with a problem cannot be turned on: the message starts with "Fix this workflow before turning it on:" and names the problem. Open the workflow, fix the problem and save it, then try again. See [Manage workflows](/guide/workflows/manage-workflows#turn-a-workflow-off-or-on).
+
+For a workflow run, the preview shows **Status**, **Started** and any **Error**.
+
+| Action           | What it does                                       | When you see it                                                                                      |
+| ---------------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Open the run** | Opens the details of the run.                      | Always                                                                                               |
+| **Resume**       | Runs the failed or blocked steps of the run again. | For a **blocked**, **failed** or **partial** run, except one from before the workflow engine upgrade |
+| **Cancel**       | Stops the run. No further steps start.             | For a **pending**, **running** or **waiting** run                                                    |
+
+**Resume** and **Cancel** do not ask you to confirm. The search window stays open, and the results refresh.
+
+- **After Resume**, a message says how many steps will run again and how many keep their results. The run starts again shortly after. Steps that already completed do not run a second time.
+- **If the run cannot be resumed**, a red message says why, for example "This workflow is turned off. Turn it back on, then retry the run." See [When a run cannot be retried](/guide/workflows/cancel-and-retry-runs#when-a-run-cannot-be-retried) for every reason and what to do.
+- **After Cancel**, a message says that the run was cancelled. If the run is running at that moment, the message says that it stops before its next step. A step already in progress may still finish. Anything the run already did, such as mail it sent, is not undone. If steps from an earlier try still need review, the message also says how many. See [Resolve a step with an unconfirmed outcome](/guide/workflows/cancel-and-retry-runs#resolve-a-step-with-an-unconfirmed-outcome).
+- **If the run was already cancelled or already finished**, a message says so, and nothing changes.
+- **If the request does not go through**, a message says why, or says "That did not work".
 
 ## Mailboxes, calendars, drives and address books
 
@@ -211,3 +227,5 @@ The actions are **Open in Subscriptions**, **Unsubscribe** (asks you to confirm 
 | **Workspaces** | "Switch to" and the name of each of your other workspaces.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 Pick a command or a settings page to run it or go there.
+
+**New workflow** opens the **Workflows** page. To create the workflow, click **New workflow** on that page. See [Build your first workflow](/guide/workflows/build-your-first-workflow).
