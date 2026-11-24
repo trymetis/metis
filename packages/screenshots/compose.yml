@@ -8,3 +8,10 @@ services:
   fakes:
     environment:
       FAKES: resend,ses,mcp-client,updater
+  claude-code:
+    build:
+      context: ../packages/screenshots
+      dockerfile: claude-code.Dockerfile
+    container_name: metis-claude-code
+    network_mode: host
+    init: true

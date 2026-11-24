@@ -1,6 +1,7 @@
 [
   {
     "name": "contacts/all-contacts",
+    "target": "all",
     "path": "{workspace}/p/all/all",
     "steps": [
       {
@@ -9,10 +10,16 @@
       {
         "waitFor": "role=list[name=\"Contacts\"] >> role=button[name=/Raj Mehta/]"
       }
+    ],
+    "www": [
+      {
+        "name": "contacts/all"
+      }
     ]
   },
   {
     "name": "contacts/show-menu",
+    "target": "all",
     "path": "{workspace}/p/all/all",
     "steps": [
       {
@@ -25,10 +32,16 @@
         "waitFor": "role=option[name=\"Studio contacts\"]"
       }
     ],
-    "element": ["role=combobox[name=\"Show\"]", "role=listbox"]
+    "element": ["role=combobox[name=\"Show\"]", "role=listbox"],
+    "www": [
+      {
+        "name": "contacts/sidebar"
+      }
+    ]
   },
   {
     "name": "contacts/switcher",
+    "target": "docs",
     "path": "{workspace}/p/all/all",
     "steps": [
       {
@@ -45,6 +58,7 @@
   },
   {
     "name": "contacts/contact-card",
+    "target": "all",
     "path": "{workspace}/p/all/all",
     "steps": [
       {
@@ -59,10 +73,16 @@
       {
         "waitFor": "role=article[name=\"Raj Mehta\"] >> text=Recent mail with them"
       }
+    ],
+    "www": [
+      {
+        "name": "contacts/card"
+      }
     ]
   },
   {
     "name": "contacts/filter",
+    "target": "all",
     "path": "{workspace}/p/all/all",
     "steps": [
       {
@@ -81,10 +101,16 @@
       "y": 0,
       "width": 1440,
       "height": 420
-    }
+    },
+    "www": [
+      {
+        "name": "contacts/filter"
+      }
+    ]
   },
   {
     "name": "contacts/new-contact-dialog",
+    "target": "all",
     "path": "{workspace}/p/all/all",
     "steps": [
       {
@@ -108,10 +134,16 @@
         "wait": 300
       }
     ],
-    "element": "role=dialog"
+    "element": "role=dialog",
+    "www": [
+      {
+        "name": "contacts/edit"
+      }
+    ]
   },
   {
     "name": "contacts/contacts-ai-panel",
+    "target": "all",
     "clip": {
       "x": 800,
       "y": 0,
@@ -135,10 +167,20 @@
       {
         "waitFor": "text=Ask about your contacts"
       }
+    ],
+    "www": [
+      {
+        "name": "contacts/assistant"
+      },
+      {
+        "name": "screens/contacts",
+        "focus": null
+      }
     ]
   },
   {
     "name": "contacts/save-from-mail",
+    "target": "all",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -178,10 +220,16 @@
         "wait": 300
       }
     ],
-    "element": "role=dialog"
+    "element": "role=dialog",
+    "www": [
+      {
+        "name": "mail/save-contact"
+      }
+    ]
   },
   {
     "name": "contacts/person-menu",
+    "target": "docs",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -214,6 +262,7 @@
   },
   {
     "name": "contacts/summary-contact-card",
+    "target": "all",
     "clip": {
       "x": 640,
       "y": 90,
@@ -231,10 +280,16 @@
       {
         "waitFor": "main >> role=button[name=\"Save contact\"]"
       }
+    ],
+    "www": [
+      {
+        "name": "contacts/summary"
+      }
     ]
   },
   {
     "name": "contacts/workspace-settings",
+    "target": "all",
     "path": "{workspace}/settings/contacts",
     "steps": [
       {
@@ -250,10 +305,16 @@
         "waitFor": "main >> role=switch[name=\"Show Studio contacts in this workspace\"]"
       }
     ],
-    "element": "main"
+    "element": "main",
+    "www": [
+      {
+        "name": "contacts/visibility"
+      }
+    ]
   },
   {
     "name": "contacts/connect-address-book-providers",
+    "target": "all",
     "path": "{workspace}/settings/contacts",
     "steps": [
       {
@@ -275,10 +336,16 @@
         "wait": 400
       }
     ],
-    "element": "role=dialog"
+    "element": "role=dialog",
+    "www": [
+      {
+        "name": "contacts/sources"
+      }
+    ]
   },
   {
     "name": "contacts/account-address-books",
+    "target": "docs",
     "path": "/settings/address-books",
     "steps": [
       {

@@ -48,7 +48,7 @@ The `metis` CLI's own suite, which reuses this stack's fakes, certificates, test
   - The deep link arrives as a second-instance launch argument, as the OS would deliver it on Linux and Windows.
   - That second launch passes `--no-sandbox`, as Playwright's `_electron.launch` does for the first, because a development copy's `chrome-sandbox` is not root-owned and Chromium aborts without it.
   - Each test gets a fresh `XDG_CONFIG_HOME`, which on Linux holds the shell's `userData`, its autostart entry and its scheme registration.
-- **A value belongs in `e2e/.env` only if it unlocks something outside the stack** (a paid API, a real account); everything else, including values that look like secrets, is seed data in `e2e/.env.fixture`. Only `generate:record` reads `e2e/.env`.
+- **A value belongs in `e2e/.env` only if it unlocks something outside the stack** (a paid API, a real account); everything else, including values that look like secrets, is seed data in `e2e/.env.fixture`. Only `generate:record` reads `e2e/.env`, and www's `scripts/shots.ts`, which takes `LLM_UPSTREAM_KEY` alone for the Claude Code shots ([screenshots.md](screenshots.md)).
 
 ### Suites
 

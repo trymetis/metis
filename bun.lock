@@ -52,14 +52,12 @@
         "@astrojs/compiler-rs": "^0.5.2",
         "@metis/e2e": "workspace:*",
         "@metis/e2e-cli": "workspace:*",
+        "@metis/screenshots": "workspace:*",
         "@playwright/test": "catalog:",
-        "@wterm/core": "0.5.10",
-        "@wterm/dom": "0.5.10",
         "astro": "^7.4.2",
         "otpauth": "catalog:",
         "oxfmt": "catalog:",
         "oxlint": "catalog:",
-        "sharp": "catalog:",
         "zod": "catalog:",
       },
     },
@@ -342,6 +340,7 @@
         "zod": "catalog:",
       },
       "devDependencies": {
+        "@metis/screenshots": "workspace:*",
         "@playwright/test": "catalog:",
         "@tailwindcss/postcss": "catalog:",
         "@types/node": "catalog:",
@@ -352,7 +351,6 @@
         "oxlint": "catalog:",
         "postcss": "^8.5.31",
         "schema-dts": "^2.1.0",
-        "sharp": "catalog:",
         "tailwindcss": "catalog:",
         "typescript": "catalog:",
       },
@@ -419,6 +417,23 @@
       "version": "0.1.0",
       "dependencies": {
         "yaml": "^2.9.1",
+        "zod": "catalog:",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "oxfmt": "catalog:",
+        "oxlint": "catalog:",
+        "typescript": "catalog:",
+      },
+    },
+    "packages/screenshots": {
+      "name": "@metis/screenshots",
+      "version": "0.1.0",
+      "dependencies": {
+        "@playwright/test": "catalog:",
+        "@wterm/core": "0.5.10",
+        "@wterm/dom": "0.5.10",
+        "sharp": "catalog:",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -1308,6 +1323,8 @@
     "@metis/mobile": ["@metis/mobile@workspace:apps/mobile"],
 
     "@metis/releases": ["@metis/releases@workspace:packages/releases"],
+
+    "@metis/screenshots": ["@metis/screenshots@workspace:packages/screenshots"],
 
     "@metis/shell-core": ["@metis/shell-core@workspace:packages/shell-core"],
 

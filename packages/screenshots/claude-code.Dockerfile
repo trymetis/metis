@@ -20,7 +20,7 @@ RUN curl -fsSL https://claude.ai/install.sh | bash
 
 COPY <<'EOF' /tmp/claude-defaults.json
 {
-  "theme": "dark",
+  "theme": "light",
   "hasCompletedOnboarding": true,
   "projects": {
     "/work": {
@@ -52,7 +52,7 @@ if [ -n "$LLM_UPSTREAM_KEY" ]; then
   export ANTHROPIC_BASE_URL=https://openrouter.ai/api
   export ANTHROPIC_AUTH_TOKEN="$LLM_UPSTREAM_KEY"
   export ANTHROPIC_API_KEY=""
-  MODEL="${CLAUDE_MODEL:-minimax/minimax-m3.1-flash:free}"
+  MODEL="$CLAUDE_MODEL"
   export ANTHROPIC_MODEL="$MODEL"
   export ANTHROPIC_DEFAULT_OPUS_MODEL="$MODEL"
   export ANTHROPIC_DEFAULT_SONNET_MODEL="$MODEL"

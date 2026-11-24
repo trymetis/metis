@@ -1,0 +1,31 @@
+{
+  "name": "@metis/screenshots",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "exports": {
+    "./app": "./src/app.ts",
+    "./box": "./src/box.ts",
+    "./browser": "./src/browser.ts",
+    "./entries": "./src/entries.ts",
+    "./steps": "./src/steps.ts",
+    "./terminal": "./src/terminal.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit && bun src/check.ts"
+  },
+  "dependencies": {
+    "@playwright/test": "catalog:",
+    "@wterm/core": "0.5.10",
+    "@wterm/dom": "0.5.10",
+    "sharp": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:"
+  }
+}

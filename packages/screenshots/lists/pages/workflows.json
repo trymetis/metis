@@ -1,6 +1,7 @@
 [
   {
     "name": "workflows/workflows-page",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "viewport": {
       "width": 1440,
@@ -32,6 +33,7 @@
   },
   {
     "name": "workflows/new-workflow-menu",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "steps": [
       {
@@ -48,7 +50,13 @@
   },
   {
     "name": "workflows/first-workflow-canvas",
-    "clip": { "x": 250, "y": 0, "width": 1190, "height": 640 },
+    "target": "docs",
+    "clip": {
+      "x": 250,
+      "y": 0,
+      "width": 1190,
+      "height": 640
+    },
     "path": "{workspace}/workflow",
     "viewport": {
       "width": 1440,
@@ -100,6 +108,7 @@
   },
   {
     "name": "workflows/add-step-menu",
+    "target": "all",
     "path": "{workspace}/workflow",
     "steps": [
       {
@@ -130,11 +139,23 @@
         "wait": 400
       }
     ],
-    "element": "role=dialog[name=\"Add step\"s]"
+    "element": "role=dialog[name=\"Add step\"s]",
+    "www": [
+      {
+        "name": "agent/steps",
+        "focus": "role=menu"
+      }
+    ]
   },
   {
     "name": "workflows/workflow-canvas",
-    "clip": { "x": 250, "y": 0, "width": 1190, "height": 600 },
+    "target": "all",
+    "clip": {
+      "x": 250,
+      "y": 0,
+      "width": 1190,
+      "height": 600
+    },
     "path": "{workspace}/workflow",
     "viewport": {
       "width": 1440,
@@ -162,10 +183,35 @@
       {
         "wait": 600
       }
+    ],
+    "www": [
+      {
+        "name": "agent/workflow",
+        "focus": {
+          "x": 510,
+          "y": 405,
+          "width": 580,
+          "height": 80
+        }
+      },
+      {
+        "name": "workflows/if",
+        "focus": ".react-flow__node[data-id=\"digest\"]"
+      },
+      {
+        "name": "workflows/shared",
+        "focus": {
+          "x": 58,
+          "y": 40,
+          "width": 220,
+          "height": 300
+        }
+      }
     ]
   },
   {
     "name": "workflows/schedule-trigger",
+    "target": "all",
     "path": "{workspace}/workflow",
     "steps": [
       {
@@ -187,10 +233,16 @@
         "wait": 400
       }
     ],
-    "element": "role=region[name=\"Inspector\"s]"
+    "element": "role=region[name=\"Inspector\"s]",
+    "www": [
+      {
+        "name": "agent/schedule"
+      }
+    ]
   },
   {
     "name": "workflows/filter-step",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "viewport": {
       "width": 2200,
@@ -223,7 +275,13 @@
   },
   {
     "name": "workflows/combine-workflow",
-    "clip": { "x": 500, "y": 470, "width": 600, "height": 160 },
+    "target": "all",
+    "clip": {
+      "x": 500,
+      "y": 470,
+      "width": 600,
+      "height": 160
+    },
     "path": "{workspace}/workflow",
     "viewport": {
       "width": 1440,
@@ -248,10 +306,22 @@
       {
         "wait": 600
       }
+    ],
+    "www": [
+      {
+        "name": "workflows/combine",
+        "focus": {
+          "x": 510,
+          "y": 380,
+          "width": 580,
+          "height": 110
+        }
+      }
     ]
   },
   {
     "name": "workflows/ask-step",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "viewport": {
       "width": 1440,
@@ -290,6 +360,7 @@
   },
   {
     "name": "workflows/branch-step",
+    "target": "all",
     "path": "{workspace}/workflow",
     "viewport": {
       "width": 1440,
@@ -315,10 +386,30 @@
         "wait": 600
       }
     ],
-    "element": "role=region[name=\"Inspector\"s]"
+    "element": "role=region[name=\"Inspector\"s]",
+    "www": [
+      {
+        "name": "agent/branch",
+        "focus": {
+          "x": 655,
+          "y": 200,
+          "width": 410,
+          "height": 700
+        },
+        "steps": [
+          {
+            "click": "role=button[name=\"Fit View\"]"
+          },
+          {
+            "wait": 900
+          }
+        ]
+      }
+    ]
   },
   {
     "name": "workflows/delete-dialog",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "steps": [
       {
@@ -347,6 +438,7 @@
   },
   {
     "name": "workflows/activity",
+    "target": "all",
     "viewport": {
       "width": 1100,
       "height": 740
@@ -362,10 +454,22 @@
       {
         "wait": 400
       }
+    ],
+    "www": [
+      {
+        "name": "agent/history",
+        "focus": {
+          "x": 420,
+          "y": 80,
+          "width": 650,
+          "height": 440
+        }
+      }
     ]
   },
   {
     "name": "workflows/run-detail",
+    "target": "all",
     "path": "{workspace}/workflow/history",
     "viewport": {
       "width": 1100,
@@ -393,10 +497,34 @@
       {
         "wait": 600
       }
+    ],
+    "www": [
+      {
+        "name": "agent/runs",
+        "focus": {
+          "x": 420,
+          "y": 80,
+          "width": 660,
+          "height": 540
+        }
+      },
+      {
+        "name": "workflows/runs-as",
+        "focus": "dl > div:has(> dt:text-is(\"Runs as\"))"
+      },
+      {
+        "name": "workflows/versions",
+        "focus": "dl > div:has(> dt:text-is(\"Revision\"))"
+      },
+      {
+        "name": "workflows/statuses",
+        "focus": "ul:has(> li:has-text(\"Path taken\"))"
+      }
     ]
   },
   {
     "name": "workflows/run-selected-step",
+    "target": "docs",
     "path": "{workspace}/workflow/history",
     "steps": [
       {
@@ -428,6 +556,7 @@
   },
   {
     "name": "workflows/try-on-recent-mail",
+    "target": "all",
     "path": "{workspace}/workflow",
     "viewport": {
       "width": 1920,
@@ -458,10 +587,17 @@
       {
         "wait": 600
       }
+    ],
+    "www": [
+      {
+        "name": "workflows/try",
+        "focus": "role=dialog[name=\"Try on recent mail\"]"
+      }
     ]
   },
   {
     "name": "workflows/bcc-steps",
+    "target": "all",
     "path": "{workspace}/workflow",
     "viewport": {
       "width": 1800,
@@ -546,10 +682,16 @@
     "element": [
       ".react-flow__node:has-text(\"Before mail is sent\")",
       ".react-flow__node:has-text(\"Add a Bcc\")"
+    ],
+    "www": [
+      {
+        "name": "workflows/bcc"
+      }
     ]
   },
   {
     "name": "workflows/new-mail-trigger",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "steps": [
       {
@@ -569,6 +711,7 @@
   },
   {
     "name": "workflows/test-run",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "viewport": {
       "width": 1920,
@@ -615,6 +758,7 @@
   },
   {
     "name": "workflows/webhook-trigger",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "steps": [
       {
@@ -641,6 +785,7 @@
   },
   {
     "name": "workflows/approvals",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "steps": [
       {
@@ -660,6 +805,7 @@
   },
   {
     "name": "workflows/workflow-settings",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "steps": [
       {

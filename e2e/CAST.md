@@ -131,7 +131,7 @@ Every drive gets the same tree; S3 also holds the edge files under `edge/` with 
 
 ## MCP shots
 
-The prompts in `apps/www/scripts/mcp-shots.ts` tell the rebrand story: Raj's "Rebrand kickoff", the "Rebrand review" invite, the hidden `Studio` workspace and the week of 5 October 2026.
+The prompts in `packages/screenshots/lists/terminals/claude-code.json` tell the rebrand story: Raj's "Rebrand kickoff", the "Rebrand review" invite, the hidden `Studio` workspace and the week of 5 October 2026.
 
 ## Recorded scenarios
 

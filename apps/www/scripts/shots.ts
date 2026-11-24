@@ -1,340 +1,401 @@
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { mkdir } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
-import { type Browser, chromium, type Page } from "@playwright/test";
-import sharp from "sharp";
+import {
+  type Account,
+  APP_URL,
+  asUser,
+  CLOCK,
+  harnessAccount,
+  rpc,
+  selectTheme,
+  signIn,
+  type StorageState,
+  totp,
+} from "@metis/screenshots/app";
+import { type Box, viewportRegion } from "@metis/screenshots/box";
+import { contextOptions, launch, shoot, VIEWPORT } from "@metis/screenshots/browser";
+import {
+  CONSENT_SHOT,
+  namePicker,
+  type PageEntry,
+  readLists,
+  type TerminalEntry,
+  type TerminalStep,
+  type WwwShot,
+} from "@metis/screenshots/entries";
+import { resolve, runStep } from "@metis/screenshots/steps";
+import {
+  captureTerminal,
+  settle,
+  type TerminalHost,
+  ttyd,
+  typeLine,
+  visibleText,
+  waitForTtyd,
+  waitUntil,
+} from "@metis/screenshots/terminal";
+import type { Browser, BrowserContext, Page } from "@playwright/test";
 import { z } from "zod";
 
-const RENDER_FLAGS = [
-  "--disable-lcd-text",
-  "--font-render-hinting=none",
-  "--disable-font-subpixel-positioning",
-  "--disable-skia-runtime-opts",
-  "--force-color-profile=srgb",
-  "--disable-gpu",
-];
+import { type Manifest, readManifest, writeManifest } from "./manifest.ts";
 
-const APP = process.env.DOCS_APP_URL ?? "http://localhost:3000";
-const HARNESS = process.env.DOCS_HARNESS_URL ?? "http://localhost:8099";
-const CLOCK = new Date(process.env.DOCS_CLOCK ?? "2026-10-08T12:00:00Z");
 const ROOT = join(import.meta.dirname, "..");
-const DOCS = join(ROOT, "..", "docs", "screenshots");
 const OUT = join(ROOT, "public", "shots");
-const MANIFEST = join(ROOT, "src", "content", "shots.json");
-const VIEWPORT = { width: 1440, height: 900 };
+const ENV_FILE = join(ROOT, "..", "..", "e2e", ".env");
 const PAD = 12;
+const CONTAINER = "metis-claude-code";
+const PORT = Number(process.env.MCP_SHOTS_PORT ?? 7681);
+const CALLBACK_PORT = process.env.MCP_SHOTS_CALLBACK_PORT ?? "47123";
+const MODEL = process.env.MCP_SHOTS_MODEL;
+const SERVER = "metis-suite";
+const CLIENT_LABEL = "Claude Code";
+const HIDDEN_WORKSPACE = "Studio";
+const SMOKE_COMMAND = "claude mcp list";
 
-const themesSchema = z.object({
-  json: z.object({
-    themes: z.array(z.object({ id: z.string(), name: z.string(), source: z.string() })),
-  }),
-});
-
-const stepSchema = z.union([
-  z.object({ goto: z.string() }),
-  z.object({ follow: z.string() }),
-  z.object({ click: z.string(), nth: z.number().optional() }),
-  z.object({ dblclick: z.string() }),
-  z.object({ rightClick: z.string() }),
-  z.object({ hover: z.string() }),
-  z.object({ fill: z.string(), value: z.string() }),
-  z.object({ type: z.string(), text: z.string() }),
-  z.object({ press: z.string() }),
-  z.object({ drag: z.string(), to: z.string() }),
-  z.object({ waitFor: z.string() }),
-  z.object({ waitForHidden: z.string() }),
-  z.object({ wait: z.number() }),
-  z.object({ scroll: z.string() }),
-  z.object({ clearReadLater: z.literal(true) }),
-]);
-type Step = z.infer<typeof stepSchema>;
-
-const readLaterSchema = z.object({ json: z.object({ messageIds: z.array(z.string()) }) });
-
-const boxSchema = z.object({
-  x: z.number(),
-  y: z.number(),
-  width: z.number(),
-  height: z.number(),
-});
-type Box = z.infer<typeof boxSchema>;
-
-const docsShotsSchema = z.array(
-  z.object({
-    name: z.string(),
-    path: z.string(),
-    signedOut: z.boolean().optional(),
-    seededWeek: z.boolean().optional(),
-    steps: z.array(stepSchema).optional(),
-    element: z.union([z.string(), z.array(z.string())]).optional(),
-    clip: boxSchema.optional(),
-  }),
-);
-type DocsShot = z.infer<typeof docsShotsSchema>[number];
-
-const shotsSchema = z.array(
-  z.object({
-    name: z.string(),
-    from: z.string(),
-    focus: z
-      .union([z.string(), z.array(z.string()), boxSchema])
-      .nullable()
-      .optional(),
-    steps: z.array(stepSchema).optional(),
-  }),
-);
-
-const accountSchema = z.object({
-  email: z.string(),
-  password: z.string(),
-  workspaceSlug: z.string(),
-  mailboxSlug: z.string(),
-  calendarSlug: z.string(),
-  driveSlugs: z.record(z.string(), z.string()),
-});
-type Account = z.infer<typeof accountSchema>;
-
-async function harness(path: string): Promise<Response> {
-  const res = await fetch(`${HARNESS}${path}`);
-  if (!res.ok) throw new Error(`harness ${path}: HTTP ${res.status}`);
-  return res;
+interface ClaudePlan {
+  consent: boolean;
+  prompts: TerminalEntry[];
+  smoke: TerminalStep[];
+  key: string | undefined;
 }
 
-function resolve(path: string, a: Account): string {
-  return path
-    .replaceAll("{workspace}", `/w/${a.workspaceSlug}`)
-    .replaceAll("{mailbox}", a.mailboxSlug)
-    .replaceAll("{calendar}", a.calendarSlug)
-    .replace(/\{drive:([A-Za-z0-9-]+)\}/g, (_, kind: string) => {
-      const slug = kind === "all" ? "all" : a.driveSlugs[kind];
-      if (!slug) throw new Error(`no seeded drive "${kind}"`);
-      return slug;
-    });
+function docker(args: string[], env?: NodeJS.ProcessEnv) {
+  const res = spawnSync("docker", args, { encoding: "utf8", env });
+  if (res.status !== 0) throw new Error(`docker ${args[0]}: ${res.stderr.trim() || res.status}`);
+  return res.stdout;
 }
 
-function contextOptions() {
+function inContainer(command: string) {
+  return docker(["exec", "-w", "/work", CONTAINER, "bash", "-lc", command]);
+}
+
+function requireContainer() {
+  const res = spawnSync("docker", ["inspect", "-f", "{{.State.Running}}", CONTAINER], {
+    encoding: "utf8",
+  });
+  if (res.status !== 0 || res.stdout.trim() !== "true")
+    throw new Error(`${CONTAINER} is not running; start the stack with bun run up:ss in e2e/`);
+}
+
+function upstreamKey(): string {
+  let text = "";
+  try {
+    text = readFileSync(ENV_FILE, "utf8");
+  } catch {
+    throw new Error(
+      `the Claude Code shots read LLM_UPSTREAM_KEY from ${ENV_FILE}, which is missing`,
+    );
+  }
+  for (const line of text.split("\n")) {
+    const match = /^\s*(?:export\s+)?LLM_UPSTREAM_KEY\s*=\s*(.*)$/.exec(line);
+    const value = (match?.[1] ?? "").trim().replace(/^(["'])(.*)\1$/, "$2");
+    if (value) return value;
+  }
+  throw new Error(`LLM_UPSTREAM_KEY is not set in ${ENV_FILE}`);
+}
+
+function claudeHost(key: string | undefined): TerminalHost {
   return {
-    baseURL: APP,
-    viewport: VIEWPORT,
-    deviceScaleFactor: 2,
-    colorScheme: "light" as const,
-    timezoneId: "UTC",
-    locale: "en-US",
-    extraHTTPHeaders: { "X-Forwarded-For": "203.0.113.10" },
+    port: PORT,
+    start() {
+      docker(["exec", CONTAINER, "sh", "-c", "pkill -x ttyd || true"]);
+      docker(
+        [
+          "exec",
+          "-d",
+          "-w",
+          "/work",
+          ...(key ? ["-e", "LLM_UPSTREAM_KEY"] : []),
+          ...(key && MODEL ? ["-e", `CLAUDE_MODEL=${MODEL}`] : []),
+          CONTAINER,
+          ...ttyd(PORT, ["bash", "-l"], ["-i", "lo"]),
+        ],
+        key ? { ...process.env, LLM_UPSTREAM_KEY: key } : undefined,
+      );
+    },
+    shell: inContainer,
   };
 }
 
-async function signIn(browser: Browser, a: Account) {
-  const context = await browser.newContext(contextOptions());
-  const page = await context.newPage();
-  await page.goto(`${APP}/`);
-  const content = page.getByRole("main");
-  await content.getByRole("textbox", { name: "Email address" }).fill(a.email);
-  await content.getByRole("textbox", { name: "Password" }).fill(a.password);
-  await content.getByRole("button", { name: "Sign in", exact: true }).click();
-  await page.waitForURL(/\/2fa\/verify/);
-  const input = page.locator('input[autocomplete="one-time-code"]');
-  await input.click();
-  await page.keyboard.type((await (await harness("/totp?fresh=1")).text()).trim());
-  await content.getByRole("button", { name: "Verify", exact: true }).click();
-  await page.waitForURL(/\/w\//);
-  const listed = await context.request.post(`${APP}/rpc/workspaceThemes/list`, {
-    data: { json: { workspaceSlug: a.workspaceSlug } },
-  });
-  if (!listed.ok()) throw new Error(`workspaceThemes/list: HTTP ${listed.status()}`);
-  const amber = themesSchema
-    .parse(await listed.json())
-    .json.themes.find((t) => t.source === "system" && t.name === "Amber");
-  if (!amber) throw new Error("no Amber theme");
-  const brand = await context.request.post(`${APP}/rpc/workspaceThemes/select`, {
-    data: { json: { workspaceSlug: a.workspaceSlug, themeId: amber.id } },
-  });
-  if (!brand.ok()) {
-    throw new Error(`workspaceThemes/select: HTTP ${brand.status()} ${await brand.text()}`);
-  }
-  const state = await context.storageState();
-  await context.close();
-  return state;
+function claudeAuthorized() {
+  const res = spawnSync(
+    "docker",
+    ["exec", "-w", "/work", CONTAINER, "bash", "-lc", "claude mcp list"],
+    { encoding: "utf8" },
+  );
+  return res.stdout
+    .split("\n")
+    .some((line) => line.startsWith(`${SERVER}:`) && line.includes("Connected"));
 }
 
-async function rpc(page: Page, procedure: string, input: unknown): Promise<unknown> {
-  const res = await page.request.post(`${APP}/rpc/${procedure}`, {
-    headers: { origin: APP },
-    data: { json: input },
-  });
-  if (!res.ok()) throw new Error(`rpc ${procedure}: HTTP ${res.status()}`);
-  return res.json();
-}
+const mcpClientsSchema = z.array(z.object({ clientId: z.string(), label: z.string() }));
 
-async function clearReadLater(page: Page, a: Account) {
-  const scope = { workspaceSlug: a.workspaceSlug, mailboxSlug: a.mailboxSlug };
-  const { json } = readLaterSchema.parse(await rpc(page, "mail/readLater/list", scope));
-  await Promise.all(
-    json.messageIds.map((messageId) => rpc(page, "mail/readLater/remove", { ...scope, messageId })),
+async function waitForText(page: Page, text: string, timeoutMs: number) {
+  const want = text.toLowerCase();
+  await waitUntil(
+    page,
+    (screen) => screen.toLowerCase().includes(want),
+    `"${text}"`,
+    timeoutMs,
+    visibleText,
   );
 }
 
-async function centerOf(page: Page, selector: string) {
-  const box = await page.locator(selector).first().boundingBox();
-  if (!box) throw new Error(`${selector} has no box`);
-  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-}
-
-async function drag(page: Page, from: string, to: string) {
-  const start = await centerOf(page, from);
-  const end = await centerOf(page, to);
-  await page.mouse.move(start.x, start.y);
-  await page.mouse.down();
-  await page.mouse.move(end.x, end.y, { steps: 12 });
-  await page.mouse.up();
-}
-
-async function run(page: Page, step: Step, a: Account) {
-  if ("clearReadLater" in step) await clearReadLater(page, a);
-  else if ("goto" in step) await page.goto(resolve(step.goto, a));
-  else if ("follow" in step) {
-    const href = await page.locator(step.follow).first().getAttribute("href");
-    if (!href) throw new Error(`${step.follow} has no href`);
-    await page.goto(new URL(href, page.url()).href);
-  } else if ("click" in step)
-    await page
-      .locator(step.click)
-      .nth(step.nth ?? 0)
-      .click();
-  else if ("dblclick" in step) await page.locator(step.dblclick).first().dblclick();
-  else if ("rightClick" in step)
-    await page.locator(step.rightClick).first().click({ button: "right" });
-  else if ("hover" in step) await page.locator(step.hover).first().hover();
-  else if ("fill" in step) await page.locator(step.fill).first().fill(step.value);
-  else if ("type" in step) {
-    await page.locator(step.type).first().click();
-    await page.keyboard.type(step.text);
-  } else if ("press" in step) await page.keyboard.press(step.press);
-  else if ("drag" in step) await drag(page, step.drag, step.to);
-  else if ("waitFor" in step)
-    await page.locator(step.waitFor).first().waitFor({ state: "visible" });
-  else if ("waitForHidden" in step)
-    await page.locator(step.waitForHidden).first().waitFor({ state: "hidden" });
-  else if ("wait" in step) await page.waitForTimeout(step.wait);
-  else if ("scroll" in step) await page.locator(step.scroll).first().scrollIntoViewIfNeeded();
-}
-
-function viewBox(el: Element): Box {
-  const rect = el.getBoundingClientRect();
-  const solid = new Set(["svg", "img", "canvas", "button", "input", "textarea"]);
-  let bottom = rect.top;
-  for (const child of el.querySelectorAll("*")) {
-    if (child.children.length > 0 && !solid.has(child.localName)) continue;
-    const r = child.getBoundingClientRect();
-    if (r.width === 0 || r.height === 0) continue;
-    if (getComputedStyle(child).visibility === "hidden") continue;
-    bottom = Math.max(bottom, Math.min(r.bottom, rect.bottom));
+async function authorizeUrl(page: Page) {
+  const rows = (
+    await page.$$eval(".xterm-rows > div", (els) => els.map((el) => el.textContent ?? ""))
+  ).map((row) => row.replace(/ /g, " "));
+  const first = rows.findIndex((row) => row.includes("oauth2/authorize"));
+  const parts: string[] = [];
+  for (let i = first; i >= 0 && i < rows.length; i++) {
+    const row = rows[i]?.trim() ?? "";
+    if (row === "") break;
+    parts.push(row);
   }
-  const end = rect.bottom - bottom > 120 ? bottom + 16 : rect.bottom;
-  return {
-    x: rect.left,
-    y: rect.top,
-    width: rect.width,
-    height: end - rect.top,
-  };
+  const url = /https?:\/\/\S+\/oauth2\/authorize\?\S+/.exec(parts.join(""));
+  if (!url) throw new Error("Claude Code printed no authorization URL");
+  return url[0];
 }
 
-async function shoot(page: Page, path: string) {
-  const png = await page.screenshot({ type: "png" });
-  await sharp(png).webp({ quality: 80 }).toFile(path);
-}
+async function authorize(browser: Browser, ctx: BrowserContext, consentFile: string | null) {
+  const clients = mcpClientsSchema.parse(await rpc(ctx, "mcp/listClients"));
+  for (const client of clients.filter((c) => c.label === CLIENT_LABEL))
+    await rpc(ctx, "mcp/deleteClient", { clientId: client.clientId });
 
-async function focusBox(page: Page, focus: string | string[]): Promise<Box | null> {
-  const boxes: Box[] = [];
-  for (const selector of Array.isArray(focus) ? focus : [focus]) {
-    const loc = page.locator(selector).first();
-    if (!(await loc.isVisible().catch(() => false))) return null;
-    boxes.push(await loc.evaluate(viewBox));
+  const page = await ctx.newPage();
+  try {
+    await page.goto("/settings/mcp");
+    await page.getByRole("button", { name: "Add client", exact: true }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.locator('input[inputmode="numeric"]').fill(CALLBACK_PORT);
+    await dialog.getByRole("button", { name: "Add client", exact: true }).click();
+    const setup = (await dialog.locator("pre").innerText()).replace(/\\\n\s*/g, " ").trim();
+    await dialog.getByRole("button", { name: "Done", exact: true }).click();
+    inContainer(`claude mcp remove ${SERVER} >/dev/null 2>&1; ${setup}`);
+
+    claudeHost(undefined).start(undefined);
+    await waitForTtyd(PORT, 50);
+    const term = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: 2 });
+    try {
+      await term.goto(`http://localhost:${PORT}/`);
+      await term.locator(".xterm-rows").waitFor();
+      await settle(term, 800, 15_000, visibleText);
+      await typeLine(term, "claude");
+      await waitForText(term, "run /mcp", 60_000);
+      await typeLine(term, "/mcp");
+      await waitForText(term, SERVER, 30_000);
+      await term.waitForTimeout(500);
+      await term.keyboard.press("Enter");
+      await term.waitForTimeout(1000);
+      await term.keyboard.press("Enter");
+      await waitForText(term, "oauth2/authorize", 60_000);
+
+      await page.goto(await authorizeUrl(term));
+      const approve = page.getByRole("main").getByRole("button", { name: "Approve", exact: true });
+      await approve.waitFor();
+      if (consentFile) await shoot(page, consentFile);
+      await page.locator('input[autocomplete="one-time-code"]').click();
+      await page.keyboard.type(await totp());
+      await approve.click();
+      await page.waitForURL(new RegExp(`localhost:${CALLBACK_PORT}/callback`));
+      await waitForText(term, "Authentication successful", 60_000);
+    } finally {
+      await term.close();
+    }
+  } finally {
+    await page.close();
   }
-  const x = Math.max(0, Math.min(...boxes.map((b) => b.x)) - PAD);
-  const y = Math.max(0, Math.min(...boxes.map((b) => b.y)) - PAD);
-  const right = Math.min(VIEWPORT.width, Math.max(...boxes.map((b) => b.x + b.width)) + PAD);
-  const bottom = Math.min(VIEWPORT.height, Math.max(...boxes.map((b) => b.y + b.height)) + PAD);
-  if (right - x < 8 || bottom - y < 8) return null;
-  return { x, y, width: right - x, height: bottom - y };
+}
+
+async function hideWorkspace(ctx: BrowserContext) {
+  const { workspaces } = z
+    .object({
+      workspaces: z.array(z.object({ id: z.string(), name: z.string() })),
+    })
+    .parse(await rpc(ctx, "workspaces/list"));
+  const workspaceId =
+    workspaces.find((w) => w.name === HIDDEN_WORKSPACE)?.id ??
+    z
+      .object({ workspaceId: z.string() })
+      .parse(await rpc(ctx, "workspaces/create", { name: HIDDEN_WORKSPACE })).workspaceId;
+  const client = mcpClientsSchema
+    .parse(await rpc(ctx, "mcp/listClients"))
+    .find((c) => c.label === CLIENT_LABEL);
+  if (!client) throw new Error(`no "${CLIENT_LABEL}" MCP client`);
+  await rpc(ctx, "mcp/setHiddenWorkspaces", {
+    clientId: client.clientId,
+    workspaceIds: [workspaceId],
+  });
+}
+
+async function capturePage(
+  browser: Browser,
+  state: StorageState,
+  account: Account,
+  entry: PageEntry,
+  shot: WwwShot,
+): Promise<number[] | null> {
+  const context = await browser.newContext({
+    ...contextOptions(APP_URL),
+    storageState: entry.signedOut ? undefined : state,
+  });
+  await context.addInitScript(() => localStorage.setItem("theme", "light"));
+  const page = await context.newPage();
+  if (entry.seededWeek) await page.clock.setFixedTime(CLOCK);
+  try {
+    await page.goto(resolve(entry.path, account));
+    await page.waitForLoadState("networkidle").catch(() => {});
+    for (const step of [...(entry.steps ?? []), ...(shot.steps ?? [])])
+      await runStep(page, step, account);
+    await page.waitForTimeout(500);
+    const want = shot.focus === undefined ? (entry.element ?? entry.clip) : shot.focus;
+    let box: Box | null = null;
+    if (want && typeof want === "object" && !Array.isArray(want)) box = want;
+    else if (want) {
+      const first = Array.isArray(want) ? want[0] : want;
+      if (first)
+        await page
+          .locator(first)
+          .first()
+          .scrollIntoViewIfNeeded()
+          .catch(() => {});
+      box = await viewportRegion(page, want, PAD);
+      if (!box && entry.element && want !== entry.element)
+        box = await viewportRegion(page, entry.element, PAD);
+    }
+    await shoot(page, join(OUT, `${shot.name}.webp`));
+    return box ? [box.x, box.y, box.width, box.height].map(Math.round) : null;
+  } finally {
+    await context.close();
+  }
+}
+
+async function captureClaude(
+  browser: Browser,
+  state: StorageState,
+  plan: ClaudePlan,
+  manifest: Manifest,
+  failed: string[],
+) {
+  const ctx = await browser.newContext({ ...contextOptions(APP_URL), storageState: state });
+  await ctx.addInitScript(() => localStorage.setItem("theme", "light"));
+  try {
+    if (plan.consent || !claudeAuthorized()) {
+      const file = plan.consent ? join(OUT, `${CONSENT_SHOT}.webp`) : null;
+      try {
+        await authorize(browser, ctx, file);
+      } catch (error) {
+        failed.push(CONSENT_SHOT);
+        console.error(`[www-shots] failed the Claude Code sign-in: ${String(error)}`);
+        return;
+      }
+      if (file) {
+        manifest[CONSENT_SHOT] = null;
+        console.log(`[www-shots] ok ${CONSENT_SHOT}`);
+      }
+    }
+    if (plan.prompts.length > 0) await hideWorkspace(ctx);
+    const host = claudeHost(plan.key);
+    for (const entry of plan.prompts) {
+      try {
+        await captureTerminal(browser, entry, host, { light: join(OUT, `${entry.name}.webp`) });
+        manifest[entry.name] = null;
+        console.log(`[www-shots] ok ${entry.name}`);
+      } catch (error) {
+        failed.push(entry.name);
+        console.error(`[www-shots] failed ${entry.name}: ${String(error)}`);
+      }
+    }
+    if (plan.smoke.length > 0) {
+      const file = join(tmpdir(), "claude-code-smoke.webp");
+      const entry: TerminalEntry = {
+        name: "smoke",
+        target: "www",
+        terminal: "claude-code",
+        cols: 120,
+        rows: 34,
+        steps: plan.smoke,
+      };
+      try {
+        await captureTerminal(browser, entry, host, { light: file });
+        console.log(`[www-shots] ok smoke ${file}`);
+      } catch (error) {
+        failed.push("smoke");
+        console.error(`[www-shots] failed smoke: ${String(error)}`);
+      }
+    }
+  } finally {
+    await ctx.close();
+  }
+}
+
+function smokeSteps(args: string[]): TerminalStep[] {
+  return args.flatMap((a): TerminalStep[] => {
+    if (a === "--smoke") return [{ type: SMOKE_COMMAND }];
+    if (a.startsWith("--smoke=")) return [{ answer: a.slice(8) }];
+    if (a.startsWith("--smoke-wait=")) return [{ waitFor: a.slice(13), ignoreCase: true }];
+    if (a.startsWith("--smoke-press=")) return [{ press: a.slice(14) }];
+    return [];
+  });
 }
 
 async function main() {
-  const only = process.argv.slice(2);
-  const docs = new Map<string, DocsShot>();
-  for (const f of readdirSync(DOCS).filter((name) => name.endsWith(".json")))
-    for (const s of docsShotsSchema.parse(JSON.parse(readFileSync(join(DOCS, f), "utf8"))))
-      docs.set(s.name, s);
-  const shots = shotsSchema
-    .parse(JSON.parse(readFileSync(join(import.meta.dirname, "shots.json"), "utf8")))
-    .filter((s) => only.length === 0 || only.some((o) => s.name.startsWith(o)));
-  let manifest: Record<string, number[] | null> = {};
-  try {
-    manifest = JSON.parse(readFileSync(MANIFEST, "utf8"));
-  } catch {}
+  const args = process.argv.slice(2);
+  const smoke = smokeSteps(args);
+  const picked = namePicker(args.filter((a) => !a.startsWith("--")));
+  const lists = readLists();
+  const pageShots =
+    smoke.length > 0
+      ? []
+      : lists.pages
+          .flatMap((entry) =>
+            entry.target === "docs" ? [] : entry.www.map((shot) => ({ entry, shot })),
+          )
+          .filter(({ shot }) => picked(shot.name));
+  const claudeShots =
+    smoke.length > 0 ? [] : lists.terminals.filter((e) => e.target === "www" && picked(e.name));
+  if (claudeShots.length > 0 && !MODEL)
+    console.log(
+      `[www-shots] MCP_SHOTS_MODEL is not set, so ${claudeShots.map((e) => e.name).join(", ")} keep their current images`,
+    );
+  const smokeModel = smoke.length > 0 && args.includes("--model");
+  if (smokeModel && !MODEL) throw new Error("--model needs MCP_SHOTS_MODEL");
+  const prompts = MODEL ? claudeShots : [];
+  const plan: ClaudePlan = {
+    consent: smoke.length === 0 && picked(CONSENT_SHOT),
+    prompts,
+    smoke,
+    key: prompts.length > 0 || smokeModel ? upstreamKey() : undefined,
+  };
+  const needsClaude = plan.consent || prompts.length > 0 || smoke.length > 0;
+  if (needsClaude) requireContainer();
 
-  const account = accountSchema.parse(await (await harness("/account")).json());
-  const browser = process.env.CDP_URL
-    ? await chromium.connectOverCDP(process.env.CDP_URL)
-    : await chromium.launch({ channel: "chrome", headless: true, args: RENDER_FLAGS });
-  const state = await signIn(browser, account);
+  const manifest = readManifest();
+  const account = await harnessAccount();
+  const browser = await launch(process.env.CDP_URL);
   const failed: string[] = [];
-
-  for (const shot of shots) {
-    const base = docs.get(shot.from);
-    if (!base) {
-      failed.push(shot.name);
-      console.error(`[www-shots] no docs entry ${shot.from}`);
-      continue;
-    }
-    const context = await browser.newContext({
-      ...contextOptions(),
-      storageState: base.signedOut ? undefined : state,
-    });
-    await context.addInitScript(() => localStorage.setItem("theme", "light"));
-    const page = await context.newPage();
-    if (base.seededWeek) await page.clock.setFixedTime(CLOCK);
-    try {
-      await page.goto(resolve(base.path, account));
-      await page.waitForLoadState("networkidle").catch(() => {});
-      for (const step of [...(base.steps ?? []), ...(shot.steps ?? [])])
-        await run(page, step, account);
-      await page.waitForTimeout(500);
-      const want = shot.focus === undefined ? (base.element ?? base.clip) : shot.focus;
-      let box: Box | null = null;
-      if (want && typeof want === "object" && !Array.isArray(want)) box = want;
-      else if (want) {
-        const first = Array.isArray(want) ? want[0] : want;
-        if (first)
-          await page
-            .locator(first)
-            .first()
-            .scrollIntoViewIfNeeded()
-            .catch(() => {});
-        box = await focusBox(page, want);
-        if (!box && base.element && want !== base.element) box = await focusBox(page, base.element);
+  try {
+    const state = await signIn(browser, account);
+    await asUser(browser, state, (page) => selectTheme(page, account.workspaceSlug, "Amber"));
+    for (const { entry, shot } of pageShots) {
+      try {
+        manifest[shot.name] = await capturePage(browser, state, account, entry, shot);
+        const box = manifest[shot.name];
+        console.log(`[www-shots] ok ${shot.name} ${box ? JSON.stringify(box) : "(whole)"}`);
+      } catch (error) {
+        failed.push(shot.name);
+        console.error(`[www-shots] failed ${shot.name}: ${String(error)}`);
       }
-      const file = join(OUT, `${shot.name}.webp`);
-      await mkdir(dirname(file), { recursive: true });
-      await shoot(page, file);
-      manifest[shot.name] = box ? [box.x, box.y, box.width, box.height].map(Math.round) : null;
-      console.log(
-        `[www-shots] ok ${shot.name} ${box ? JSON.stringify(manifest[shot.name]) : "(whole)"}`,
-      );
-    } catch (error) {
-      failed.push(shot.name);
-      console.error(`[www-shots] failed ${shot.name}: ${String(error)}`);
-    } finally {
-      await context.close();
     }
+    if (needsClaude) await captureClaude(browser, state, plan, manifest, failed);
+  } finally {
+    await browser.close();
   }
 
-  await browser.close();
-  const sorted = Object.fromEntries(
-    Object.entries(manifest).toSorted(([a], [b]) => a.localeCompare(b)),
-  );
-  writeFileSync(MANIFEST, `${JSON.stringify(sorted, null, 2)}\n`);
+  if (smoke.length === 0) writeManifest(manifest);
   if (failed.length > 0) {
     console.error(`[www-shots] ${failed.length} failed: ${failed.join(", ")}`);
     process.exit(1);

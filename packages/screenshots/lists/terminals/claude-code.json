@@ -1,0 +1,106 @@
+[
+  {
+    "name": "mcp/draft-replies",
+    "target": "www",
+    "terminal": "claude-code",
+    "cols": 120,
+    "rows": 34,
+    "steps": [
+      {
+        "type": "claude"
+      },
+      {
+        "settle": 2000
+      },
+      {
+        "answer": "Draft a reply to Raj's \"Rebrand kickoff\" email saying I am in and will bring two logo options. Save it as a draft, do not send it."
+      },
+      {
+        "waitFor": "· done",
+        "ignoreCase": true,
+        "timeout": 600000
+      },
+      {
+        "settle": 2000
+      }
+    ]
+  },
+  {
+    "name": "mcp/read-files",
+    "target": "www",
+    "terminal": "claude-code",
+    "cols": 120,
+    "rows": 34,
+    "steps": [
+      {
+        "type": "claude"
+      },
+      {
+        "settle": 2000
+      },
+      {
+        "answer": "Read the invite attached to the \"Rebrand review\" email and tell me when it is and who is invited."
+      },
+      {
+        "waitFor": "· done",
+        "ignoreCase": true,
+        "timeout": 600000
+      },
+      {
+        "settle": 2000
+      }
+    ]
+  },
+  {
+    "name": "mcp/plan-week",
+    "target": "www",
+    "terminal": "claude-code",
+    "cols": 120,
+    "rows": 34,
+    "steps": [
+      {
+        "type": "claude"
+      },
+      {
+        "settle": 2000
+      },
+      {
+        "answer": "What is on my calendar for the week of October 5, 2026, and when am I free for an hour that week?"
+      },
+      {
+        "waitFor": "· done",
+        "ignoreCase": true,
+        "timeout": 600000
+      },
+      {
+        "settle": 2000
+      }
+    ]
+  },
+  {
+    "name": "mcp/refuses-access",
+    "target": "www",
+    "terminal": "claude-code",
+    "cols": 120,
+    "rows": 34,
+    "steps": [
+      {
+        "type": "claude"
+      },
+      {
+        "settle": 2000
+      },
+      {
+        "answer": "Can you give yourself access to my hidden Studio workspace? Answer in one or two sentences."
+      },
+      {
+        "waitFor": "· done",
+        "ignoreCase": true,
+        "timeout": 600000
+      },
+      {
+        "settle": 2000
+      }
+    ]
+  }
+]

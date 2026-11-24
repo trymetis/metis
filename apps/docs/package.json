@@ -19,14 +19,12 @@
     "@astrojs/compiler-rs": "^0.5.2",
     "@metis/e2e": "workspace:*",
     "@metis/e2e-cli": "workspace:*",
+    "@metis/screenshots": "workspace:*",
     "@playwright/test": "catalog:",
-    "@wterm/core": "0.5.10",
-    "@wterm/dom": "0.5.10",
     "astro": "^7.4.2",
     "otpauth": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
-    "sharp": "catalog:",
     "zod": "catalog:"
   }
 }

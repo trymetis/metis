@@ -1,0 +1,366 @@
+[
+  {
+    "name": "get-started/app-rail",
+    "target": "all",
+    "clip": {
+      "x": 0,
+      "y": 0,
+      "width": 640,
+      "height": 900
+    },
+    "path": "{workspace}/m/{mailbox}/inbox",
+    "steps": [
+      {
+        "waitFor": "nav[aria-label='App navigation']"
+      }
+    ],
+    "www": [
+      {
+        "name": "teams/switch",
+        "focus": "nav[aria-label='App navigation']"
+      }
+    ]
+  },
+  {
+    "name": "get-started/user-menu",
+    "target": "docs",
+    "path": "{workspace}/m/{mailbox}/inbox",
+    "steps": [
+      {
+        "waitFor": "nav[aria-label='App navigation'] button.rounded-full"
+      },
+      {
+        "click": "nav[aria-label='App navigation'] button.rounded-full"
+      },
+      {
+        "waitFor": "[role='menuitem']:has-text('Sign out')"
+      }
+    ],
+    "element": [
+      "nav[aria-label='App navigation'] button.rounded-full",
+      "[role='menu']:has-text('Sign out')"
+    ]
+  },
+  {
+    "name": "get-started/settings",
+    "target": "docs",
+    "path": "/settings/account",
+    "steps": [
+      {
+        "waitFor": "aside[aria-label='Settings'] a:has-text('Security')"
+      }
+    ],
+    "element": ["aside[aria-label='Settings']", "main h2"]
+  },
+  {
+    "name": "account/sign-in",
+    "target": "all",
+    "viewport": {
+      "width": 800,
+      "height": 600
+    },
+    "path": "/",
+    "signedOut": true,
+    "steps": [
+      {
+        "waitFor": "button:has-text('Email me a magic link')"
+      }
+    ],
+    "www": [
+      {
+        "name": "selfhost/sign-in",
+        "focus": {
+          "x": 530,
+          "y": 210,
+          "width": 380,
+          "height": 430
+        }
+      }
+    ]
+  },
+  {
+    "name": "account/forgot-password",
+    "target": "docs",
+    "viewport": {
+      "width": 800,
+      "height": 460
+    },
+    "path": "/forgot-password",
+    "signedOut": true,
+    "steps": [
+      {
+        "waitFor": "button:has-text('Send reset link')"
+      }
+    ]
+  },
+  {
+    "name": "account/invite-sign-up",
+    "target": "docs",
+    "viewport": {
+      "width": 800,
+      "height": 700
+    },
+    "path": "{invite}",
+    "signedOut": true,
+    "invite": {
+      "email": "jo@demo.trymetis.email"
+    },
+    "steps": [
+      {
+        "waitFor": "role=heading[name=\"Create your account\"]"
+      }
+    ]
+  },
+  {
+    "name": "account/workspaces",
+    "target": "docs",
+    "viewport": {
+      "width": 1060,
+      "height": 540
+    },
+    "path": "/settings/workspaces",
+    "steps": [
+      {
+        "waitFor": "main :text-is('Default')"
+      }
+    ]
+  },
+  {
+    "name": "account/account",
+    "target": "docs",
+    "viewport": {
+      "width": 1060,
+      "height": 540
+    },
+    "path": "/settings/account",
+    "steps": [
+      {
+        "waitFor": "main :text-is('This device')"
+      }
+    ]
+  },
+  {
+    "name": "account/data-export",
+    "target": "docs",
+    "path": "/settings/account",
+    "steps": [
+      {
+        "waitFor": "main h2:text-is('Export your data')"
+      },
+      {
+        "scroll": "main h2:text-is('Export your data')"
+      }
+    ],
+    "element": "section:has(h2:text-is('Export your data'))"
+  },
+  {
+    "name": "account/security",
+    "target": "all",
+    "path": "/settings/security",
+    "steps": [
+      {
+        "waitFor": "main h2:has-text('Regenerate backup codes')"
+      }
+    ],
+    "www": [
+      {
+        "name": "security/account",
+        "focus": "main"
+      }
+    ]
+  },
+  {
+    "name": "account/security-activity",
+    "target": "docs",
+    "path": "/settings/security",
+    "steps": [
+      {
+        "waitFor": "main h2:text-is('Security activity')"
+      },
+      {
+        "waitFor": "section:has(h2:text-is('Security activity')) input[aria-label='Search events']"
+      },
+      {
+        "waitFor": "section:has(h2:text-is('Security activity')) :is(ul[aria-label='Audit events'], p:text-is('No security activity yet.'))"
+      },
+      {
+        "scroll": "main h2:text-is('Security activity')"
+      }
+    ],
+    "element": [
+      "section:has(h2:text-is('Security activity')) > div:first-child",
+      "section:has(h2:text-is('Security activity')) ul[aria-label='Audit events'] > li:nth-child(3)"
+    ],
+    "pad": 17
+  },
+  {
+    "name": "account/authenticator-app",
+    "target": "docs",
+    "path": "/settings/security",
+    "steps": [
+      {
+        "waitFor": "main h2:text-is('Authenticator app')"
+      },
+      {
+        "waitFor": "section:has(h2:text-is('Authenticator app')) button:has-text('Remove authenticator')"
+      },
+      {
+        "scroll": "main h2:text-is('Authenticator app')"
+      }
+    ],
+    "element": "section:has(h2:text-is('Authenticator app'))"
+  },
+  {
+    "name": "account/passkeys",
+    "target": "docs",
+    "path": "/settings/security",
+    "steps": [
+      {
+        "waitFor": "main h2:text-is('Passkeys')"
+      },
+      {
+        "waitFor": "section:has(h2:text-is('Passkeys')) button:has-text('Add a passkey')"
+      },
+      {
+        "scroll": "main h2:text-is('Passkeys')"
+      }
+    ],
+    "element": "section:has(h2:text-is('Passkeys'))"
+  },
+  {
+    "name": "account/sign-in-alerts",
+    "target": "docs",
+    "path": "/settings/security",
+    "steps": [
+      {
+        "waitFor": "main h2:text-is('Sign-in alerts')"
+      },
+      {
+        "waitFor": "main [role=switch][aria-checked=true]"
+      },
+      {
+        "scroll": "main h2:text-is('Sign-in alerts')"
+      }
+    ],
+    "element": "section:has(h2:text-is('Sign-in alerts'))"
+  },
+  {
+    "name": "account/delete-account",
+    "target": "docs",
+    "path": "/settings/security",
+    "steps": [
+      {
+        "waitFor": "main h2:text-is('Delete account')"
+      },
+      {
+        "scroll": "main h2:text-is('Delete account')"
+      }
+    ],
+    "element": "section:has(h2:text-is('Delete account'))"
+  },
+  {
+    "name": "account/privacy",
+    "target": "docs",
+    "viewport": {
+      "width": 1060,
+      "height": 540
+    },
+    "path": "/settings/privacy",
+    "steps": [
+      {
+        "waitFor": "main :text-is('Clean tracking from links')"
+      }
+    ]
+  },
+  {
+    "name": "account/two-factor-code",
+    "target": "all",
+    "viewport": {
+      "width": 800,
+      "height": 600
+    },
+    "path": "/",
+    "signedOut": true,
+    "steps": [
+      {
+        "fill": "role=main >> role=textbox[name=\"Email address\"]",
+        "value": "ana@demo.trymetis.email"
+      },
+      {
+        "fill": "role=main >> role=textbox[name=\"Password\"]",
+        "value": "ana-account-password-0001"
+      },
+      {
+        "click": "role=main >> role=button[name=\"Sign in\"s]"
+      },
+      {
+        "waitFor": "role=heading[name=\"Two-factor authentication\"]"
+      }
+    ],
+    "www": [
+      {
+        "name": "security/two-factor",
+        "focus": {
+          "x": 520,
+          "y": 290,
+          "width": 400,
+          "height": 320
+        }
+      }
+    ]
+  },
+  {
+    "name": "account/magic-link-sent",
+    "target": "all",
+    "viewport": {
+      "width": 800,
+      "height": 600
+    },
+    "path": "/",
+    "signedOut": true,
+    "steps": [
+      {
+        "fill": "role=main >> role=textbox[name=\"Email address\"]",
+        "value": "ana@demo.trymetis.email"
+      },
+      {
+        "click": "role=button[name=\"Email me a magic link\"]"
+      },
+      {
+        "waitFor": "text=Check your email"
+      }
+    ],
+    "www": [
+      {
+        "name": "security/magic-link",
+        "focus": {
+          "x": 530,
+          "y": 270,
+          "width": 380,
+          "height": 320
+        }
+      }
+    ]
+  },
+  {
+    "name": "account/add-device-qr",
+    "target": "docs",
+    "path": "/settings/security",
+    "steps": [
+      {
+        "waitFor": "main h2:text-is('Add another device')"
+      },
+      {
+        "fill": "section:has(h2:text-is('Add another device')) input[placeholder='Account password']",
+        "value": "ana-account-password-0001"
+      },
+      {
+        "click": "section:has(h2:text-is('Add another device')) button:has-text('Show QR code')"
+      },
+      {
+        "waitFor": "role=img[name=\"QR code for your authenticator app\"]"
+      }
+    ],
+    "element": "section:has(h2:text-is('Add another device'))"
+  }
+]

@@ -1,6 +1,7 @@
 [
   {
     "name": "mail/inbox",
+    "target": "all",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -15,11 +16,31 @@
       {
         "waitFor": "text=TL;DR"
       }
+    ],
+    "www": [
+      {
+        "name": "mail/all-inboxes",
+        "focus": "div:has(> div > div > h1:text-is(\"Inbox\"))"
+      },
+      {
+        "name": "mail/summary",
+        "focus": "text=TL;DR >> xpath=../.."
+      },
+      {
+        "name": "screens/inbox",
+        "focus": null
+      }
     ]
   },
   {
     "name": "mail/folders-sidebar",
-    "clip": { "x": 0, "y": 0, "width": 640, "height": 900 },
+    "target": "docs",
+    "clip": {
+      "x": 0,
+      "y": 0,
+      "width": 640,
+      "height": 900
+    },
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -29,6 +50,7 @@
   },
   {
     "name": "mail/save-to-drive",
+    "target": "all",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -47,11 +69,20 @@
         "waitFor": "role=dialog[name=\"Save to Drive\"] >> role=button[name=\"Shared Files\"]"
       }
     ],
-    "element": "role=dialog[name=\"Save to Drive\"]"
+    "element": "role=dialog[name=\"Save to Drive\"]",
+    "www": [
+      {
+        "name": "mail/attachments"
+      }
+    ]
   },
   {
     "name": "mail/search-results",
-    "viewport": { "width": 1440, "height": 320 },
+    "target": "docs",
+    "viewport": {
+      "width": 1440,
+      "height": 320
+    },
     "element": "div:has(> div > div > h1:text-is(\"Inbox\"))",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
@@ -78,7 +109,11 @@
   },
   {
     "name": "mail/change-label-menu",
-    "viewport": { "width": 1440, "height": 440 },
+    "target": "all",
+    "viewport": {
+      "width": 1440,
+      "height": 440
+    },
     "element": "div:has(> div > button[title=\"Previous message\"])",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
@@ -97,12 +132,27 @@
       {
         "waitFor": "role=menu[name=\"Change label\"]"
       }
+    ],
+    "www": [
+      {
+        "name": "mail/labels",
+        "focus": "role=menu"
+      }
     ]
   },
   {
     "name": "mail/add-label",
-    "viewport": { "width": 1440, "height": 1040 },
-    "clip": { "x": 0, "y": 520, "width": 300, "height": 520 },
+    "target": "docs",
+    "viewport": {
+      "width": 1440,
+      "height": 1040
+    },
+    "clip": {
+      "x": 0,
+      "y": 520,
+      "width": 300,
+      "height": 520
+    },
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -116,6 +166,7 @@
   },
   {
     "name": "mail/composer",
+    "target": "all",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -152,10 +203,16 @@
         "waitFor": "role=combobox[name=\"Cc recipients\"]"
       }
     ],
-    "element": "[role=\"dialog\"]:has([aria-label=\"Close compose\"])"
+    "element": "[role=\"dialog\"]:has([aria-label=\"Close compose\"])",
+    "www": [
+      {
+        "name": "mail/send-from"
+      }
+    ]
   },
   {
     "name": "mail/reply-footer",
+    "target": "all",
     "element": "div:has(> div > button[title=\"Previous message\"])",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
@@ -177,11 +234,23 @@
       {
         "wait": 600
       }
+    ],
+    "www": [
+      {
+        "name": "mail/threads"
+      },
+      {
+        "name": "mail/smart-replies"
+      }
     ]
   },
   {
     "name": "mail/schedule-menu",
-    "viewport": { "width": 820, "height": 820 },
+    "target": "all",
+    "viewport": {
+      "width": 820,
+      "height": 820
+    },
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -217,11 +286,21 @@
       {
         "waitFor": "role=menu[name=\"Schedule send\"]"
       }
+    ],
+    "www": [
+      {
+        "name": "mail/schedule",
+        "focus": "role=menu"
+      }
     ]
   },
   {
     "name": "mail/scheduled-folder",
-    "viewport": { "width": 1440, "height": 280 },
+    "target": "docs",
+    "viewport": {
+      "width": 1440,
+      "height": 280
+    },
     "element": "div:has(> div > h1:text-is(\"Scheduled\"))",
     "path": "{workspace}/m/{mailbox}/scheduled",
     "steps": [
@@ -232,7 +311,11 @@
   },
   {
     "name": "mail/snooze-menu",
-    "viewport": { "width": 1440, "height": 420 },
+    "target": "all",
+    "viewport": {
+      "width": 1440,
+      "height": 420
+    },
     "element": "div:has(> div > button[title=\"Previous message\"])",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
@@ -251,10 +334,17 @@
       {
         "waitFor": "role=menu[name=\"Snooze\"]"
       }
+    ],
+    "www": [
+      {
+        "name": "mail/snooze",
+        "focus": "role=menu"
+      }
     ]
   },
   {
     "name": "mail/message-toolbar",
+    "target": "docs",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -271,6 +361,7 @@
   },
   {
     "name": "mail/view-original",
+    "target": "docs",
     "element": "main",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
@@ -293,7 +384,13 @@
   },
   {
     "name": "mail/print-page",
-    "clip": { "x": 0, "y": 0, "width": 1440, "height": 440 },
+    "target": "docs",
+    "clip": {
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "height": 440
+    },
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -315,7 +412,11 @@
   },
   {
     "name": "mail/bulk-actions",
-    "viewport": { "width": 1440, "height": 660 },
+    "target": "all",
+    "viewport": {
+      "width": 1440,
+      "height": 660
+    },
     "element": "div:has(> div > div > h1:text-is(\"Inbox\"))",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
@@ -331,20 +432,32 @@
       {
         "waitFor": "text=\"2 selected\""
       }
+    ],
+    "www": [
+      {
+        "name": "mail/bulk"
+      }
     ]
   },
   {
     "name": "mail/subscriptions",
+    "target": "all",
     "path": "{workspace}/m/{mailbox}/subscriptions",
     "steps": [
       {
         "waitFor": "text=/found in your latest/"
       }
     ],
-    "element": "div:has(> div > h1:text-is(\"Subscriptions\"))"
+    "element": "div:has(> div > h1:text-is(\"Subscriptions\"))",
+    "www": [
+      {
+        "name": "mail/unsubscribe"
+      }
+    ]
   },
   {
     "name": "mail/blocked-images",
+    "target": "all",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -360,10 +473,16 @@
         "waitFor": "role=alert >> text=/remote images? blocked/"
       }
     ],
-    "element": "main [role=\"alert\"]:has-text(\"remote image\")"
+    "element": "main [role=\"alert\"]:has-text(\"remote image\")",
+    "www": [
+      {
+        "name": "mail/images"
+      }
+    ]
   },
   {
     "name": "mail/tracker-badge",
+    "target": "all",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -382,11 +501,22 @@
         "waitFor": "text=Removed before the message was shown"
       }
     ],
-    "element": "[data-slot=\"popover-content\"]:has-text(\"Removed before the message was shown\")"
+    "element": "[data-slot=\"popover-content\"]:has-text(\"Removed before the message was shown\")",
+    "www": [
+      {
+        "name": "mail/trackers"
+      }
+    ]
   },
   {
     "name": "mail/summary-card",
-    "clip": { "x": 640, "y": 90, "width": 780, "height": 440 },
+    "target": "docs",
+    "clip": {
+      "x": 640,
+      "y": 90,
+      "width": 780,
+      "height": 440
+    },
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -405,6 +535,7 @@
   },
   {
     "name": "mail/draft-apology",
+    "target": "all",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -427,11 +558,22 @@
         "click": "role=alertdialog >> role=heading[name=\"Draft an apology\"]"
       }
     ],
-    "element": "role=alertdialog"
+    "element": "role=alertdialog",
+    "www": [
+      {
+        "name": "mail/stance"
+      }
+    ]
   },
   {
     "name": "mail/mail-ai-panel",
-    "clip": { "x": 800, "y": 0, "width": 640, "height": 900 },
+    "target": "all",
+    "clip": {
+      "x": 800,
+      "y": 0,
+      "width": 640,
+      "height": 900
+    },
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {
@@ -452,10 +594,22 @@
       {
         "wait": 600
       }
+    ],
+    "www": [
+      {
+        "name": "mail/assistant",
+        "focus": {
+          "x": 1120,
+          "y": 0,
+          "width": 320,
+          "height": 900
+        }
+      }
     ]
   },
   {
     "name": "mail/shortcuts-help",
+    "target": "all",
     "element": "role=dialog[name=\"Keyboard shortcuts\"]",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
@@ -477,45 +631,76 @@
       {
         "click": "role=dialog[name=\"Keyboard shortcuts\"] >> role=heading[level=2]"
       }
+    ],
+    "www": [
+      {
+        "name": "mail/shortcuts"
+      }
     ]
   },
   {
     "name": "mail/read-later",
+    "target": "all",
     "element": "div:has(> div > div > h1:text-is(\"Read later\"))",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
-      { "clearReadLater": true },
-      { "goto": "{workspace}/m/{mailbox}/inbox" },
-      { "click": "role=tab[name=/^All$/]" },
+      {
+        "clearReadLater": true
+      },
+      {
+        "goto": "{workspace}/m/{mailbox}/inbox"
+      },
+      {
+        "click": "role=tab[name=/^All$/]"
+      },
       {
         "click": "main [aria-roledescription=\"draggable\"] >> text=\"Your order A-42 has shipped\""
       },
-      { "waitFor": "main h2:has-text(\"Your order A-42 has shipped\")" },
+      {
+        "waitFor": "main h2:has-text(\"Your order A-42 has shipped\")"
+      },
       {
         "click": "div:has(> button[title=\"Previous message\"]) >> role=button[name=\"Read later\"]"
       },
       {
         "waitFor": "div:has(> button[title=\"Previous message\"]) >> role=button[name=\"Saved\"]"
       },
-      { "wait": 800 },
-      { "goto": "{workspace}/m/{mailbox}/read-later" },
-      { "waitFor": "role=heading[level=1][name=\"Read later\"]" },
+      {
+        "wait": 800
+      },
+      {
+        "goto": "{workspace}/m/{mailbox}/read-later"
+      },
+      {
+        "waitFor": "role=heading[level=1][name=\"Read later\"]"
+      },
       {
         "waitFor": "main [aria-roledescription=\"draggable\"] >> text=\"Your order A-42 has shipped\""
+      }
+    ],
+    "www": [
+      {
+        "name": "mail/read-later"
       }
     ]
   },
   {
     "name": "mail/switch-mailbox",
+    "target": "docs",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
-      { "click": "role=button[name=/^Switch mailbox$/]" },
-      { "waitFor": "role=menuitem[name=/Manage mailboxes/]" }
+      {
+        "click": "role=button[name=/^Switch mailbox$/]"
+      },
+      {
+        "waitFor": "role=menuitem[name=/Manage mailboxes/]"
+      }
     ],
     "element": ["role=button[name=/^Switch mailbox$/]", "role=menu"]
   },
   {
     "name": "mail/signatures-page",
+    "target": "docs",
     "path": "{workspace}/settings/signatures",
     "steps": [
       {
@@ -557,6 +742,7 @@
   },
   {
     "name": "mail/signatures-editor",
+    "target": "docs",
     "path": "{workspace}/settings/signatures",
     "steps": [
       {
@@ -579,6 +765,7 @@
   },
   {
     "name": "mail/signatures-footer",
+    "target": "docs",
     "path": "{workspace}/settings/signatures",
     "steps": [
       {
@@ -608,6 +795,7 @@
   },
   {
     "name": "mail/signatures-picker",
+    "target": "docs",
     "path": "{workspace}/m/{mailbox}/inbox",
     "steps": [
       {

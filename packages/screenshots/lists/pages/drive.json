@@ -1,0 +1,595 @@
+[
+  {
+    "name": "drive/explorer-list",
+    "target": "all",
+    "viewport": {
+      "width": 1440,
+      "height": 480
+    },
+    "clip": {
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "height": 360
+    },
+    "path": "{workspace}/d/{drive:s3}",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"welcome.txt\"]"
+      }
+    ],
+    "www": [
+      {
+        "name": "drive/list",
+        "focus": {
+          "x": 60,
+          "y": 0,
+          "width": 700,
+          "height": 220
+        }
+      }
+    ]
+  },
+  {
+    "name": "drive/explorer-grid",
+    "target": "all",
+    "viewport": {
+      "width": 1440,
+      "height": 480
+    },
+    "clip": {
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "height": 360
+    },
+    "path": "{workspace}/d/{drive:s3}",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"welcome.txt\"]"
+      },
+      {
+        "click": "[aria-label=\"Switch to grid\"]"
+      },
+      {
+        "waitFor": "[aria-label=\"Switch to list\"]"
+      }
+    ],
+    "www": [
+      {
+        "name": "drive/grid",
+        "focus": {
+          "x": 60,
+          "y": 0,
+          "width": 880,
+          "height": 240
+        }
+      }
+    ]
+  },
+  {
+    "name": "drive/switcher",
+    "target": "docs",
+    "path": "{workspace}/d/{drive:s3}",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"welcome.txt\"]"
+      },
+      {
+        "click": "[aria-label=\"Switch drive\"]"
+      },
+      {
+        "waitFor": "role=menuitem[name=\"Add drive\"]"
+      }
+    ],
+    "element": ["[aria-label=\"Switch drive\"]", "role=menu"]
+  },
+  {
+    "name": "drive/sidebar",
+    "target": "docs",
+    "clip": {
+      "x": 0,
+      "y": 0,
+      "width": 760,
+      "height": 220
+    },
+    "path": "{workspace}/d/{drive:s3}",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"Team\"]"
+      },
+      {
+        "dblclick": "section[aria-label=\"Files\"] [title=\"Team\"]"
+      },
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"website\"]"
+      },
+      {
+        "goto": "{workspace}/d/{drive:s3}"
+      },
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"welcome.txt\"]"
+      },
+      {
+        "waitFor": "aside:has([aria-label=\"Switch drive\"]) >> role=button[name=\"Rebrand\"s]"
+      }
+    ]
+  },
+  {
+    "name": "drive/all-drives",
+    "target": "all",
+    "viewport": {
+      "width": 1440,
+      "height": 480
+    },
+    "clip": {
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "height": 360
+    },
+    "path": "{workspace}/d/{drive:all}",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] button[title]"
+      }
+    ],
+    "www": [
+      {
+        "name": "drive/all",
+        "focus": {
+          "x": 60,
+          "y": 0,
+          "width": 700,
+          "height": 320
+        }
+      }
+    ]
+  },
+  {
+    "name": "drive/all-drives-picker",
+    "target": "docs",
+    "path": "{workspace}/d/{drive:all}",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] button[title]"
+      },
+      {
+        "click": "role=button[name=\"New folder\"s]"
+      },
+      {
+        "waitFor": "role=dialog >> text=Choose the folder to create it in."
+      },
+      {
+        "wait": 800
+      }
+    ],
+    "element": "role=dialog"
+  },
+  {
+    "name": "drive/search",
+    "target": "all",
+    "viewport": {
+      "width": 1440,
+      "height": 480
+    },
+    "clip": {
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "height": 360
+    },
+    "path": "{workspace}/d/{drive:s3}",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"Clients\"]"
+      },
+      {
+        "fill": "input[placeholder=\"Search this drive\"]",
+        "value": "welcome"
+      },
+      {
+        "wait": 2000
+      },
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"welcome.txt\"]"
+      }
+    ],
+    "www": [
+      {
+        "name": "drive/search",
+        "focus": {
+          "x": 560,
+          "y": 0,
+          "width": 880,
+          "height": 120
+        }
+      }
+    ]
+  },
+  {
+    "name": "drive/new-folder-dialog",
+    "target": "docs",
+    "path": "{workspace}/d/{drive:s3}",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"welcome.txt\"]"
+      },
+      {
+        "click": "role=button[name=\"New folder\"s]"
+      },
+      {
+        "waitFor": "role=dialog[name=\"New folder\"]"
+      }
+    ],
+    "element": "role=dialog"
+  },
+  {
+    "name": "drive/file-menu",
+    "target": "all",
+    "viewport": {
+      "width": 1024,
+      "height": 440
+    },
+    "clip": {
+      "x": 280,
+      "y": 0,
+      "width": 744,
+      "height": 300
+    },
+    "path": "{workspace}/d/{drive:s3}",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"welcome.txt\"]"
+      },
+      {
+        "click": "[aria-label=\"Actions for welcome.txt\"]"
+      },
+      {
+        "waitFor": "role=menuitem[name=\"Download\"]"
+      }
+    ],
+    "www": [
+      {
+        "name": "drive/file-menu",
+        "focus": "role=menu"
+      }
+    ]
+  },
+  {
+    "name": "drive/folder-menu",
+    "target": "docs",
+    "viewport": {
+      "width": 1024,
+      "height": 440
+    },
+    "clip": {
+      "x": 280,
+      "y": 0,
+      "width": 744,
+      "height": 200
+    },
+    "path": "{workspace}/d/{drive:s3}",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"Clients\"]"
+      },
+      {
+        "click": "[aria-label=\"Actions for Clients\"]"
+      },
+      {
+        "waitFor": "role=menuitem[name=\"Pin to sidebar\"]"
+      }
+    ]
+  },
+  {
+    "name": "drive/rename-dialog",
+    "target": "docs",
+    "path": "{workspace}/d/{drive:s3}",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"welcome.txt\"]"
+      },
+      {
+        "click": "[aria-label=\"Actions for welcome.txt\"]"
+      },
+      {
+        "click": "role=menuitem[name=\"Rename\"s]"
+      },
+      {
+        "waitFor": "role=dialog[name=\"Rename\"]"
+      }
+    ],
+    "element": "role=dialog"
+  },
+  {
+    "name": "drive/delete-dialog",
+    "target": "all",
+    "path": "{workspace}/d/{drive:s3}",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"welcome.txt\"]"
+      },
+      {
+        "click": "[aria-label=\"Actions for welcome.txt\"]"
+      },
+      {
+        "click": "role=menuitem[name=\"Delete\"s]"
+      },
+      {
+        "waitFor": "role=alertdialog[name=\"Delete welcome.txt?\"]"
+      }
+    ],
+    "element": "role=alertdialog",
+    "www": [
+      {
+        "name": "drive/delete"
+      }
+    ]
+  },
+  {
+    "name": "drive/preview-pdf",
+    "target": "all",
+    "viewport": {
+      "width": 1440,
+      "height": 420
+    },
+    "element": "aside[aria-label=\"Preview of moodboard.pdf\"]",
+    "path": "{workspace}/d/{drive:s3}/Clients%2FAozora%20Ceramics%2FRebrand%2F",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"moodboard.pdf\"]"
+      },
+      {
+        "dblclick": "section[aria-label=\"Files\"] [title=\"moodboard.pdf\"]"
+      },
+      {
+        "waitFor": "aside[aria-label=\"Preview of moodboard.pdf\"] [aria-label=\"Next page\"]:not([disabled])"
+      },
+      {
+        "wait": 2000
+      }
+    ],
+    "www": [
+      {
+        "name": "drive/preview"
+      }
+    ]
+  },
+  {
+    "name": "drive/preview-table",
+    "target": "docs",
+    "viewport": {
+      "width": 1920,
+      "height": 640
+    },
+    "element": "aside[aria-label=\"Preview of invoices.csv\"]",
+    "path": "{workspace}/d/{drive:s3}/Finance%2F2025%2F",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"invoices.csv\"]"
+      },
+      {
+        "dblclick": "section[aria-label=\"Files\"] [title=\"invoices.csv\"]"
+      },
+      {
+        "waitFor": "aside[aria-label=\"Preview of invoices.csv\"] table"
+      },
+      {
+        "wait": 800
+      }
+    ]
+  },
+  {
+    "name": "drive/preview-fallback",
+    "target": "docs",
+    "viewport": {
+      "width": 1440,
+      "height": 480
+    },
+    "path": "{workspace}/d/{drive:s3}/Clients%2FKaltwasser%20GmbH%2F",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"Pitch deck.pptx\"]"
+      },
+      {
+        "dblclick": "section[aria-label=\"Files\"] [title=\"Pitch deck.pptx\"]"
+      },
+      {
+        "waitFor": "aside[aria-label=\"Preview of Pitch deck.pptx\"] >> text=There is no preview for this file type."
+      }
+    ],
+    "element": "aside[aria-label=\"Preview of Pitch deck.pptx\"]"
+  },
+  {
+    "name": "drive/restricted-drive",
+    "target": "docs",
+    "viewport": {
+      "width": 1440,
+      "height": 480
+    },
+    "clip": {
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "height": 360
+    },
+    "path": "{workspace}/d/{drive:ftp}",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"Clients\"]"
+      }
+    ]
+  },
+  {
+    "name": "drive/folder-restriction-settings",
+    "target": "all",
+    "clip": {
+      "x": 480,
+      "y": 30,
+      "width": 770,
+      "height": 380
+    },
+    "path": "{workspace}/settings/drives",
+    "steps": [
+      {
+        "waitFor": "[aria-label=\"Choose folders\"]"
+      },
+      {
+        "click": "[aria-label=\"Choose folders\"]"
+      },
+      {
+        "waitFor": "text=Pick the top-level folders this workspace can see."
+      },
+      {
+        "waitFor": "role=button[name=\"Save\"s]"
+      },
+      {
+        "wait": 500
+      }
+    ],
+    "www": [
+      {
+        "name": "drive/restrictions",
+        "focus": "main"
+      }
+    ]
+  },
+  {
+    "name": "drive/add-drive-dialog",
+    "target": "all",
+    "path": "{workspace}/settings/drives",
+    "steps": [
+      {
+        "waitFor": "role=button[name=\"Add drive\"s]"
+      },
+      {
+        "click": "role=button[name=\"Add drive\"s]"
+      },
+      {
+        "waitFor": "role=dialog[name=\"Add a drive\"]"
+      },
+      {
+        "wait": 500
+      }
+    ],
+    "element": "role=dialog",
+    "www": [
+      {
+        "name": "drive/sources"
+      }
+    ]
+  },
+  {
+    "name": "drive/drive-ai",
+    "target": "all",
+    "viewport": {
+      "width": 1440,
+      "height": 560
+    },
+    "path": "{workspace}/d/{drive:s3}",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"welcome.txt\"]"
+      },
+      {
+        "click": "role=button[name=\"Drive AI\"s]"
+      },
+      {
+        "waitFor": "text=Ask about these files"
+      },
+      {
+        "wait": 500
+      }
+    ],
+    "www": [
+      {
+        "name": "drive/assistant",
+        "focus": {
+          "x": 1110,
+          "y": 0,
+          "width": 330,
+          "height": 900
+        }
+      }
+    ]
+  },
+  {
+    "name": "drive/shortcuts-help",
+    "target": "all",
+    "path": "{workspace}/d/{drive:s3}",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"welcome.txt\"]"
+      },
+      {
+        "press": "?"
+      },
+      {
+        "waitFor": "role=dialog >> text=Keyboard shortcuts"
+      },
+      {
+        "click": "role=dialog >> role=heading[name=\"Keyboard shortcuts\"]"
+      }
+    ],
+    "element": "role=dialog",
+    "www": [
+      {
+        "name": "drive/shortcuts"
+      }
+    ]
+  },
+  {
+    "name": "drive/recent-folders",
+    "target": "all",
+    "clip": {
+      "x": 0,
+      "y": 0,
+      "width": 760,
+      "height": 240
+    },
+    "path": "{workspace}/d/{drive:s3}",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"Clients\"]"
+      },
+      {
+        "dblclick": "section[aria-label=\"Files\"] [title=\"Clients\"]"
+      },
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"Aozora Ceramics\"]"
+      },
+      {
+        "dblclick": "section[aria-label=\"Files\"] [title=\"Aozora Ceramics\"]"
+      },
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"Rebrand\"]"
+      },
+      {
+        "waitFor": "aside:has([aria-label=\"Switch drive\"]) >> text=Recent"
+      }
+    ],
+    "www": [
+      {
+        "name": "drive/recent"
+      }
+    ]
+  },
+  {
+    "name": "drive/preview-zip",
+    "target": "docs",
+    "path": "{workspace}/d/{drive:s3}/Clients%2FAozora%20Ceramics%2FRebrand%2F",
+    "steps": [
+      {
+        "waitFor": "section[aria-label=\"Files\"] [title=\"logo-pack.zip\"]"
+      },
+      {
+        "dblclick": "section[aria-label=\"Files\"] [title=\"logo-pack.zip\"]"
+      },
+      {
+        "waitFor": "aside[aria-label=\"Preview of logo-pack.zip\"] >> text=README.txt"
+      }
+    ],
+    "element": "aside[aria-label=\"Preview of logo-pack.zip\"]"
+  }
+]

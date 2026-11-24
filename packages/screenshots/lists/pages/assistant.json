@@ -1,0 +1,531 @@
+[
+  {
+    "name": "assistant/workspace-ai-empty",
+    "target": "all",
+    "path": "{workspace}/assistant",
+    "steps": [
+      {
+        "waitFor": "text=\"Ask across your whole workspace\""
+      },
+      {
+        "waitFor": "role=button[name=\"Find the latest contract in my drives\"s]"
+      }
+    ],
+    "www": [
+      {
+        "name": "agent/workspace",
+        "focus": {
+          "x": 600,
+          "y": 130,
+          "width": 580,
+          "height": 280
+        }
+      },
+      {
+        "name": "screens/agent",
+        "focus": null
+      }
+    ]
+  },
+  {
+    "name": "assistant/reference-picker",
+    "target": "all",
+    "path": "{workspace}/assistant",
+    "steps": [
+      {
+        "waitFor": "role=textbox[name=\"Ask across your workspace\"s]"
+      },
+      {
+        "click": "role=textbox[name=\"Ask across your workspace\"s]"
+      },
+      {
+        "press": "@"
+      },
+      {
+        "waitFor": "role=listbox[name=\"Insert a reference\"] >> role=option"
+      },
+      {
+        "press": "b"
+      },
+      {
+        "press": "r"
+      },
+      {
+        "press": "i"
+      },
+      {
+        "press": "e"
+      },
+      {
+        "press": "f"
+      },
+      {
+        "waitFor": "role=listbox[name=\"Insert a reference\"] >> role=option[name=/brief\\.md/]"
+      },
+      {
+        "wait": 600
+      }
+    ],
+    "element": [
+      "[role=dialog]:has([aria-label=\"Insert a reference\"])",
+      "form:has([aria-label=\"Ask across your workspace\"])"
+    ],
+    "www": [
+      {
+        "name": "agent/references"
+      }
+    ]
+  },
+  {
+    "name": "assistant/stored-conversation",
+    "target": "docs",
+    "path": "{workspace}/assistant",
+    "steps": [
+      {
+        "waitFor": "role=complementary >> role=listitem >> role=link"
+      },
+      {
+        "click": "role=complementary >> role=listitem >> role=link",
+        "nth": 0
+      },
+      {
+        "waitFor": "role=log >> text=\"What needs my attention across my mailboxes this week?\""
+      },
+      {
+        "wait": 800
+      }
+    ]
+  },
+  {
+    "name": "assistant/mail-ai-panel",
+    "target": "all",
+    "clip": {
+      "x": 800,
+      "y": 0,
+      "width": 640,
+      "height": 900
+    },
+    "path": "{workspace}/m/{mailbox}/inbox",
+    "steps": [
+      {
+        "waitFor": "role=main >> role=button[name=\"Toggle AI agent\"]"
+      },
+      {
+        "click": "role=main >> role=button[name=\"Toggle AI agent\"]"
+      },
+      {
+        "waitFor": "role=textbox[name=\"Ask about your emails…\"]"
+      },
+      {
+        "click": "role=button[name=\"Attach an email\"]"
+      },
+      {
+        "waitFor": "role=listbox[name=\"Suggestions\"] >> role=option >> text=\"Rebrand kickoff\""
+      },
+      {
+        "click": "role=listbox[name=\"Suggestions\"] >> role=option >> text=\"Rebrand kickoff\""
+      },
+      {
+        "press": "Escape"
+      },
+      {
+        "wait": 400
+      },
+      {
+        "click": "role=heading[level=1][name=\"Inbox\"]"
+      },
+      {
+        "waitFor": "text=/^1 attached$/"
+      },
+      {
+        "wait": 400
+      }
+    ],
+    "www": [
+      {
+        "name": "agent/every-view",
+        "focus": {
+          "x": 1120,
+          "y": 0,
+          "width": 320,
+          "height": 900
+        }
+      },
+      {
+        "name": "screens/mail-ai",
+        "focus": null
+      }
+    ]
+  },
+  {
+    "name": "assistant/calendar-ai-panel",
+    "target": "all",
+    "clip": {
+      "x": 800,
+      "y": 0,
+      "width": 640,
+      "height": 900
+    },
+    "path": "{workspace}/c/{calendar}",
+    "seededWeek": true,
+    "steps": [
+      {
+        "waitFor": "role=banner >> role=button[name=/^(Day|Week|Month|Year|Schedule)$/]"
+      },
+      {
+        "click": "role=banner >> role=button[name=/^(Day|Week|Month|Year|Schedule)$/]"
+      },
+      {
+        "click": "role=menuitem[name=/^Week/]"
+      },
+      {
+        "waitFor": "role=button[name=/^Design review/]"
+      },
+      {
+        "click": "role=banner >> role=button[name=\"Calendar AI\"s]"
+      },
+      {
+        "waitFor": "role=textbox[name=\"Ask about your calendar…\"]"
+      },
+      {
+        "wait": 400
+      }
+    ],
+    "www": [
+      {
+        "name": "agent/busywork",
+        "focus": {
+          "x": 1110,
+          "y": 0,
+          "width": 330,
+          "height": 900
+        }
+      }
+    ]
+  },
+  {
+    "name": "assistant/drive-ai-panel",
+    "target": "all",
+    "clip": {
+      "x": 800,
+      "y": 0,
+      "width": 640,
+      "height": 900
+    },
+    "path": "{workspace}/d/{drive:s3}",
+    "steps": [
+      {
+        "waitFor": "role=navigation[name=\"breadcrumb\"]"
+      },
+      {
+        "click": "role=button[name=\"Drive AI\"s]"
+      },
+      {
+        "waitFor": "role=textbox[name=\"Ask about these files…\"]"
+      },
+      {
+        "wait": 400
+      }
+    ],
+    "www": [
+      {
+        "name": "screens/drive",
+        "focus": null
+      }
+    ]
+  },
+  {
+    "name": "assistant/mcp-clients",
+    "target": "all",
+    "viewport": {
+      "width": 1440,
+      "height": 562
+    },
+    "path": "/settings/mcp",
+    "steps": [
+      {
+        "waitFor": "role=heading[name=\"MCP clients\"s]"
+      },
+      {
+        "waitFor": "role=button[name=\"Add client\"s]"
+      }
+    ],
+    "www": [
+      {
+        "name": "agent/mcp-client",
+        "focus": "main",
+        "steps": [
+          {
+            "waitFor": "role=link[name=\"Open Claude Code\"s]"
+          },
+          {
+            "click": "role=link[name=\"Open Claude Code\"s]"
+          },
+          {
+            "waitFor": "role=heading[level=1][name=\"Claude Code\"s]"
+          },
+          {
+            "wait": 400
+          }
+        ]
+      },
+      {
+        "name": "agent/mcp-workspaces",
+        "focus": "section:has(> h2:text-is(\"Workspaces\"))",
+        "steps": [
+          {
+            "waitFor": "role=link[name=\"Open Claude Code\"s]"
+          },
+          {
+            "click": "role=link[name=\"Open Claude Code\"s]"
+          },
+          {
+            "waitFor": "section:has(> h2:text-is(\"Workspaces\")) >> role=switch"
+          },
+          {
+            "scroll": "section:has(> h2:text-is(\"Workspaces\"))"
+          },
+          {
+            "wait": 400
+          }
+        ]
+      },
+      {
+        "name": "mcp/control",
+        "focus": [
+          "main h1",
+          "main >> text=Client ID:",
+          "main >> role=switch[name=/enabled$/]",
+          "main >> role=button[name=\"Remove client\"]"
+        ],
+        "steps": [
+          {
+            "waitFor": "role=link[name=\"Open Claude Code\"s]"
+          },
+          {
+            "click": "role=link[name=\"Open Claude Code\"s]"
+          },
+          {
+            "waitFor": "role=heading[level=1][name=\"Claude Code\"s]"
+          },
+          {
+            "wait": 400
+          }
+        ]
+      },
+      {
+        "name": "mcp/sign-ins",
+        "focus": "section:has(> h2:text-is(\"Authorizations\"))",
+        "steps": [
+          {
+            "waitFor": "role=link[name=\"Open Claude Code\"s]"
+          },
+          {
+            "click": "role=link[name=\"Open Claude Code\"s]"
+          },
+          {
+            "waitFor": "role=heading[level=1][name=\"Claude Code\"s]"
+          },
+          {
+            "scroll": "section:has(> h2:text-is(\"Authorizations\"))"
+          },
+          {
+            "wait": 400
+          }
+        ]
+      },
+      {
+        "name": "mcp/back-on",
+        "focus": "role=dialog",
+        "steps": [
+          {
+            "waitFor": "role=link[name=\"Open Claude Code\"s]"
+          },
+          {
+            "click": "role=link[name=\"Open Claude Code\"s]"
+          },
+          {
+            "waitFor": "role=heading[level=1][name=\"Claude Code\"s]"
+          },
+          {
+            "click": "main >> role=switch[name=/enabled$/]"
+          },
+          {
+            "wait": 1200
+          },
+          {
+            "click": "main >> role=switch[name=/enabled$/]"
+          },
+          {
+            "waitFor": "role=dialog >> text=/^Re-enable/"
+          },
+          {
+            "wait": 500
+          }
+        ]
+      },
+      {
+        "name": "mcp/own-access",
+        "focus": "section:has(> h2:text-is(\"Tools\"))",
+        "steps": [
+          {
+            "waitFor": "role=link[name=\"Open Claude Code\"s]"
+          },
+          {
+            "click": "role=link[name=\"Open Claude Code\"s]"
+          },
+          {
+            "waitFor": "role=heading[level=1][name=\"Claude Code\"s]"
+          },
+          {
+            "scroll": "section:has(> h2:text-is(\"Tools\"))"
+          },
+          {
+            "wait": 400
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "assistant/add-mcp-client",
+    "target": "all",
+    "path": "/settings/mcp",
+    "element": "role=dialog",
+    "steps": [
+      {
+        "waitFor": "role=button[name=\"Add client\"s]"
+      },
+      {
+        "click": "role=button[name=\"Add client\"s]"
+      },
+      {
+        "waitFor": "role=dialog >> text=\"Add an MCP client\""
+      },
+      {
+        "waitFor": "role=dialog >> text=\"Sign-in port\""
+      },
+      {
+        "wait": 300
+      }
+    ],
+    "www": [
+      {
+        "name": "agent/mcp"
+      },
+      {
+        "name": "mcp/no-secret",
+        "steps": [
+          {
+            "fill": "role=dialog >> input[placeholder=\"Claude Code — laptop\"]",
+            "value": "Claude Code — laptop"
+          },
+          {
+            "click": "role=dialog >> role=button[name=\"Add client\"s]"
+          },
+          {
+            "waitFor": "role=dialog >> text=Client ID"
+          },
+          {
+            "wait": 500
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "assistant/mcp-client-page",
+    "target": "docs",
+    "viewport": {
+      "width": 1440,
+      "height": 720
+    },
+    "path": "/settings/mcp",
+    "steps": [
+      {
+        "waitFor": "role=link[name=\"Open Tandem\"]"
+      },
+      {
+        "click": "role=link[name=\"Open Tandem\"]"
+      },
+      {
+        "waitFor": "role=heading[level=1][name=\"Tandem\"]"
+      },
+      {
+        "waitFor": "main >> text=Client ID:"
+      },
+      {
+        "wait": 400
+      }
+    ]
+  },
+  {
+    "name": "assistant/mcp-client-workspaces",
+    "target": "docs",
+    "path": "/settings/mcp",
+    "steps": [
+      {
+        "click": "role=link[name=\"Open Tandem\"]"
+      },
+      {
+        "waitFor": "section:has(> h2:text-is(\"Workspaces\")) >> role=switch"
+      },
+      {
+        "scroll": "section:has(> h2:text-is(\"Workspaces\"))"
+      }
+    ],
+    "element": "section:has(> h2:text-is(\"Workspaces\"))"
+  },
+  {
+    "name": "assistant/remove-mcp-client",
+    "target": "docs",
+    "path": "/settings/mcp",
+    "steps": [
+      {
+        "click": "role=link[name=\"Open Tandem\"]"
+      },
+      {
+        "waitFor": "role=heading[level=1][name=\"Tandem\"]"
+      },
+      {
+        "click": "main >> role=button[name=\"Remove client\"]"
+      },
+      {
+        "waitFor": "role=alertdialog >> text=Also remove it locally"
+      },
+      {
+        "wait": 300
+      }
+    ],
+    "element": "role=alertdialog"
+  },
+  {
+    "name": "assistant/approval-card",
+    "target": "all",
+    "element": ["role=log", "role=region[name=\"Approval needed\"]"],
+    "path": "{workspace}/assistant",
+    "steps": [
+      {
+        "waitFor": "role=textbox[name=\"Ask across your workspace\"s]"
+      },
+      {
+        "fill": "role=textbox[name=\"Ask across your workspace\"s]",
+        "value": "Make a folder called Final artwork in Team on my WebDAV drive."
+      },
+      {
+        "press": "Enter"
+      },
+      {
+        "waitFor": "role=region[name=\"Approval needed\"] >> role=button[name=\"Approve\"s]"
+      },
+      {
+        "wait": 600
+      }
+    ],
+    "www": [
+      {
+        "name": "agent/approval"
+      }
+    ]
+  }
+]

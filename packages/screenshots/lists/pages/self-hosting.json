@@ -1,0 +1,510 @@
+[
+  {
+    "name": "self-hosting/dashboard-overview",
+    "target": "all",
+    "path": "/dashboard",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"Overview\"]"
+      },
+      {
+        "waitFor": "text=Accounts on this instance"
+      },
+      {
+        "waitFor": "text=AI tokens, last 7 days"
+      }
+    ],
+    "www": [
+      {
+        "name": "selfhost/dashboard",
+        "focus": null
+      }
+    ]
+  },
+  {
+    "name": "self-hosting/dashboard-themes",
+    "target": "docs",
+    "path": "/dashboard/themes",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"Themes\"]"
+      },
+      {
+        "waitFor": "main >> role=heading[level=2][name=\"Built in\"]"
+      }
+    ]
+  },
+  {
+    "name": "self-hosting/dashboard-accounts",
+    "target": "docs",
+    "path": "/dashboard/accounts",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"Accounts\"]"
+      },
+      {
+        "waitFor": "main >> text=Newest accounts"
+      },
+      {
+        "waitForHidden": "main >> .animate-spin"
+      }
+    ]
+  },
+  {
+    "name": "self-hosting/dashboard-users",
+    "target": "docs",
+    "path": "/dashboard/accounts/users",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"Users\"]"
+      },
+      {
+        "waitFor": "role=button[name=/^Actions for /]"
+      }
+    ]
+  },
+  {
+    "name": "self-hosting/dashboard-users-role",
+    "target": "docs",
+    "path": "/dashboard/accounts/users",
+    "steps": [
+      {
+        "waitFor": "role=button[name=/^Actions for /]"
+      },
+      {
+        "click": "role=button[name=/^Actions for /]"
+      },
+      {
+        "click": "role=menuitem[name=\"Change role\"]"
+      },
+      {
+        "click": "role=menuitemradio[name=\"Observer\"]"
+      },
+      {
+        "waitFor": "role=alertdialog[name=\"Change instance role\"]"
+      }
+    ],
+    "element": "role=alertdialog"
+  },
+  {
+    "name": "self-hosting/dashboard-users-ban",
+    "target": "docs",
+    "path": "/dashboard/accounts/users",
+    "steps": [
+      {
+        "waitFor": "role=button[name=/^Actions for /]"
+      },
+      {
+        "click": "role=button[name=/^Actions for /]"
+      },
+      {
+        "click": "role=menuitem[name=\"Ban…\"]"
+      },
+      {
+        "waitFor": "role=alertdialog[name=\"Ban user\"]"
+      }
+    ],
+    "element": "role=alertdialog"
+  },
+  {
+    "name": "self-hosting/dashboard-invites",
+    "target": "all",
+    "path": "/dashboard/accounts/invites",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"Invites\"]"
+      },
+      {
+        "waitFor": "main >> text=Invite someone"
+      },
+      {
+        "waitFor": "main >> text=Pending account invites"
+      },
+      {
+        "waitForHidden": "main >> .animate-spin"
+      }
+    ],
+    "www": [
+      {
+        "name": "security/invites",
+        "focus": "main"
+      }
+    ]
+  },
+  {
+    "name": "self-hosting/dashboard-observer",
+    "target": "docs",
+    "path": "/dashboard/system/drivers/llm",
+    "observer": true,
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"LLM\"]"
+      },
+      {
+        "waitFor": "main >> text=The instance owner and admins can run checks."
+      }
+    ],
+    "element": "main"
+  },
+  {
+    "name": "self-hosting/dashboard-system",
+    "target": "all",
+    "path": "/dashboard/system",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"System\"]"
+      },
+      {
+        "waitFor": "main >> text=Workflow runner"
+      },
+      {
+        "waitFor": "main >> text=SFTP"
+      }
+    ],
+    "www": [
+      {
+        "name": "selfhost/settings",
+        "focus": null
+      }
+    ]
+  },
+  {
+    "name": "self-hosting/dashboard-instance",
+    "target": "docs",
+    "path": "/dashboard/system/instance",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"Instance\"]"
+      },
+      {
+        "waitFor": "main >> text=/^Configuration version \\d+\\./"
+      },
+      {
+        "waitFor": "role=spinbutton[name=\"Max transfer size (MB)\"]"
+      }
+    ],
+    "element": "main"
+  },
+  {
+    "name": "self-hosting/dashboard-save-bar",
+    "target": "docs",
+    "viewport": {
+      "width": 1440,
+      "height": 1200
+    },
+    "clip": {
+      "x": 456,
+      "y": 890,
+      "width": 756,
+      "height": 310
+    },
+    "path": "/dashboard/system/instance",
+    "steps": [
+      {
+        "waitFor": "role=spinbutton[name=\"Max transfer size (MB)\"]"
+      },
+      {
+        "fill": "role=spinbutton[name=\"Max transfer size (MB)\"]",
+        "value": "300"
+      },
+      {
+        "waitFor": "text=1 unsaved change"
+      },
+      {
+        "scroll": "role=spinbutton[name=/Max transfer size \\(MB\\)/]"
+      }
+    ]
+  },
+  {
+    "name": "self-hosting/dashboard-history",
+    "target": "docs",
+    "path": "/dashboard/system/history",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"History\"]"
+      },
+      {
+        "waitFor": "main >> role=cell[name=/Current$/]"
+      }
+    ],
+    "element": "main"
+  },
+  {
+    "name": "self-hosting/dashboard-audit",
+    "target": "docs",
+    "path": "/dashboard/audit",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"Audit log\"]"
+      },
+      {
+        "waitFor": "main >> role=searchbox[name=\"Search events\"]"
+      },
+      {
+        "waitFor": "main >> role=combobox[name=\"Event type\"]"
+      },
+      {
+        "waitFor": "main >> :is(ul[aria-label='Audit events'], p:text-is('No audit events yet.'))"
+      }
+    ]
+  },
+  {
+    "name": "self-hosting/provider-google",
+    "target": "docs",
+    "path": "/dashboard/system/providers/google",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"Google\"]"
+      },
+      {
+        "waitFor": "main >> text=Redirect URI"
+      }
+    ],
+    "element": "main"
+  },
+  {
+    "name": "self-hosting/provider-imap",
+    "target": "all",
+    "path": "/dashboard/system/providers/imap",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"IMAP\"]"
+      },
+      {
+        "waitFor": "main >> text=IMAP host"
+      }
+    ],
+    "element": "main",
+    "www": [
+      {
+        "name": "security/servers"
+      }
+    ]
+  },
+  {
+    "name": "self-hosting/dashboard-updates",
+    "target": "all",
+    "element": "main",
+    "path": "/dashboard/system/updates",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"Updates\"]"
+      },
+      {
+        "waitFor": "main >> text=Running release"
+      },
+      {
+        "waitFor": "main >> role=button[name=\"Upgrade\"s]"
+      }
+    ],
+    "www": [
+      {
+        "name": "selfhost/updates"
+      }
+    ]
+  },
+  {
+    "name": "self-hosting/upgrade-dialog",
+    "target": "docs",
+    "path": "/dashboard/system/updates",
+    "steps": [
+      {
+        "waitFor": "main >> role=button[name=\"Upgrade\"s]"
+      },
+      {
+        "click": "main >> role=button[name=\"Upgrade\"s]"
+      },
+      {
+        "waitFor": "role=alertdialog[name=/^Upgrade to /]"
+      },
+      {
+        "wait": 300
+      }
+    ],
+    "element": "role=alertdialog"
+  },
+  {
+    "name": "self-hosting/undo-dialog",
+    "target": "docs",
+    "path": "/dashboard/system/updates",
+    "steps": [
+      {
+        "waitFor": "main >> role=button[name=\"Undo last upgrade\"]"
+      },
+      {
+        "click": "main >> role=button[name=\"Undo last upgrade\"]"
+      },
+      {
+        "waitFor": "role=alertdialog[name=\"Undo last upgrade\"]"
+      },
+      {
+        "wait": 300
+      }
+    ],
+    "element": "role=alertdialog"
+  },
+  {
+    "name": "self-hosting/dashboard-automation",
+    "target": "docs",
+    "path": "/dashboard/automation",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"Automation\"]"
+      },
+      {
+        "waitFor": "main >> text=Last successful tick"
+      },
+      {
+        "waitFor": "main >> text=Recent runs"
+      }
+    ]
+  },
+  {
+    "name": "self-hosting/driver-llm",
+    "target": "all",
+    "path": "/dashboard/system/drivers/llm",
+    "fullPage": true,
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"LLM\"]"
+      },
+      {
+        "waitFor": "main >> text=Decision model"
+      },
+      {
+        "waitFor": "role=combobox[name=\"Driver\"]"
+      }
+    ],
+    "www": [
+      {
+        "name": "agent/model",
+        "focus": "main"
+      }
+    ]
+  },
+  {
+    "name": "self-hosting/driver-mail-smtp",
+    "target": "docs",
+    "path": "/dashboard/system/drivers/mail",
+    "viewport": {
+      "width": 1440,
+      "height": 960
+    },
+    "steps": [
+      {
+        "waitFor": "role=combobox[name=\"Driver\"]"
+      },
+      {
+        "click": "role=combobox[name=\"Driver\"]"
+      },
+      {
+        "click": "role=option[name=\"smtp\"s]"
+      },
+      {
+        "waitFor": "role=textbox[name=/^SMTP host/]"
+      },
+      {
+        "fill": "role=textbox[name=/^From\\s*optional/]",
+        "value": "Metis Suite <noreply@notify.demo.trymetis.email>"
+      },
+      {
+        "fill": "role=textbox[name=/^SMTP host/]",
+        "value": "smtp.demo.trymetis.email"
+      },
+      {
+        "click": "role=heading[level=1][name=\"Mail\"]"
+      }
+    ]
+  },
+  {
+    "name": "self-hosting/driver-runner",
+    "target": "all",
+    "path": "/dashboard/system/drivers/runner",
+    "fullPage": true,
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"Workflow runner\"]"
+      },
+      {
+        "waitFor": "main >> text=Last tick"
+      },
+      {
+        "waitFor": "role=spinbutton[name=\"Cadence (seconds)\"]"
+      }
+    ],
+    "www": [
+      {
+        "name": "selfhost/runner",
+        "focus": null
+      }
+    ]
+  },
+  {
+    "name": "self-hosting/deploy-checks",
+    "target": "all",
+    "element": "main",
+    "path": "/dashboard/system/preflight",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"Deploy checks\"]"
+      },
+      {
+        "waitFor": "main >> text=/^(Last run|No preflight run yet)$/"
+      }
+    ],
+    "www": [
+      {
+        "name": "selfhost/checks"
+      }
+    ]
+  },
+  {
+    "name": "self-hosting/ai-usage",
+    "target": "docs",
+    "path": "/dashboard/usage",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"AI usage\"]"
+      },
+      {
+        "click": "role=button[name=\"90 days\"]"
+      },
+      {
+        "waitFor": "role=img[name=\"Input and output tokens per day\"]"
+      },
+      {
+        "wait": 600
+      }
+    ],
+    "element": ["main h1", "main table"]
+  },
+  {
+    "name": "self-hosting/maintenance-page",
+    "target": "docs",
+    "path": "/",
+    "signedOut": true,
+    "maintenance": true,
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"Down for maintenance\"]"
+      }
+    ]
+  },
+  {
+    "name": "self-hosting/dashboard-exports",
+    "target": "docs",
+    "path": "/dashboard/system/exports",
+    "steps": [
+      {
+        "waitFor": "role=heading[level=1][name=\"Exports\"]"
+      },
+      {
+        "waitFor": "main >> text=metis-export-20261111T100000Z.tar"
+      },
+      {
+        "waitFor": "main >> text=In S3"
+      }
+    ],
+    "element": "main"
+  }
+]

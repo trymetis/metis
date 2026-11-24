@@ -1,34 +1,31 @@
-import { readdirSync, readFileSync } from "node:fs";
-import { mkdir } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 
 import { sentInviteLink } from "@metis/e2e/lib/invites";
 import {
-  type Browser,
-  type BrowserContext,
-  chromium,
-  type Page,
-  type PageScreenshotOptions,
-} from "@playwright/test";
+  accountSchema,
+  APP_URL,
+  asUser,
+  CLOCK,
+  harness,
+  HARNESS_URL,
+  rpc,
+  selectTheme,
+  signIn,
+  type StorageState,
+  totp,
+} from "@metis/screenshots/app";
+import { pageRegion } from "@metis/screenshots/box";
+import { contextOptions, launch, shoot } from "@metis/screenshots/browser";
+import { capturedBy, namePicker, type PageEntry, readLists } from "@metis/screenshots/entries";
+import { resolve, runStep } from "@metis/screenshots/steps";
+import { captureTerminal } from "@metis/screenshots/terminal";
+import type { Browser, Page, PageScreenshotOptions } from "@playwright/test";
 import * as OTPAuth from "otpauth";
-import sharp from "sharp";
 import { z } from "zod";
 
-import { captureTerminal, hostShell, releaseValues, terminalShotsSchema } from "./terminal.ts";
+import { cliHost, hostShell, releaseValues } from "./terminal.ts";
 
-const RENDER_FLAGS = [
-  "--disable-lcd-text",
-  "--font-render-hinting=none",
-  "--disable-font-subpixel-positioning",
-  "--disable-skia-runtime-opts",
-  "--force-color-profile=srgb",
-  "--disable-gpu",
-];
-
-const APP = process.env.DOCS_APP_URL ?? "http://localhost:3000";
-const HARNESS = process.env.DOCS_HARNESS_URL ?? "http://localhost:8099";
 const CLI_APP = process.env.DOCS_CLI_APP_URL ?? "http://localhost:30050";
-const CLOCK = new Date(process.env.DOCS_CLOCK ?? "2026-10-08T12:00:00Z");
 const ROOT = join(import.meta.dirname, "..");
 const OUT = join(ROOT, "public", "images");
 const PAD = 24;
@@ -37,180 +34,26 @@ const THEMES = [
   { theme: "dark", suffix: "-dark" },
 ] as const;
 
-const stepSchema = z.union([
-  z.object({ goto: z.string() }),
-  z.object({ follow: z.string() }),
-  z.object({ click: z.string(), nth: z.number().optional() }),
-  z.object({ dblclick: z.string() }),
-  z.object({ rightClick: z.string() }),
-  z.object({ hover: z.string() }),
-  z.object({ fill: z.string(), value: z.string() }),
-  z.object({ type: z.string(), text: z.string() }),
-  z.object({ press: z.string() }),
-  z.object({ drag: z.string(), to: z.string() }),
-  z.object({ waitFor: z.string() }),
-  z.object({ waitForHidden: z.string() }),
-  z.object({ wait: z.number() }),
-  z.object({ scroll: z.string() }),
-  z.object({ clearReadLater: z.literal(true) }),
-]);
-type Step = z.infer<typeof stepSchema>;
-
-const readLaterSchema = z.object({ json: z.object({ messageIds: z.array(z.string()) }) });
-
-const boxSchema = z.object({
-  x: z.number(),
-  y: z.number(),
-  width: z.number(),
-  height: z.number(),
-});
-type Box = z.infer<typeof boxSchema>;
-
-const shotsSchema = z.array(
-  z.object({
-    name: z.string(),
-    path: z.string(),
-    signedOut: z.boolean().optional(),
-    maintenance: z.boolean().optional(),
-    observer: z.boolean().optional(),
-    invite: z
-      .object({
-        email: z.string(),
-        workspace: z.boolean().optional(),
-        role: z.enum(["admin", "observer"]).optional(),
-      })
-      .optional(),
-    seededWeek: z.boolean().optional(),
-    steps: z.array(stepSchema).optional(),
-    element: z.union([z.string(), z.array(z.string())]).optional(),
-    pad: z.number().optional(),
-    clip: boxSchema.optional(),
-    fullPage: z.boolean().optional(),
-    viewport: z.object({ width: z.number(), height: z.number() }).optional(),
-  }),
-);
-type Shot = z.infer<typeof shotsSchema>[number];
-
-const accountSchema = z.object({
-  email: z.string(),
-  password: z.string(),
-  workspaceSlug: z.string(),
-  mailboxSlug: z.string(),
-  calendarSlug: z.string(),
-  driveSlugs: z.record(z.string(), z.string()),
+const docsAccountSchema = accountSchema.extend({
   member: z.object({ email: z.string(), password: z.string(), totpURI: z.string() }),
 });
-type Account = z.infer<typeof accountSchema>;
-type StorageState = Awaited<ReturnType<BrowserContext["storageState"]>>;
-
-async function harness(path: string): Promise<Response> {
-  const res = await fetch(`${HARNESS}${path}`);
-  if (!res.ok) throw new Error(`harness ${path}: HTTP ${res.status}`);
-  return res;
-}
-
-function webAccount(a: Account | undefined): Account {
-  if (!a) throw new Error("this entry needs the web stack's account");
-  return a;
-}
-
-function resolve(path: string, account: Account | undefined): string {
-  if (!path.includes("{")) return path;
-  const a = webAccount(account);
-  return path
-    .replaceAll("{workspace}", `/w/${a.workspaceSlug}`)
-    .replaceAll("{mailbox}", a.mailboxSlug)
-    .replaceAll("{calendar}", a.calendarSlug)
-    .replace(/\{drive:([A-Za-z0-9-]+)\}/g, (_, kind: string) => {
-      const slug = kind === "all" ? "all" : a.driveSlugs[kind];
-      if (!slug) throw new Error(`no seeded drive "${kind}"`);
-      return slug;
-    });
-}
-
-async function signIn(
-  browser: Browser,
-  who: { email: string; password: string },
-  code: () => Promise<string>,
-) {
-  const context = await browser.newContext(contextOptions());
-  const page = await context.newPage();
-  await page.goto(`${APP}/`);
-  const content = page.getByRole("main");
-  await content.getByRole("textbox", { name: "Email address" }).fill(who.email);
-  await content.getByRole("textbox", { name: "Password" }).fill(who.password);
-  await content.getByRole("button", { name: "Sign in", exact: true }).click();
-  await page.waitForURL(/\/2fa\/verify/);
-  const input = page.locator('input[autocomplete="one-time-code"]');
-  await input.click();
-  await page.keyboard.type(await code());
-  await content.getByRole("button", { name: "Verify", exact: true }).click();
-  await page.waitForURL(/\/w\//);
-  const state = await context.storageState();
-  await context.close();
-  return state;
-}
-
-function contextOptions() {
-  return {
-    baseURL: APP,
-    viewport: { width: 1440, height: 900 },
-    deviceScaleFactor: 2,
-    colorScheme: "light" as const,
-    timezoneId: "UTC",
-    locale: "en-US",
-    extraHTTPHeaders: { "X-Forwarded-For": "203.0.113.10" },
-  };
-}
-
-async function rpc(page: Page, procedure: string, input: unknown): Promise<unknown> {
-  const res = await page.request.post(`${APP}/rpc/${procedure}`, {
-    headers: { origin: APP },
-    data: { json: input },
-  });
-  if (!res.ok()) throw new Error(`rpc ${procedure}: HTTP ${res.status()}`);
-  return res.json();
-}
+type DocsAccount = z.infer<typeof docsAccountSchema>;
 
 const invitesSchema = z.object({
-  json: z.object({ invites: z.array(z.object({ id: z.string(), email: z.string() })) }),
+  invites: z.array(z.object({ id: z.string(), email: z.string() })),
 });
 
-type Invite = NonNullable<Shot["invite"]>;
+type Invite = NonNullable<PageEntry["invite"]>;
 
-const themesSchema = z.object({
-  json: z.object({
-    themes: z.array(z.object({ id: z.string(), name: z.string(), source: z.string() })),
-  }),
-});
-
-async function useGraphite(browser: Browser, state: StorageState, a: Account) {
-  const context = await browser.newContext({ ...contextOptions(), storageState: state });
-  const page = await context.newPage();
-  try {
-    const scope = { workspaceSlug: a.workspaceSlug };
-    const { json } = themesSchema.parse(await rpc(page, "workspaceThemes/list", scope));
-    const graphite = json.themes.find((t) => t.source === "system" && t.name === "Graphite");
-    if (!graphite) throw new Error("no Graphite theme");
-    await rpc(page, "workspaceThemes/select", { ...scope, themeId: graphite.id });
-  } finally {
-    await context.close();
-  }
-}
-
-async function totp(): Promise<string> {
-  return (await (await harness("/totp?fresh=1")).text()).trim();
-}
-
-async function revokeInvites(page: Page, a: Account, email: string, invite: Invite) {
+async function revokeInvites(page: Page, a: DocsAccount, email: string, invite: Invite) {
   if (invite.workspace) {
     const scope = { workspaceSlug: a.workspaceSlug };
-    const { json } = invitesSchema.parse(await rpc(page, "workspaces/listInvites", scope));
-    for (const pending of json.invites.filter((i) => i.email === email))
+    const { invites } = invitesSchema.parse(await rpc(page, "workspaces/listInvites", scope));
+    for (const pending of invites.filter((i) => i.email === email))
       await rpc(page, "workspaces/revokeInvite", { ...scope, inviteId: pending.id });
   } else {
-    const { json } = invitesSchema.parse(await rpc(page, "dashboard/invites/list", {}));
-    for (const pending of json.invites.filter((i) => i.email === email))
+    const { invites } = invitesSchema.parse(await rpc(page, "dashboard/invites/list", {}));
+    for (const pending of invites.filter((i) => i.email === email))
       await rpc(page, "dashboard/invites/revoke", { inviteId: pending.id });
   }
 }
@@ -218,41 +61,40 @@ async function revokeInvites(page: Page, a: Account, email: string, invite: Invi
 async function withInvite(
   browser: Browser,
   state: StorageState,
-  a: Account,
+  a: DocsAccount,
   invite: Invite,
   onLink: (path: string) => Promise<void>,
 ) {
-  const context = await browser.newContext({ ...contextOptions(), storageState: state });
-  const page = await context.newPage();
   const email = invite.email.replaceAll("{member}", a.member.email);
-  try {
-    await revokeInvites(page, a, email, invite);
-    const link = await sentInviteLink(HARNESS, email, async () =>
-      invite.workspace
-        ? rpc(page, "workspaces/createInvite", {
-            workspaceSlug: a.workspaceSlug,
-            email,
-            role: "member",
-          })
-        : rpc(page, "dashboard/invites/create", {
-            email,
-            instanceRole: invite.role ?? null,
-            ...(invite.role ? { code: await totp() } : {}),
-          }),
-    );
-    const { pathname, search } = new URL(link);
-    await onLink(`${pathname}${search}`);
-  } finally {
-    await revokeInvites(page, a, email, invite);
-    await context.close();
-  }
+  await asUser(browser, state, async (page) => {
+    try {
+      await revokeInvites(page, a, email, invite);
+      const link = await sentInviteLink(HARNESS_URL, email, async () =>
+        invite.workspace
+          ? rpc(page, "workspaces/createInvite", {
+              workspaceSlug: a.workspaceSlug,
+              email,
+              role: "member",
+            })
+          : rpc(page, "dashboard/invites/create", {
+              email,
+              instanceRole: invite.role ?? null,
+              ...(invite.role ? { code: await totp() } : {}),
+            }),
+      );
+      const { pathname, search } = new URL(link);
+      await onLink(`${pathname}${search}`);
+    } finally {
+      await revokeInvites(page, a, email, invite);
+    }
+  });
 }
 
 const usersSchema = z.object({
-  json: z.object({ users: z.array(z.object({ id: z.string(), email: z.string() })) }),
+  users: z.array(z.object({ id: z.string(), email: z.string() })),
 });
 
-function memberCode(a: Account): Promise<string> {
+function memberCode(a: DocsAccount): Promise<string> {
   const parsed = OTPAuth.URI.parse(a.member.totpURI);
   if (!(parsed instanceof OTPAuth.TOTP)) throw new Error("the member's totpURI is not a TOTP URI");
   return Promise.resolve(parsed.generate());
@@ -261,111 +103,22 @@ function memberCode(a: Account): Promise<string> {
 async function withObserver(
   browser: Browser,
   state: StorageState,
-  a: Account,
+  a: DocsAccount,
   onState: (observer: StorageState) => Promise<void>,
 ) {
-  const context = await browser.newContext({ ...contextOptions(), storageState: state });
-  const page = await context.newPage();
-  const { json } = usersSchema.parse(await rpc(page, "dashboard/users/list", {}));
-  const member = json.users.find((u) => u.email === a.member.email);
-  if (!member) throw new Error(`${a.member.email} is not listed on the Users page`);
-  const setRole = async (role: "observer" | "user") =>
-    rpc(page, "dashboard/users/setRole", { userId: member.id, role, code: await totp() });
-  try {
-    await setRole("observer");
-    await onState(await signIn(browser, a.member, () => memberCode(a)));
-  } finally {
-    await setRole("user");
-    await context.close();
-  }
-}
-
-async function clearReadLater(page: Page, a: Account) {
-  const scope = { workspaceSlug: a.workspaceSlug, mailboxSlug: a.mailboxSlug };
-  const { json } = readLaterSchema.parse(await rpc(page, "mail/readLater/list", scope));
-  await Promise.all(
-    json.messageIds.map((messageId) => rpc(page, "mail/readLater/remove", { ...scope, messageId })),
-  );
-}
-
-async function centerOf(page: Page, selector: string) {
-  const box = await page.locator(selector).first().boundingBox();
-  if (!box) throw new Error(`${selector} has no box`);
-  return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
-}
-
-async function drag(page: Page, from: string, to: string) {
-  const start = await centerOf(page, from);
-  const end = await centerOf(page, to);
-  await page.mouse.move(start.x, start.y);
-  await page.mouse.down();
-  await page.mouse.move(end.x, end.y, { steps: 12 });
-  await page.mouse.up();
-}
-
-async function run(page: Page, step: Step, a: Account | undefined) {
-  if ("clearReadLater" in step) await clearReadLater(page, webAccount(a));
-  else if ("goto" in step) await page.goto(resolve(step.goto, a));
-  else if ("follow" in step) {
-    const href = await page.locator(step.follow).first().getAttribute("href");
-    if (!href) throw new Error(`${step.follow} has no href`);
-    await page.goto(new URL(href, page.url()).href);
-  } else if ("click" in step)
-    await page
-      .locator(step.click)
-      .nth(step.nth ?? 0)
-      .click();
-  else if ("dblclick" in step) await page.locator(step.dblclick).first().dblclick();
-  else if ("rightClick" in step)
-    await page.locator(step.rightClick).first().click({ button: "right" });
-  else if ("hover" in step) await page.locator(step.hover).first().hover();
-  else if ("fill" in step) await page.locator(step.fill).first().fill(step.value);
-  else if ("type" in step) {
-    await page.locator(step.type).first().click();
-    await page.keyboard.type(step.text);
-  } else if ("press" in step) await page.keyboard.press(step.press);
-  else if ("drag" in step) await drag(page, step.drag, step.to);
-  else if ("waitFor" in step)
-    await page.locator(step.waitFor).first().waitFor({ state: "visible" });
-  else if ("waitForHidden" in step)
-    await page.locator(step.waitForHidden).first().waitFor({ state: "hidden" });
-  else if ("wait" in step) await page.waitForTimeout(step.wait);
-  else if ("scroll" in step) await page.locator(step.scroll).first().scrollIntoViewIfNeeded();
-}
-
-function contentBox(el: Element): Box {
-  const rect = el.getBoundingClientRect();
-  const solid = new Set(["svg", "img", "canvas", "button", "input", "textarea", "select"]);
-  let bottom = rect.top;
-  for (const child of el.querySelectorAll("*")) {
-    if (child.children.length > 0 && !solid.has(child.localName)) continue;
-    const r = child.getBoundingClientRect();
-    if (r.width === 0 || r.height === 0) continue;
-    if (getComputedStyle(child).visibility === "hidden") continue;
-    bottom = Math.max(bottom, Math.min(r.bottom, rect.bottom));
-  }
-  const end = rect.bottom - bottom > 120 ? bottom + 16 : rect.bottom;
-  return {
-    x: rect.left + window.scrollX,
-    y: rect.top + window.scrollY,
-    width: rect.width,
-    height: end - rect.top,
-  };
-}
-
-async function region(page: Page, element: string | string[], pad = PAD): Promise<Box> {
-  const boxes: Box[] = [];
-  for (const selector of Array.isArray(element) ? element : [element])
-    boxes.push(await page.locator(selector).first().evaluate(contentBox));
-  const doc = await page.evaluate(() => ({
-    width: document.documentElement.scrollWidth,
-    height: document.documentElement.scrollHeight,
-  }));
-  const x = Math.max(0, Math.min(...boxes.map((b) => b.x)) - pad);
-  const y = Math.max(0, Math.min(...boxes.map((b) => b.y)) - pad);
-  const right = Math.min(doc.width, Math.max(...boxes.map((b) => b.x + b.width)) + pad);
-  const bottom = Math.min(doc.height, Math.max(...boxes.map((b) => b.y + b.height)) + pad);
-  return { x, y, width: right - x, height: bottom - y };
+  await asUser(browser, state, async (page) => {
+    const { users } = usersSchema.parse(await rpc(page, "dashboard/users/list", {}));
+    const member = users.find((u) => u.email === a.member.email);
+    if (!member) throw new Error(`${a.member.email} is not listed on the Users page`);
+    const setRole = async (role: "observer" | "user") =>
+      rpc(page, "dashboard/users/setRole", { userId: member.id, role, code: await totp() });
+    try {
+      await setRole("observer");
+      await onState(await signIn(browser, a.member, () => memberCode(a)));
+    } finally {
+      await setRole("user");
+    }
+  });
 }
 
 async function unscroll(page: Page) {
@@ -379,20 +132,13 @@ async function unscroll(page: Page) {
   });
 }
 
-async function shoot(page: Page, path: string, options: PageScreenshotOptions) {
-  const png = await page.screenshot({ ...options, type: "png" });
-  await sharp(png).webp({ quality: 80 }).toFile(path);
-}
-
-async function capture(page: Page, shot: Shot, path: string) {
+async function capture(page: Page, shot: PageEntry, path: string) {
   await unscroll(page);
-  if (shot.clip) await shoot(page, path, { clip: shot.clip });
+  let options: PageScreenshotOptions = { fullPage: shot.fullPage };
+  if (shot.clip) options = { clip: shot.clip };
   else if (shot.element)
-    await shoot(page, path, {
-      fullPage: true,
-      clip: await region(page, shot.element, shot.pad),
-    });
-  else await shoot(page, path, { fullPage: shot.fullPage });
+    options = { fullPage: true, clip: await pageRegion(page, shot.element, shot.pad ?? PAD) };
+  await shoot(page, path, options);
 }
 
 async function switchTheme(page: Page, theme: "light" | "dark") {
@@ -403,8 +149,6 @@ async function switchTheme(page: Page, theme: "light" | "dark") {
   }, theme);
   await page.waitForTimeout(800);
 }
-
-const TERMINAL_FILE = "terminal.json";
 
 async function inMaintenance(): Promise<boolean> {
   const res = await fetch(`${CLI_APP}/`, { headers: { accept: "application/json" } }).catch(
@@ -425,7 +169,6 @@ async function waitFor(check: () => Promise<boolean>, what: string, timeoutMs = 
 
 function setMaintenance(on: boolean) {
   hostShell(
-    "cli-host",
     on
       ? "metis config set METIS_MAINTENANCE=2026-11-11T10:00:00Z --yes"
       : "metis config unset METIS_MAINTENANCE --yes",
@@ -433,34 +176,30 @@ function setMaintenance(on: boolean) {
 }
 
 async function main() {
-  const only = process.argv.slice(2);
-  const picked = (name: string) => only.length === 0 || only.some((o) => name.startsWith(o));
-  const dir = join(ROOT, "screenshots");
-  const all = readdirSync(dir)
-    .filter((f) => f.endsWith(".json") && f !== TERMINAL_FILE)
-    .flatMap((f) => shotsSchema.parse(JSON.parse(readFileSync(join(dir, f), "utf8"))))
-    .filter((s) => picked(s.name));
+  const picked = namePicker(process.argv.slice(2));
+  const lists = readLists();
+  const all = lists.pages.filter((s) => capturedBy(s.target, "docs") && picked(s.name));
   const shots = all.filter((s) => !s.maintenance);
   const frozen = all.filter((s) => s.maintenance);
-  const terminals = terminalShotsSchema
-    .parse(JSON.parse(readFileSync(join(dir, TERMINAL_FILE), "utf8")))
-    .filter((s) => picked(s.name));
+  const terminals = lists.terminals.filter((s) => capturedBy(s.target, "docs") && picked(s.name));
   const account =
-    shots.length > 0 ? accountSchema.parse(await (await harness("/account")).json()) : undefined;
-  const browser = await chromium.launch({ channel: "chrome", headless: true, args: RENDER_FLAGS });
-  const state = account ? await signIn(browser, account, totp) : undefined;
-  if (state && account) await useGraphite(browser, state, account);
+    shots.length > 0
+      ? docsAccountSchema.parse(await (await harness("/account")).json())
+      : undefined;
+  const browser = await launch();
+  const state = account ? await signIn(browser, account) : undefined;
+  if (state && account)
+    await asUser(browser, state, (page) => selectTheme(page, account.workspaceSlug, "Graphite"));
   const failed: string[] = [];
 
   async function take(
-    shot: Shot,
+    shot: PageEntry,
     path: string,
     as: StorageState | undefined = state,
-    baseURL = APP,
+    baseURL = APP_URL,
   ) {
     const context = await browser.newContext({
-      ...contextOptions(),
-      baseURL,
+      ...contextOptions(baseURL),
       ...(shot.viewport ? { viewport: shot.viewport } : {}),
       storageState: shot.signedOut ? undefined : as,
     });
@@ -472,13 +211,11 @@ async function main() {
     try {
       await page.goto(resolve(path, account));
       await page.waitForLoadState("networkidle").catch(() => {});
-      for (const step of shot.steps ?? []) await run(page, step, account);
+      for (const step of shot.steps ?? []) await runStep(page, step, account);
       await page.waitForTimeout(400);
       for (const { theme, suffix } of THEMES) {
         if (theme !== "light") await switchTheme(page, theme);
-        const file = join(OUT, `${shot.name}${suffix}.webp`);
-        await mkdir(dirname(file), { recursive: true });
-        await capture(page, shot, file);
+        await capture(page, shot, join(OUT, `${shot.name}${suffix}.webp`));
       }
       console.log(`[docs-shots] ok ${shot.name}`);
     } catch (error) {
@@ -519,7 +256,16 @@ async function main() {
     const values = releaseValues();
     for (const shot of terminals) {
       try {
-        await captureTerminal(browser, shot, OUT, values);
+        await captureTerminal(
+          browser,
+          shot,
+          cliHost,
+          {
+            light: join(OUT, `${shot.name}.webp`),
+            dark: join(OUT, `${shot.name}-dark.webp`),
+          },
+          values,
+        );
         console.log(`[docs-shots] ok ${shot.name}`);
       } catch (error) {
         failed.push(shot.name);

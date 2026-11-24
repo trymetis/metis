@@ -11,6 +11,7 @@
   - The Next.js rules `next dev` generates live in `apps/web/AGENTS.md`.
 - **`src/…` means `apps/web/src/…`** unless a path names another workspace.
 - **Every edit under `apps/docs/content/` (pages and each folder's `meta.ts`) goes through the three subagents in `.claude/agents/`, in order: `docs-feature-finder`, `docs-writer`, `docs-verifier`.** Never hand-edit a page there, not even a one-line fix. The rest of `apps/docs/` (scripts, screenshot lists, images, config) is edited directly.
+  - Read `apps/docs/.claude/skills/customer-docs/SKILL.md` before briefing them: it sets each page's audience level, what gets documented at all and what each agent's brief carries.
 
 ## 2. Toolchain
 
@@ -121,6 +122,7 @@
 | [e2e.md](agent-docs/e2e.md)                           | the e2e black-box rule, the web stack and its suites, the fakes, the harness and the model-call recorder                                                     |
 | [e2e-cli.md](agent-docs/e2e-cli.md)                   | the `metis` CLI suite: the Docker-in-Docker install host, the releases and stand-ins it publishes, its run order                                             |
 | [www.md](agent-docs/www.md)                           | the marketing site's metadata, structured data, sitemap, social images and comparison pages                                                                  |
+| [screenshots.md](agent-docs/screenshots.md)           | the shared screenshot lists and their check, the screenshot stack overlay, page steps, terminal sessions, the Claude Code shots                              |
 
 ### Writing AGENTS.md and agent-docs
 

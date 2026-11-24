@@ -1,6 +1,7 @@
 [
   {
     "name": "search/dialog",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "steps": [
       {
@@ -15,12 +16,15 @@
       {
         "waitFor": "role=dialog[name=\"Search\"] >> role=group[name=\"Commands\"]"
       },
-      { "wait": 400 }
+      {
+        "wait": 400
+      }
     ],
     "element": "role=dialog[name=\"Search\"]"
   },
   {
     "name": "search/results",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "steps": [
       {
@@ -42,12 +46,15 @@
       {
         "waitFor": "role=dialog[name=\"Search\"] >> role=complementary[name=\"Preview\"] >> p"
       },
-      { "wait": 400 }
+      {
+        "wait": 400
+      }
     ],
     "element": "role=dialog[name=\"Search\"]"
   },
   {
     "name": "search/address-books",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "steps": [
       {
@@ -66,12 +73,15 @@
       {
         "waitFor": "role=dialog[name=\"Search\"] >> role=complementary[name=\"Preview\"] >> role=heading"
       },
-      { "wait": 400 }
+      {
+        "wait": 400
+      }
     ],
     "element": "role=dialog[name=\"Search\"]"
   },
   {
     "name": "search/contact-filters",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "steps": [
       {
@@ -87,12 +97,15 @@
       {
         "waitFor": "role=dialog[name=\"Search\"] >> role=option[name=/Raj Mehta/]"
       },
-      { "wait": 400 }
+      {
+        "wait": 400
+      }
     ],
     "element": "role=dialog[name=\"Search\"]"
   },
   {
     "name": "search/actions",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "steps": [
       {
@@ -111,19 +124,24 @@
       {
         "waitFor": "role=dialog[name=\"Search\"] >> role=complementary[name=\"Preview\"] >> p"
       },
-      { "press": "ControlOrMeta+Enter" },
+      {
+        "press": "ControlOrMeta+Enter"
+      },
       {
         "waitFor": "role=dialog[name=\"Search\"] >> role=button[name=\"Back to results\"]"
       },
       {
         "waitFor": "role=dialog[name=\"Search\"] >> role=option[name=/^Reply$/]"
       },
-      { "wait": 400 }
+      {
+        "wait": 400
+      }
     ],
     "element": "role=dialog[name=\"Search\"]"
   },
   {
     "name": "search/autocomplete",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "steps": [
       {
@@ -139,14 +157,21 @@
       {
         "waitFor": "role=dialog[name=\"Search\"] >> role=group[name=\"Suggestions\"] >> role=option[name=/^mail-folder:/]"
       },
-      { "wait": 600 },
-      { "waitForHidden": "role=dialog[name=\"Search\"] >> .animate-spin" },
-      { "wait": 400 }
+      {
+        "wait": 600
+      },
+      {
+        "waitForHidden": "role=dialog[name=\"Search\"] >> .animate-spin"
+      },
+      {
+        "wait": 400
+      }
     ],
     "element": "role=dialog[name=\"Search\"]"
   },
   {
     "name": "search/save-search",
+    "target": "docs",
     "path": "{workspace}/workflow",
     "steps": [
       {
@@ -172,7 +197,9 @@
         "fill": "role=dialog[name=\"Save this search\"] >> role=textbox[name=\"Name\"]",
         "value": "Kickoff mail"
       },
-      { "wait": 300 }
+      {
+        "wait": 300
+      }
     ],
     "element": "role=dialog[name=\"Save this search\"]"
   }
