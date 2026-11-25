@@ -9,7 +9,7 @@ import {
   touchCachedMessage,
 } from "@/mail/cache";
 import { seedProviderLabels } from "@/mail/labels";
-import { readRawMessage } from "@/mail/raw";
+import { readRawText } from "@/mail/raw";
 import { listMailInState } from "@/mail/search";
 import { forSender, type MailSession, mailboxIds, scopeMessage } from "@/mail/session";
 import { suggestPeople } from "@/people";
@@ -320,7 +320,7 @@ export const messagesRouter = {
       const { mail } = context;
 
       try {
-        return { raw: await readRawMessage(mail.adapter, input.id) };
+        return { raw: await readRawText(mail.adapter, input.id) };
       } catch (err) {
         console.error("[mail/raw]", err);
         throw new ORPCError("BAD_GATEWAY", { cause: err });

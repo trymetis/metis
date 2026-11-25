@@ -125,6 +125,9 @@ Each release's notes are in [`releases/`](../../releases/), listed under Release
 - In Calendar, with the AI panel open, the card of an event you drag follows the pointer from the start, as it does in Mail, Drive and Contacts.
 - Signing out in the browser clears Drive's **Recent** lists, so the next person who signs in on a shared browser no longer sees your recent folders and files.
 - Confirm-it's-you boxes say **Confirming…** while they work, instead of **Saving…** when nothing is being saved.
+- On IMAP mailboxes, messages written in a character set other than UTF-8, such as GB2312, Big5, Shift_JIS, ISO-2022-JP, EUC-KR, Windows-1251 or ISO-8859-1, show their text instead of garbled characters.
+- **Print** and **View original** show a message written in another character set correctly on every kind of mailbox, and **Download original** saves the message exactly as it arrived.
+- On IMAP mailboxes, plain-text messages sent with flowed line wrapping show as whole paragraphs instead of lines broken mid-sentence.
 
 ### Security
 

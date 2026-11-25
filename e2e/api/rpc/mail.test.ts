@@ -1,6 +1,7 @@
 import { env } from "@metis/e2e/lib/env";
 import { beforeAll, describe, expect, test } from "vitest";
 
+import { APP } from "../../clients/harness";
 import type { Rpc } from "../../clients/rpc";
 import { ana, mailboxScope } from "../support/session";
 
@@ -58,6 +59,8 @@ async function listInbox(rpc: Rpc, scope: object): Promise<Listed[]> {
 describe.skipIf(!env.edge)("malformed and oversized mail", () => {
   let rpc: Rpc;
   let scope: object;
+  let pageBase: string;
+  let cookie: string;
   let inbox: Listed[];
   let edge: Listed[];
   let everyEdge: Listed[];
@@ -68,10 +71,22 @@ describe.skipIf(!env.edge)("malformed and oversized mail", () => {
     return found;
   }
 
+  function body(subject: string): Promise<{ bodyText?: string; bodyHtml?: string }> {
+    return rpc("mail.messages.get", { ...scope, id: named(subject).id, folder: "inbox" });
+  }
+
+  function mailPage(page: string, params: Record<string, string>): Promise<Response> {
+    return fetch(`${pageBase}/${page}?${new URLSearchParams(params).toString()}`, {
+      headers: { cookie },
+    });
+  }
+
   beforeAll(async () => {
     const session = await ana();
     rpc = session.rpc;
+    cookie = session.cookie;
     scope = mailboxScope(session.account);
+    pageBase = `${APP}/w/${session.account.workspaceSlug}/m/${session.account.mailboxSlug}`;
     inbox = await listInbox(rpc, scope);
     everyEdge = inbox.filter(isEdge);
     edge = onePerCase(everyEdge);
@@ -192,6 +207,53 @@ describe.skipIf(!env.edge)("malformed and oversized mail", () => {
       mimeType: first?.mimeType,
     });
     expect(download.data).toBe("");
+  });
+
+  describe("message bodies in charsets other than UTF-8", () => {
+    test.each([
+      ["enc-gb2312-multipart", "你好，世界"],
+      ["enc-shift-jis", "日本語のテキスト"],
+      ["enc-iso-2022-jp", "こんにちは"],
+      ["enc-cp936-label", "中文测试邮件"],
+      ["enc-latin1-bytes", "Café crème à la française"],
+    ])("%s reads in its own charset", async (subject, expected) => {
+      const { bodyText } = await body(subject);
+      expect(bodyText).toContain(expected);
+      expect(bodyText).not.toContain("\u{FFFD}");
+    });
+
+    test("the html part of a multipart message reads in its own charset", async () => {
+      const { bodyHtml } = await body("enc-gb2312-multipart");
+      expect(bodyHtml).toContain("你好，世界");
+    });
+
+    test("UTF-8 bytes under a Latin-1 label read as UTF-8", async () => {
+      const { bodyText } = await body("enc-latin1-label-utf8-bytes");
+      expect(bodyText).toContain("Café — 日本語 — 🎉 labelled latin-1");
+    });
+
+    test("a charset label nobody knows still reads", async () => {
+      const { bodyText } = await body("enc-bogus-charset");
+      expect(bodyText).toContain("charset nobody knows");
+    });
+
+    test("Print and View original keep a raw 8-bit body in its own charset", async () => {
+      const id = named("enc-cp936-label").id;
+
+      const printed = await mailPage("print", { id });
+      expect(printed.status).toBe(200);
+      expect(await printed.text()).toContain("中文测试邮件");
+
+      const original = await mailPage("original", { id, download: "1" });
+      expect(original.status).toBe(200);
+      const saved = Buffer.from(await original.arrayBuffer());
+      expect(saved.includes(Buffer.from("d6d0cec4b2e2cad4d3cabcfe", "hex"))).toBe(true);
+    });
+
+    test("UTF-8 bytes with no charset label read as UTF-8", async () => {
+      const { bodyText } = await body("enc-8bit-no-cte");
+      expect(bodyText).toContain("raw 8-bit ümlaut with no transfer encoding");
+    });
   });
 
   test("the raw source of malformed messages is returned as stored", async () => {

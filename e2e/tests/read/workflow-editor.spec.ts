@@ -368,7 +368,7 @@ test("Details on a run asks first when the workflow has unsaved changes", async 
     .filter({ hasText: "completed" })
     .first()
     .click();
-  const details = page.getByRole("link", { name: "Details", exact: true });
+  const details = page.getByRole("button", { name: "Details", exact: true });
   const confirm = page.getByRole("alertdialog", { name: "Discard unsaved changes?" });
 
   await details.click();

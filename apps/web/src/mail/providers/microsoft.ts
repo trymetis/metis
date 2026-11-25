@@ -359,13 +359,13 @@ async function getUnsubscribeInfo(
   };
 }
 
-async function getRaw(accessToken: string, id: string): Promise<string> {
-  const mime: string = await getGraphClient(accessToken)
+async function getRaw(accessToken: string, id: string): Promise<Buffer> {
+  const mime: ArrayBuffer = await getGraphClient(accessToken)
     .api(`/me/messages/${id}/$value`)
-    .responseType(ResponseType.TEXT)
+    .responseType(ResponseType.ARRAYBUFFER)
     .get();
 
-  return Buffer.from(mime, "utf-8").toString("base64");
+  return Buffer.from(mime);
 }
 
 async function move(accessToken: string, id: string, destinationId: string): Promise<string> {

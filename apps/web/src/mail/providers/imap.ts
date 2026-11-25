@@ -1,6 +1,7 @@
 import "server-only";
 import { snippetOf } from "@metis/gateway-contract/text";
 import type { FetchMessageObject, FetchQueryObject, MessageStructureObject } from "imapflow";
+import libmime from "libmime";
 import { createTransport } from "nodemailer";
 import MailComposer from "nodemailer/lib/mail-composer";
 import PostalMime from "postal-mime";
@@ -30,6 +31,7 @@ import {
 } from "@/types/mail";
 
 import type { MailAdapter, MailChanges } from "../adapter";
+import { decodeBody } from "../charset";
 import { isMixedMultipart, type MessageHeaders } from "../headers";
 import { decodeMimeHeader } from "../recipients";
 import {
@@ -463,9 +465,16 @@ async function searchAst(
   };
 }
 
+interface TextPart {
+  part: string;
+  charset?: string;
+  flowed: boolean;
+  delSp: boolean;
+}
+
 interface PartIndex {
-  html?: string;
-  text?: string;
+  html?: TextPart;
+  text?: TextPart;
   attachments: Attachment[];
 }
 
@@ -490,8 +499,14 @@ function collectParts(node: MessageStructureObject | undefined, found: PartIndex
     return;
   }
 
-  if (type === "text/html" && !found.html) found.html = node.part ?? "1";
-  else if (type === "text/plain" && !found.text) found.text = node.part ?? "1";
+  const text: TextPart = {
+    part: node.part ?? "1",
+    charset: node.parameters?.charset,
+    flowed: node.parameters?.format?.toLowerCase() === "flowed",
+    delSp: node.parameters?.delsp?.toLowerCase() === "yes",
+  };
+  if (type === "text/html" && !found.html) found.html = text;
+  else if (type === "text/plain" && !found.text) found.text = text;
 }
 
 async function getMessage(credentials: ImapCredentials, id: string): Promise<Partial<Email>> {
@@ -530,13 +545,23 @@ async function getMessage(credentials: ImapCredentials, id: string): Promise<Par
     const found: PartIndex = { attachments: [] };
     collectParts(message.bodyStructure, found);
 
-    const wanted = [found.html, found.text].filter((part): part is string => !!part);
+    const wanted = [found.html, found.text].flatMap((entry) => (entry ? [entry.part] : []));
     const parts = wanted.length
       ? await ctx.client.downloadMany(String(ref.uid), wanted, { uid: true })
       : {};
+    const decoded = (entry: TextPart | undefined) => {
+      const downloaded = entry ? parts[entry.part] : undefined;
+      if (!entry || !downloaded?.content) return "";
+      return decodeBody(downloaded.content, downloaded.meta?.charset ?? entry.charset);
+    };
 
-    const html = found.html ? (parts[found.html]?.content?.toString("utf8") ?? "") : "";
-    const text = found.text ? (parts[found.text]?.content?.toString("utf8") ?? "") : "";
+    const html = decoded(found.html);
+    const plain = decoded(found.text);
+    const meta = found.text ? parts[found.text.part]?.meta : undefined;
+    const text =
+      plain && (meta?.flowed ?? found.text?.flowed)
+        ? libmime.decodeFlowed(plain, meta?.delSp ?? found.text?.delSp)
+        : plain;
 
     return {
       ...base,
@@ -548,7 +573,7 @@ async function getMessage(credentials: ImapCredentials, id: string): Promise<Par
   });
 }
 
-async function getRaw(credentials: ImapCredentials, id: string): Promise<string> {
+async function getRaw(credentials: ImapCredentials, id: string): Promise<Buffer> {
   const ref = decodeMessageId(id);
   return withImapPath(credentials, ref.path, async (ctx) => {
     assertUidValidity(ctx, ref);
@@ -556,7 +581,7 @@ async function getRaw(credentials: ImapCredentials, id: string): Promise<string>
     if (!message) throw new Error("Message not found");
     const source = message.source;
     if (!source) throw new Error("Message not found");
-    return source.toString("utf8");
+    return source;
   });
 }
 

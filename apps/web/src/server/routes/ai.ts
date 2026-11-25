@@ -87,9 +87,9 @@ export const aiRouter = {
         await rateLimitOrThrow(mail.userId, RATE_LIMITS.phishingAnalyze);
 
         const adapter = mail.adapter;
-        const rawB64 = await adapter.getRaw(input.id);
+        const raw = await adapter.getRaw(input.id);
 
-        if (!rawB64) {
+        if (raw.length === 0) {
           throw new ORPCError("BAD_REQUEST", {
             message: "No content to analyze",
           });
@@ -97,7 +97,7 @@ export const aiRouter = {
 
         const analysis = await getPhishingDetection().analyze({
           userId: mail.userId,
-          rawMimeBase64: rawB64,
+          rawMimeBase64: raw.toString("base64"),
           headers: context.headers,
         });
 

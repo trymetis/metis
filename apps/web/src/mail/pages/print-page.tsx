@@ -26,7 +26,7 @@ function PrintHeader({ message }: { message: PrintableMessage }) {
   );
 }
 
-export async function printPage(raw: string, options: PrintOptions): Promise<Response> {
+export async function printPage(raw: Buffer, options: PrintOptions): Promise<Response> {
   const message = await printableMessage(raw, options);
   const nonce = newNonce();
   const html = buildFrameDocument(message.bodyHtml || "<em>No content</em>", {

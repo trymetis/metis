@@ -8,17 +8,26 @@ import { searchDialog, typeQuery, openSearch } from "../search";
 const SEARCH_SUGGEST_PER_MINUTE = 240;
 const REFERENCE_SUGGEST_PER_MINUTE = 240;
 const LIMIT_WINDOW_MS = 70_000;
+const EXHAUST_BATCH = 20;
+
+function limited(result: PromiseSettledResult<unknown>): boolean {
+  return (
+    result.status === "rejected" &&
+    result.reason instanceof RpcError &&
+    result.reason.status === 429
+  );
+}
 
 async function exhaust(call: () => Promise<unknown>, perMinute: number): Promise<void> {
-  for (let i = 0; i <= 2 * perMinute; i++) {
-    try {
-      await call();
-    } catch (err) {
-      if (err instanceof RpcError && err.status === 429) return;
-      throw err;
-    }
+  let sent = 0;
+  while (sent <= 2 * perMinute) {
+    const results = await Promise.allSettled(Array.from({ length: EXHAUST_BATCH }, () => call()));
+    sent += EXHAUST_BATCH;
+    const failure = results.find((result) => result.status === "rejected" && !limited(result));
+    if (failure?.status === "rejected") throw failure.reason;
+    if (results.some(limited)) return;
   }
-  throw new Error(`no 429 after ${2 * perMinute + 1} calls`);
+  throw new Error(`no 429 after ${sent} calls`);
 }
 
 async function waitForReset(call: () => Promise<unknown>): Promise<void> {
@@ -77,7 +86,7 @@ export default function suggestionLimitSpecs() {
     account,
   }) => {
     const suggest = () =>
-      rpc("agentReferences.suggest", { workspaceSlug: account.workspaceSlug, query: "brief" });
+      rpc("agentReferences.suggest", { workspaceSlug: account.workspaceSlug, query: "" });
     await exhaust(suggest, REFERENCE_SUGGEST_PER_MINUTE);
     try {
       await page.goto(workspacePath(account, "/assistant"));

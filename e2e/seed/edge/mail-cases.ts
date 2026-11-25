@@ -419,6 +419,75 @@ export const MAIL_CASES: MailCase[] = [
         Buffer.from("raw 8-bit \u{FC}mlaut with no transfer encoding", "utf8"),
       ),
   },
+  {
+    name: "enc-gb2312-multipart",
+    build: () =>
+      entity(
+        withHeaders(std("enc-gb2312-multipart", 38), [
+          ["Content-Type", `multipart/alternative; boundary="gb2312-alt"`],
+        ]),
+        multipartBody("gb2312-alt", [
+          {
+            headers: [
+              ["Content-Type", "text/plain; charset=GB2312"],
+              ["Content-Transfer-Encoding", "base64"],
+            ],
+            body: base64Lines(Buffer.from("c4e3bac3a3accac0bde7", "hex")),
+          },
+          {
+            headers: [
+              ["Content-Type", "text/html; charset=GB2312"],
+              ["Content-Transfer-Encoding", "quoted-printable"],
+            ],
+            body: "<p>=C4=E3=BA=C3=A3=AC=CA=C0=BD=E7</p>",
+          },
+        ]),
+      ),
+  },
+  {
+    name: "enc-shift-jis",
+    build: () =>
+      entity(
+        withHeaders(std("enc-shift-jis", 39), [
+          ["Content-Type", "text/plain; charset=Shift_JIS"],
+          ["Content-Transfer-Encoding", "base64"],
+        ]),
+        base64Lines(Buffer.from("93fa967b8cea82cc8365834c83588367", "hex")),
+      ),
+  },
+  {
+    name: "enc-iso-2022-jp",
+    build: () =>
+      entity(
+        withHeaders(std("enc-iso-2022-jp", 45), [
+          ["Content-Type", "text/plain; charset=ISO-2022-JP"],
+          ["Content-Transfer-Encoding", "7bit"],
+        ]),
+        Buffer.from("1b244224332473244b2441244f1b2842", "hex"),
+      ),
+  },
+  {
+    name: "enc-cp936-label",
+    build: () =>
+      entity(
+        withHeaders(std("enc-cp936-label", 46), [
+          ["Content-Type", "text/plain; charset=cp936"],
+          ["Content-Transfer-Encoding", "8bit"],
+        ]),
+        Buffer.from("d6d0cec4b2e2cad4d3cabcfe", "hex"),
+      ),
+  },
+  {
+    name: "enc-latin1-bytes",
+    build: () =>
+      entity(
+        withHeaders(std("enc-latin1-bytes", 47), [
+          ["Content-Type", "text/plain; charset=iso-8859-1"],
+          ["Content-Transfer-Encoding", "8bit"],
+        ]),
+        Buffer.from("436166e9206372e86d6520e0206c61206672616ee761697365", "hex"),
+      ),
+  },
 
   {
     name: "mime-missing-terminator",

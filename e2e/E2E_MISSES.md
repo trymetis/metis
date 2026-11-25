@@ -16,6 +16,7 @@ The e2e stack is a seeded environment that two suites drive: Vitest in `api/` fo
 - **Mail cache prune:** `system:mail-cache-prune` (`pruneCachedBodies`) is not run; seeded messages are fetched within the retention period, so no body is old enough to clear.
 - **Sender check results:** no seeded message carries an `Authentication-Results` header, so View original's PASS and FAIL rows and its "as reported by" note are never shown; every row reads **Not reported**. Adding the header to an existing anchor message changes no recorded model request (the classifier sends from, subject and snippet; summaries send only automation headers) and no screenshot.
 - **An empty message body on the print page:** the only seeded message with no body (`min-headers-only`, edge seed) has no subject either, so no test can find it by search, and the print page's "No content" is never shown.
+- **format=flowed plain text:** no seeded message is `format=flowed`, so the IMAP adapter's joining of soft line breaks (with and without `delsp=yes`) is never exercised. A new edge message would be classified, and adding edge mail changed recorded chat requests too, so it costs a `generate:record` run.
 - **One-click and `mailto` unsubscribes:** the seeded Kestrel Supply Co. newsletters offer both, but nothing performs them; the `unsubscribe` case appends its own link-only message over IMAP and removes it.
 
 ## 2. Small infrastructure

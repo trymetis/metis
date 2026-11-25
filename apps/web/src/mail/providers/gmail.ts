@@ -597,15 +597,14 @@ async function getThread(accessToken: string, threadId: string): Promise<Email[]
   });
 }
 
-async function getRaw(accessToken: string, id: string): Promise<string> {
+async function getRaw(accessToken: string, id: string): Promise<Buffer> {
   const gmail = getGmailClient(accessToken);
   const res = await gmail.users.messages.get({
     userId: "me",
     id,
     format: "raw",
   });
-  const rawB64Url = res.data.raw ?? "";
-  return rawB64Url.replace(/-/g, "+").replace(/_/g, "/");
+  return Buffer.from(res.data.raw ?? "", "base64url");
 }
 
 async function deleteMessage(accessToken: string, id: string): Promise<string> {

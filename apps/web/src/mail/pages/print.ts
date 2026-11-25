@@ -44,7 +44,7 @@ function formatDate(value: string | undefined, timeZone: string | null): string 
 }
 
 export async function printableMessage(
-  raw: string,
+  raw: Buffer,
   options: PrintOptions,
 ): Promise<PrintableMessage> {
   const email = await parseRaw(raw);

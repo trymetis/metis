@@ -1,4 +1,5 @@
 import "server-only";
+import { rawText } from "../raw";
 import {
   AUTH_METHODS,
   type AuthMethod,
@@ -95,12 +96,12 @@ function OriginalPage({
   );
 }
 
-export async function originalPage(raw: string, downloadHref: string): Promise<Response> {
+export async function originalPage(raw: Buffer, downloadHref: string): Promise<Response> {
   const nonce = newNonce();
   return renderPage(
     <OriginalPage
       summary={await summarizeOriginal(raw)}
-      raw={raw}
+      raw={rawText(raw)}
       downloadHref={downloadHref}
       nonce={nonce}
     />,

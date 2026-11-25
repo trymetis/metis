@@ -29,6 +29,7 @@ import {
 
 import type { MailAdapter } from "../adapter";
 import { headersFromRaw, type MessageHeaders } from "../headers";
+import { rawText } from "../raw";
 
 export function gatewayMail(target: GatewayTarget, from: string): MailAdapter {
   return bind<MailAdapter, GatewayTarget>(
@@ -270,9 +271,9 @@ async function searchAst(
   };
 }
 
-async function getRaw(target: GatewayTarget, id: string): Promise<string> {
+async function getRaw(target: GatewayTarget, id: string): Promise<Buffer> {
   const res = await gatewayFetch(target, `/messages/${encodeURIComponent(id)}/raw`);
-  return res.text();
+  return Buffer.from(await res.arrayBuffer());
 }
 
 async function getThread(target: GatewayTarget, threadId: string): Promise<Email[]> {
@@ -349,7 +350,7 @@ async function getHeaders(
   id: string,
   names: string[],
 ): Promise<MessageHeaders> {
-  return headersFromRaw(await getRaw(target, id), names);
+  return headersFromRaw(rawText(await getRaw(target, id)), names);
 }
 
 async function getUnsubscribeInfo(

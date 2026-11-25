@@ -43,12 +43,12 @@ export async function analyzePhishing(args: {
       };
     }
 
-    const rawB64 = await mailbox.adapter.getRaw(id);
-    if (!rawB64) return { id, error: "No content to analyze" };
+    const raw = await mailbox.adapter.getRaw(id);
+    if (raw.length === 0) return { id, error: "No content to analyze" };
 
     const analysis = await getPhishingDetection().analyze({
       userId,
-      rawMimeBase64: rawB64,
+      rawMimeBase64: raw.toString("base64"),
       headers,
     });
     await cacheAnalysis(scoped, analysis);

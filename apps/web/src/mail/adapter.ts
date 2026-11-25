@@ -35,7 +35,7 @@ export interface MailAdapter {
   batchMarkRead(ids: string[], read: boolean): Promise<void>;
   search(query: string): Promise<MessagesResponse>;
   searchAst(search: AstSearch<Email>): Promise<MessagesResponse>;
-  getRaw(id: string): Promise<string>;
+  getRaw(id: string): Promise<Buffer>;
   getThread(threadId: string): Promise<Email[]>;
   listAllInFolder(folder: MailFolder): Promise<string[]>;
   batchDelete(ids: string[]): Promise<Map<string, string>>;

@@ -40,6 +40,9 @@ The three mail backends that are separate services speaking one HTTP contract, a
 - **`snippetOf` builds every gateway snippet from the HTML's visible text, and from the plain text only when that is empty.**
   - It reads at most 64 KB from `<body>`, drops `head`, `title`, `style`, `script`, `noscript`, `template`, `xml`, `svg` and comments, decodes entities, and strips the invisible filler characters newsletters pad their preview text with.
   - It runs once at ingest and at send with a bounded cost, so it fits the Workers CPU limit; the list serves the stored snippet as is.
+- **Gateway bodies are decoded once at ingest, and not by IMAP's charset rule** ([mail.md](mail.md)).
+  - Cloudflare and SES take the text PostalMime decodes: by the part's label, through its aliases for labels such as `cp936`; with no label or one it does not know, as UTF-8 when the bytes are valid UTF-8 and as Windows-1252 otherwise. PostalMime has no hook for another decoder, and the Worker has no `nodejs_compat` for iconv-lite.
+  - Resend's API returns `html` and `text` already decoded, so Resend decides those bodies.
 
 ### Tokens
 
@@ -108,6 +111,7 @@ The three mail backends that are separate services speaking one HTTP contract, a
 
 ## Deliberate limits
 
+- **A gateway body can read differently from the same message over IMAP.** On Cloudflare and SES, UTF-8 labelled Latin-1 reads as Windows-1252 and `utf-7`, `cp850` or `ibm437` bodies fall back as unknown labels; on Resend, Resend's decoding decides.
 - **Gateways are degraded like IMAP**: SQL `LIKE` search (`likePattern`, [search.md](search.md); SQLite ignores case for ASCII only), synthesized threading, app-level folders, and no mail from before the gateway's setup.
 - **The SES gateway has no catch-up poll**: a receipt event that keeps failing ends in the function's failure destination, with the raw message still in the bucket.
 - **A sandboxed SES account sends only to verified addresses** until AWS grants production access for the region.

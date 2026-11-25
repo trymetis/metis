@@ -11,6 +11,7 @@ declare module "addressparser" {
 declare module "libmime" {
   const libmime: {
     decodeWords(value: string): string;
+    decodeFlowed(value: string, delSp?: boolean): string;
   };
   export = libmime;
 }

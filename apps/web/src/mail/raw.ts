@@ -1,12 +1,11 @@
 import "server-only";
 import type { MailAdapter } from "./adapter";
+import { decodeBody } from "./charset";
 
-export async function readRawMessage(adapter: MailAdapter, id: string): Promise<string> {
-  const raw = await adapter.getRaw(id);
-  try {
-    const decoded = Buffer.from(raw, "base64").toString("utf-8");
-    return /^[A-Za-z-]+:/m.test(decoded) ? decoded : raw;
-  } catch {
-    return raw;
-  }
+export function rawText(raw: Buffer): string {
+  return decodeBody(raw, undefined);
+}
+
+export async function readRawText(adapter: MailAdapter, id: string): Promise<string> {
+  return rawText(await adapter.getRaw(id));
 }

@@ -21,7 +21,6 @@ import { looksTextual, TEXT_LIMIT } from "@/lib/file-utils";
 import { htmlToText, truncate } from "@/lib/utils";
 import type { MailAdapter } from "@/mail/adapter";
 import { parseCalendarInvite } from "@/mail/attachment-data";
-import { readRawMessage } from "@/mail/raw";
 import type { ContactDraft, ContactDto } from "@/server/schema";
 import type {
   CalendarEvent,
@@ -244,8 +243,7 @@ export async function downloadAttachment(
 }
 
 export async function rawMail(handle: MailHandle, id: string): Promise<Buffer> {
-  const raw = await readRawMessage(handle.adapter, id);
-  const data = Buffer.from(raw, "utf8");
+  const data = await handle.adapter.getRaw(id);
   if (data.byteLength > MAX_BLOB_BYTES) throw new Error("That message is larger than 10 MB");
   return data;
 }

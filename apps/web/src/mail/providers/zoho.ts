@@ -29,6 +29,7 @@ import {
 
 import type { MailAdapter } from "../adapter";
 import { headersFromRaw, type MessageHeaders } from "../headers";
+import { rawText } from "../raw";
 import { parseRecipientList } from "../recipients";
 
 export interface ZohoSession {
@@ -731,20 +732,14 @@ async function getHeaders(
   id: string,
   names: string[],
 ): Promise<MessageHeaders> {
-  return headersFromRaw(await getRaw(session, id), names);
+  return headersFromRaw(rawText(await getRaw(session, id)), names);
 }
 
 async function getUnsubscribeInfo(
   session: ZohoSession,
   id: string,
 ): Promise<UnsubscribeInfo | null> {
-  const raw = await getRaw(session, id);
-
-  let mime = raw;
-  try {
-    const decoded = Buffer.from(raw, "base64").toString("utf-8");
-    if (/^[A-Za-z-]+:/m.test(decoded)) mime = decoded;
-  } catch {}
+  const mime = rawText(await getRaw(session, id));
 
   const headerBlock = mime.split(/\r?\n\r?\n/, 1)[0] ?? "";
   const unfolded = headerBlock.replace(/\r?\n[ \t]+/g, " ");
@@ -760,7 +755,7 @@ async function getUnsubscribeInfo(
   };
 }
 
-async function getRaw(session: ZohoSession, encodedId: string): Promise<string> {
+async function getRaw(session: ZohoSession, encodedId: string): Promise<Buffer> {
   const { folderId, messageId: id } = decodeMessageId(encodedId);
   const acc = await loadAccount(session);
   const base = await zohoBaseUrl(session);
@@ -786,32 +781,37 @@ async function getRaw(session: ZohoSession, encodedId: string): Promise<string> 
       /* oxlint-disable eslint/no-await-in-loop -- tries each raw-message endpoint in order and stops at the first that returns content */
       const res = await fetch(c.url, { headers: authHeaders(session) });
       if (res.ok) {
-        const text = await res.text();
+        const bytes = Buffer.from(await res.arrayBuffer());
         /* oxlint-enable eslint/no-await-in-loop */
-        if (!text) {
+        if (bytes.length === 0) {
           attempts.push(`${c.note}:empty`);
           continue;
         }
 
-        let mime = text;
+        const text = bytes.toString("utf8");
         const trimmed = text.trimStart();
         if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
           try {
             const parsed: { data?: string | ZohoRawMessage } = JSON.parse(text);
             const data = parsed.data;
-            if (typeof data === "string") {
-              mime = data;
-            } else if (data) {
-              mime =
-                data.content ?? data.originalMessage ?? data.mailContent ?? data.rawMessage ?? "";
-            }
+            const mime =
+              typeof data === "string"
+                ? data
+                : data
+                  ? (data.content ??
+                    data.originalMessage ??
+                    data.mailContent ??
+                    data.rawMessage ??
+                    "")
+                  : text;
             if (!mime) {
               attempts.push(`${c.note}:empty-json`);
               continue;
             }
+            return Buffer.from(mime, "utf8");
           } catch {}
         }
-        return Buffer.from(mime, "utf-8").toString("base64");
+        return bytes;
       }
       attempts.push(`${c.note}:${res.status}`);
     } catch (err) {
@@ -841,10 +841,13 @@ async function getRaw(session: ZohoSession, encodedId: string): Promise<string> 
         header("Subject", m.subject) +
         header("Date", m.receivedTime) +
         header("Message-ID", m.messageId) +
-        header("Content-Type", m.mailFormat === "html" ? "text/html" : "text/plain") +
+        header(
+          "Content-Type",
+          m.mailFormat === "html" ? "text/html; charset=utf-8" : "text/plain; charset=utf-8",
+        ) +
         "\r\n" +
         body;
-      return Buffer.from(mime, "utf-8").toString("base64");
+      return Buffer.from(mime, "utf8");
     }
   } catch {}
 

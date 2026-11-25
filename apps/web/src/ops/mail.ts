@@ -5,7 +5,7 @@ import { sanitizeError } from "@/lib/errors/sanitize-error";
 import { looksTextual, TEXT_LIMIT } from "@/lib/file-utils";
 import { htmlToText, truncate } from "@/lib/utils";
 import { isParsableAttachment, parseAttachment } from "@/mail/attachment-data";
-import { readRawMessage } from "@/mail/raw";
+import { readRawText } from "@/mail/raw";
 import {
   canEditWorkspaceSignatures,
   deleteSignature as removeSignature,
@@ -454,7 +454,7 @@ export async function getRawEmail(
   mailbox: AgentMailbox,
   id: string,
 ): Promise<Output<typeof getRawEmailOutput>> {
-  const raw = await readRawMessage(mailbox.adapter, id);
+  const raw = await readRawText(mailbox.adapter, id);
   return {
     mailboxId: mailbox.mailboxId,
     id,

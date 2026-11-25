@@ -5,11 +5,10 @@ import { sanitizeError } from "@/lib/errors/sanitize-error";
 import { RateLimitedError, rateLimit } from "@/services/rate-limit";
 import { RATE_LIMITS } from "@/services/rate-limits";
 
-import { readRawMessage } from "../raw";
 import { getMailSession } from "../session";
 import { errorPage } from "./page-document";
 
-export function parseRaw(raw: string): Promise<ParsedEmail> {
+export function parseRaw(raw: Buffer): Promise<ParsedEmail> {
   return PostalMime.parse(raw, { attachmentEncoding: "arraybuffer" });
 }
 
@@ -37,7 +36,7 @@ export async function readPageSource(
   workspaceSlug: string,
   mailboxSlug: string,
   id: string | null,
-): Promise<string | Response> {
+): Promise<Buffer | Response> {
   if (!id) return errorPage(400, "Message not found", "The link does not name a message.");
   const mail = await getMailSession(headers, workspaceSlug, mailboxSlug);
   if (!mail) return errorPage(404, "Message not found", "This mailbox is not available to you.");
@@ -49,7 +48,7 @@ export async function readPageSource(
     return page;
   }
   try {
-    return await readRawMessage(mail.adapter, id);
+    return await mail.adapter.getRaw(id);
   } catch (err) {
     console.error("[mail/raw]", err);
     return errorPage(502, "Could not load the message", sanitizeError(err));

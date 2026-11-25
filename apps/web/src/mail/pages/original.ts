@@ -32,7 +32,7 @@ export function authenticationResults(value: string | undefined): Authentication
   };
 }
 
-export async function summarizeOriginal(raw: string): Promise<OriginalSummary> {
+export async function summarizeOriginal(raw: Buffer): Promise<OriginalSummary> {
   const email = await parseRaw(raw);
   return {
     messageId: email.messageId ?? "",
@@ -52,9 +52,9 @@ function emlName(subject: string): string {
   return `${base || "message"}.eml`;
 }
 
-export async function originalDownload(raw: string): Promise<Response> {
+export async function originalDownload(raw: Buffer): Promise<Response> {
   const { subject } = await summarizeOriginal(raw);
-  return new Response(raw, {
+  return new Response(new Uint8Array(raw), {
     headers: {
       "Content-Type": "message/rfc822",
       "Content-Disposition": `attachment; filename="${emlName(subject)}"`,
